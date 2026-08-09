@@ -1,0 +1,11 @@
+# Server-specific configuration — copy config.example.php to config.php on deploy.
+config.php
+
+# Runtime data.
+data/*.sqlite
+data/*.sqlite-*
+data/*.sqlite3
+
+# Reader uploads.
+uploads/*
+!uploads/.htaccess

@@ -1,0 +1,586 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Prairie Post — Brand Identity</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:ital,wdth,wght@0,62..125,100..900;1,62..125,100..900&family=IBM+Plex+Mono:wght@400;500;600&family=Newsreader:ital,opsz,wght@0,6..72,300..700;1,6..72,300..600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --shelterbelt:#17301C;
+  --quarter:#3F5A22;
+  --field:#58651C;
+  --bigsky:#2F6C99;
+  --noonsky:#77B2D6;
+  --highsky:#A9CDE4;
+  --stubble:#7A661F;
+  --straw:#B99A45;
+  --fencepost:#6F5535;
+  --board:#C4C0B4;
+  --cloudbank:#F1F2F0;
+  --binred:#9C3B22;
+
+  --display:'Archivo','Arial Narrow',Helvetica,sans-serif;
+  --body:'Newsreader',Georgia,'Times New Roman',serif;
+  --mono:'IBM Plex Mono',ui-monospace,'SFMono-Regular',Menlo,monospace;
+
+  --gut:clamp(20px,4vw,56px);
+  --maxw:1180px;
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%;overflow-x:hidden;max-width:100%}
+body{
+  margin:0;overflow-x:hidden;background:var(--cloudbank);color:var(--shelterbelt);
+  font-family:var(--body);font-size:19px;line-height:1.62;
+  font-optical-sizing:auto;
+}
+.wrap{max-width:var(--maxw);margin:0 auto;padding:0 var(--gut)}
+
+/* ---------- type roles ---------- */
+.display{font-family:var(--display);font-weight:800;font-stretch:68%;font-variation-settings:'wdth' 68,'wght' 800;
+  text-transform:uppercase;letter-spacing:.02em;line-height:.9}
+.hed{font-family:var(--display);font-weight:700;font-stretch:78%;font-variation-settings:'wdth' 78,'wght' 700;
+  line-height:1.04;letter-spacing:-.005em}
+.meta{font-family:var(--mono);font-size:11.5px;letter-spacing:.16em;text-transform:uppercase;font-weight:500}
+.mono{font-family:var(--mono)}
+
+/* ---------- horizon rule: the signature ---------- */
+.horizon{position:relative;height:0;border-top:4px solid var(--shelterbelt)}
+.horizon::after{content:"";position:absolute;left:0;right:0;top:2px;height:1px;background:var(--board)}
+.horizon--full{margin-left:calc(50% - 50vw);margin-right:calc(50% - 50vw)}
+
+/* ---------- masthead ---------- */
+.sky{
+  background:linear-gradient(180deg,#5E9EC9 0%,var(--noonsky) 46%,var(--highsky) 78%,#D7E7F1 100%);
+  padding:clamp(24px,6vw,48px) 0 0;position:relative;overflow:hidden;
+}
+.sky .wrap{position:relative;z-index:2}
+.cloud{position:absolute;background:#fff;border-radius:999px;filter:blur(3px)}
+.skybar{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;
+  color:#0F2A3C;opacity:.85}
+.skyfield{height:clamp(150px,30vh,300px)}
+.mastwrap{background:var(--cloudbank);padding-top:clamp(18px,3vw,30px)}
+.mastlogo{width:100%;height:auto;display:block;max-width:820px}
+.tagline{display:flex;justify-content:space-between;align-items:baseline;gap:20px;flex-wrap:wrap;
+  margin-top:12px}
+
+/* ---------- sections ---------- */
+section{padding:clamp(48px,8vw,104px) 0 0}
+.sechead{display:flex;align-items:baseline;gap:16px;margin-bottom:26px}
+.secnum{font-family:var(--mono);font-size:11.5px;letter-spacing:.16em;font-weight:600;color:var(--stubble)}
+.sectitle{font-family:var(--display);font-weight:800;font-stretch:70%;font-variation-settings:'wdth' 70,'wght' 800;
+  text-transform:uppercase;letter-spacing:.02em;font-size:clamp(26px,4.4vw,40px);line-height:1;margin:0}
+.lede{font-size:clamp(20px,2.4vw,24px);line-height:1.5;max-width:62ch;margin:0 0 8px}
+p{max-width:68ch}
+.note{font-size:16px;color:#3C4F3F;max-width:66ch}
+
+/* ---------- palette ---------- */
+.swatches{display:grid;grid-template-columns:repeat(auto-fill,minmax(232px,1fr));gap:2px;margin-top:28px}
+.sw{padding:0;border:0;background:transparent}
+.sw .chip{height:118px;display:flex;align-items:flex-end;padding:10px;position:relative;box-shadow:inset 0 0 0 1px rgba(23,48,28,.16)}
+.sw .chip .ratio{font-family:var(--mono);font-size:10.5px;letter-spacing:.08em;
+  padding:3px 6px;background:rgba(255,255,255,.86);color:#17301C;border-radius:2px}
+.sw .body{padding:10px 2px 18px}
+.sw h4{font-family:var(--display);font-weight:700;font-stretch:80%;font-variation-settings:'wdth' 80,'wght' 700;
+  font-size:17px;margin:0 0 2px;letter-spacing:.01em}
+.sw .hex{font-family:var(--mono);font-size:12px;letter-spacing:.06em}
+.sw .use{font-size:14.5px;line-height:1.4;margin:6px 0 0;color:#3C4F3F}
+.sw .from{font-family:var(--mono);font-size:10.5px;letter-spacing:.06em;color:#6F7A6C;margin-top:6px;display:block}
+
+/* ---------- type specimens ---------- */
+.spec{border-top:1px solid var(--board);padding:26px 0}
+.spec:first-of-type{border-top:0}
+.speclabel{display:flex;gap:14px;flex-wrap:wrap;align-items:baseline;margin-bottom:14px}
+.tscroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.scale{width:100%;min-width:560px;border-collapse:collapse;margin-top:10px;font-size:15px}
+.scale th,.scale td{text-align:left;padding:9px 12px 9px 0;border-bottom:1px solid var(--board);vertical-align:baseline}
+.scale th{font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;font-weight:600;color:#3C4F3F}
+.scale td.mono{font-size:13px}
+
+/* ---------- logo grid ---------- */
+.logogrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:2px;margin-top:26px}
+.logocell{padding:34px 28px;display:flex;flex-direction:column;justify-content:space-between;gap:22px;min-height:230px}
+.logocell svg{width:100%;height:auto;max-width:100%}
+.cellcap{font-family:var(--mono);font-size:10.5px;letter-spacing:.14em;text-transform:uppercase}
+.marks{display:flex;align-items:flex-end;gap:22px;flex-wrap:wrap;margin-top:26px}
+.marks figure{margin:0}
+.marks svg{display:block}
+.marks figcaption{font-family:var(--mono);font-size:10.5px;letter-spacing:.1em;margin-top:8px;color:#3C4F3F}
+
+/* ---------- sections colours ---------- */
+.sectiontable{width:100%;min-width:520px;border-collapse:collapse;margin-top:24px}
+.sectiontable td,.sectiontable th{padding:12px 14px 12px 0;border-bottom:1px solid var(--board);text-align:left;vertical-align:middle}
+.sectiontable th{font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;font-weight:600;color:#3C4F3F}
+.tick{display:inline-block;width:44px;height:12px;vertical-align:middle}
+.sectiontable .nm{font-family:var(--display);font-weight:700;font-stretch:80%;font-variation-settings:'wdth' 80,'wght' 700;font-size:17px;text-transform:uppercase;letter-spacing:.04em}
+
+/* ---------- homepage mock ---------- */
+.mock{background:#fff;border:1px solid var(--board);margin-top:28px}
+.mocknav{display:flex;gap:0;flex-wrap:wrap;border-bottom:1px solid var(--board)}
+.mocknav a{padding:11px 14px;text-decoration:none;color:var(--shelterbelt);
+  font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;
+  border-bottom:3px solid transparent}
+.mocknav a:hover,.mocknav a:focus-visible{border-bottom-color:currentColor}
+.mockmast{padding:26px 22px 14px;text-align:center}
+.mockmast svg{width:min(420px,86%);height:auto}
+.mockbody{padding:22px;display:grid;grid-template-columns:1.55fr .9fr;gap:26px}
+@media(max-width:760px){.mockbody{grid-template-columns:1fr}}
+.eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.16em;text-transform:uppercase;font-weight:600}
+.lead h3{font-family:var(--display);font-weight:700;font-stretch:76%;font-variation-settings:'wdth' 76,'wght' 700;
+  font-size:clamp(27px,3.6vw,39px);line-height:1.03;margin:9px 0 10px;letter-spacing:-.005em}
+.lead p{font-size:18px;margin:0;max-width:none}
+.byline{font-family:var(--mono);font-size:11px;letter-spacing:.1em;color:#5A6A5C;margin-top:12px;text-transform:uppercase}
+.photo{display:block;width:100%;height:200px;margin-bottom:14px}
+.rail{border-left:1px solid var(--board);padding-left:22px}
+.rail h4{font-family:var(--mono);font-size:11px;letter-spacing:.16em;text-transform:uppercase;margin:0 0 12px;font-weight:600}
+.prices{width:100%;border-collapse:collapse;font-family:var(--mono);font-size:13px}
+.prices td{padding:6px 0;border-bottom:1px dotted var(--board)}
+.prices td:last-child{text-align:right}
+.up{color:var(--quarter)} .down{color:var(--binred)}
+.signup{margin-top:22px;background:var(--shelterbelt);color:var(--cloudbank);padding:18px}
+.signup .k{font-family:var(--mono);font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--noonsky)}
+.signup p{font-size:16px;margin:8px 0 12px;max-width:none}
+.btn{display:inline-block;background:var(--noonsky);color:#0F2A1A;font-family:var(--mono);
+  font-size:11.5px;letter-spacing:.14em;text-transform:uppercase;padding:10px 16px;text-decoration:none;font-weight:600}
+
+/* ---------- voice / do-don't ---------- */
+.cols{display:grid;grid-template-columns:1fr 1fr;gap:2px;margin-top:26px}
+@media(max-width:720px){.cols{grid-template-columns:1fr}}
+.col{padding:24px;background:#fff;border-top:4px solid var(--quarter)}
+.col.no{border-top-color:var(--binred)}
+.col h4{font-family:var(--mono);font-size:11px;letter-spacing:.16em;text-transform:uppercase;margin:0 0 14px}
+.col ul{margin:0;padding-left:18px}
+.col li{margin-bottom:11px;font-size:16.5px;line-height:1.5}
+.col li:last-child{margin-bottom:0}
+.ex{font-family:var(--mono);font-size:13px;display:block;margin-top:4px;color:#3C4F3F}
+
+/* ---------- tokens ---------- */
+pre{background:var(--shelterbelt);color:#DDE6DB;padding:22px;overflow-x:auto;
+  font-family:var(--mono);font-size:12.5px;line-height:1.75;margin-top:24px}
+pre .c{color:var(--noonsky)}
+
+footer{margin-top:clamp(56px,9vw,110px);padding:26px 0 40px}
+a{color:var(--bigsky)}
+:focus-visible{outline:3px solid var(--bigsky);outline-offset:3px}
+@media(prefers-reduced-motion:no-preference){
+  .sky .wrap>*{animation:rise .8s cubic-bezier(.2,.7,.3,1) both}
+  .sky .wrap>*:nth-child(2){animation-delay:.08s}
+  @keyframes rise{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+}
+</style>
+</head>
+<body>
+
+<!-- ============ MASTHEAD ============ -->
+<header class="sky">
+  <div class="cloud" style="width:69px;height:32px;left:calc(4% + -72px);top:calc(50% + 3px);opacity:0.64"></div>
+  <div class="cloud" style="width:71px;height:26px;left:calc(4% + -37px);top:calc(50% + 3px);opacity:0.65"></div>
+  <div class="cloud" style="width:73px;height:34px;left:calc(4% + 0px);top:calc(50% + -4px);opacity:0.60"></div>
+  <div class="cloud" style="width:39px;height:16px;left:calc(4% + 20px);top:calc(50% + 4px);opacity:0.70"></div>
+  <div class="cloud" style="width:59px;height:29px;left:calc(13% + -77px);top:calc(46% + 2px);opacity:0.70"></div>
+  <div class="cloud" style="width:44px;height:19px;left:calc(13% + -34px);top:calc(46% + 3px);opacity:0.52"></div>
+  <div class="cloud" style="width:36px;height:13px;left:calc(13% + -9px);top:calc(46% + -3px);opacity:0.51"></div>
+  <div class="cloud" style="width:63px;height:24px;left:calc(13% + 16px);top:calc(46% + 1px);opacity:0.56"></div>
+  <div class="cloud" style="width:48px;height:21px;left:calc(13% + 37px);top:calc(46% + -0px);opacity:0.71"></div>
+  <div class="cloud" style="width:51px;height:20px;left:calc(22% + -53px);top:calc(53% + 1px);opacity:0.80"></div>
+  <div class="cloud" style="width:39px;height:17px;left:calc(22% + -20px);top:calc(53% + -2px);opacity:0.57"></div>
+  <div class="cloud" style="width:52px;height:17px;left:calc(22% + 0px);top:calc(53% + 1px);opacity:0.53"></div>
+  <div class="cloud" style="width:40px;height:19px;left:calc(22% + 21px);top:calc(53% + -1px);opacity:0.81"></div>
+  <div class="cloud" style="width:34px;height:12px;left:calc(31% + -44px);top:calc(44% + 4px);opacity:0.52"></div>
+  <div class="cloud" style="width:58px;height:28px;left:calc(31% + -45px);top:calc(44% + -1px);opacity:0.52"></div>
+  <div class="cloud" style="width:74px;height:27px;left:calc(31% + -19px);top:calc(44% + 2px);opacity:0.61"></div>
+  <div class="cloud" style="width:53px;height:20px;left:calc(31% + 14px);top:calc(44% + 5px);opacity:0.74"></div>
+  <div class="cloud" style="width:41px;height:14px;left:calc(31% + 32px);top:calc(44% + 2px);opacity:0.50"></div>
+  <div class="cloud" style="width:65px;height:23px;left:calc(40% + -68px);top:calc(51% + 1px);opacity:0.64"></div>
+  <div class="cloud" style="width:46px;height:22px;left:calc(40% + -24px);top:calc(51% + 3px);opacity:0.63"></div>
+  <div class="cloud" style="width:58px;height:20px;left:calc(40% + 0px);top:calc(51% + -1px);opacity:0.57"></div>
+  <div class="cloud" style="width:51px;height:24px;left:calc(40% + 27px);top:calc(51% + 5px);opacity:0.69"></div>
+  <div class="cloud" style="width:47px;height:17px;left:calc(49% + -37px);top:calc(47% + 5px);opacity:0.69"></div>
+  <div class="cloud" style="width:70px;height:24px;left:calc(49% + -18px);top:calc(47% + 5px);opacity:0.57"></div>
+  <div class="cloud" style="width:50px;height:17px;left:calc(49% + 13px);top:calc(47% + 1px);opacity:0.77"></div>
+  <div class="cloud" style="width:38px;height:13px;left:calc(58% + -40px);top:calc(55% + -3px);opacity:0.70"></div>
+  <div class="cloud" style="width:34px;height:14px;left:calc(58% + -18px);top:calc(55% + -1px);opacity:0.65"></div>
+  <div class="cloud" style="width:71px;height:29px;left:calc(58% + 0px);top:calc(55% + 1px);opacity:0.78"></div>
+  <div class="cloud" style="width:45px;height:19px;left:calc(58% + 23px);top:calc(55% + -2px);opacity:0.57"></div>
+  <div class="cloud" style="width:49px;height:22px;left:calc(67% + -64px);top:calc(45% + -3px);opacity:0.70"></div>
+  <div class="cloud" style="width:69px;height:25px;left:calc(67% + -54px);top:calc(45% + 5px);opacity:0.78"></div>
+  <div class="cloud" style="width:72px;height:25px;left:calc(67% + -19px);top:calc(45% + -5px);opacity:0.53"></div>
+  <div class="cloud" style="width:66px;height:32px;left:calc(67% + 17px);top:calc(45% + -3px);opacity:0.73"></div>
+  <div class="cloud" style="width:50px;height:20px;left:calc(67% + 39px);top:calc(45% + 4px);opacity:0.66"></div>
+  <div class="cloud" style="width:45px;height:21px;left:calc(76% + -58px);top:calc(52% + 5px);opacity:0.54"></div>
+  <div class="cloud" style="width:64px;height:27px;left:calc(76% + -50px);top:calc(52% + 4px);opacity:0.70"></div>
+  <div class="cloud" style="width:51px;height:19px;left:calc(76% + -13px);top:calc(52% + 4px);opacity:0.74"></div>
+  <div class="cloud" style="width:38px;height:14px;left:calc(76% + 10px);top:calc(52% + -1px);opacity:0.52"></div>
+  <div class="cloud" style="width:45px;height:17px;left:calc(76% + 35px);top:calc(52% + 0px);opacity:0.81"></div>
+  <div class="cloud" style="width:57px;height:20px;left:calc(85% + -44px);top:calc(48% + -0px);opacity:0.61"></div>
+  <div class="cloud" style="width:67px;height:29px;left:calc(85% + -17px);top:calc(48% + -4px);opacity:0.51"></div>
+  <div class="cloud" style="width:35px;height:14px;left:calc(85% + 9px);top:calc(48% + -1px);opacity:0.60"></div>
+  <div class="cloud" style="width:35px;height:15px;left:calc(93% + -27px);top:calc(43% + -4px);opacity:0.52"></div>
+  <div class="cloud" style="width:53px;height:20px;left:calc(93% + -14px);top:calc(43% + 5px);opacity:0.52"></div>
+  <div class="cloud" style="width:68px;height:27px;left:calc(93% + 18px);top:calc(43% + -5px);opacity:0.80"></div>
+  <div class="cloud" style="width:42px;height:19px;left:calc(19% + -55px);top:calc(62% + 4px);opacity:0.30"></div>
+  <div class="cloud" style="width:64px;height:30px;left:calc(19% + -50px);top:calc(62% + 4px);opacity:0.31"></div>
+  <div class="cloud" style="width:35px;height:16px;left:calc(19% + -9px);top:calc(62% + 1px);opacity:0.34"></div>
+  <div class="cloud" style="width:58px;height:23px;left:calc(19% + 15px);top:calc(62% + -5px);opacity:0.25"></div>
+  <div class="cloud" style="width:39px;height:17px;left:calc(19% + 30px);top:calc(62% + 5px);opacity:0.38"></div>
+  <div class="cloud" style="width:55px;height:22px;left:calc(46% + -72px);top:calc(64% + 2px);opacity:0.33"></div>
+  <div class="cloud" style="width:62px;height:25px;left:calc(46% + -48px);top:calc(64% + 0px);opacity:0.32"></div>
+  <div class="cloud" style="width:66px;height:22px;left:calc(46% + -17px);top:calc(64% + 1px);opacity:0.32"></div>
+  <div class="cloud" style="width:48px;height:23px;left:calc(46% + 12px);top:calc(64% + -4px);opacity:0.36"></div>
+  <div class="cloud" style="width:65px;height:24px;left:calc(46% + 51px);top:calc(64% + -5px);opacity:0.29"></div>
+  <div class="cloud" style="width:73px;height:27px;left:calc(72% + -95px);top:calc(63% + -3px);opacity:0.38"></div>
+  <div class="cloud" style="width:62px;height:26px;left:calc(72% + -48px);top:calc(63% + -3px);opacity:0.30"></div>
+  <div class="cloud" style="width:50px;height:18px;left:calc(72% + -13px);top:calc(63% + -1px);opacity:0.37"></div>
+  <div class="cloud" style="width:46px;height:22px;left:calc(72% + 12px);top:calc(63% + -1px);opacity:0.33"></div>
+  <div class="cloud" style="width:54px;height:20px;left:calc(72% + 42px);top:calc(63% + -4px);opacity:0.30"></div>
+  <div class="wrap">
+    <div class="skybar meta">
+      <span>Brand identity &middot; v1.0</span>
+      <span>Every colour sampled from one photograph</span>
+    </div>
+    <div class="skyfield"></div>
+  </div>
+</header>
+
+<div class="mastwrap">
+  <div class="wrap">
+    <svg class="mastlogo" viewBox="0 0 700 118" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="The Prairie Post">
+      <path d="M16.14 0.00V-53.10H1.50V-66.00H45.69V-53.10H31.18V0.00Z M53.96 0.00V-66.00H69.01V-39.90H82.03V-66.00H97.04V0.00H82.03V-27.05H69.01V0.00Z M108.61 0.00V-66.00H147.89V-53.24H123.65V-39.90H144.35V-27.16H123.65V-12.76H148.36V0.00Z M171.85 0.00V-66.00H196.76Q203.26 -66.00 207.20 -63.32Q211.15 -60.64 212.95 -55.82Q214.75 -50.99 214.75 -44.55Q214.75 -37.91 212.78 -32.87Q210.81 -27.83 206.83 -24.97Q202.85 -22.11 196.73 -22.11H186.89V0.00ZM186.89 -34.44H193.53Q196.79 -34.44 198.17 -37.11Q199.55 -39.79 199.55 -44.09Q199.55 -47.25 198.97 -49.36Q198.38 -51.47 197.00 -52.52Q195.63 -53.56 193.24 -53.56H186.89Z M222.54 0.00V-66.00H247.21Q254.52 -66.00 258.69 -63.35Q262.86 -60.71 264.63 -56.21Q266.39 -51.72 266.39 -46.17Q266.39 -40.32 264.76 -35.59Q263.13 -30.85 259.36 -28.00L268.60 0.00H252.80L245.75 -23.38H237.58V0.00ZM237.58 -35.45H245.00Q248.46 -35.45 249.86 -38.10Q251.27 -40.76 251.27 -44.90Q251.27 -47.67 250.65 -49.61Q250.03 -51.55 248.65 -52.60Q247.27 -53.65 244.78 -53.65H237.58Z M271.32 0.00 287.01 -66.00H307.08L322.82 0.00H306.97L304.44 -12.12H289.13L286.68 0.00ZM291.31 -24.44H302.31L299.05 -41.48Q298.91 -42.27 298.69 -43.58Q298.47 -44.89 298.21 -46.49Q297.95 -48.08 297.68 -49.68Q297.41 -51.27 297.19 -52.59H296.47Q296.23 -50.96 295.90 -48.89Q295.57 -46.82 295.23 -44.85Q294.90 -42.87 294.60 -41.48Z M329.68 0.00V-66.00H344.72V0.00Z M356.27 0.00V-66.00H380.93Q388.24 -66.00 392.42 -63.35Q396.59 -60.71 398.35 -56.21Q400.12 -51.72 400.12 -46.17Q400.12 -40.32 398.49 -35.59Q396.86 -30.85 393.09 -28.00L402.33 0.00H386.53L379.48 -23.38H371.31V0.00ZM371.31 -35.45H378.73Q382.19 -35.45 383.59 -38.10Q384.99 -40.76 384.99 -44.90Q384.99 -47.67 384.38 -49.61Q383.76 -51.55 382.38 -52.60Q381.00 -53.65 378.51 -53.65H371.31Z M409.74 0.00V-66.00H424.78V0.00Z M436.36 0.00V-66.00H475.64V-53.24H451.40V-39.90H472.09V-27.16H451.40V-12.76H476.10V0.00Z M499.60 0.00V-66.00H524.50Q531.00 -66.00 534.95 -63.32Q538.89 -60.64 540.69 -55.82Q542.49 -50.99 542.49 -44.55Q542.49 -37.91 540.52 -32.87Q538.55 -27.83 534.57 -24.97Q530.59 -22.11 524.47 -22.11H514.64V0.00ZM514.64 -34.44H521.28Q524.54 -34.44 525.92 -37.11Q527.30 -39.79 527.30 -44.09Q527.30 -47.25 526.71 -49.36Q526.13 -51.47 524.75 -52.52Q523.37 -53.56 520.98 -53.56H514.64Z M573.56 1.15Q565.36 1.15 559.84 -2.41Q554.32 -5.97 551.52 -13.52Q548.73 -21.07 548.73 -32.98Q548.73 -44.91 551.52 -52.45Q554.32 -59.99 559.84 -63.57Q565.36 -67.15 573.56 -67.15Q581.81 -67.15 587.34 -63.57Q592.88 -59.99 595.64 -52.45Q598.39 -44.91 598.39 -32.98Q598.39 -21.07 595.64 -13.52Q592.88 -5.97 587.34 -2.41Q581.81 1.15 573.56 1.15ZM573.56 -11.56Q576.24 -11.56 578.04 -12.65Q579.85 -13.74 580.97 -15.84Q582.08 -17.94 582.58 -20.99Q583.08 -24.04 583.08 -27.99V-38.03Q583.08 -41.98 582.58 -45.02Q582.08 -48.05 580.97 -50.15Q579.85 -52.26 578.04 -53.35Q576.24 -54.44 573.56 -54.44Q570.91 -54.44 569.09 -53.35Q567.26 -52.26 566.15 -50.15Q565.03 -48.05 564.54 -45.02Q564.04 -41.98 564.04 -38.03V-27.99Q564.04 -24.04 564.54 -20.99Q565.03 -17.94 566.15 -15.84Q567.26 -13.74 569.09 -12.65Q570.91 -11.56 573.56 -11.56Z M627.76 1.15Q623.25 1.15 619.36 0.25Q615.47 -0.65 612.53 -2.92Q609.59 -5.20 607.94 -9.19Q606.28 -13.18 606.28 -19.39Q606.28 -19.72 606.28 -20.30Q606.28 -20.89 606.33 -21.26H620.74Q620.73 -20.81 620.73 -20.32Q620.73 -19.83 620.73 -19.37Q620.73 -16.27 621.49 -14.54Q622.25 -12.81 623.71 -12.11Q625.16 -11.41 627.24 -11.41Q628.46 -11.41 629.43 -11.66Q630.40 -11.91 631.18 -12.45Q631.95 -13.00 632.47 -13.80Q632.99 -14.60 633.23 -15.70Q633.48 -16.80 633.48 -18.19Q633.48 -20.41 632.37 -21.92Q631.26 -23.44 629.38 -24.53Q627.50 -25.62 625.17 -26.58Q622.83 -27.53 620.32 -28.59Q617.81 -29.65 615.47 -31.12Q613.14 -32.59 611.26 -34.74Q609.39 -36.89 608.28 -39.94Q607.17 -43.00 607.17 -47.29Q607.17 -52.67 608.82 -56.46Q610.46 -60.24 613.36 -62.61Q616.26 -64.97 619.94 -66.08Q623.63 -67.19 627.71 -67.19Q631.91 -67.19 635.52 -66.20Q639.12 -65.21 641.79 -63.05Q644.47 -60.89 645.97 -57.34Q647.47 -53.80 647.48 -48.70V-46.46H633.27V-47.68Q633.27 -49.89 632.77 -51.42Q632.27 -52.95 631.11 -53.78Q629.96 -54.61 627.88 -54.61Q626.15 -54.61 624.90 -53.98Q623.66 -53.36 623.04 -52.12Q622.42 -50.88 622.42 -48.99Q622.42 -46.66 623.53 -45.07Q624.64 -43.47 626.54 -42.36Q628.43 -41.26 630.77 -40.31Q633.10 -39.35 635.59 -38.32Q638.09 -37.28 640.42 -35.85Q642.75 -34.41 644.65 -32.31Q646.55 -30.21 647.66 -27.20Q648.77 -24.20 648.77 -19.97Q648.77 -12.71 646.18 -8.04Q643.59 -3.36 638.88 -1.11Q634.18 1.15 627.76 1.15Z M668.84 0.00V-53.10H654.21V-66.00H698.40V-53.10H683.89V0.00Z" transform="translate(0,96)" fill="var(--shelterbelt)"/>
+    </svg>
+    <div class="horizon horizon--full" style="margin-top:8px"></div>
+    <div class="tagline">
+      <span class="meta">News to the horizon</span>
+      <span class="meta" style="color:#5A6A5C">Sampled 07.08.2026 &middot; 1024&times;1024 px source</span>
+    </div>
+  </div>
+</div>
+
+<main class="wrap">
+
+<!-- ============ 01 THE IDEA ============ -->
+<section id="idea">
+  <div class="sechead"><span class="secnum">01</span><h2 class="sectitle">The idea</h2></div>
+  <p class="lede">A prairie photograph is two shapes: sky and land, divided by one hard line. The Prairie Post is built on that line.</p>
+  <p>The horizon rule runs under the masthead, under every section head, and under every card. It is the only structural device the brand needs, and it carries meaning — above it, the open field the paper reserves for its own name; below it, the reporting. Everything else stays quiet.</p>
+  <p>The wordmark borrows from prairie signwriting rather than Fleet Street: heavy condensed capitals, the lettering painted on grain elevators and highway signs across the west. It reads at 300&nbsp;px on a homepage and at 40&nbsp;px on a phone, which is where most of the audience will meet it.</p>
+  <p class="note">Positioning &mdash; a regional daily for people who live between the towns: farm and market news alongside council, courts, weather and community. Plain, close to the ground, unhurried, never folksy.</p>
+</section>
+
+<!-- ============ 02 PALETTE ============ -->
+<section id="palette">
+  <div class="sechead"><span class="secnum">02</span><h2 class="sectitle">Palette</h2></div>
+  <p class="lede">Twelve colours, each one taken from a pixel coordinate in the source photograph &mdash; or, in one honest exception, admitted not to be.</p>
+  <p class="note">Contrast figures are measured against Cloudbank <span class="mono">#F1F2F0</span>. Anything below 4.5:1 is a fill colour and must never carry body text.</p>
+
+  <div class="swatches"><div class="sw">
+      <div class="chip" style="background:#17301C"><span class="ratio">12.7:1</span></div>
+      <div class="body"><h4>Shelterbelt</h4><span class="hex">#17301C</span>
+      <p class="use">Primary ink. Masthead, headlines, the horizon rule, reversed panels.</p><span class="from">Spruce &amp; hill @ 115,655</span></div></div>
+<div class="sw">
+      <div class="chip" style="background:#3F5A22"><span class="ratio">6.9:1</span></div>
+      <div class="body"><h4>Quarter Section</h4><span class="hex">#3F5A22</span>
+      <p class="use">Agriculture desk. Secondary ink for standfirsts and pull quotes.</p><span class="from">Distant hill @ 630,477</span></div></div>
+<div class="sw">
+      <div class="chip" style="background:#58651C"><span class="ratio">5.7:1</span></div>
+      <div class="body"><h4>Field</h4><span class="hex">#58651C</span>
+      <p class="use">Charts and data series. First colour in any two-series graphic.</p><span class="from">Foreground grass @ 275,780</span></div></div>
+<div class="sw">
+      <div class="chip" style="background:#6F5535"><span class="ratio">6.2:1</span></div>
+      <div class="body"><h4>Fencepost</h4><span class="hex">#6F5535</span>
+      <p class="use">Community desk. Warm ink for features and obituaries.</p><span class="from">House roof @ 790,597</span></div></div>
+<div class="sw">
+      <div class="chip" style="background:#7A661F"><span class="ratio">5.0:1</span></div>
+      <div class="body"><h4>Stubble</h4><span class="hex">#7A661F</span>
+      <p class="use">Business &amp; markets desk. Section numbers and mono labels.</p><span class="from">Dry grass @ 500,960</span></div></div>
+<div class="sw">
+      <div class="chip" style="background:#9C3B22"><span class="ratio">6.1:1</span></div>
+      <div class="body"><h4>Bin Red</h4><span class="hex">#9C3B22</span>
+      <p class="use">Live coverage, corrections, opinion. Rationed &mdash; one per screen.</p><span class="from">Not in the photograph</span></div></div>
+<div class="sw">
+      <div class="chip" style="background:#2F6C99"><span class="ratio">5.0:1</span></div>
+      <div class="body"><h4>Big Sky</h4><span class="hex">#2F6C99</span>
+      <p class="use">Links and interactive states. The only blue that may carry text.</p><span class="from">Upper sky @ 430,45</span></div></div>
+<div class="sw">
+      <div class="chip" style="background:#77B2D6"><span class="ratio">2.0:1 &middot; fill only</span></div>
+      <div class="body"><h4>Noon Sky</h4><span class="hex">#77B2D6</span>
+      <p class="use">Weather blocks, masthead sky field, subscribe buttons. Fill only.</p><span class="from">Upper sky, exact</span></div></div>
+<div class="sw">
+      <div class="chip" style="background:#A9CDE4"><span class="ratio">1.5:1 &middot; fill only</span></div>
+      <div class="body"><h4>High Sky</h4><span class="hex">#A9CDE4</span>
+      <p class="use">Tints, hover beds, table stripes. Fill only.</p><span class="from">Low sky @ 220,315</span></div></div>
+<div class="sw">
+      <div class="chip" style="background:#B99A45"><span class="ratio">2.4:1 &middot; fill only</span></div>
+      <div class="body"><h4>Straw</h4><span class="hex">#B99A45</span>
+      <p class="use">Highlight fills and print spot. Fill only.</p><span class="from">Weathered siding @ 785,627</span></div></div>
+<div class="sw">
+      <div class="chip" style="background:#C4C0B4"><span class="ratio">1.6:1 &middot; fill only</span></div>
+      <div class="body"><h4>Weathered Board</h4><span class="hex">#C4C0B4</span>
+      <p class="use">Hairlines and dividers. Never text, at any size.</p><span class="from">Cloud bank @ 450,265</span></div></div>
+<div class="sw">
+      <div class="chip" style="background:#F1F2F0"><span class="ratio">1.0:1 &middot; fill only</span></div>
+      <div class="body"><h4>Cloudbank</h4><span class="hex">#F1F2F0</span>
+      <p class="use">Page background. The paper is cool, not cream.</p><span class="from">Cloud, lifted</span></div></div></div>
+
+  <p class="note" style="margin-top:22px"><strong>On the red.</strong> There is no red anywhere in the photograph. A news brand still needs one signal colour for live coverage, corrections and opinion, so Bin Red is borrowed from the other thing that is always red on a prairie section: the paint on a grain bin and a barn door. It is the only colour in the system without a coordinate, and it is rationed accordingly &mdash; never as decoration, only as a signal.</p>
+</section>
+
+<!-- ============ 03 TYPE ============ -->
+<section id="type">
+  <div class="sechead"><span class="secnum">03</span><h2 class="sectitle">Type</h2></div>
+  <p class="lede">Three faces, three jobs, no overlap. All open-licence, all servable from your own domain.</p>
+
+  <div class="spec">
+    <div class="speclabel"><span class="meta">Display &mdash; Archivo</span><span class="meta" style="color:#5A6A5C">width 68 &middot; weight 800 &middot; caps &middot; +2% tracking</span></div>
+    <div class="display" style="font-size:clamp(38px,7.6vw,86px)">Grain elevator</div>
+    <p class="note" style="margin-top:14px">The masthead, section fronts and standing furniture. Archivo is a variable grotesque; running it narrow and heavy gets the painted-sign density without the novelty of a true elevator face. Never set body copy in it, and never let it go below width&nbsp;65 &mdash; past that the counters close.</p>
+  </div>
+
+  <div class="spec">
+    <div class="speclabel"><span class="meta">Body &mdash; Newsreader</span><span class="meta" style="color:#5A6A5C">weight 400 &middot; 19px / 1.62</span></div>
+    <div style="font-family:var(--body);font-size:clamp(24px,3.6vw,38px);line-height:1.24;max-width:22ch">Council votes 5&ndash;2 to keep the grader</div>
+    <p style="margin-top:12px">Article text, ledes and headlines inside stories. Newsreader was drawn for screen news at reading sizes and holds up in a long scroll where a high-contrast display serif would fall apart. Italics for ship-and-vessel names, publication titles and quoted terms only.</p>
+  </div>
+
+  <div class="spec">
+    <div class="speclabel"><span class="meta">Utility &mdash; IBM Plex Mono</span><span class="meta" style="color:#5A6A5C">weights 400/500/600</span></div>
+    <div class="mono" style="font-size:clamp(15px,2.2vw,21px);letter-spacing:.02em">CANOLA NOV&nbsp;&nbsp;687.40&nbsp;&nbsp;+4.10&nbsp;&nbsp;&nbsp;WHEAT&nbsp;CWRS&nbsp;&nbsp;318.75&nbsp;&nbsp;&minus;1.25</div>
+    <p class="note" style="margin-top:14px">Datelines, bylines, timestamps, section labels, and the price tables the paper actually gets read for. Monospace is not a style choice here &mdash; the figures have to align in a column, and the wire-service register is the correct voice for data.</p>
+  </div>
+
+  <div class="tscroll"><table class="scale">
+    <thead><tr><th>Role</th><th>Face</th><th>Size / line</th><th>Notes</th></tr></thead>
+    <tbody>
+      <tr><td>Masthead</td><td class="mono">Archivo 68/800 caps</td><td class="mono">clamp(44, 12vw, 116)</td><td>Sits on the horizon rule. Never below 40px.</td></tr>
+      <tr><td>Section front</td><td class="mono">Archivo 70/800 caps</td><td class="mono">clamp(26, 4.4vw, 40) / 1.0</td><td>Always paired with a two-digit mono label.</td></tr>
+      <tr><td>Story headline</td><td class="mono">Archivo 78/700</td><td class="mono">clamp(27, 3.6vw, 39) / 1.03</td><td>Sentence case. Caps are for the paper's own name.</td></tr>
+      <tr><td>Lede</td><td class="mono">Newsreader 400 italic</td><td class="mono">22 / 1.5</td><td>One sentence, 30 words maximum.</td></tr>
+      <tr><td>Body</td><td class="mono">Newsreader 400</td><td class="mono">19 / 1.62</td><td>Measure capped at 68 characters.</td></tr>
+      <tr><td>Dateline &amp; byline</td><td class="mono">Plex Mono 500 caps</td><td class="mono">11 / 1.4, +.16em</td><td>Place name first, then the reporter.</td></tr>
+      <tr><td>Caption</td><td class="mono">Newsreader 300 italic</td><td class="mono">15 / 1.45</td><td>Credit in Plex Mono, same line.</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<!-- ============ 04 LOGO ============ -->
+<section id="logo">
+  <div class="sechead"><span class="secnum">04</span><h2 class="sectitle">Logo</h2></div>
+  <p class="lede">Primary is the wordmark on the rule. The farmstead only appears where the wordmark cannot go wide.</p>
+
+  <div class="logogrid">
+    <div class="logocell" style="background:#fff">
+      <svg viewBox="0 0 700 142" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="The Prairie Post primary lockup">
+        <path d="M16.14 0.00V-53.10H1.50V-66.00H45.69V-53.10H31.18V0.00Z M53.96 0.00V-66.00H69.01V-39.90H82.03V-66.00H97.04V0.00H82.03V-27.05H69.01V0.00Z M108.61 0.00V-66.00H147.89V-53.24H123.65V-39.90H144.35V-27.16H123.65V-12.76H148.36V0.00Z M171.85 0.00V-66.00H196.76Q203.26 -66.00 207.20 -63.32Q211.15 -60.64 212.95 -55.82Q214.75 -50.99 214.75 -44.55Q214.75 -37.91 212.78 -32.87Q210.81 -27.83 206.83 -24.97Q202.85 -22.11 196.73 -22.11H186.89V0.00ZM186.89 -34.44H193.53Q196.79 -34.44 198.17 -37.11Q199.55 -39.79 199.55 -44.09Q199.55 -47.25 198.97 -49.36Q198.38 -51.47 197.00 -52.52Q195.63 -53.56 193.24 -53.56H186.89Z M222.54 0.00V-66.00H247.21Q254.52 -66.00 258.69 -63.35Q262.86 -60.71 264.63 -56.21Q266.39 -51.72 266.39 -46.17Q266.39 -40.32 264.76 -35.59Q263.13 -30.85 259.36 -28.00L268.60 0.00H252.80L245.75 -23.38H237.58V0.00ZM237.58 -35.45H245.00Q248.46 -35.45 249.86 -38.10Q251.27 -40.76 251.27 -44.90Q251.27 -47.67 250.65 -49.61Q250.03 -51.55 248.65 -52.60Q247.27 -53.65 244.78 -53.65H237.58Z M271.32 0.00 287.01 -66.00H307.08L322.82 0.00H306.97L304.44 -12.12H289.13L286.68 0.00ZM291.31 -24.44H302.31L299.05 -41.48Q298.91 -42.27 298.69 -43.58Q298.47 -44.89 298.21 -46.49Q297.95 -48.08 297.68 -49.68Q297.41 -51.27 297.19 -52.59H296.47Q296.23 -50.96 295.90 -48.89Q295.57 -46.82 295.23 -44.85Q294.90 -42.87 294.60 -41.48Z M329.68 0.00V-66.00H344.72V0.00Z M356.27 0.00V-66.00H380.93Q388.24 -66.00 392.42 -63.35Q396.59 -60.71 398.35 -56.21Q400.12 -51.72 400.12 -46.17Q400.12 -40.32 398.49 -35.59Q396.86 -30.85 393.09 -28.00L402.33 0.00H386.53L379.48 -23.38H371.31V0.00ZM371.31 -35.45H378.73Q382.19 -35.45 383.59 -38.10Q384.99 -40.76 384.99 -44.90Q384.99 -47.67 384.38 -49.61Q383.76 -51.55 382.38 -52.60Q381.00 -53.65 378.51 -53.65H371.31Z M409.74 0.00V-66.00H424.78V0.00Z M436.36 0.00V-66.00H475.64V-53.24H451.40V-39.90H472.09V-27.16H451.40V-12.76H476.10V0.00Z M499.60 0.00V-66.00H524.50Q531.00 -66.00 534.95 -63.32Q538.89 -60.64 540.69 -55.82Q542.49 -50.99 542.49 -44.55Q542.49 -37.91 540.52 -32.87Q538.55 -27.83 534.57 -24.97Q530.59 -22.11 524.47 -22.11H514.64V0.00ZM514.64 -34.44H521.28Q524.54 -34.44 525.92 -37.11Q527.30 -39.79 527.30 -44.09Q527.30 -47.25 526.71 -49.36Q526.13 -51.47 524.75 -52.52Q523.37 -53.56 520.98 -53.56H514.64Z M573.56 1.15Q565.36 1.15 559.84 -2.41Q554.32 -5.97 551.52 -13.52Q548.73 -21.07 548.73 -32.98Q548.73 -44.91 551.52 -52.45Q554.32 -59.99 559.84 -63.57Q565.36 -67.15 573.56 -67.15Q581.81 -67.15 587.34 -63.57Q592.88 -59.99 595.64 -52.45Q598.39 -44.91 598.39 -32.98Q598.39 -21.07 595.64 -13.52Q592.88 -5.97 587.34 -2.41Q581.81 1.15 573.56 1.15ZM573.56 -11.56Q576.24 -11.56 578.04 -12.65Q579.85 -13.74 580.97 -15.84Q582.08 -17.94 582.58 -20.99Q583.08 -24.04 583.08 -27.99V-38.03Q583.08 -41.98 582.58 -45.02Q582.08 -48.05 580.97 -50.15Q579.85 -52.26 578.04 -53.35Q576.24 -54.44 573.56 -54.44Q570.91 -54.44 569.09 -53.35Q567.26 -52.26 566.15 -50.15Q565.03 -48.05 564.54 -45.02Q564.04 -41.98 564.04 -38.03V-27.99Q564.04 -24.04 564.54 -20.99Q565.03 -17.94 566.15 -15.84Q567.26 -13.74 569.09 -12.65Q570.91 -11.56 573.56 -11.56Z M627.76 1.15Q623.25 1.15 619.36 0.25Q615.47 -0.65 612.53 -2.92Q609.59 -5.20 607.94 -9.19Q606.28 -13.18 606.28 -19.39Q606.28 -19.72 606.28 -20.30Q606.28 -20.89 606.33 -21.26H620.74Q620.73 -20.81 620.73 -20.32Q620.73 -19.83 620.73 -19.37Q620.73 -16.27 621.49 -14.54Q622.25 -12.81 623.71 -12.11Q625.16 -11.41 627.24 -11.41Q628.46 -11.41 629.43 -11.66Q630.40 -11.91 631.18 -12.45Q631.95 -13.00 632.47 -13.80Q632.99 -14.60 633.23 -15.70Q633.48 -16.80 633.48 -18.19Q633.48 -20.41 632.37 -21.92Q631.26 -23.44 629.38 -24.53Q627.50 -25.62 625.17 -26.58Q622.83 -27.53 620.32 -28.59Q617.81 -29.65 615.47 -31.12Q613.14 -32.59 611.26 -34.74Q609.39 -36.89 608.28 -39.94Q607.17 -43.00 607.17 -47.29Q607.17 -52.67 608.82 -56.46Q610.46 -60.24 613.36 -62.61Q616.26 -64.97 619.94 -66.08Q623.63 -67.19 627.71 -67.19Q631.91 -67.19 635.52 -66.20Q639.12 -65.21 641.79 -63.05Q644.47 -60.89 645.97 -57.34Q647.47 -53.80 647.48 -48.70V-46.46H633.27V-47.68Q633.27 -49.89 632.77 -51.42Q632.27 -52.95 631.11 -53.78Q629.96 -54.61 627.88 -54.61Q626.15 -54.61 624.90 -53.98Q623.66 -53.36 623.04 -52.12Q622.42 -50.88 622.42 -48.99Q622.42 -46.66 623.53 -45.07Q624.64 -43.47 626.54 -42.36Q628.43 -41.26 630.77 -40.31Q633.10 -39.35 635.59 -38.32Q638.09 -37.28 640.42 -35.85Q642.75 -34.41 644.65 -32.31Q646.55 -30.21 647.66 -27.20Q648.77 -24.20 648.77 -19.97Q648.77 -12.71 646.18 -8.04Q643.59 -3.36 638.88 -1.11Q634.18 1.15 627.76 1.15Z M668.84 0.00V-53.10H654.21V-66.00H698.40V-53.10H683.89V0.00Z" transform="translate(0,96)" fill="var(--shelterbelt)"/>
+        <rect x="0" y="104" width="700" height="4" fill="var(--shelterbelt)"/>
+        <rect x="0" y="110" width="700" height="1" fill="var(--board)"/>
+        <path d="M1.14 0.00V-9.60H2.64L7.03 -3.59Q7.11 -3.50 7.21 -3.34Q7.32 -3.19 7.42 -3.03Q7.51 -2.88 7.56 -2.78H7.63Q7.63 -2.99 7.63 -3.19Q7.63 -3.39 7.63 -3.59V-9.60H9.14V0.00H7.69L3.25 -6.10Q3.14 -6.25 2.97 -6.52Q2.80 -6.78 2.71 -6.92H2.65Q2.65 -6.72 2.65 -6.51Q2.65 -6.31 2.65 -6.10V0.00Z M16.17 0.00V-9.60H23.61V-8.26H17.74V-5.58H23.00V-4.24H17.74V-1.34H23.70V0.00Z M32.03 0.00 29.39 -9.60H31.05L32.68 -3.27Q32.73 -3.12 32.78 -2.85Q32.84 -2.59 32.89 -2.30Q32.95 -2.01 32.99 -1.78H33.07Q33.11 -1.96 33.13 -2.17Q33.16 -2.38 33.20 -2.59Q33.24 -2.81 33.28 -2.98Q33.31 -3.16 33.34 -3.27L34.85 -9.60H36.87L38.39 -3.27Q38.43 -3.12 38.48 -2.85Q38.54 -2.59 38.59 -2.30Q38.64 -2.01 38.68 -1.78H38.76Q38.80 -1.95 38.84 -2.16Q38.88 -2.36 38.92 -2.57Q38.97 -2.77 39.01 -2.96Q39.06 -3.14 39.09 -3.27L40.73 -9.60H42.21L39.56 0.00H37.73L36.12 -6.42Q36.07 -6.62 36.02 -6.89Q35.96 -7.17 35.92 -7.45Q35.87 -7.74 35.84 -7.95H35.77Q35.75 -7.73 35.70 -7.44Q35.66 -7.14 35.60 -6.87Q35.55 -6.60 35.51 -6.42L33.92 0.00Z M51.82 0.17Q51.03 0.17 50.30 0.00Q49.58 -0.16 49.02 -0.52Q48.46 -0.87 48.13 -1.42Q47.81 -1.97 47.81 -2.75Q47.81 -2.83 47.81 -2.90Q47.82 -2.98 47.82 -3.04H49.40Q49.39 -3.00 49.39 -2.91Q49.38 -2.83 49.38 -2.77Q49.38 -2.25 49.68 -1.89Q49.99 -1.53 50.54 -1.35Q51.09 -1.16 51.82 -1.16Q52.21 -1.16 52.57 -1.21Q52.94 -1.26 53.24 -1.36Q53.54 -1.47 53.77 -1.63Q53.99 -1.79 54.11 -2.02Q54.23 -2.24 54.23 -2.54Q54.23 -2.98 53.97 -3.27Q53.71 -3.56 53.27 -3.76Q52.83 -3.96 52.28 -4.11Q51.73 -4.26 51.14 -4.42Q50.55 -4.57 50.00 -4.78Q49.45 -4.99 49.01 -5.29Q48.57 -5.59 48.31 -6.05Q48.05 -6.52 48.05 -7.17Q48.05 -7.80 48.31 -8.29Q48.58 -8.78 49.08 -9.11Q49.58 -9.44 50.29 -9.60Q50.99 -9.77 51.87 -9.77Q52.63 -9.77 53.30 -9.61Q53.96 -9.45 54.47 -9.12Q54.98 -8.78 55.27 -8.26Q55.55 -7.75 55.55 -7.03V-6.86H54.00V-7.04Q54.00 -7.48 53.73 -7.79Q53.46 -8.10 52.98 -8.27Q52.51 -8.44 51.89 -8.44Q51.14 -8.44 50.64 -8.30Q50.14 -8.15 49.88 -7.89Q49.62 -7.62 49.62 -7.26Q49.62 -6.87 49.88 -6.60Q50.14 -6.34 50.58 -6.15Q51.02 -5.97 51.58 -5.83Q52.13 -5.68 52.72 -5.52Q53.30 -5.36 53.85 -5.15Q54.41 -4.95 54.85 -4.64Q55.29 -4.33 55.55 -3.87Q55.81 -3.41 55.81 -2.76Q55.81 -1.72 55.30 -1.07Q54.78 -0.42 53.88 -0.13Q52.98 0.17 51.82 0.17Z M72.38 0.00V-8.25H69.20V-9.60H77.15V-8.25H73.95V0.00Z M87.72 0.17Q86.22 0.17 85.14 -0.38Q84.05 -0.92 83.48 -2.03Q82.90 -3.13 82.90 -4.80Q82.90 -6.49 83.48 -7.58Q84.05 -8.68 85.14 -9.23Q86.22 -9.77 87.72 -9.77Q89.23 -9.77 90.30 -9.23Q91.38 -8.68 91.96 -7.58Q92.54 -6.49 92.54 -4.80Q92.54 -3.13 91.96 -2.03Q91.38 -0.92 90.30 -0.38Q89.23 0.17 87.72 0.17ZM87.72 -1.16Q88.48 -1.16 89.07 -1.37Q89.67 -1.59 90.08 -2.02Q90.50 -2.45 90.72 -3.11Q90.93 -3.76 90.93 -4.64V-4.94Q90.93 -5.83 90.72 -6.49Q90.50 -7.15 90.08 -7.58Q89.67 -8.02 89.07 -8.23Q88.48 -8.44 87.72 -8.44Q86.95 -8.44 86.36 -8.23Q85.77 -8.02 85.35 -7.58Q84.94 -7.15 84.73 -6.49Q84.51 -5.83 84.51 -4.94V-4.64Q84.51 -3.76 84.73 -3.11Q84.94 -2.45 85.35 -2.02Q85.77 -1.59 86.36 -1.37Q86.95 -1.16 87.72 -1.16Z M109.09 0.00V-8.25H105.91V-9.60H113.86V-8.25H110.65V0.00Z M120.07 0.00V-9.60H121.63V-5.59H126.51V-9.60H128.07V0.00H126.51V-4.24H121.63V0.00Z M135.10 0.00V-9.60H142.54V-8.26H136.67V-5.58H141.93V-4.24H136.67V-1.34H142.63V0.00Z M156.93 0.00V-9.60H158.49V-5.59H163.37V-9.60H164.93V0.00H163.37V-4.24H158.49V0.00Z M176.32 0.17Q174.83 0.17 173.74 -0.38Q172.66 -0.92 172.08 -2.03Q171.51 -3.13 171.51 -4.80Q171.51 -6.49 172.08 -7.58Q172.66 -8.68 173.74 -9.23Q174.83 -9.77 176.32 -9.77Q177.83 -9.77 178.91 -9.23Q179.99 -8.68 180.56 -7.58Q181.14 -6.49 181.14 -4.80Q181.14 -3.13 180.56 -2.03Q179.99 -0.92 178.91 -0.38Q177.83 0.17 176.32 0.17ZM176.32 -1.16Q177.08 -1.16 177.68 -1.37Q178.28 -1.59 178.69 -2.02Q179.10 -2.45 179.32 -3.11Q179.54 -3.76 179.54 -4.64V-4.94Q179.54 -5.83 179.32 -6.49Q179.10 -7.15 178.69 -7.58Q178.28 -8.02 177.68 -8.23Q177.08 -8.44 176.32 -8.44Q175.56 -8.44 174.97 -8.23Q174.37 -8.02 173.96 -7.58Q173.55 -7.15 173.33 -6.49Q173.12 -5.83 173.12 -4.94V-4.64Q173.12 -3.76 173.33 -3.11Q173.55 -2.45 173.96 -2.02Q174.37 -1.59 174.97 -1.37Q175.56 -1.16 176.32 -1.16Z M187.72 0.00V-9.60H192.77Q193.79 -9.60 194.46 -9.24Q195.14 -8.88 195.47 -8.23Q195.81 -7.58 195.81 -6.71Q195.81 -5.75 195.37 -5.03Q194.93 -4.31 194.14 -3.97L196.14 0.00H194.44L192.62 -3.71H189.28V0.00ZM189.28 -5.02H192.63Q193.39 -5.02 193.81 -5.47Q194.23 -5.93 194.23 -6.71Q194.23 -7.21 194.04 -7.55Q193.86 -7.89 193.51 -8.08Q193.16 -8.26 192.63 -8.26H189.28Z M202.58 0.00V-9.60H204.15V0.00Z M210.47 0.00V-0.77L215.97 -8.26H210.84V-9.60H218.28V-8.83L212.78 -1.34H218.41V0.00Z M229.19 0.17Q227.69 0.17 226.61 -0.38Q225.52 -0.92 224.95 -2.03Q224.37 -3.13 224.37 -4.80Q224.37 -6.49 224.95 -7.58Q225.52 -8.68 226.61 -9.23Q227.69 -9.77 229.19 -9.77Q230.70 -9.77 231.77 -9.23Q232.85 -8.68 233.43 -7.58Q234.01 -6.49 234.01 -4.80Q234.01 -3.13 233.43 -2.03Q232.85 -0.92 231.77 -0.38Q230.70 0.17 229.19 0.17ZM229.19 -1.16Q229.95 -1.16 230.54 -1.37Q231.14 -1.59 231.55 -2.02Q231.97 -2.45 232.19 -3.11Q232.40 -3.76 232.40 -4.64V-4.94Q232.40 -5.83 232.19 -6.49Q231.97 -7.15 231.55 -7.58Q231.14 -8.02 230.54 -8.23Q229.95 -8.44 229.19 -8.44Q228.42 -8.44 227.83 -8.23Q227.24 -8.02 226.82 -7.58Q226.41 -7.15 226.20 -6.49Q225.98 -5.83 225.98 -4.94V-4.64Q225.98 -3.76 226.20 -3.11Q226.41 -2.45 226.82 -2.02Q227.24 -1.59 227.83 -1.37Q228.42 -1.16 229.19 -1.16Z M240.58 0.00V-9.60H242.08L246.48 -3.59Q246.55 -3.50 246.66 -3.34Q246.76 -3.19 246.86 -3.03Q246.96 -2.88 247.00 -2.78H247.07Q247.07 -2.99 247.07 -3.19Q247.07 -3.39 247.07 -3.59V-9.60H248.58V0.00H247.13L242.69 -6.10Q242.58 -6.25 242.41 -6.52Q242.25 -6.78 242.16 -6.92H242.09Q242.09 -6.72 242.09 -6.51Q242.09 -6.31 242.09 -6.10V0.00Z" transform="translate(1,136)" fill="var(--shelterbelt)"/>
+      </svg>
+      <span class="cellcap">Primary &middot; horizontal</span>
+    </div>
+
+    <div class="logocell" style="background:var(--shelterbelt);color:var(--cloudbank)">
+      <svg viewBox="0 0 700 142" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="The Prairie Post reversed lockup">
+        <path d="M16.14 0.00V-53.10H1.50V-66.00H45.69V-53.10H31.18V0.00Z M53.96 0.00V-66.00H69.01V-39.90H82.03V-66.00H97.04V0.00H82.03V-27.05H69.01V0.00Z M108.61 0.00V-66.00H147.89V-53.24H123.65V-39.90H144.35V-27.16H123.65V-12.76H148.36V0.00Z M171.85 0.00V-66.00H196.76Q203.26 -66.00 207.20 -63.32Q211.15 -60.64 212.95 -55.82Q214.75 -50.99 214.75 -44.55Q214.75 -37.91 212.78 -32.87Q210.81 -27.83 206.83 -24.97Q202.85 -22.11 196.73 -22.11H186.89V0.00ZM186.89 -34.44H193.53Q196.79 -34.44 198.17 -37.11Q199.55 -39.79 199.55 -44.09Q199.55 -47.25 198.97 -49.36Q198.38 -51.47 197.00 -52.52Q195.63 -53.56 193.24 -53.56H186.89Z M222.54 0.00V-66.00H247.21Q254.52 -66.00 258.69 -63.35Q262.86 -60.71 264.63 -56.21Q266.39 -51.72 266.39 -46.17Q266.39 -40.32 264.76 -35.59Q263.13 -30.85 259.36 -28.00L268.60 0.00H252.80L245.75 -23.38H237.58V0.00ZM237.58 -35.45H245.00Q248.46 -35.45 249.86 -38.10Q251.27 -40.76 251.27 -44.90Q251.27 -47.67 250.65 -49.61Q250.03 -51.55 248.65 -52.60Q247.27 -53.65 244.78 -53.65H237.58Z M271.32 0.00 287.01 -66.00H307.08L322.82 0.00H306.97L304.44 -12.12H289.13L286.68 0.00ZM291.31 -24.44H302.31L299.05 -41.48Q298.91 -42.27 298.69 -43.58Q298.47 -44.89 298.21 -46.49Q297.95 -48.08 297.68 -49.68Q297.41 -51.27 297.19 -52.59H296.47Q296.23 -50.96 295.90 -48.89Q295.57 -46.82 295.23 -44.85Q294.90 -42.87 294.60 -41.48Z M329.68 0.00V-66.00H344.72V0.00Z M356.27 0.00V-66.00H380.93Q388.24 -66.00 392.42 -63.35Q396.59 -60.71 398.35 -56.21Q400.12 -51.72 400.12 -46.17Q400.12 -40.32 398.49 -35.59Q396.86 -30.85 393.09 -28.00L402.33 0.00H386.53L379.48 -23.38H371.31V0.00ZM371.31 -35.45H378.73Q382.19 -35.45 383.59 -38.10Q384.99 -40.76 384.99 -44.90Q384.99 -47.67 384.38 -49.61Q383.76 -51.55 382.38 -52.60Q381.00 -53.65 378.51 -53.65H371.31Z M409.74 0.00V-66.00H424.78V0.00Z M436.36 0.00V-66.00H475.64V-53.24H451.40V-39.90H472.09V-27.16H451.40V-12.76H476.10V0.00Z M499.60 0.00V-66.00H524.50Q531.00 -66.00 534.95 -63.32Q538.89 -60.64 540.69 -55.82Q542.49 -50.99 542.49 -44.55Q542.49 -37.91 540.52 -32.87Q538.55 -27.83 534.57 -24.97Q530.59 -22.11 524.47 -22.11H514.64V0.00ZM514.64 -34.44H521.28Q524.54 -34.44 525.92 -37.11Q527.30 -39.79 527.30 -44.09Q527.30 -47.25 526.71 -49.36Q526.13 -51.47 524.75 -52.52Q523.37 -53.56 520.98 -53.56H514.64Z M573.56 1.15Q565.36 1.15 559.84 -2.41Q554.32 -5.97 551.52 -13.52Q548.73 -21.07 548.73 -32.98Q548.73 -44.91 551.52 -52.45Q554.32 -59.99 559.84 -63.57Q565.36 -67.15 573.56 -67.15Q581.81 -67.15 587.34 -63.57Q592.88 -59.99 595.64 -52.45Q598.39 -44.91 598.39 -32.98Q598.39 -21.07 595.64 -13.52Q592.88 -5.97 587.34 -2.41Q581.81 1.15 573.56 1.15ZM573.56 -11.56Q576.24 -11.56 578.04 -12.65Q579.85 -13.74 580.97 -15.84Q582.08 -17.94 582.58 -20.99Q583.08 -24.04 583.08 -27.99V-38.03Q583.08 -41.98 582.58 -45.02Q582.08 -48.05 580.97 -50.15Q579.85 -52.26 578.04 -53.35Q576.24 -54.44 573.56 -54.44Q570.91 -54.44 569.09 -53.35Q567.26 -52.26 566.15 -50.15Q565.03 -48.05 564.54 -45.02Q564.04 -41.98 564.04 -38.03V-27.99Q564.04 -24.04 564.54 -20.99Q565.03 -17.94 566.15 -15.84Q567.26 -13.74 569.09 -12.65Q570.91 -11.56 573.56 -11.56Z M627.76 1.15Q623.25 1.15 619.36 0.25Q615.47 -0.65 612.53 -2.92Q609.59 -5.20 607.94 -9.19Q606.28 -13.18 606.28 -19.39Q606.28 -19.72 606.28 -20.30Q606.28 -20.89 606.33 -21.26H620.74Q620.73 -20.81 620.73 -20.32Q620.73 -19.83 620.73 -19.37Q620.73 -16.27 621.49 -14.54Q622.25 -12.81 623.71 -12.11Q625.16 -11.41 627.24 -11.41Q628.46 -11.41 629.43 -11.66Q630.40 -11.91 631.18 -12.45Q631.95 -13.00 632.47 -13.80Q632.99 -14.60 633.23 -15.70Q633.48 -16.80 633.48 -18.19Q633.48 -20.41 632.37 -21.92Q631.26 -23.44 629.38 -24.53Q627.50 -25.62 625.17 -26.58Q622.83 -27.53 620.32 -28.59Q617.81 -29.65 615.47 -31.12Q613.14 -32.59 611.26 -34.74Q609.39 -36.89 608.28 -39.94Q607.17 -43.00 607.17 -47.29Q607.17 -52.67 608.82 -56.46Q610.46 -60.24 613.36 -62.61Q616.26 -64.97 619.94 -66.08Q623.63 -67.19 627.71 -67.19Q631.91 -67.19 635.52 -66.20Q639.12 -65.21 641.79 -63.05Q644.47 -60.89 645.97 -57.34Q647.47 -53.80 647.48 -48.70V-46.46H633.27V-47.68Q633.27 -49.89 632.77 -51.42Q632.27 -52.95 631.11 -53.78Q629.96 -54.61 627.88 -54.61Q626.15 -54.61 624.90 -53.98Q623.66 -53.36 623.04 -52.12Q622.42 -50.88 622.42 -48.99Q622.42 -46.66 623.53 -45.07Q624.64 -43.47 626.54 -42.36Q628.43 -41.26 630.77 -40.31Q633.10 -39.35 635.59 -38.32Q638.09 -37.28 640.42 -35.85Q642.75 -34.41 644.65 -32.31Q646.55 -30.21 647.66 -27.20Q648.77 -24.20 648.77 -19.97Q648.77 -12.71 646.18 -8.04Q643.59 -3.36 638.88 -1.11Q634.18 1.15 627.76 1.15Z M668.84 0.00V-53.10H654.21V-66.00H698.40V-53.10H683.89V0.00Z" transform="translate(0,96)" fill="var(--cloudbank)"/>
+        <rect x="0" y="104" width="700" height="4" fill="var(--cloudbank)"/>
+        <rect x="0" y="110" width="700" height="1" fill="var(--cloudbank)" opacity=".45"/>
+        <path d="M1.14 0.00V-9.60H2.64L7.03 -3.59Q7.11 -3.50 7.21 -3.34Q7.32 -3.19 7.42 -3.03Q7.51 -2.88 7.56 -2.78H7.63Q7.63 -2.99 7.63 -3.19Q7.63 -3.39 7.63 -3.59V-9.60H9.14V0.00H7.69L3.25 -6.10Q3.14 -6.25 2.97 -6.52Q2.80 -6.78 2.71 -6.92H2.65Q2.65 -6.72 2.65 -6.51Q2.65 -6.31 2.65 -6.10V0.00Z M16.17 0.00V-9.60H23.61V-8.26H17.74V-5.58H23.00V-4.24H17.74V-1.34H23.70V0.00Z M32.03 0.00 29.39 -9.60H31.05L32.68 -3.27Q32.73 -3.12 32.78 -2.85Q32.84 -2.59 32.89 -2.30Q32.95 -2.01 32.99 -1.78H33.07Q33.11 -1.96 33.13 -2.17Q33.16 -2.38 33.20 -2.59Q33.24 -2.81 33.28 -2.98Q33.31 -3.16 33.34 -3.27L34.85 -9.60H36.87L38.39 -3.27Q38.43 -3.12 38.48 -2.85Q38.54 -2.59 38.59 -2.30Q38.64 -2.01 38.68 -1.78H38.76Q38.80 -1.95 38.84 -2.16Q38.88 -2.36 38.92 -2.57Q38.97 -2.77 39.01 -2.96Q39.06 -3.14 39.09 -3.27L40.73 -9.60H42.21L39.56 0.00H37.73L36.12 -6.42Q36.07 -6.62 36.02 -6.89Q35.96 -7.17 35.92 -7.45Q35.87 -7.74 35.84 -7.95H35.77Q35.75 -7.73 35.70 -7.44Q35.66 -7.14 35.60 -6.87Q35.55 -6.60 35.51 -6.42L33.92 0.00Z M51.82 0.17Q51.03 0.17 50.30 0.00Q49.58 -0.16 49.02 -0.52Q48.46 -0.87 48.13 -1.42Q47.81 -1.97 47.81 -2.75Q47.81 -2.83 47.81 -2.90Q47.82 -2.98 47.82 -3.04H49.40Q49.39 -3.00 49.39 -2.91Q49.38 -2.83 49.38 -2.77Q49.38 -2.25 49.68 -1.89Q49.99 -1.53 50.54 -1.35Q51.09 -1.16 51.82 -1.16Q52.21 -1.16 52.57 -1.21Q52.94 -1.26 53.24 -1.36Q53.54 -1.47 53.77 -1.63Q53.99 -1.79 54.11 -2.02Q54.23 -2.24 54.23 -2.54Q54.23 -2.98 53.97 -3.27Q53.71 -3.56 53.27 -3.76Q52.83 -3.96 52.28 -4.11Q51.73 -4.26 51.14 -4.42Q50.55 -4.57 50.00 -4.78Q49.45 -4.99 49.01 -5.29Q48.57 -5.59 48.31 -6.05Q48.05 -6.52 48.05 -7.17Q48.05 -7.80 48.31 -8.29Q48.58 -8.78 49.08 -9.11Q49.58 -9.44 50.29 -9.60Q50.99 -9.77 51.87 -9.77Q52.63 -9.77 53.30 -9.61Q53.96 -9.45 54.47 -9.12Q54.98 -8.78 55.27 -8.26Q55.55 -7.75 55.55 -7.03V-6.86H54.00V-7.04Q54.00 -7.48 53.73 -7.79Q53.46 -8.10 52.98 -8.27Q52.51 -8.44 51.89 -8.44Q51.14 -8.44 50.64 -8.30Q50.14 -8.15 49.88 -7.89Q49.62 -7.62 49.62 -7.26Q49.62 -6.87 49.88 -6.60Q50.14 -6.34 50.58 -6.15Q51.02 -5.97 51.58 -5.83Q52.13 -5.68 52.72 -5.52Q53.30 -5.36 53.85 -5.15Q54.41 -4.95 54.85 -4.64Q55.29 -4.33 55.55 -3.87Q55.81 -3.41 55.81 -2.76Q55.81 -1.72 55.30 -1.07Q54.78 -0.42 53.88 -0.13Q52.98 0.17 51.82 0.17Z M72.38 0.00V-8.25H69.20V-9.60H77.15V-8.25H73.95V0.00Z M87.72 0.17Q86.22 0.17 85.14 -0.38Q84.05 -0.92 83.48 -2.03Q82.90 -3.13 82.90 -4.80Q82.90 -6.49 83.48 -7.58Q84.05 -8.68 85.14 -9.23Q86.22 -9.77 87.72 -9.77Q89.23 -9.77 90.30 -9.23Q91.38 -8.68 91.96 -7.58Q92.54 -6.49 92.54 -4.80Q92.54 -3.13 91.96 -2.03Q91.38 -0.92 90.30 -0.38Q89.23 0.17 87.72 0.17ZM87.72 -1.16Q88.48 -1.16 89.07 -1.37Q89.67 -1.59 90.08 -2.02Q90.50 -2.45 90.72 -3.11Q90.93 -3.76 90.93 -4.64V-4.94Q90.93 -5.83 90.72 -6.49Q90.50 -7.15 90.08 -7.58Q89.67 -8.02 89.07 -8.23Q88.48 -8.44 87.72 -8.44Q86.95 -8.44 86.36 -8.23Q85.77 -8.02 85.35 -7.58Q84.94 -7.15 84.73 -6.49Q84.51 -5.83 84.51 -4.94V-4.64Q84.51 -3.76 84.73 -3.11Q84.94 -2.45 85.35 -2.02Q85.77 -1.59 86.36 -1.37Q86.95 -1.16 87.72 -1.16Z M109.09 0.00V-8.25H105.91V-9.60H113.86V-8.25H110.65V0.00Z M120.07 0.00V-9.60H121.63V-5.59H126.51V-9.60H128.07V0.00H126.51V-4.24H121.63V0.00Z M135.10 0.00V-9.60H142.54V-8.26H136.67V-5.58H141.93V-4.24H136.67V-1.34H142.63V0.00Z M156.93 0.00V-9.60H158.49V-5.59H163.37V-9.60H164.93V0.00H163.37V-4.24H158.49V0.00Z M176.32 0.17Q174.83 0.17 173.74 -0.38Q172.66 -0.92 172.08 -2.03Q171.51 -3.13 171.51 -4.80Q171.51 -6.49 172.08 -7.58Q172.66 -8.68 173.74 -9.23Q174.83 -9.77 176.32 -9.77Q177.83 -9.77 178.91 -9.23Q179.99 -8.68 180.56 -7.58Q181.14 -6.49 181.14 -4.80Q181.14 -3.13 180.56 -2.03Q179.99 -0.92 178.91 -0.38Q177.83 0.17 176.32 0.17ZM176.32 -1.16Q177.08 -1.16 177.68 -1.37Q178.28 -1.59 178.69 -2.02Q179.10 -2.45 179.32 -3.11Q179.54 -3.76 179.54 -4.64V-4.94Q179.54 -5.83 179.32 -6.49Q179.10 -7.15 178.69 -7.58Q178.28 -8.02 177.68 -8.23Q177.08 -8.44 176.32 -8.44Q175.56 -8.44 174.97 -8.23Q174.37 -8.02 173.96 -7.58Q173.55 -7.15 173.33 -6.49Q173.12 -5.83 173.12 -4.94V-4.64Q173.12 -3.76 173.33 -3.11Q173.55 -2.45 173.96 -2.02Q174.37 -1.59 174.97 -1.37Q175.56 -1.16 176.32 -1.16Z M187.72 0.00V-9.60H192.77Q193.79 -9.60 194.46 -9.24Q195.14 -8.88 195.47 -8.23Q195.81 -7.58 195.81 -6.71Q195.81 -5.75 195.37 -5.03Q194.93 -4.31 194.14 -3.97L196.14 0.00H194.44L192.62 -3.71H189.28V0.00ZM189.28 -5.02H192.63Q193.39 -5.02 193.81 -5.47Q194.23 -5.93 194.23 -6.71Q194.23 -7.21 194.04 -7.55Q193.86 -7.89 193.51 -8.08Q193.16 -8.26 192.63 -8.26H189.28Z M202.58 0.00V-9.60H204.15V0.00Z M210.47 0.00V-0.77L215.97 -8.26H210.84V-9.60H218.28V-8.83L212.78 -1.34H218.41V0.00Z M229.19 0.17Q227.69 0.17 226.61 -0.38Q225.52 -0.92 224.95 -2.03Q224.37 -3.13 224.37 -4.80Q224.37 -6.49 224.95 -7.58Q225.52 -8.68 226.61 -9.23Q227.69 -9.77 229.19 -9.77Q230.70 -9.77 231.77 -9.23Q232.85 -8.68 233.43 -7.58Q234.01 -6.49 234.01 -4.80Q234.01 -3.13 233.43 -2.03Q232.85 -0.92 231.77 -0.38Q230.70 0.17 229.19 0.17ZM229.19 -1.16Q229.95 -1.16 230.54 -1.37Q231.14 -1.59 231.55 -2.02Q231.97 -2.45 232.19 -3.11Q232.40 -3.76 232.40 -4.64V-4.94Q232.40 -5.83 232.19 -6.49Q231.97 -7.15 231.55 -7.58Q231.14 -8.02 230.54 -8.23Q229.95 -8.44 229.19 -8.44Q228.42 -8.44 227.83 -8.23Q227.24 -8.02 226.82 -7.58Q226.41 -7.15 226.20 -6.49Q225.98 -5.83 225.98 -4.94V-4.64Q225.98 -3.76 226.20 -3.11Q226.41 -2.45 226.82 -2.02Q227.24 -1.59 227.83 -1.37Q228.42 -1.16 229.19 -1.16Z M240.58 0.00V-9.60H242.08L246.48 -3.59Q246.55 -3.50 246.66 -3.34Q246.76 -3.19 246.86 -3.03Q246.96 -2.88 247.00 -2.78H247.07Q247.07 -2.99 247.07 -3.19Q247.07 -3.39 247.07 -3.59V-9.60H248.58V0.00H247.13L242.69 -6.10Q242.58 -6.25 242.41 -6.52Q242.25 -6.78 242.16 -6.92H242.09Q242.09 -6.72 242.09 -6.51Q242.09 -6.31 242.09 -6.10V0.00Z" transform="translate(1,136)" fill="var(--noonsky)"/>
+      </svg>
+      <span class="cellcap">Reversed &middot; on Shelterbelt</span>
+    </div>
+
+    <div class="logocell" style="background:#fff;align-items:center">
+      <svg viewBox="0 0 359 250" xmlns="http://www.w3.org/2000/svg" style="max-width:230px" role="img" aria-label="The Prairie Post stacked lockup">
+        <g fill="var(--shelterbelt)"><g transform="translate(116.2,62) scale(0.55)" >
+    <polygon points="24,-30 34,-92 44,-30"/>
+    <polygon points="48,-34 57,-84 66,-34"/>
+    <ellipse cx="22" cy="-28" rx="22" ry="28"/>
+    <ellipse cx="48" cy="-32" rx="24" ry="32"/>
+    <ellipse cx="74" cy="-24" rx="20" ry="24"/>
+    <rect x="0" y="-22" width="94" height="22"/>
+    <polygon points="122,0 122,-24 142,-38 162,-24 162,0"/>
+    <rect x="185" y="-60" width="7" height="20"/>
+    <polygon points="174,0 174,-32 202,-52 230,-32 230,0"/>
+  </g></g>
+        <rect x="0" y="66" width="359" height="4" fill="var(--shelterbelt)"/>
+        <rect x="0" y="72" width="359" height="1" fill="var(--board)"/>
+        <path d="M12.11 0.00V-39.83H1.13V-49.50H34.27V-39.83H23.39V0.00Z M40.47 0.00V-49.50H51.75V-29.93H61.53V-49.50H72.78V0.00H61.53V-20.29H51.75V0.00Z M81.46 0.00V-49.50H110.92V-39.93H92.74V-29.93H108.26V-20.37H92.74V-9.57H111.27V0.00Z M128.89 0.00V-49.50H147.57Q152.44 -49.50 155.40 -47.49Q158.36 -45.48 159.71 -41.86Q161.06 -38.24 161.06 -33.42Q161.06 -28.43 159.58 -24.65Q158.11 -20.87 155.12 -18.73Q152.14 -16.58 147.54 -16.58H140.17V0.00ZM140.17 -25.83H145.15Q147.60 -25.83 148.63 -27.83Q149.67 -29.84 149.67 -33.07Q149.67 -35.44 149.23 -37.02Q148.79 -38.60 147.75 -39.39Q146.72 -40.17 144.93 -40.17H140.17Z M166.91 0.00V-49.50H185.40Q190.89 -49.50 194.02 -47.52Q197.15 -45.53 198.47 -42.16Q199.79 -38.79 199.79 -34.63Q199.79 -30.24 198.57 -26.69Q197.35 -23.14 194.52 -21.00L201.45 0.00H189.60L184.31 -17.53H178.19V0.00ZM178.19 -26.59H183.75Q186.35 -26.59 187.40 -28.58Q188.45 -30.57 188.45 -33.67Q188.45 -35.75 187.99 -37.21Q187.53 -38.67 186.49 -39.45Q185.45 -40.24 183.58 -40.24H178.19Z M203.49 0.00 215.26 -49.50H230.31L242.11 0.00H230.23L228.33 -9.09H216.85L215.01 0.00ZM218.48 -18.33H226.73L224.29 -31.11Q224.18 -31.70 224.02 -32.68Q223.85 -33.67 223.66 -34.87Q223.46 -36.06 223.26 -37.26Q223.06 -38.45 222.89 -39.45H222.35Q222.17 -38.22 221.92 -36.67Q221.67 -35.12 221.42 -33.63Q221.17 -32.15 220.95 -31.11Z M247.26 0.00V-49.50H258.54V0.00Z M267.20 0.00V-49.50H285.70Q291.18 -49.50 294.31 -47.52Q297.44 -45.53 298.77 -42.16Q300.09 -38.79 300.09 -34.63Q300.09 -30.24 298.87 -26.69Q297.65 -23.14 294.82 -21.00L301.74 0.00H289.90L284.61 -17.53H278.48V0.00ZM278.48 -26.59H284.05Q286.64 -26.59 287.69 -28.58Q288.75 -30.57 288.75 -33.67Q288.75 -35.75 288.28 -37.21Q287.82 -38.67 286.78 -39.45Q285.75 -40.24 283.88 -40.24H278.48Z M307.31 0.00V-49.50H318.59V0.00Z M327.27 0.00V-49.50H356.73V-39.93H338.55V-29.93H354.07V-20.37H338.55V-9.57H357.08V0.00Z" transform="translate(0.0,152)" fill="var(--shelterbelt)"/>
+        <path d="M3.61 0.00V-49.50H22.29Q27.16 -49.50 30.12 -47.49Q33.08 -45.48 34.43 -41.86Q35.78 -38.24 35.78 -33.42Q35.78 -28.43 34.30 -24.65Q32.83 -20.87 29.84 -18.73Q26.86 -16.58 22.26 -16.58H14.89V0.00ZM14.89 -25.83H19.87Q22.32 -25.83 23.35 -27.83Q24.39 -29.84 24.39 -33.07Q24.39 -35.44 23.95 -37.02Q23.51 -38.60 22.47 -39.39Q21.44 -40.17 19.65 -40.17H14.89Z M59.08 0.86Q52.93 0.86 48.79 -1.81Q44.65 -4.48 42.55 -10.14Q40.46 -15.80 40.46 -24.74Q40.46 -33.68 42.55 -39.34Q44.65 -44.99 48.79 -47.68Q52.93 -50.36 59.08 -50.36Q65.27 -50.36 69.42 -47.68Q73.57 -44.99 75.64 -39.34Q77.71 -33.68 77.71 -24.74Q77.71 -15.80 75.64 -10.14Q73.57 -4.48 69.42 -1.81Q65.27 0.86 59.08 0.86ZM59.08 -8.67Q61.09 -8.67 62.44 -9.49Q63.80 -10.31 64.64 -11.88Q65.48 -13.45 65.85 -15.74Q66.22 -18.03 66.22 -21.00V-28.52Q66.22 -31.49 65.85 -33.76Q65.48 -36.04 64.64 -37.62Q63.80 -39.19 62.44 -40.01Q61.09 -40.83 59.08 -40.83Q57.09 -40.83 55.73 -40.01Q54.36 -39.19 53.52 -37.62Q52.69 -36.04 52.32 -33.76Q51.94 -31.49 51.94 -28.52V-21.00Q51.94 -18.03 52.32 -15.74Q52.69 -13.45 53.52 -11.88Q54.36 -10.31 55.73 -9.49Q57.09 -8.67 59.08 -8.67Z M99.73 0.86Q96.35 0.86 93.43 0.19Q90.51 -0.49 88.31 -2.19Q86.11 -3.90 84.86 -6.89Q83.62 -9.88 83.62 -14.54Q83.62 -14.79 83.62 -15.23Q83.62 -15.66 83.66 -15.95H94.47Q94.46 -15.61 94.46 -15.24Q94.46 -14.87 94.46 -14.53Q94.46 -12.21 95.03 -10.91Q95.60 -9.61 96.69 -9.08Q97.78 -8.56 99.34 -8.56Q100.26 -8.56 100.99 -8.75Q101.71 -8.93 102.29 -9.34Q102.88 -9.75 103.27 -10.35Q103.66 -10.95 103.84 -11.78Q104.02 -12.60 104.02 -13.64Q104.02 -15.31 103.19 -16.44Q102.35 -17.58 100.95 -18.40Q99.54 -19.22 97.79 -19.93Q96.04 -20.65 94.15 -21.44Q92.27 -22.24 90.52 -23.34Q88.77 -24.44 87.36 -26.05Q85.95 -27.66 85.12 -29.96Q84.29 -32.25 84.29 -35.47Q84.29 -39.50 85.52 -42.34Q86.76 -45.18 88.93 -46.95Q91.10 -48.73 93.87 -49.56Q96.63 -50.39 99.69 -50.39Q102.85 -50.39 105.55 -49.65Q108.25 -48.91 110.26 -47.29Q112.26 -45.67 113.39 -43.01Q114.52 -40.35 114.52 -36.52V-34.85H103.86V-35.76Q103.86 -37.42 103.49 -38.56Q103.11 -39.71 102.25 -40.33Q101.38 -40.96 99.82 -40.96Q98.52 -40.96 97.59 -40.49Q96.66 -40.02 96.19 -39.09Q95.73 -38.16 95.73 -36.74Q95.73 -35.00 96.56 -33.80Q97.39 -32.60 98.81 -31.77Q100.24 -30.94 101.99 -30.23Q103.74 -29.52 105.61 -28.74Q107.48 -27.96 109.23 -26.88Q110.98 -25.81 112.40 -24.23Q113.82 -22.66 114.66 -20.40Q115.49 -18.15 115.49 -14.98Q115.49 -9.53 113.55 -6.03Q111.60 -2.52 108.07 -0.83Q104.54 0.86 99.73 0.86Z M130.55 0.00V-39.83H119.57V-49.50H152.71V-39.83H141.83V0.00Z" transform="translate(102.6,224)" fill="var(--shelterbelt)"/>
+      </svg>
+      <span class="cellcap">Stacked &middot; narrow &amp; print</span>
+    </div>
+  </div>
+
+  <div class="marks">
+    <figure><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="88" height="88" role="img" aria-label="The Prairie Post mark">  <rect width="200" height="200" fill="#77B2D6"/>  <path d="M104,124 C 130,100 168,96 200,104 L200,124 Z" fill="#3F5A22"/>  <rect x="0" y="122" width="200" height="5" fill="#17301C"/>  <path d="M0,127 L200,127 L200,200 L0,200 Z" fill="#3F5A22"/>  <path d="M0,150 C 62,140 138,144 200,156 L200,200 L0,200 Z" fill="#58651C"/>  <path d="M0,182 C 70,176 130,178 200,186 L200,200 L0,200 Z" fill="#8B7528"/>  <g transform="translate(14,123) scale(0.42)" fill="#17301C">    <polygon points="24,-30 34,-92 44,-30"/>    <polygon points="48,-34 57,-84 66,-34"/>    <ellipse cx="22" cy="-28" rx="22" ry="28"/>    <ellipse cx="48" cy="-32" rx="24" ry="32"/>    <ellipse cx="74" cy="-24" rx="20" ry="24"/>    <rect x="0" y="-22" width="94" height="22"/>    <polygon points="122,0 122,-24 142,-38 162,-24 162,0"/>    <rect x="185" y="-60" width="7" height="20"/>    <polygon points="174,0 174,-32 202,-52 230,-32 230,0"/>  </g></svg><figcaption>App mark &middot; 88px+</figcaption></figure>
+    <figure><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="44" height="44" role="img" aria-label="The Prairie Post mark">  <rect width="200" height="200" fill="#77B2D6"/>  <path d="M104,124 C 130,100 168,96 200,104 L200,124 Z" fill="#3F5A22"/>  <rect x="0" y="122" width="200" height="5" fill="#17301C"/>  <path d="M0,127 L200,127 L200,200 L0,200 Z" fill="#3F5A22"/>  <path d="M0,150 C 62,140 138,144 200,156 L200,200 L0,200 Z" fill="#58651C"/>  <path d="M0,182 C 70,176 130,178 200,186 L200,200 L0,200 Z" fill="#8B7528"/>  <g transform="translate(14,123) scale(0.42)" fill="#17301C">    <polygon points="24,-30 34,-92 44,-30"/>    <polygon points="48,-34 57,-84 66,-34"/>    <ellipse cx="22" cy="-28" rx="22" ry="28"/>    <ellipse cx="48" cy="-32" rx="24" ry="32"/>    <ellipse cx="74" cy="-24" rx="20" ry="24"/>    <rect x="0" y="-22" width="94" height="22"/>    <polygon points="122,0 122,-24 142,-38 162,-24 162,0"/>    <rect x="185" y="-60" width="7" height="20"/>    <polygon points="174,0 174,-32 202,-52 230,-32 230,0"/>  </g></svg><figcaption>44px</figcaption></figure>
+    <figure><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="44" height="44" role="img" aria-label="The Prairie Post mark, small size">  <rect width="200" height="200" fill="#77B2D6"/>  <path d="M0,132 C 60,108 124,104 172,116 C 184,119 194,124 200,128 L200,200 L0,200 Z" fill="#3F5A22"/>  <polygon points="46,130 46,88 78,60 110,88 110,130" fill="#17301C"/>  <rect x="0" y="128" width="200" height="13" fill="#17301C"/>  <path d="M0,168 C 70,160 132,163 200,172 L200,200 L0,200 Z" fill="#58651C"/></svg><figcaption>Reduced &middot; 44px</figcaption></figure>
+    <figure><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="22" height="22" role="img" aria-label="The Prairie Post mark, small size">  <rect width="200" height="200" fill="#77B2D6"/>  <path d="M0,132 C 60,108 124,104 172,116 C 184,119 194,124 200,128 L200,200 L0,200 Z" fill="#3F5A22"/>  <polygon points="46,130 46,88 78,60 110,88 110,130" fill="#17301C"/>  <rect x="0" y="128" width="200" height="13" fill="#17301C"/>  <path d="M0,168 C 70,160 132,163 200,172 L200,200 L0,200 Z" fill="#58651C"/></svg><figcaption>Reduced &middot; 22px</figcaption></figure>
+    <figure><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="16" height="16" role="img" aria-label="The Prairie Post mark, small size">  <rect width="200" height="200" fill="#77B2D6"/>  <path d="M0,132 C 60,108 124,104 172,116 C 184,119 194,124 200,128 L200,200 L0,200 Z" fill="#3F5A22"/>  <polygon points="46,130 46,88 78,60 110,88 110,130" fill="#17301C"/>  <rect x="0" y="128" width="200" height="13" fill="#17301C"/>  <path d="M0,168 C 70,160 132,163 200,172 L200,200 L0,200 Z" fill="#58651C"/></svg><figcaption>16px favicon</figcaption></figure>
+  </div>
+  <p class="note" style="margin-top:18px">The mark is the source photograph reduced to five bands: sky, distant hill, the horizon, the field, the stubble in the foreground. Below 32&nbsp;px the shelterbelt and the second building close up, so the reduced mark drops to one gable and a thicker horizon. Clear space on every lockup is one cap height of the wordmark on all four sides; the rule may bleed past that to the edge of its container, and usually should.</p>
+
+  <div class="cols">
+    <div class="col"><h4>Do</h4><ul>
+      <li>Let the horizon rule run full-bleed out of the lockup and across the container.</li>
+      <li>Set the mark on Noon Sky, Cloudbank, or a photograph with a clear horizon.</li>
+      <li>Use the stacked lockup under 360&nbsp;px and on anything printed narrow.</li>
+    </ul></div>
+    <div class="col no"><h4>Don't</h4><ul>
+      <li>Rebuild the wordmark in another face, or stretch, arc or outline it.</li>
+      <li>Add a second rule above the wordmark. There is one horizon.</li>
+      <li>Tint the wordmark in Stubble or Bin Red, or place it over the busy part of a photo.</li>
+      <li>Put the farmstead beside the horizontal lockup &mdash; it belongs to the mark and the stacked form.</li>
+    </ul></div>
+  </div>
+</section>
+
+<!-- ============ 05 SECTION COLOURS ============ -->
+<section id="sections">
+  <div class="sechead"><span class="secnum">05</span><h2 class="sectitle">Sections</h2></div>
+  <p class="lede">Each desk owns one colour, and it appears in exactly two places: the nav underline and the eyebrow above the headline.</p>
+  <div class="tscroll"><table class="sectiontable">
+    <thead><tr><th>Desk</th><th>Colour</th><th>Hex</th><th>On paper</th></tr></thead>
+    <tbody><tr><td class="nm">News</td><td><span class="tick" style="background:#17301C"></span> Shelterbelt</td><td class="mono" style="font-size:13px">#17301C</td><td class="mono" style="font-size:13px">12.7:1</td></tr>
+<tr><td class="nm">Politics</td><td><span class="tick" style="background:#2F6C99"></span> Big Sky</td><td class="mono" style="font-size:13px">#2F6C99</td><td class="mono" style="font-size:13px">5.0:1</td></tr>
+<tr><td class="nm">Agriculture</td><td><span class="tick" style="background:#3F5A22"></span> Quarter Section</td><td class="mono" style="font-size:13px">#3F5A22</td><td class="mono" style="font-size:13px">6.9:1</td></tr>
+<tr><td class="nm">Business &amp; Markets</td><td><span class="tick" style="background:#7A661F"></span> Stubble</td><td class="mono" style="font-size:13px">#7A661F</td><td class="mono" style="font-size:13px">5.0:1</td></tr>
+<tr><td class="nm">Community</td><td><span class="tick" style="background:#6F5535"></span> Fencepost</td><td class="mono" style="font-size:13px">#6F5535</td><td class="mono" style="font-size:13px">6.2:1</td></tr>
+<tr><td class="nm">Opinion</td><td><span class="tick" style="background:#9C3B22"></span> Bin Red</td><td class="mono" style="font-size:13px">#9C3B22</td><td class="mono" style="font-size:13px">6.1:1</td></tr>
+<tr><td class="nm">Weather</td><td><span class="tick" style="background:#77B2D6"></span> Noon Sky</td><td class="mono" style="font-size:13px">#77B2D6</td><td class="mono" style="font-size:13px">2.0:1 &mdash; fill only</td></tr></tbody>
+  </table></div>
+  <p class="note" style="margin-top:18px">Weather is the exception: Noon Sky is a fill only, so weather eyebrows set Shelterbelt type on a Noon Sky block rather than coloured type on paper. No desk gets a gradient, and no story carries two desk colours at once.</p>
+</section>
+
+<!-- ============ 06 IN USE ============ -->
+<section id="inuse">
+  <div class="sechead"><span class="secnum">06</span><h2 class="sectitle">In use</h2></div>
+  <p class="lede">The homepage, assembled from the parts above. Nothing here is a new decision.</p>
+
+  <div class="mock">
+    <nav class="mocknav">
+      <a href="#inuse" style="border-bottom-color:var(--shelterbelt)">News</a>
+      <a href="#inuse">Politics</a>
+      <a href="#inuse">Agriculture</a>
+      <a href="#inuse">Business</a>
+      <a href="#inuse">Community</a>
+      <a href="#inuse">Opinion</a>
+      <a href="#inuse">Weather</a>
+    </nav>
+    <div class="mockmast">
+      <svg viewBox="0 0 700 118" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="The Prairie Post">
+        <path d="M16.14 0.00V-53.10H1.50V-66.00H45.69V-53.10H31.18V0.00Z M53.96 0.00V-66.00H69.01V-39.90H82.03V-66.00H97.04V0.00H82.03V-27.05H69.01V0.00Z M108.61 0.00V-66.00H147.89V-53.24H123.65V-39.90H144.35V-27.16H123.65V-12.76H148.36V0.00Z M171.85 0.00V-66.00H196.76Q203.26 -66.00 207.20 -63.32Q211.15 -60.64 212.95 -55.82Q214.75 -50.99 214.75 -44.55Q214.75 -37.91 212.78 -32.87Q210.81 -27.83 206.83 -24.97Q202.85 -22.11 196.73 -22.11H186.89V0.00ZM186.89 -34.44H193.53Q196.79 -34.44 198.17 -37.11Q199.55 -39.79 199.55 -44.09Q199.55 -47.25 198.97 -49.36Q198.38 -51.47 197.00 -52.52Q195.63 -53.56 193.24 -53.56H186.89Z M222.54 0.00V-66.00H247.21Q254.52 -66.00 258.69 -63.35Q262.86 -60.71 264.63 -56.21Q266.39 -51.72 266.39 -46.17Q266.39 -40.32 264.76 -35.59Q263.13 -30.85 259.36 -28.00L268.60 0.00H252.80L245.75 -23.38H237.58V0.00ZM237.58 -35.45H245.00Q248.46 -35.45 249.86 -38.10Q251.27 -40.76 251.27 -44.90Q251.27 -47.67 250.65 -49.61Q250.03 -51.55 248.65 -52.60Q247.27 -53.65 244.78 -53.65H237.58Z M271.32 0.00 287.01 -66.00H307.08L322.82 0.00H306.97L304.44 -12.12H289.13L286.68 0.00ZM291.31 -24.44H302.31L299.05 -41.48Q298.91 -42.27 298.69 -43.58Q298.47 -44.89 298.21 -46.49Q297.95 -48.08 297.68 -49.68Q297.41 -51.27 297.19 -52.59H296.47Q296.23 -50.96 295.90 -48.89Q295.57 -46.82 295.23 -44.85Q294.90 -42.87 294.60 -41.48Z M329.68 0.00V-66.00H344.72V0.00Z M356.27 0.00V-66.00H380.93Q388.24 -66.00 392.42 -63.35Q396.59 -60.71 398.35 -56.21Q400.12 -51.72 400.12 -46.17Q400.12 -40.32 398.49 -35.59Q396.86 -30.85 393.09 -28.00L402.33 0.00H386.53L379.48 -23.38H371.31V0.00ZM371.31 -35.45H378.73Q382.19 -35.45 383.59 -38.10Q384.99 -40.76 384.99 -44.90Q384.99 -47.67 384.38 -49.61Q383.76 -51.55 382.38 -52.60Q381.00 -53.65 378.51 -53.65H371.31Z M409.74 0.00V-66.00H424.78V0.00Z M436.36 0.00V-66.00H475.64V-53.24H451.40V-39.90H472.09V-27.16H451.40V-12.76H476.10V0.00Z M499.60 0.00V-66.00H524.50Q531.00 -66.00 534.95 -63.32Q538.89 -60.64 540.69 -55.82Q542.49 -50.99 542.49 -44.55Q542.49 -37.91 540.52 -32.87Q538.55 -27.83 534.57 -24.97Q530.59 -22.11 524.47 -22.11H514.64V0.00ZM514.64 -34.44H521.28Q524.54 -34.44 525.92 -37.11Q527.30 -39.79 527.30 -44.09Q527.30 -47.25 526.71 -49.36Q526.13 -51.47 524.75 -52.52Q523.37 -53.56 520.98 -53.56H514.64Z M573.56 1.15Q565.36 1.15 559.84 -2.41Q554.32 -5.97 551.52 -13.52Q548.73 -21.07 548.73 -32.98Q548.73 -44.91 551.52 -52.45Q554.32 -59.99 559.84 -63.57Q565.36 -67.15 573.56 -67.15Q581.81 -67.15 587.34 -63.57Q592.88 -59.99 595.64 -52.45Q598.39 -44.91 598.39 -32.98Q598.39 -21.07 595.64 -13.52Q592.88 -5.97 587.34 -2.41Q581.81 1.15 573.56 1.15ZM573.56 -11.56Q576.24 -11.56 578.04 -12.65Q579.85 -13.74 580.97 -15.84Q582.08 -17.94 582.58 -20.99Q583.08 -24.04 583.08 -27.99V-38.03Q583.08 -41.98 582.58 -45.02Q582.08 -48.05 580.97 -50.15Q579.85 -52.26 578.04 -53.35Q576.24 -54.44 573.56 -54.44Q570.91 -54.44 569.09 -53.35Q567.26 -52.26 566.15 -50.15Q565.03 -48.05 564.54 -45.02Q564.04 -41.98 564.04 -38.03V-27.99Q564.04 -24.04 564.54 -20.99Q565.03 -17.94 566.15 -15.84Q567.26 -13.74 569.09 -12.65Q570.91 -11.56 573.56 -11.56Z M627.76 1.15Q623.25 1.15 619.36 0.25Q615.47 -0.65 612.53 -2.92Q609.59 -5.20 607.94 -9.19Q606.28 -13.18 606.28 -19.39Q606.28 -19.72 606.28 -20.30Q606.28 -20.89 606.33 -21.26H620.74Q620.73 -20.81 620.73 -20.32Q620.73 -19.83 620.73 -19.37Q620.73 -16.27 621.49 -14.54Q622.25 -12.81 623.71 -12.11Q625.16 -11.41 627.24 -11.41Q628.46 -11.41 629.43 -11.66Q630.40 -11.91 631.18 -12.45Q631.95 -13.00 632.47 -13.80Q632.99 -14.60 633.23 -15.70Q633.48 -16.80 633.48 -18.19Q633.48 -20.41 632.37 -21.92Q631.26 -23.44 629.38 -24.53Q627.50 -25.62 625.17 -26.58Q622.83 -27.53 620.32 -28.59Q617.81 -29.65 615.47 -31.12Q613.14 -32.59 611.26 -34.74Q609.39 -36.89 608.28 -39.94Q607.17 -43.00 607.17 -47.29Q607.17 -52.67 608.82 -56.46Q610.46 -60.24 613.36 -62.61Q616.26 -64.97 619.94 -66.08Q623.63 -67.19 627.71 -67.19Q631.91 -67.19 635.52 -66.20Q639.12 -65.21 641.79 -63.05Q644.47 -60.89 645.97 -57.34Q647.47 -53.80 647.48 -48.70V-46.46H633.27V-47.68Q633.27 -49.89 632.77 -51.42Q632.27 -52.95 631.11 -53.78Q629.96 -54.61 627.88 -54.61Q626.15 -54.61 624.90 -53.98Q623.66 -53.36 623.04 -52.12Q622.42 -50.88 622.42 -48.99Q622.42 -46.66 623.53 -45.07Q624.64 -43.47 626.54 -42.36Q628.43 -41.26 630.77 -40.31Q633.10 -39.35 635.59 -38.32Q638.09 -37.28 640.42 -35.85Q642.75 -34.41 644.65 -32.31Q646.55 -30.21 647.66 -27.20Q648.77 -24.20 648.77 -19.97Q648.77 -12.71 646.18 -8.04Q643.59 -3.36 638.88 -1.11Q634.18 1.15 627.76 1.15Z M668.84 0.00V-53.10H654.21V-66.00H698.40V-53.10H683.89V0.00Z" transform="translate(0,96)" fill="var(--shelterbelt)"/>
+        <rect x="0" y="104" width="700" height="4" fill="var(--shelterbelt)"/>
+        <rect x="0" y="110" width="700" height="1" fill="var(--board)"/>
+      </svg>
+    </div>
+    <div class="mockbody">
+      <div class="lead">
+        <svg class="photo" viewBox="0 0 620 200" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Illustration: farmstead on the horizon">
+  <rect width="620" height="200" fill="var(--noonsky)"/>
+  <path d="M300,114 C 380,84 470,78 545,88 C 578,92 604,98 620,104 L620,114 Z" fill="var(--quarter)"/>
+  <rect x="0" y="112" width="620" height="4" fill="var(--shelterbelt)"/>
+  <path d="M0,116 L620,116 L620,200 L0,200 Z" fill="var(--quarter)"/>
+  <path d="M0,142 C 180,130 420,136 620,152 L620,200 L0,200 Z" fill="var(--field)"/>
+  <path d="M0,178 C 200,170 400,173 620,182 L620,200 L0,200 Z" fill="var(--straw)"/>
+  <g transform="translate(52,112) scale(0.5)" fill="var(--shelterbelt)">
+    <polygon points="24,-30 34,-92 44,-30"/>
+    <polygon points="48,-34 57,-84 66,-34"/>
+    <ellipse cx="22" cy="-28" rx="22" ry="28"/>
+    <ellipse cx="48" cy="-32" rx="24" ry="32"/>
+    <ellipse cx="74" cy="-24" rx="20" ry="24"/>
+    <rect x="0" y="-22" width="94" height="22"/>
+    <polygon points="122,0 122,-24 142,-38 162,-24 162,0"/>
+    <rect x="185" y="-60" width="7" height="20"/>
+    <polygon points="174,0 174,-32 202,-52 230,-32 230,0"/>
+  </g>
+</svg>
+        <span class="eyebrow" style="color:var(--quarter)">Agriculture</span>
+        <h3>Canola contracts move early as growers watch a dry June</h3>
+        <p style="font-family:var(--body);font-style:italic;color:#3C4F3F">Elevators north of the river are signing at levels last seen in 2023, and nobody wants to be the last one to price.</p>
+        <div class="byline">Three Hills &middot; By Dana Ruthven &middot; 6:40&nbsp;a.m.</div>
+      </div>
+      <aside class="rail">
+        <h4>Closing prices</h4>
+        <table class="prices">
+          <tr><td>Canola&nbsp;Nov</td><td>687.40</td><td class="up">+4.10</td></tr>
+          <tr><td>Wheat&nbsp;CWRS</td><td>318.75</td><td class="down">&minus;1.25</td></tr>
+          <tr><td>Barley&nbsp;Feed</td><td>241.00</td><td class="up">+0.75</td></tr>
+          <tr><td>Steers&nbsp;850lb</td><td>402.50</td><td class="up">+2.00</td></tr>
+        </table>
+        <div class="signup">
+          <span class="k">The 6 a.m.</span>
+          <p>One email before the day starts: council, markets, weather, and what happened overnight.</p>
+          <a class="btn" href="#inuse">Subscribe</a>
+        </div>
+      </aside>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 07 VOICE ============ -->
+<section id="voice">
+  <div class="sechead"><span class="secnum">07</span><h2 class="sectitle">Voice</h2></div>
+  <p class="lede">Plain, specific, and close to the ground. The paper is written for people who will recognise the road being described.</p>
+  <div class="cols">
+    <div class="col"><h4>Write it this way</h4><ul>
+      <li>Name the place in the dateline, always.<span class="ex">HANNA &mdash; Council spent ninety minutes on one culvert.</span></li>
+      <li>Use the units people actually use.<span class="ex">a quarter section, 850&nbsp;lb steers, 40 minutes of gravel</span></li>
+      <li>Say who is speaking, or say why you can't.<span class="ex">Two councillors, who asked not to be named because the file is in camera, said&hellip;</span></li>
+      <li>Empty states point at the next thing.<span class="ex">No stories filed from Kneehill this week. Try the county council archive.</span></li>
+      <li>Errors say what broke and what to do.<span class="ex">The market feed didn't load. Prices last updated 4:15&nbsp;p.m. Reload.</span></li>
+    </ul></div>
+    <div class="col no"><h4>Not this way</h4><ul>
+      <li>Folksy register. The audience lives here; they don't need it performed back at them.<span class="ex">Well folks, out here on the ol' homestead&hellip;</span></li>
+      <li>Metro shorthand for rural distance.<span class="ex">&ldquo;just outside the city&rdquo; for a place 90&nbsp;km away</span></li>
+      <li>Vague attribution used as filler.<span class="ex">Sources say &middot; many are asking &middot; some believe</span></li>
+      <li>Buttons that don't name their outcome.<span class="ex">Submit &middot; Learn more &middot; Click here</span></li>
+    </ul></div>
+  </div>
+  <p class="note" style="margin-top:20px"><strong>Tagline.</strong> <span class="mono">News to the horizon</span> is the standing line: it points at the rule, sets the geographic promise, and stays out of the way. Runners-up worth keeping for campaigns: <em>Everything under this sky</em> and <em>Reported from the road it happened on</em>. The tagline is set in Plex Mono, uppercase, +0.34em, never in the display face.</p>
+</section>
+
+<!-- ============ 08 TOKENS ============ -->
+<section id="tokens">
+  <div class="sechead"><span class="secnum">08</span><h2 class="sectitle">Tokens</h2></div>
+  <p class="lede">Drop this in first. Every value above resolves to one of these.</p>
+<pre><code>:root{
+  <span class="c">/* Ink &amp; ground */</span>
+  --pp-shelterbelt:#17301C;   <span class="c">/* primary ink, masthead, rule */</span>
+  --pp-quarter:#3F5A22;       <span class="c">/* agriculture, secondary ink */</span>
+  --pp-field:#58651C;         <span class="c">/* charts, data */</span>
+  --pp-fencepost:#6F5535;     <span class="c">/* community */</span>
+  --pp-stubble:#7A661F;       <span class="c">/* business &amp; markets */</span>
+  --pp-binred:#9C3B22;        <span class="c">/* opinion, live, corrections */</span>
+
+  <span class="c">/* Sky &amp; light &mdash; fills only below 4.5:1 */</span>
+  --pp-bigsky:#2F6C99;        <span class="c">/* links, interactive */</span>
+  --pp-noonsky:#77B2D6;       <span class="c">/* weather, large fills */</span>
+  --pp-highsky:#A9CDE4;       <span class="c">/* tints, hover beds */</span>
+  --pp-straw:#B99A45;         <span class="c">/* highlight fills */</span>
+  --pp-board:#C4C0B4;         <span class="c">/* rules, dividers &mdash; never text */</span>
+  --pp-cloudbank:#F1F2F0;     <span class="c">/* page background */</span>
+
+  <span class="c">/* Type */</span>
+  --pp-display:'Archivo','Arial Narrow',sans-serif;
+  --pp-body:'Newsreader',Georgia,serif;
+  --pp-mono:'IBM Plex Mono',ui-monospace,monospace;
+  --pp-display-vf:'wdth' 68,'wght' 800;
+  --pp-hed-vf:'wdth' 78,'wght' 700;
+
+  <span class="c">/* Structure */</span>
+  --pp-rule:4px solid var(--pp-shelterbelt);
+  --pp-hairline:1px solid var(--pp-board);
+  --pp-measure:68ch;
+  --pp-radius:0;              <span class="c">/* the brand has no rounded corners */</span>
+}</code></pre>
+  <p class="note" style="margin-top:18px">Two rules that are easy to lose in a build: the horizon is <em>4px plus a 1px hairline two pixels below it</em>, not a single border; and radius is zero everywhere, including buttons, cards and images. A rounded corner on this brand reads as a different paper.</p>
+</section>
+
+<footer>
+  <div class="horizon horizon--full" style="margin-bottom:18px"></div>
+  <div class="skybar meta"><span>The Prairie Post &middot; brand identity v1.0</span><span>Archivo, Newsreader &amp; IBM Plex Mono &mdash; SIL Open Font Licence</span></div>
+</footer>
+</main>
+</body>
+</html>

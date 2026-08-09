@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200" role="img" aria-label="The Prairie Post mark, small size">
+  <rect width="200" height="200" fill="#77B2D6"/>
+  <path d="M0,132 C 60,108 124,104 172,116 C 184,119 194,124 200,128 L200,200 L0,200 Z" fill="#3F5A22"/>
+  <polygon points="46,130 46,88 78,60 110,88 110,130" fill="#17301C"/>
+  <rect x="0" y="128" width="200" height="13" fill="#17301C"/>
+  <path d="M0,168 C 70,160 132,163 200,172 L200,200 L0,200 Z" fill="#58651C"/>
+</svg>

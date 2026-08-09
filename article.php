@@ -1,0 +1,100 @@
+<?php
+/** The Prairie Post — story page. */
+require __DIR__ . '/app/bootstrap.php';
+require __DIR__ . '/app/views/ui.php';
+
+$slug = (string) ($_GET['slug'] ?? '');
+$post = $slug !== '' ? post_by_slug($slug) : null;
+
+if (!$post) {
+    http_response_code(404);
+    page_header(['title' => 'Story not found']);
+    echo '<div class="wrap pagehead"><h1>Not found</h1>';
+    echo '<div class="empty">That story isn\'t in the archive — the link may be old, or the piece may have been unpublished. '
+       . 'Try the <a href="/">front page</a> or <a href="' . e(url('search')) . '">search the archive</a>.</div></div>';
+    page_footer();
+    exit;
+}
+
+$canonical = site_url() . '/story/' . $post['slug'];
+$tags = tags_for_post((int) $post['id']);
+
+$jsonld = [
+    '@context' => 'https://schema.org',
+    '@type'    => 'NewsArticle',
+    'headline' => $post['title'],
+    'description' => $post['meta_description'] ?: excerpt((string) $post['lede'], 155),
+    'datePublished' => date('c', strtotime($post['published_at'])),
+    'dateModified'  => date('c', strtotime($post['updated_at'] ?: $post['published_at'])),
+    'mainEntityOfPage' => $canonical,
+    'author' => ['@type' => 'Person', 'name' => $post['byline'] ?: setting('site_title')],
+    'publisher' => [
+        '@type' => 'NewsMediaOrganization',
+        'name'  => setting('site_title', 'The Prairie Post'),
+        'logo'  => ['@type' => 'ImageObject', 'url' => site_url() . '/assets/img/mark.svg'],
+    ],
+];
+if ($post['image']) {
+    $jsonld['image'] = [site_url() . $post['image']];
+}
+if ($post['dateline']) {
+    $jsonld['dateline'] = mb_strtoupper($post['dateline']);
+}
+
+page_header([
+    'title'       => $post['title'],
+    'description' => $post['meta_description'] ?: excerpt((string) $post['lede'], 155),
+    'canonical'   => $canonical,
+    'og_type'     => 'article',
+    'og_image'    => $post['image'] ? site_url() . $post['image'] : null,
+    'jsonld'      => $jsonld,
+], (string) $post['category_slug']);
+?>
+
+<article class="article wrap">
+  <div class="headwrap">
+    <?= eyebrow($post) ?>
+    <h1><?= e($post['title']) ?></h1>
+    <?php if ($post['lede']): ?><p class="lede"><?= e($post['lede']) ?></p><?php endif; ?>
+    <p class="byline dateline"><?= dateline($post) ?></p>
+  </div>
+
+  <div class="pp-horizon" style="margin-top:18px"></div>
+
+  <?php if ($post['image']): ?>
+  <div style="max-width:820px;margin-top:26px">
+    <?= story_photo($post, true) ?>
+  </div>
+  <?php endif; ?>
+
+  <div class="bodycopy">
+    <?= sanitize_html((string) $post['body']) ?>
+  </div>
+
+  <?= ad_slot('article') ?>
+
+  <?php if ($post['source_url']): ?>
+  <p class="pp-meta" style="margin-top:24px">Source material: <a href="<?= e($post['source_url']) ?>" rel="nofollow noopener"><?= e(parse_url($post['source_url'], PHP_URL_HOST) ?: $post['source_url']) ?></a></p>
+  <?php endif; ?>
+
+  <?php if ($tags): ?>
+  <div class="tagsrow">
+    <?php foreach ($tags as $tag): ?>
+    <a href="<?= e(url('search') . '?q=' . urlencode($tag['name'])) ?>"><?= e($tag['name']) ?></a>
+    <?php endforeach; ?>
+  </div>
+  <?php endif; ?>
+</article>
+
+<?php $related = related_posts($post['category_id'] ? (int) $post['category_id'] : null, (int) $post['id']); ?>
+<?php if ($related): ?>
+<section class="related wrap" aria-label="More from the paper">
+  <div class="deskhead"><h2>More from the paper</h2></div>
+  <div class="pp-horizon"></div>
+  <div class="deskgrid" style="margin-top:20px">
+    <?php foreach ($related as $rel): ?><?= story_card($rel) ?><?php endforeach; ?>
+  </div>
+</section>
+<?php endif; ?>
+
+<?php page_footer(); ?>

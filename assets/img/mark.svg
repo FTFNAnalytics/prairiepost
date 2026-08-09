@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200" role="img" aria-label="The Prairie Post mark">
+  <rect width="200" height="200" fill="#77B2D6"/>
+  <path d="M104,124 C 130,100 168,96 200,104 L200,124 Z" fill="#3F5A22"/>
+  <rect x="0" y="122" width="200" height="5" fill="#17301C"/>
+  <path d="M0,127 L200,127 L200,200 L0,200 Z" fill="#3F5A22"/>
+  <path d="M0,150 C 62,140 138,144 200,156 L200,200 L0,200 Z" fill="#58651C"/>
+  <path d="M0,182 C 70,176 130,178 200,186 L200,200 L0,200 Z" fill="#8B7528"/>
+  <g transform="translate(14,123) scale(0.42)" fill="#17301C">
+    <polygon points="24,-30 34,-92 44,-30"/>
+    <polygon points="48,-34 57,-84 66,-34"/>
+    <ellipse cx="22" cy="-28" rx="22" ry="28"/>
+    <ellipse cx="48" cy="-32" rx="24" ry="32"/>
+    <ellipse cx="74" cy="-24" rx="20" ry="24"/>
+    <rect x="0" y="-22" width="94" height="22"/>
+    <polygon points="122,0 122,-24 142,-38 162,-24 162,0"/>
+    <rect x="185" y="-60" width="7" height="20"/>
+    <polygon points="174,0 174,-32 202,-52 230,-32 230,0"/>
+  </g>
+</svg>

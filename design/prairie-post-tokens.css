@@ -1,0 +1,86 @@
+/* ==========================================================================
+   The Prairie Post — design tokens v1.0
+   Every colour below was sampled from a single 1024×1024 prairie photograph,
+   with one declared exception (--pp-binred).
+   Fonts: Archivo, Newsreader, IBM Plex Mono — all SIL Open Font Licence.
+   ========================================================================== */
+
+@import url('https://fonts.googleapis.com/css2?family=Archivo:ital,wdth,wght@0,62..125,100..900;1,62..125,100..900&family=IBM+Plex+Mono:wght@400;500;600&family=Newsreader:ital,opsz,wght@0,6..72,300..700;1,6..72,300..600&display=swap');
+
+:root{
+  /* --- Ink & ground -------------------------------------------------- */
+  --pp-shelterbelt:#17301C;   /* 12.7:1 — primary ink, masthead, the rule   */
+  --pp-quarter:#3F5A22;       /*  6.9:1 — agriculture desk, secondary ink   */
+  --pp-field:#58651C;         /*  5.7:1 — charts, first data series         */
+  --pp-fencepost:#6F5535;     /*  6.2:1 — community desk, feature ink       */
+  --pp-stubble:#7A661F;       /*  5.0:1 — business & markets desk           */
+  --pp-binred:#9C3B22;        /*  6.1:1 — opinion, live, corrections        */
+
+  /* --- Sky & light — anything under 4.5:1 is a FILL, never text ------- */
+  --pp-bigsky:#2F6C99;        /*  5.0:1 — links and interactive states      */
+  --pp-noonsky:#77B2D6;       /*  2.0:1 — weather, sky fields, buttons      */
+  --pp-highsky:#A9CDE4;       /*  1.5:1 — tints, hover beds, table stripes  */
+  --pp-straw:#B99A45;         /*  2.4:1 — highlight fills, print spot       */
+  --pp-board:#C4C0B4;         /*  1.6:1 — hairlines only, never text        */
+  --pp-cloudbank:#F1F2F0;     /*    ——   page background (cool, not cream)  */
+
+  /* --- Desk assignments ---------------------------------------------- */
+  --pp-desk-news:var(--pp-shelterbelt);
+  --pp-desk-politics:var(--pp-bigsky);
+  --pp-desk-agriculture:var(--pp-quarter);
+  --pp-desk-business:var(--pp-stubble);
+  --pp-desk-community:var(--pp-fencepost);
+  --pp-desk-opinion:var(--pp-binred);
+  --pp-desk-weather:var(--pp-noonsky);   /* fill only: ink type on a block */
+
+  /* --- Type ----------------------------------------------------------- */
+  --pp-display:'Archivo','Arial Narrow',Helvetica,sans-serif;
+  --pp-body:'Newsreader',Georgia,'Times New Roman',serif;
+  --pp-mono:'IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,monospace;
+
+  /* --- Structure ------------------------------------------------------ */
+  --pp-rule-weight:4px;
+  --pp-hairline:1px;
+  --pp-measure:68ch;
+  --pp-radius:0;              /* the brand has no rounded corners, anywhere */
+  --pp-gutter:clamp(20px,4vw,56px);
+  --pp-maxw:1180px;
+}
+
+/* --- Type roles ------------------------------------------------------- */
+.pp-display{                       /* masthead, section fronts             */
+  font-family:var(--pp-display);
+  font-weight:800; font-stretch:68%;
+  font-variation-settings:'wdth' 68,'wght' 800;
+  text-transform:uppercase; letter-spacing:.02em; line-height:.9;
+}
+.pp-hed{                           /* story headlines — sentence case      */
+  font-family:var(--pp-display);
+  font-weight:700; font-stretch:78%;
+  font-variation-settings:'wdth' 78,'wght' 700;
+  line-height:1.04; letter-spacing:-.005em;
+}
+.pp-body{ font-family:var(--pp-body); font-size:19px; line-height:1.62; max-width:var(--pp-measure); }
+.pp-lede{ font-family:var(--pp-body); font-style:italic; font-size:22px; line-height:1.5; }
+.pp-meta{                          /* datelines, bylines, labels, tables   */
+  font-family:var(--pp-mono); font-size:11.5px; font-weight:500;
+  letter-spacing:.16em; text-transform:uppercase;
+}
+
+/* --- The horizon rule: 4px ink, then a 1px hairline two pixels below --- */
+.pp-horizon{
+  position:relative; height:0;
+  border-top:var(--pp-rule-weight) solid var(--pp-shelterbelt);
+}
+.pp-horizon::after{
+  content:""; position:absolute; left:0; right:0; top:2px;
+  height:var(--pp-hairline); background:var(--pp-board);
+}
+/* Let the rule run past its container to the edge of the viewport. */
+.pp-horizon--full{ margin-left:calc(50% - 50vw); margin-right:calc(50% - 50vw); }
+
+/* --- Accessibility floor ---------------------------------------------- */
+:focus-visible{ outline:3px solid var(--pp-bigsky); outline-offset:3px; }
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{ animation-duration:.01ms !important; transition-duration:.01ms !important; }
+}

@@ -1,0 +1,224 @@
+<?php
+/** The Prairie Post — query layer. All access goes through prepared statements. */
+
+/* --- Posts -------------------------------------------------------------- */
+
+const PP_POST_COLS = "p.*, c.name AS category_name, c.slug AS category_slug,
+    c.color AS category_color, c.color_is_fill AS category_color_is_fill";
+
+function pp_published_where(): string
+{
+    return "p.status = 'published' AND p.published_at <= ?";
+}
+
+function now(): string
+{
+    return date('Y-m-d H:i:s');
+}
+
+function featured_post(): ?array
+{
+    $sql = 'SELECT ' . PP_POST_COLS . ' FROM posts p
+            LEFT JOIN categories c ON c.id = p.category_id
+            WHERE ' . pp_published_where() . '
+            ORDER BY p.is_featured DESC, p.published_at DESC LIMIT 1';
+    $stmt = db()->prepare($sql);
+    $stmt->execute([now()]);
+    return $stmt->fetch() ?: null;
+}
+
+function latest_posts(int $limit, array $excludeIds = [], int $offset = 0): array
+{
+    $params = [now()];
+    $not = '';
+    if ($excludeIds) {
+        $not = ' AND p.id NOT IN (' . implode(',', array_fill(0, count($excludeIds), '?')) . ')';
+        $params = array_merge($params, array_map('intval', $excludeIds));
+    }
+    $sql = 'SELECT ' . PP_POST_COLS . ' FROM posts p
+            LEFT JOIN categories c ON c.id = p.category_id
+            WHERE ' . pp_published_where() . $not . '
+            ORDER BY p.published_at DESC LIMIT ' . (int) $limit . ' OFFSET ' . (int) $offset;
+    $stmt = db()->prepare($sql);
+    $stmt->execute($params);
+    return $stmt->fetchAll();
+}
+
+function posts_in_category(int $categoryId, int $limit, array $excludeIds = [], int $offset = 0): array
+{
+    $params = [now(), $categoryId];
+    $not = '';
+    if ($excludeIds) {
+        $not = ' AND p.id NOT IN (' . implode(',', array_fill(0, count($excludeIds), '?')) . ')';
+        $params = array_merge($params, array_map('intval', $excludeIds));
+    }
+    $sql = 'SELECT ' . PP_POST_COLS . ' FROM posts p
+            LEFT JOIN categories c ON c.id = p.category_id
+            WHERE ' . pp_published_where() . ' AND p.category_id = ?' . $not . '
+            ORDER BY p.published_at DESC LIMIT ' . (int) $limit . ' OFFSET ' . (int) $offset;
+    $stmt = db()->prepare($sql);
+    $stmt->execute($params);
+    return $stmt->fetchAll();
+}
+
+function count_posts_in_category(int $categoryId): int
+{
+    $stmt = db()->prepare('SELECT COUNT(*) AS n FROM posts p WHERE ' . pp_published_where() . ' AND p.category_id = ?');
+    $stmt->execute([now(), $categoryId]);
+    return (int) $stmt->fetch()['n'];
+}
+
+function post_by_slug(string $slug): ?array
+{
+    $sql = 'SELECT ' . PP_POST_COLS . ' FROM posts p
+            LEFT JOIN categories c ON c.id = p.category_id
+            WHERE p.slug = ? AND ' . pp_published_where() . ' LIMIT 1';
+    $stmt = db()->prepare($sql);
+    $stmt->execute([$slug, now()]);
+    return $stmt->fetch() ?: null;
+}
+
+function search_posts(string $q, int $limit, int $offset = 0): array
+{
+    $like = '%' . str_replace(['%', '_'], ['\\%', '\\_'], $q) . '%';
+    $sql = 'SELECT ' . PP_POST_COLS . ' FROM posts p
+            LEFT JOIN categories c ON c.id = p.category_id
+            WHERE ' . pp_published_where() . ' AND (p.title LIKE ? OR p.lede LIKE ? OR p.body LIKE ? OR p.dateline LIKE ?)
+            ORDER BY p.published_at DESC LIMIT ' . (int) $limit . ' OFFSET ' . (int) $offset;
+    $stmt = db()->prepare($sql);
+    $stmt->execute([now(), $like, $like, $like, $like]);
+    return $stmt->fetchAll();
+}
+
+function count_search_posts(string $q): int
+{
+    $like = '%' . str_replace(['%', '_'], ['\\%', '\\_'], $q) . '%';
+    $stmt = db()->prepare('SELECT COUNT(*) AS n FROM posts p
+        WHERE ' . pp_published_where() . ' AND (p.title LIKE ? OR p.lede LIKE ? OR p.body LIKE ? OR p.dateline LIKE ?)');
+    $stmt->execute([now(), $like, $like, $like, $like]);
+    return (int) $stmt->fetch()['n'];
+}
+
+function related_posts(?int $categoryId, int $excludeId, int $limit = 3): array
+{
+    if ($categoryId) {
+        $posts = posts_in_category($categoryId, $limit, [$excludeId]);
+        if (count($posts) >= $limit) {
+            return $posts;
+        }
+        $more = latest_posts($limit - count($posts), array_merge([$excludeId], array_column($posts, 'id')));
+        return array_merge($posts, $more);
+    }
+    return latest_posts($limit, [$excludeId]);
+}
+
+/** Unique slug for a new/updated post. */
+function unique_post_slug(string $title, int $ignoreId = 0): string
+{
+    $base = slugify($title);
+    $slug = $base;
+    $n = 2;
+    while (true) {
+        $stmt = db()->prepare('SELECT id FROM posts WHERE slug = ? AND id != ?');
+        $stmt->execute([$slug, $ignoreId]);
+        if (!$stmt->fetch()) {
+            return $slug;
+        }
+        $slug = $base . '-' . $n++;
+    }
+}
+
+/* --- Categories ---------------------------------------------------------- */
+
+function categories_all(): array
+{
+    return db()->query('SELECT * FROM categories ORDER BY sort, name')->fetchAll();
+}
+
+function category_by_slug(string $slug): ?array
+{
+    $stmt = db()->prepare('SELECT * FROM categories WHERE slug = ?');
+    $stmt->execute([$slug]);
+    return $stmt->fetch() ?: null;
+}
+
+/* --- Tags ---------------------------------------------------------------- */
+
+function tags_for_post(int $postId): array
+{
+    $stmt = db()->prepare('SELECT t.* FROM tags t JOIN post_tags pt ON pt.tag_id = t.id WHERE pt.post_id = ? ORDER BY t.name');
+    $stmt->execute([$postId]);
+    return $stmt->fetchAll();
+}
+
+function set_post_tags(int $postId, string $commaList): void
+{
+    $pdo = db();
+    $pdo->prepare('DELETE FROM post_tags WHERE post_id = ?')->execute([$postId]);
+    foreach (array_filter(array_map('trim', explode(',', $commaList))) as $name) {
+        $slug = slugify($name);
+        $stmt = $pdo->prepare('SELECT id FROM tags WHERE slug = ?');
+        $stmt->execute([$slug]);
+        $tag = $stmt->fetch();
+        if (!$tag) {
+            $pdo->prepare('INSERT INTO tags (name, slug) VALUES (?, ?)')->execute([$name, $slug]);
+            $tagId = (int) $pdo->lastInsertId();
+        } else {
+            $tagId = (int) $tag['id'];
+        }
+        $pdo->prepare('INSERT INTO post_tags (post_id, tag_id) VALUES (?, ?)')->execute([$postId, $tagId]);
+    }
+}
+
+/* --- Users ---------------------------------------------------------------- */
+
+function user_by_id(int $id): ?array
+{
+    $stmt = db()->prepare('SELECT * FROM users WHERE id = ?');
+    $stmt->execute([$id]);
+    return $stmt->fetch() ?: null;
+}
+
+function user_by_email(string $email): ?array
+{
+    $stmt = db()->prepare('SELECT * FROM users WHERE email = ?');
+    $stmt->execute([mb_strtolower(trim($email))]);
+    return $stmt->fetch() ?: null;
+}
+
+function users_count(): int
+{
+    return (int) db()->query('SELECT COUNT(*) AS n FROM users')->fetch()['n'];
+}
+
+/* --- News pull ------------------------------------------------------------ */
+
+function news_items_for_region(string $region, int $limit = 40, bool $includeUsed = true): array
+{
+    $sql = 'SELECT n.*, s.name AS source_name FROM news_items n
+            JOIN sources s ON s.id = n.source_id
+            WHERE n.region = ?' . ($includeUsed ? '' : ' AND n.used = 0') . '
+            ORDER BY COALESCE(n.published_at, n.fetched_at) DESC LIMIT ' . (int) $limit;
+    $stmt = db()->prepare($sql);
+    $stmt->execute([$region]);
+    return $stmt->fetchAll();
+}
+
+function sources_all(): array
+{
+    return db()->query('SELECT * FROM sources ORDER BY region, name')->fetchAll();
+}
+
+/* --- Stats for the dashboard ---------------------------------------------- */
+
+function pp_counts(): array
+{
+    $db = db();
+    return [
+        'published'   => (int) $db->query("SELECT COUNT(*) AS n FROM posts WHERE status = 'published'")->fetch()['n'],
+        'drafts'      => (int) $db->query("SELECT COUNT(*) AS n FROM posts WHERE status = 'draft'")->fetch()['n'],
+        'scheduled'   => (int) $db->query("SELECT COUNT(*) AS n FROM posts WHERE status = 'scheduled'")->fetch()['n'],
+        'subscribers' => (int) $db->query('SELECT COUNT(*) AS n FROM subscribers')->fetch()['n'],
+        'sources'     => (int) $db->query('SELECT COUNT(*) AS n FROM sources WHERE enabled = 1')->fetch()['n'],
+    ];
+}

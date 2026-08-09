@@ -1,0 +1,6 @@
+# Uploaded files are served, never executed.
+<FilesMatch "\.(?i:php|phtml|phar|php[0-9])$">
+  Require all denied
+</FilesMatch>
+RemoveHandler .php .phtml .phar
+RemoveType .php .phtml .phar

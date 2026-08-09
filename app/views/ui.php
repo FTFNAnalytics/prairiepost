@@ -1,0 +1,213 @@
+<?php
+/** The Prairie Post — public page chrome and shared render helpers. */
+
+/** Inline style carrying the desk colour for eyebrows, nav and section heads. */
+function desk_style(?string $color): string
+{
+    $color = $color ?: '#17301C';
+    return preg_match('/^#[0-9A-Fa-f]{3,8}$/', $color) ? ' style="--desk:' . e($color) . '"' : '';
+}
+
+function eyebrow(array $post): string
+{
+    if (empty($post['category_name'])) {
+        return '';
+    }
+    $href = url('desk/' . $post['category_slug']);
+    // Fill-only desk colours (Weather) set ink type on a colour block instead.
+    if (!empty($post['category_color_is_fill'])) {
+        return '<a class="eyebrow eyebrow--weather" href="' . e($href) . '">' . e($post['category_name']) . '</a>';
+    }
+    return '<a class="eyebrow" href="' . e($href) . '"' . desk_style($post['category_color']) . '>'
+         . e($post['category_name']) . '</a>';
+}
+
+function story_photo(array $post, bool $withCaption = false): string
+{
+    if (empty($post['image'])) {
+        return '';
+    }
+    $img = '<img src="' . e($post['image']) . '" alt="' . e($post['image_caption'] ?: $post['title']) . '" loading="lazy">';
+    if (!$withCaption || ($post['image_caption'] === '' && $post['image_credit'] === '')) {
+        return '<a class="photo" href="' . e(url('story/' . $post['slug'])) . '" tabindex="-1" aria-hidden="true">' . $img . '</a>';
+    }
+    $cap = '<figcaption>' . e($post['image_caption']);
+    if ($post['image_credit'] !== '') {
+        $cap .= ' <span class="credit">' . e($post['image_credit']) . '</span>';
+    }
+    $cap .= '</figcaption>';
+    return '<figure class="photo">' . $img . $cap . '</figure>';
+}
+
+function story_card(array $post, bool $withPhoto = true): string
+{
+    $html = '<article class="card">';
+    if ($withPhoto) {
+        $html .= story_photo($post);
+    }
+    $html .= eyebrow($post);
+    $html .= '<h3><a href="' . e(url('story/' . $post['slug'])) . '">' . e($post['title']) . '</a></h3>';
+    if (!empty($post['lede'])) {
+        $html .= '<p>' . e(excerpt($post['lede'], 140)) . '</p>';
+    }
+    $html .= '<p class="byline">' . dateline($post) . '</p>';
+    $html .= '</article>';
+    return $html;
+}
+
+/**
+ * Page head + masthead + nav.
+ * $meta keys: title, description, canonical, og_image, og_type, jsonld (array).
+ */
+function page_header(array $meta = [], string $activeDesk = ''): void
+{
+    $siteTitle = setting('site_title', 'The Prairie Post');
+    $tagline   = setting('tagline', 'News to the horizon');
+    $title = isset($meta['title']) && $meta['title'] !== ''
+        ? $meta['title'] . ' — ' . $siteTitle
+        : $siteTitle . ' — ' . $tagline;
+    $description = $meta['description'] ?? setting('meta_description', '');
+    $canonical   = $meta['canonical'] ?? (site_url() . ($_SERVER['REQUEST_URI'] ?? '/'));
+    $canonical   = strtok($canonical, '?') ?: $canonical;
+    if (!empty($meta['keep_query'])) {
+        $canonical = $meta['canonical'] ?? (site_url() . ($_SERVER['REQUEST_URI'] ?? '/'));
+    }
+    $ogImage = $meta['og_image'] ?? (site_url() . '/assets/img/og-default.png');
+    $ogType  = $meta['og_type'] ?? 'website';
+    ?>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title><?= e($title) ?></title>
+<?php if ($description !== ''): ?><meta name="description" content="<?= e($description) ?>">
+<?php endif; ?><link rel="canonical" href="<?= e($canonical) ?>">
+<link rel="icon" type="image/svg+xml" href="/assets/img/favicon.svg">
+<link rel="alternate" type="application/rss+xml" title="<?= e($siteTitle) ?>" href="<?= e(site_url()) ?>/feed/">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="/assets/css/prairie.css">
+<meta property="og:site_name" content="<?= e($siteTitle) ?>">
+<meta property="og:title" content="<?= e($meta['title'] ?? $siteTitle) ?>">
+<?php if ($description !== ''): ?><meta property="og:description" content="<?= e($description) ?>">
+<?php endif; ?><meta property="og:type" content="<?= e($ogType) ?>">
+<meta property="og:url" content="<?= e($canonical) ?>">
+<meta property="og:image" content="<?= e($ogImage) ?>">
+<meta name="twitter:card" content="summary_large_image">
+<?php if (!empty($meta['jsonld'])): ?>
+<script type="application/ld+json"><?= json_encode($meta['jsonld'], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) ?></script>
+<?php endif; ?>
+<?php $analytics = setting('analytics_code'); if ($analytics !== '') { echo $analytics . "\n"; } ?>
+</head>
+<body>
+<a class="pp-meta" href="#content" style="position:absolute;left:-9999px" onfocus="this.style.left='8px';this.style.top='8px'" onblur="this.style.left='-9999px'">Skip to the news</a>
+
+<div class="skybar">
+  <div class="wrap pp-meta">
+    <span><?= e(date('l, F j, Y')) ?></span>
+    <span><a href="<?= e(url('desk/weather')) ?>"><?= e(setting('weather_line', '')) ?></a></span>
+  </div>
+</div>
+
+<header class="masthead">
+  <div class="wrap">
+    <a class="logo" href="/" aria-label="<?= e($siteTitle) ?> — front page">
+      <img src="/assets/img/logo-primary.svg" alt="<?= e($siteTitle) ?>" width="820" height="138">
+    </a>
+    <div class="pp-horizon pp-horizon--full" style="margin-top:8px"></div>
+    <div class="tagline">
+      <span class="pp-meta"><?= e($tagline) ?></span>
+      <span class="pp-meta muted"><a href="<?= e(url('feed/')) ?>" style="color:inherit;text-decoration:none">RSS</a> · <a href="<?= e(url('search')) ?>" style="color:inherit;text-decoration:none">Search</a></span>
+    </div>
+  </div>
+</header>
+
+<nav class="desknav" aria-label="Desks">
+  <div class="wrap">
+    <?php foreach (categories_all() as $cat): ?>
+    <a href="<?= e(url('desk/' . $cat['slug'])) ?>"<?= desk_style($cat['color']) ?><?= !empty($cat['color_is_fill']) ? ' class="is-weather"' : '' ?><?= $activeDesk === $cat['slug'] ? ' aria-current="page"' : '' ?>><?= e($cat['name']) ?></a>
+    <?php endforeach; ?>
+  </div>
+</nav>
+
+<main id="content">
+<?php
+}
+
+function page_footer(): void
+{
+    $siteTitle = setting('site_title', 'The Prairie Post');
+    ?>
+</main>
+
+<footer class="sitefoot">
+  <div class="pp-horizon pp-horizon--full"></div>
+  <div class="inner">
+    <div class="wrap">
+      <div class="cols">
+        <div class="brandcol">
+          <img src="/assets/img/logo-reversed.svg" alt="<?= e($siteTitle) ?>" width="280" height="47">
+          <p><?= e(setting('footer_line', 'A regional daily for people who live between the towns: farm and market news alongside council, courts, weather and community.')) ?></p>
+        </div>
+        <div>
+          <p class="k">Desks</p>
+          <ul>
+            <?php foreach (categories_all() as $cat): ?>
+            <li><a href="<?= e(url('desk/' . $cat['slug'])) ?>"><?= e($cat['name']) ?></a></li>
+            <?php endforeach; ?>
+          </ul>
+        </div>
+        <div>
+          <p class="k">The paper</p>
+          <ul>
+            <li><a href="<?= e(url('search')) ?>">Search the archive</a></li>
+            <li><a href="<?= e(url('feed/')) ?>">RSS feed</a></li>
+            <li><a href="<?= e(url('subscribe')) ?>">The 6 a.m. newsletter</a></li>
+            <li><a href="/admin/">Newsroom sign-in</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="legal">
+        <span>© <?= e(date('Y')) ?> <?= e($siteTitle) ?> · <?= e(setting('tagline', 'News to the horizon')) ?></span>
+        <span>Archivo · Newsreader · IBM Plex Mono</span>
+      </div>
+    </div>
+  </div>
+</footer>
+</body>
+</html>
+<?php
+}
+
+/** The 6 a.m. signup block, used on the rail and the subscribe page. */
+function signup_block(): string
+{
+    $heading = setting('newsletter_heading', 'The 6 a.m.');
+    $copy    = setting('newsletter_copy', 'One email before the day starts: council, markets, weather, and what happened overnight.');
+    $ok = isset($_GET['subscribed']);
+    $html  = '<div class="signup">';
+    $html .= '<p class="k">' . e($heading) . '</p>';
+    if ($ok) {
+        $html .= '<p>You\'re on the list. The next edition lands at 6 a.m.</p>';
+    } else {
+        $html .= '<p>' . e($copy) . '</p>';
+        $html .= '<form method="post" action="' . e(url('subscribe')) . '">';
+        $html .= '<input type="email" name="email" required placeholder="you@example.com" aria-label="Email address">';
+        $html .= '<input type="text" name="website" value="" style="display:none" tabindex="-1" autocomplete="off" aria-hidden="true">';
+        $html .= '<button class="btn" type="submit">Subscribe</button>';
+        $html .= '</form>';
+    }
+    $html .= '</div>';
+    return $html;
+}
+
+/** An ad slot renders only when there is code to show; always labelled. */
+function ad_slot(string $key): string
+{
+    $code = setting('ad_' . $key);
+    if (trim($code) === '') {
+        return '';
+    }
+    return '<div class="adslot"><p class="k">Advertisement</p>' . $code . '</div>';
+}

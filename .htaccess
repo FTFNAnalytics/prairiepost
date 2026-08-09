@@ -1,0 +1,31 @@
+# The Prairie Post — Apache rewrite and protection rules.
+Options -Indexes
+
+<IfModule mod_rewrite.c>
+RewriteEngine On
+
+# Application internals are never served directly.
+RewriteRule ^(app|data)/ - [F,L]
+
+# Pretty URLs.
+RewriteRule ^story/([a-z0-9-]+)/?$ article.php?slug=$1 [L,QSA]
+RewriteRule ^desk/([a-z0-9-]+)/?$ section.php?slug=$1 [L,QSA]
+RewriteRule ^search/?$ search.php [L,QSA]
+RewriteRule ^feed/?$ feed.php [L]
+RewriteRule ^sitemap\.xml$ sitemap.php [L]
+RewriteRule ^subscribe/?$ subscribe.php [L,QSA]
+</IfModule>
+
+<FilesMatch "^(config\.php|config\.example\.php)$">
+  Require all denied
+</FilesMatch>
+
+# Sensible caching for static assets.
+<IfModule mod_expires.c>
+ExpiresActive On
+ExpiresByType text/css "access plus 7 days"
+ExpiresByType image/svg+xml "access plus 30 days"
+ExpiresByType image/png "access plus 30 days"
+ExpiresByType image/jpeg "access plus 30 days"
+ExpiresByType application/javascript "access plus 7 days"
+</IfModule>

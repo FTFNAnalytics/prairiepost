@@ -1,0 +1,237 @@
+<?php
+/** The Prairie Post — shared helpers. */
+
+function e(?string $s): string
+{
+    return htmlspecialchars((string) $s, ENT_QUOTES, 'UTF-8');
+}
+
+function url(string $path = ''): string
+{
+    return '/' . ltrim($path, '/');
+}
+
+function redirect(string $path): never
+{
+    header('Location: ' . $path);
+    exit;
+}
+
+function slugify(string $text): string
+{
+    $text = mb_strtolower(trim($text));
+    if (function_exists('iconv')) {
+        $t = @iconv('UTF-8', 'ASCII//TRANSLIT//IGNORE', $text);
+        if ($t !== false) {
+            $text = $t;
+        }
+    }
+    $text = preg_replace('/[^a-z0-9]+/', '-', $text);
+    return trim($text, '-') ?: 'story';
+}
+
+/* --- CSRF -------------------------------------------------------------- */
+
+function csrf_token(): string
+{
+    if (empty($_SESSION['csrf'])) {
+        $_SESSION['csrf'] = bin2hex(random_bytes(20));
+    }
+    return $_SESSION['csrf'];
+}
+
+function csrf_field(): string
+{
+    return '<input type="hidden" name="csrf" value="' . e(csrf_token()) . '">';
+}
+
+function csrf_check(): void
+{
+    $sent = $_POST['csrf'] ?? '';
+    if (!is_string($sent) || $sent === '' || !hash_equals($_SESSION['csrf'] ?? '', $sent)) {
+        http_response_code(403);
+        exit('The form token expired. Go back, reload the page, and try again.');
+    }
+}
+
+/* --- Auth --------------------------------------------------------------- */
+
+function current_user(): ?array
+{
+    static $user = false;
+    if ($user === false) {
+        $uid = $_SESSION['uid'] ?? 0;
+        $user = $uid ? user_by_id((int) $uid) : null;
+    }
+    return $user;
+}
+
+function require_login(): array
+{
+    $user = current_user();
+    if (!$user) {
+        redirect('/admin/login.php');
+    }
+    return $user;
+}
+
+function require_admin(): array
+{
+    $user = require_login();
+    if ($user['role'] !== 'admin') {
+        http_response_code(403);
+        exit('That page needs an administrator account.');
+    }
+    return $user;
+}
+
+/* --- Text --------------------------------------------------------------- */
+
+function excerpt(string $html, int $chars = 180): string
+{
+    $text = trim(preg_replace('/\s+/', ' ', strip_tags($html)));
+    if (mb_strlen($text) <= $chars) {
+        return $text;
+    }
+    $cut = mb_substr($text, 0, $chars);
+    $space = mb_strrpos($cut, ' ');
+    return ($space ? mb_substr($cut, 0, $space) : $cut) . '…';
+}
+
+/**
+ * Whitelist-sanitize stored article HTML before rendering or saving.
+ * Keeps editorial tags, strips scripts, event handlers and javascript: URLs.
+ */
+function sanitize_html(string $html): string
+{
+    $allowed = '<p><br><strong><em><b><i><u><s><a><h2><h3><blockquote><ul><ol><li>'
+             . '<figure><figcaption><img><table><thead><tbody><tr><td><th><hr><div><span>';
+    $html = strip_tags($html, $allowed);
+    $html = preg_replace('/\son\w+\s*=\s*("[^"]*"|\'[^\']*\'|[^\s>]+)/i', '', $html);
+    $html = preg_replace('/\s(href|src)\s*=\s*(["\']?)\s*javascript:[^"\'>\s]*\2/i', '', $html);
+    $html = preg_replace('/\s(href|src)\s*=\s*(["\']?)\s*data:text\/html[^"\'>\s]*\2/i', '', $html);
+    return $html;
+}
+
+function fmt_date(?string $dt, string $format = 'M j, Y'): string
+{
+    if (!$dt) {
+        return '';
+    }
+    $ts = strtotime($dt);
+    return $ts ? date($format, $ts) : '';
+}
+
+/** "6:40 a.m." / "Yesterday" / "Jul 3" — the register of a dateline, not a widget. */
+function time_label(?string $dt): string
+{
+    if (!$dt) {
+        return '';
+    }
+    $ts = strtotime($dt);
+    if (!$ts) {
+        return '';
+    }
+    $day = date('Y-m-d', $ts);
+    if ($day === date('Y-m-d')) {
+        return strtolower(str_replace(['AM', 'PM'], ['a.m.', 'p.m.'], date('g:i A', $ts)));
+    }
+    if ($day === date('Y-m-d', strtotime('-1 day'))) {
+        return 'Yesterday';
+    }
+    return date('M j', $ts);
+}
+
+/** Full dateline: "THREE HILLS — By Dana Ruthven · 6:40 a.m." */
+function dateline(array $post): string
+{
+    $parts = [];
+    if (!empty($post['dateline'])) {
+        $parts[] = mb_strtoupper($post['dateline']);
+    }
+    if (!empty($post['byline'])) {
+        $parts[] = 'By ' . $post['byline'];
+    }
+    if (!empty($post['published_at'])) {
+        $parts[] = time_label($post['published_at']);
+    }
+    return implode(' · ', array_map('e', $parts));
+}
+
+/* --- Feeds (shared by cron and the sources admin) ----------------------- */
+
+/** Fetch a URL with a short timeout; returns [body, error]. */
+function http_get(string $url, int $timeout = 12): array
+{
+    $ch = curl_init($url);
+    curl_setopt_array($ch, [
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_FOLLOWLOCATION => true,
+        CURLOPT_MAXREDIRS      => 5,
+        CURLOPT_TIMEOUT        => $timeout,
+        CURLOPT_CONNECTTIMEOUT => 8,
+        CURLOPT_USERAGENT      => 'PrairiePost/1.0 (+news reader)',
+        CURLOPT_ENCODING       => '',
+    ]);
+    $body = curl_exec($ch);
+    $err  = curl_error($ch);
+    $code = (int) curl_getinfo($ch, CURLINFO_RESPONSE_CODE);
+    curl_close($ch);
+
+    if ($body === false) {
+        return [null, $err ?: 'request failed'];
+    }
+    if ($code >= 400) {
+        return [null, 'HTTP ' . $code];
+    }
+    return [$body, null];
+}
+
+/**
+ * Parse an RSS 2.0 or Atom document into [[title, url, summary, published_at], …].
+ * Returns [items, error].
+ */
+function parse_feed(string $xml): array
+{
+    libxml_use_internal_errors(true);
+    $doc = simplexml_load_string($xml, 'SimpleXMLElement', LIBXML_NOCDATA);
+    if ($doc === false) {
+        return [[], 'not a valid RSS or Atom feed'];
+    }
+
+    $items = [];
+
+    if (isset($doc->channel->item)) {                       // RSS 2.0
+        foreach ($doc->channel->item as $item) {
+            $items[] = [
+                'title'        => trim((string) $item->title),
+                'url'          => trim((string) $item->link),
+                'summary'      => excerpt((string) ($item->description ?? ''), 300),
+                'published_at' => (string) $item->pubDate !== '' ? date('Y-m-d H:i:s', strtotime((string) $item->pubDate)) : null,
+            ];
+        }
+    } elseif (isset($doc->entry)) {                          // Atom
+        foreach ($doc->entry as $entry) {
+            $link = '';
+            foreach ($entry->link as $l) {
+                $rel = (string) $l['rel'];
+                if ($rel === '' || $rel === 'alternate') {
+                    $link = (string) $l['href'];
+                    break;
+                }
+            }
+            $when = (string) ($entry->published ?? $entry->updated ?? '');
+            $items[] = [
+                'title'        => trim((string) $entry->title),
+                'url'          => trim($link),
+                'summary'      => excerpt((string) ($entry->summary ?? $entry->content ?? ''), 300),
+                'published_at' => $when !== '' ? date('Y-m-d H:i:s', strtotime($when)) : null,
+            ];
+        }
+    } else {
+        return [[], 'no items found in feed'];
+    }
+
+    $items = array_values(array_filter($items, fn ($i) => $i['title'] !== '' && $i['url'] !== ''));
+    return [$items, null];
+}
