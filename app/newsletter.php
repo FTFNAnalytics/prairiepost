@@ -1,6 +1,6 @@
 <?php
 /**
- * The Prairie Post — The 6 a.m.
+ * The Prairie Dispatch — The 6 a.m.
  * Compiles the morning edition from the last 24 hours, renders it as
  * email-safe HTML in the brand's register, and sends it to the active list.
  */
@@ -23,7 +23,7 @@ function pp_edition_posts(): array
 function pp_compile_edition(): array
 {
     $posts = pp_edition_posts();
-    $siteTitle = setting('site_title', 'The Prairie Post');
+    $siteTitle = setting('site_title', 'The Prairie Dispatch');
     $dateLine = date('l, F j, Y');
     $subject = setting('newsletter_heading', 'The 6 a.m.') . ' — ' . date('l, M j')
         . ($posts ? ': ' . $posts[0]['title'] : '');
@@ -177,7 +177,7 @@ function pp_maybe_send_daily(): string
 function pp_send_confirmation(array $subscriber): ?string
 {
     $confirm = site_url() . '/newsletter/confirm?t=' . urlencode($subscriber['token']);
-    $siteTitle = setting('site_title', 'The Prairie Post');
+    $siteTitle = setting('site_title', 'The Prairie Dispatch');
     $html = '<!DOCTYPE html><html lang="en"><body style="font-family:Georgia,serif;color:#17301C;background:#F1F2F0;padding:24px;">'
         . '<div style="max-width:520px;margin:0 auto;">'
         . "<div style=\"font-family:'Arial Narrow',Arial,sans-serif;font-weight:bold;font-size:26px;border-bottom:4px solid #17301C;padding-bottom:6px;\">" . strtoupper(e($siteTitle)) . '</div>'

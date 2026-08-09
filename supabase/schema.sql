@@ -1,5 +1,5 @@
 -- ============================================================================
--- The Prairie Post network — shared content database schema (Postgres).
+-- The Prairie Dispatch network — shared content database schema (Postgres).
 --
 -- Run this once in the Supabase SQL Editor, OR simply point a site's
 -- config.php at the database: the app installs this same schema automatically
@@ -178,4 +178,4 @@ CREATE INDEX idx_news_region ON news_items (region, fetched_at);
 CREATE INDEX idx_post_sites_site ON post_sites (site_id);
 CREATE INDEX idx_ads_site_placement ON ads (site_id, placement);
 
-INSERT INTO settings (site_id, skey, svalue) VALUES (0, 'schema_version', '4');
+INSERT INTO settings (site_id, skey, svalue) VALUES (0, 'schema_version', '5');

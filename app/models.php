@@ -1,5 +1,5 @@
 <?php
-/** The Prairie Post — query layer. All access goes through prepared statements. */
+/** The Prairie Dispatch — query layer. All access goes through prepared statements. */
 
 /* --- Posts -------------------------------------------------------------- */
 

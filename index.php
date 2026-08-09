@@ -1,5 +1,5 @@
 <?php
-/** The Prairie Post — front page. */
+/** The Prairie Dispatch — front page. */
 require __DIR__ . '/app/bootstrap.php';
 require __DIR__ . '/app/views/ui.php';
 
@@ -18,7 +18,7 @@ page_header([
     'jsonld' => [
         '@context' => 'https://schema.org',
         '@type'    => 'NewsMediaOrganization',
-        'name'     => setting('site_title', 'The Prairie Post'),
+        'name'     => setting('site_title', 'The Prairie Dispatch'),
         'url'      => site_url(),
         'slogan'   => setting('tagline', 'News to the horizon'),
         'logo'     => site_url() . '/assets/img/mark.svg',

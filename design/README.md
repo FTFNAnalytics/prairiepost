@@ -1,4 +1,4 @@
-# The Prairie Post — brand package v1.0
+# The Prairie Dispatch — brand package v1.0
 
 Built from one photograph. Every colour in the system has a pixel coordinate in
 the source image, except one, which is declared as an exception in the guide.
@@ -7,13 +7,13 @@ the source image, except one, which is declared as an exception in the guide.
 
 | File | What it is |
 | --- | --- |
-| `prairie-post-brand-guide.html` | The full guide — palette, type, logo rules, section colours, homepage mock, voice, tokens. Open in a browser. Self-contained. |
-| `prairie-post-tokens.css` | Drop-in CSS custom properties, type roles, and the horizon rule component. |
-| `prairie-post-logo-primary.svg` | Primary horizontal lockup — wordmark on the rule, with tagline. Outlined; no font needed. |
-| `prairie-post-logo-reversed.svg` | Same lockup knocked out of Shelterbelt green. |
-| `prairie-post-logo-stacked.svg` | Stacked lockup with the farmstead. Use under 360 px and in print. |
-| `prairie-post-mark.svg` | App mark / social avatar. Use at 32 px and above. |
-| `prairie-post-mark-small.svg` | Reduced mark for favicons and anything under 32 px. |
+| `prairie-dispatch-brand-guide.html` | The full guide — palette, type, logo rules, section colours, homepage mock, voice, tokens. Open in a browser. Self-contained. |
+| `prairie-dispatch-tokens.css` | Drop-in CSS custom properties, type roles, and the horizon rule component. |
+| `prairie-dispatch-logo-primary.svg` | Primary horizontal lockup — wordmark on the rule, with tagline. Outlined; no font needed. |
+| `prairie-dispatch-logo-reversed.svg` | Same lockup knocked out of Shelterbelt green. |
+| `prairie-dispatch-logo-stacked.svg` | Stacked lockup with the farmstead. Use under 360 px and in print. |
+| `prairie-dispatch-mark.svg` | App mark / social avatar. Use at 32 px and above. |
+| `prairie-dispatch-mark-small.svg` | Reduced mark for favicons and anything under 32 px. |
 
 All wordmarks are outlined paths, so the SVGs render identically everywhere
 without loading a font.

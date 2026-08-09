@@ -1,5 +1,5 @@
 <?php
-/** The Prairie Post — feed aggregation, shared by cron and the sources admin. */
+/** The Prairie Dispatch — feed aggregation, shared by cron and the sources admin. */
 
 /** Fetch one source; returns [added_count, error|null]. Updates source status. */
 function pp_fetch_source(PDO $db, array $source): array

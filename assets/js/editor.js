@@ -1,4 +1,4 @@
-/* The Prairie Post — story editor. Small on purpose: a toolbar, a sync,
+/* The Prairie Dispatch — story editor. Small on purpose: a toolbar, a sync,
    an uploader, a word count, and an autosave that respects the workflow. */
 (function () {
   var editor = document.getElementById('editor');

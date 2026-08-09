@@ -1,11 +1,11 @@
 <?php
 /**
- * The Prairie Post — application bootstrap.
+ * The Prairie Dispatch — application bootstrap.
  * Every entry point (public page, admin page, cron) requires this file first.
  */
 
 define('PP_ROOT', dirname(__DIR__));
-define('PP_SCHEMA_VERSION', 4);
+define('PP_SCHEMA_VERSION', 5);
 
 $configFile = PP_ROOT . '/config.php';
 $GLOBALS['pp_config'] = is_file($configFile)
@@ -79,7 +79,7 @@ function db(): PDO
         ]);
     } else {
         $driver = 'sqlite';
-        $path = $cfg['sqlite_path'] ?? PP_ROOT . '/data/prairiepost.sqlite';
+        $path = $cfg['sqlite_path'] ?? PP_ROOT . '/data/prairiedispatch.sqlite';
         if (!is_dir(dirname($path))) {
             mkdir(dirname($path), 0775, true);
         }
@@ -129,7 +129,7 @@ function current_site(): array
     if ($site !== null) {
         return $site;
     }
-    $slug = slugify((string) pp_config('site_slug', 'prairiepost'));
+    $slug = slugify((string) pp_config('site_slug', 'prairiedispatch'));
     $stmt = db()->prepare('SELECT * FROM sites WHERE slug = ?');
     $stmt->execute([$slug]);
     $site = $stmt->fetch();

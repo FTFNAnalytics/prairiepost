@@ -1,5 +1,5 @@
 <?php
-/** The Prairie Post — story page. */
+/** The Prairie Dispatch — story page. */
 require __DIR__ . '/app/bootstrap.php';
 require __DIR__ . '/app/views/ui.php';
 
@@ -34,7 +34,7 @@ $jsonld = [
     ]),
     'publisher' => [
         '@type' => 'NewsMediaOrganization',
-        'name'  => setting('site_title', 'The Prairie Post'),
+        'name'  => setting('site_title', 'The Prairie Dispatch'),
         'logo'  => ['@type' => 'ImageObject', 'url' => site_url() . '/assets/img/mark.svg'],
     ],
 ];

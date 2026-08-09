@@ -6,7 +6,7 @@ require_editor();
 
 if (isset($_GET['export'])) {
     header('Content-Type: text/csv; charset=utf-8');
-    header('Content-Disposition: attachment; filename="prairiepost-subscribers-' . date('Y-m-d') . '.csv"');
+    header('Content-Disposition: attachment; filename="prairiedispatch-subscribers-' . date('Y-m-d') . '.csv"');
     $out = fopen('php://output', 'w');
     fputcsv($out, ['email', 'status', 'consent', 'confirmed_at', 'subscribed_at']);
     $stmt = db()->prepare('SELECT email, status, consent_note, confirmed_at, created_at FROM subscribers WHERE site_id = ? ORDER BY created_at');

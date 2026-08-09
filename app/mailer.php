@@ -1,6 +1,6 @@
 <?php
 /**
- * The Prairie Post — outgoing mail.
+ * The Prairie Dispatch — outgoing mail.
  * A deliberately small SMTP client (EHLO / STARTTLS / AUTH LOGIN / DATA) with
  * a PHP mail() fallback when no SMTP host is configured. No dependencies.
  */
@@ -13,7 +13,7 @@ function pp_send_mail(string $to, string $subject, string $html, string $listUns
         $host = parse_url(site_url(), PHP_URL_HOST) ?: 'localhost';
         $from = 'newsletter@' . preg_replace('/^www\./', '', $host);
     }
-    $fromName = setting('mail_from_name', setting('site_title', 'The Prairie Post'));
+    $fromName = setting('mail_from_name', setting('site_title', 'The Prairie Dispatch'));
 
     $encodedSubject = '=?UTF-8?B?' . base64_encode($subject) . '?=';
     $encodedFrom = '=?UTF-8?B?' . base64_encode($fromName) . '?=';

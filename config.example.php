@@ -1,6 +1,6 @@
 <?php
 /**
- * The Prairie Post — site configuration.
+ * The Prairie Dispatch — site configuration.
  *
  * Copy this file to config.php and adjust for your server. Three database
  * drivers are supported:
@@ -18,7 +18,7 @@
 return [
     'db' => [
         'driver' => 'sqlite',                                // 'sqlite', 'pgsql' or 'mysql'
-        'sqlite_path' => __DIR__ . '/data/prairiepost.sqlite',
+        'sqlite_path' => __DIR__ . '/data/prairiedispatch.sqlite',
         'pgsql' => [
             'host'    => 'aws-0-ca-central-1.pooler.supabase.com',
             'port'    => 5432,
@@ -29,8 +29,8 @@ return [
         ],
         'mysql' => [
             'host'    => 'localhost',
-            'name'    => 'prairiepost',
-            'user'    => 'prairiepost',
+            'name'    => 'prairiedispatch',
+            'user'    => 'prairiedispatch',
             'pass'    => '',
             'charset' => 'utf8mb4',
         ],
@@ -39,9 +39,9 @@ return [
     // Which site of the network this deployment is. Every install with the
     // same shared database gets its own slug; the slug scopes which published
     // articles, settings and subscribers belong to this front end.
-    'site_slug' => 'prairiepost',
+    'site_slug' => 'prairiedispatch',
 
-    // Canonical site URL, no trailing slash (e.g. 'https://prairiepost.com').
+    // Canonical site URL, no trailing slash (e.g. 'https://prairiedispatch.com').
     // Leave empty to auto-detect from the request.
     'site_url' => '',
 

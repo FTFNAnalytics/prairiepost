@@ -1,5 +1,5 @@
 <?php
-/** The Prairie Post — desk archive. */
+/** The Prairie Dispatch — desk archive. */
 require __DIR__ . '/app/bootstrap.php';
 require __DIR__ . '/app/views/ui.php';
 

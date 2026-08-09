@@ -1,6 +1,6 @@
 <?php
 /**
- * The Prairie Post — schema install and migrations.
+ * The Prairie Dispatch — schema install and migrations.
  * Drivers: sqlite (default), pgsql (shared network database, e.g. Supabase),
  * mysql. The canonical Postgres DDL also ships as supabase/schema.sql.
  */
@@ -255,10 +255,10 @@ function pp_migrate(PDO $pdo, string $driver): void
         $pdo->exec('CREATE INDEX idx_posts_author ON posts (author_id)');
 
         // The founding site inherits the existing single-site content.
-        $slug = slugify((string) pp_config('site_slug', 'prairiepost'));
+        $slug = slugify((string) pp_config('site_slug', 'prairiedispatch'));
         $titleRow = $pdo->query("SELECT svalue FROM settings WHERE skey = 'site_title'")->fetch();
         $pdo->prepare('INSERT INTO sites (name, slug, created_at) VALUES (?, ?, ?)')
-            ->execute([$titleRow['svalue'] ?? 'The Prairie Post', $slug, date('Y-m-d H:i:s')]);
+            ->execute([$titleRow['svalue'] ?? 'The Prairie Dispatch', $slug, date('Y-m-d H:i:s')]);
         $siteId = $driver === 'pgsql' ? (int) $pdo->lastInsertId('sites_id_seq') : (int) $pdo->lastInsertId();
 
         $pdo->exec("INSERT INTO post_sites (post_id, site_id) SELECT id, $siteId FROM posts");
@@ -350,5 +350,22 @@ function pp_migrate(PDO $pdo, string $driver): void
         }
 
         $pdo->exec("UPDATE settings SET svalue = '4' WHERE site_id = 0 AND skey = 'schema_version'");
+    }
+
+    if ($version < 5) {
+        // The paper renamed: The Prairie Post → The Prairie Dispatch.
+        // Only values still carrying the old default are touched; anything an
+        // editor customised stays exactly as they wrote it.
+        $rows = $pdo->query("SELECT site_id, skey, svalue FROM settings WHERE svalue LIKE '%Prairie Post%'")->fetchAll();
+        $upd = $pdo->prepare('UPDATE settings SET svalue = ? WHERE site_id = ? AND skey = ?');
+        foreach ($rows as $row) {
+            $upd->execute([str_replace(['The Prairie Post', 'Prairie Post'], ['The Prairie Dispatch', 'Prairie Dispatch'], $row['svalue']), $row['site_id'], $row['skey']]);
+        }
+        $sites = $pdo->query("SELECT id, name FROM sites WHERE name LIKE '%Prairie Post%'")->fetchAll();
+        $updSite = $pdo->prepare('UPDATE sites SET name = ? WHERE id = ?');
+        foreach ($sites as $site) {
+            $updSite->execute([str_replace(['The Prairie Post', 'Prairie Post'], ['The Prairie Dispatch', 'Prairie Dispatch'], $site['name']), $site['id']]);
+        }
+        $pdo->exec("UPDATE settings SET svalue = '5' WHERE site_id = 0 AND skey = 'schema_version'");
     }
 }

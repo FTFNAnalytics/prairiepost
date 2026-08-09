@@ -1,6 +1,6 @@
-# The Prairie Post
+# The Prairie Dispatch
 
-A regional news site and newsroom CMS built on the Prairie Post brand system —
+A regional news site and newsroom CMS built on the Prairie Dispatch brand system —
 *News to the horizon*. PHP 8 with SQLite, a shared Postgres/Supabase network
 database, or MySQL. No framework, no build step, no Composer. Upload it to
 shared hosting, or run it locally with one command.
@@ -93,7 +93,7 @@ sanitization of story HTML.
 php -S localhost:8080 router.php
 ```
 
-Open http://localhost:8080. First run creates `data/prairiepost.sqlite`,
+Open http://localhost:8080. First run creates `data/prairiedispatch.sqlite`,
 installs the schema, and seeds the desks, settings, wire sources and sample
 stories. Then open http://localhost:8080/admin/ — with no accounts yet, the
 sign-in page becomes a one-time form that creates the founding administrator.
@@ -125,7 +125,7 @@ for pretty URLs (the standard shared-host setup); the PHP built-in server uses
 
 ## Running a network on Supabase
 
-One Supabase project can feed any number of Prairie Post sites:
+One Supabase project can feed any number of Prairie Dispatch sites:
 
 1. In `config.php` on **every** site, set the `db` driver to `pgsql` and fill
    the `pgsql` block with the **Session pooler** details from Supabase

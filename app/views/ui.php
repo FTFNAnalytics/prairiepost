@@ -1,5 +1,5 @@
 <?php
-/** The Prairie Post — public page chrome and shared render helpers. */
+/** The Prairie Dispatch — public page chrome and shared render helpers. */
 
 /** Inline style carrying the desk colour for eyebrows, nav and section heads. */
 function desk_style(?string $color): string
@@ -61,7 +61,7 @@ function story_card(array $post, bool $withPhoto = true): string
  */
 function page_header(array $meta = [], string $activeDesk = ''): void
 {
-    $siteTitle = setting('site_title', 'The Prairie Post');
+    $siteTitle = setting('site_title', 'The Prairie Dispatch');
     $tagline   = setting('tagline', 'News to the horizon');
     $title = isset($meta['title']) && $meta['title'] !== ''
         ? $meta['title'] . ' — ' . $siteTitle
@@ -137,7 +137,7 @@ function page_header(array $meta = [], string $activeDesk = ''): void
 
 function page_footer(): void
 {
-    $siteTitle = setting('site_title', 'The Prairie Post');
+    $siteTitle = setting('site_title', 'The Prairie Dispatch');
     ?>
 </main>
 

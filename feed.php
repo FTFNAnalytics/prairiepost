@@ -1,9 +1,9 @@
 <?php
-/** The Prairie Post — RSS 2.0 feed of the latest 20 stories. */
+/** The Prairie Dispatch — RSS 2.0 feed of the latest 20 stories. */
 require __DIR__ . '/app/bootstrap.php';
 
 $posts = latest_posts(20);
-$siteTitle = setting('site_title', 'The Prairie Post');
+$siteTitle = setting('site_title', 'The Prairie Dispatch');
 
 header('Content-Type: application/rss+xml; charset=utf-8');
 echo '<?xml version="1.0" encoding="UTF-8"?>' . "\n";

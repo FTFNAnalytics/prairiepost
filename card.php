@@ -1,6 +1,6 @@
 <?php
 /**
- * The Prairie Post — social card generator.
+ * The Prairie Dispatch — social card generator.
  * /card/{slug}.png renders a 1200×630 Open Graph card for a story: mono
  * kicker, the horizon rule, the headline in condensed caps-height type, and
  * the five-band prairie ground. Cards are cached on disk and re-rendered
@@ -78,7 +78,7 @@ if (!is_file($cacheFile)) {
         $x = $track(19, $x, $kickerY, $col($deskHex), $deskName, 4.5);
         $x = $track(19, $x + 10, $kickerY, $board, '·', 4.5) + 10;
     }
-    $track(19, $x, $kickerY, $shelterbelt, setting('site_title', 'The Prairie Post'), 4.5);
+    $track(19, $x, $kickerY, $shelterbelt, setting('site_title', 'The Prairie Dispatch'), 4.5);
 
     // The horizon rule: ink, two pixels of paper, hairline.
     $ruleY = $kickerY + 26;

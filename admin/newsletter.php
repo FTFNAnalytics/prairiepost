@@ -107,11 +107,11 @@ flash_show();
       </div>
       <div>
         <label for="mail_from">From address</label>
-        <input type="email" id="mail_from" name="mail_from" value="<?= e(setting('mail_from')) ?>" placeholder="sixam@prairiepost.com">
+        <input type="email" id="mail_from" name="mail_from" value="<?= e(setting('mail_from')) ?>" placeholder="sixam@prairiedispatch.com">
         <label for="mail_from_name">From name</label>
         <input type="text" id="mail_from_name" name="mail_from_name" value="<?= e(setting('mail_from_name', setting('site_title'))) ?>">
         <label for="paper_address">The paper's mailing address · required by anti-spam law (CASL)</label>
-        <textarea id="paper_address" name="paper_address" class="prose" style="min-height:64px" placeholder="The Prairie Post, Box 100, Three Hills, AB T0M 2A0"><?= e(setting('paper_address')) ?></textarea>
+        <textarea id="paper_address" name="paper_address" class="prose" style="min-height:64px" placeholder="The Prairie Dispatch, Box 100, Three Hills, AB T0M 2A0"><?= e(setting('paper_address')) ?></textarea>
         <label for="newsletter_send_hour">Send after · o'clock, site time</label>
         <input type="text" id="newsletter_send_hour" name="newsletter_send_hour" value="<?= e(setting('newsletter_send_hour', '6')) ?>">
         <label style="display:flex;align-items:center;gap:8px;margin-top:16px;text-transform:none;letter-spacing:.04em">

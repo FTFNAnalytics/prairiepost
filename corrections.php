@@ -1,6 +1,6 @@
 <?php
 /**
- * The Prairie Post — the corrections file.
+ * The Prairie Dispatch — the corrections file.
  * Every correction the paper has run, in public, newest first. Being seen
  * to fix mistakes is the cheapest credibility a paper can buy.
  */
@@ -11,7 +11,7 @@ $posts = corrected_posts();
 
 page_header([
     'title' => 'The corrections file',
-    'description' => 'Every correction ' . setting('site_title', 'The Prairie Post') . ' has run, in public. When we get it wrong, this is where we say so.',
+    'description' => 'Every correction ' . setting('site_title', 'The Prairie Dispatch') . ' has run, in public. When we get it wrong, this is where we say so.',
 ]);
 ?>
 <div class="pagehead wrap" style="--desk:#9C3B22">

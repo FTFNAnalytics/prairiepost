@@ -1,5 +1,5 @@
 <?php
-/** The Prairie Post — archive search. */
+/** The Prairie Dispatch — archive search. */
 require __DIR__ . '/app/bootstrap.php';
 require __DIR__ . '/app/views/ui.php';
 

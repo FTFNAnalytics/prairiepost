@@ -1,6 +1,6 @@
 <?php
 /**
- * The Prairie Post — The 6 a.m., public side.
+ * The Prairie Dispatch — The 6 a.m., public side.
  *   /newsletter/                the archive of past editions + signup
  *   /newsletter/2026-08-09      one edition, as it was sent
  *   /newsletter/confirm?t=…     double opt-in confirmation

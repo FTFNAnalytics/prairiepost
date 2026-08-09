@@ -1,5 +1,5 @@
 <?php
-/** The Prairie Post — public author page. */
+/** The Prairie Dispatch — public author page. */
 require __DIR__ . '/app/bootstrap.php';
 require __DIR__ . '/app/views/ui.php';
 
@@ -33,7 +33,7 @@ page_header([
         'name'     => $author['name'],
         'jobTitle' => $author['title'] ?: 'Reporter',
         'url'      => site_url() . '/author/' . $author['slug'],
-        'worksFor' => ['@type' => 'NewsMediaOrganization', 'name' => setting('site_title', 'The Prairie Post')],
+        'worksFor' => ['@type' => 'NewsMediaOrganization', 'name' => setting('site_title', 'The Prairie Dispatch')],
     ],
 ]);
 ?>

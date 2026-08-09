@@ -1,4 +1,4 @@
-# The Prairie Post — Apache rewrite and protection rules.
+# The Prairie Dispatch — Apache rewrite and protection rules.
 Options -Indexes
 
 <IfModule mod_rewrite.c>

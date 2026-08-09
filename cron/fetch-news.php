@@ -1,6 +1,6 @@
 <?php
 /**
- * The Prairie Post — daily automation.
+ * The Prairie Dispatch — daily automation.
  * Fetches every enabled wire feed, de-duplicates by URL, prunes unused items
  * older than 14 days, and publishes scheduled stories whose time has come.
  *

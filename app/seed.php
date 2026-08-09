@@ -1,6 +1,6 @@
 <?php
 /**
- * The Prairie Post — first-run seed and site provisioning.
+ * The Prairie Dispatch — first-run seed and site provisioning.
  * pp_seed() populates a fresh database: the founding site, desks, settings,
  * verified wire sources, and sample stories that demonstrate the design.
  * pp_create_site() provisions an additional site joining a shared database.
@@ -47,7 +47,7 @@ function pp_site_default_settings(string $title): array
         'smtp_user'          => '',
         'smtp_pass'          => '',
         'smtp_secure'        => 'tls',   // tls | ssl | none
-        'mail_from'          => '',      // e.g. sixam@prairiepost.com
+        'mail_from'          => '',      // e.g. sixam@prairiedispatch.com
         'mail_from_name'     => $title,
         'paper_address'      => '',      // CASL: the paper's mailing address
         'newsletter_enabled' => '0',
@@ -76,9 +76,9 @@ function pp_create_site(PDO $pdo, string $slug, ?string $name = null): array
 function pp_seed(PDO $pdo): void
 {
     /* --- The founding site ----------------------------------------------- */
-    $slug = slugify((string) pp_config('site_slug', 'prairiepost'));
+    $slug = slugify((string) pp_config('site_slug', 'prairiedispatch'));
     $pdo->prepare('INSERT INTO sites (name, slug, created_at) VALUES (?, ?, ?)')
-        ->execute(['The Prairie Post', $slug, date('Y-m-d H:i:s')]);
+        ->execute(['The Prairie Dispatch', $slug, date('Y-m-d H:i:s')]);
     $siteId = pp_seed_last_id($pdo, 'sites');
 
     /* --- Desks: each one owns a colour ---------------------------------- */
@@ -100,7 +100,7 @@ function pp_seed(PDO $pdo): void
     }
 
     /* --- Settings -------------------------------------------------------- */
-    $settings = array_merge(pp_site_default_settings('The Prairie Post'), [
+    $settings = array_merge(pp_site_default_settings('The Prairie Dispatch'), [
         'weather_line'  => '21° and clearing · Wind NW 30 km/h',
         'markets'       => json_encode([
             ['Canola Nov',  '687.40', '+4.10'],

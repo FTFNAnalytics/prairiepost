@@ -1,5 +1,5 @@
 <?php
-/** The Prairie Post — shared helpers. */
+/** The Prairie Dispatch — shared helpers. */
 
 function e(?string $s): string
 {
@@ -229,7 +229,7 @@ function http_get(string $url, int $timeout = 12): array
         CURLOPT_MAXREDIRS      => 5,
         CURLOPT_TIMEOUT        => $timeout,
         CURLOPT_CONNECTTIMEOUT => 8,
-        CURLOPT_USERAGENT      => 'PrairiePost/1.0 (+news reader)',
+        CURLOPT_USERAGENT      => 'PrairieDispatch/1.0 (+news reader)',
         CURLOPT_ENCODING       => '',
     ]);
     $body = curl_exec($ch);

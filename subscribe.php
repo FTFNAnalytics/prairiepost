@@ -1,5 +1,5 @@
 <?php
-/** The Prairie Post — newsletter signup endpoint and page. */
+/** The Prairie Dispatch — newsletter signup endpoint and page. */
 require __DIR__ . '/app/bootstrap.php';
 require __DIR__ . '/app/views/ui.php';
 

@@ -1,5 +1,5 @@
 <?php
-/** The Prairie Post — admin chrome. Include after bootstrap; call admin_header()/admin_footer(). */
+/** The Prairie Dispatch — admin chrome. Include after bootstrap; call admin_header()/admin_footer(). */
 
 function flash_set(string $message, bool $error = false): void
 {
@@ -41,7 +41,7 @@ function admin_header(string $title, string $active = ''): void
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title><?= e($title) ?> — Newsroom — <?= e(setting('site_title', 'The Prairie Post')) ?></title>
+<title><?= e($title) ?> — Newsroom — <?= e(setting('site_title', 'The Prairie Dispatch')) ?></title>
 <meta name="robots" content="noindex,nofollow">
 <link rel="icon" type="image/svg+xml" href="/assets/img/favicon.svg">
 <link rel="stylesheet" href="/assets/css/admin.css">
@@ -74,7 +74,7 @@ function admin_footer(): void
 </main>
 <footer class="adminfoot">
   <div class="wrap">
-    <span><?= e(setting('site_title', 'The Prairie Post')) ?> · Newsroom</span>
+    <span><?= e(setting('site_title', 'The Prairie Dispatch')) ?> · Newsroom</span>
     <span><a href="/" style="color:inherit">View the site →</a></span>
   </div>
 </footer>

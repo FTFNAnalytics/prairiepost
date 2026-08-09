@@ -1,5 +1,5 @@
 <?php
-/** The Prairie Post — ad click-through: count, then redirect to the advertiser. */
+/** The Prairie Dispatch — ad click-through: count, then redirect to the advertiser. */
 require __DIR__ . '/app/bootstrap.php';
 
 $ad = ad_by_id((int) ($_GET['id'] ?? 0));
