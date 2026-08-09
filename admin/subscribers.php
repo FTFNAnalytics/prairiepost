@@ -2,14 +2,16 @@
 /** The 6 a.m. list: subscribers, with CSV export for the mail tool. */
 require dirname(__DIR__) . '/app/bootstrap.php';
 require __DIR__ . '/_layout.php';
-require_login();
+require_editor();
 
 if (isset($_GET['export'])) {
     header('Content-Type: text/csv; charset=utf-8');
     header('Content-Disposition: attachment; filename="prairiepost-subscribers-' . date('Y-m-d') . '.csv"');
     $out = fopen('php://output', 'w');
     fputcsv($out, ['email', 'subscribed_at']);
-    foreach (db()->query('SELECT email, created_at FROM subscribers ORDER BY created_at') as $row) {
+    $stmt = db()->prepare('SELECT email, created_at FROM subscribers WHERE site_id = ? ORDER BY created_at');
+    $stmt->execute([current_site_id()]);
+    foreach ($stmt as $row) {
         fputcsv($out, [$row['email'], $row['created_at']]);
     }
     fclose($out);
@@ -25,8 +27,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     redirect('subscribers.php');
 }
 
-$total = (int) db()->query('SELECT COUNT(*) AS n FROM subscribers')->fetch()['n'];
-$subs = db()->query('SELECT * FROM subscribers ORDER BY created_at DESC LIMIT 200')->fetchAll();
+$cnt = db()->prepare('SELECT COUNT(*) AS n FROM subscribers WHERE site_id = ?');
+$cnt->execute([current_site_id()]);
+$total = (int) $cnt->fetch()['n'];
+$list = db()->prepare('SELECT * FROM subscribers WHERE site_id = ? ORDER BY created_at DESC LIMIT 200');
+$list->execute([current_site_id()]);
+$subs = $list->fetchAll();
 
 admin_header('Subscribers', 'subscribers');
 flash_show();

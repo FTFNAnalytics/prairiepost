@@ -98,6 +98,7 @@ input:focus,select:focus,textarea:focus{border-color:var(--pp-bigsky);outline:no
 .chip--published{background:var(--pp-quarter);color:var(--pp-cloudbank)}
 .chip--draft{background:var(--pp-highsky);color:var(--pp-shelterbelt)}
 .chip--scheduled{background:var(--pp-straw);color:var(--pp-shelterbelt)}
+.chip--in_review{background:var(--pp-bigsky);color:var(--pp-cloudbank)}
 .chip--used{background:var(--pp-board);color:var(--pp-shelterbelt)}
 .chip--error{background:var(--pp-binred);color:var(--pp-cloudbank)}
 .chip--ok{background:var(--pp-quarter);color:var(--pp-cloudbank)}

@@ -1,13 +1,75 @@
 <?php
 /**
- * The Prairie Post — first-run seed.
- * Desks, settings, verified wire sources, and sample stories so the site
- * demonstrates the design the moment it is installed. Replace the stories
- * with real reporting; everything here is editable or deletable in the admin.
+ * The Prairie Post — first-run seed and site provisioning.
+ * pp_seed() populates a fresh database: the founding site, desks, settings,
+ * verified wire sources, and sample stories that demonstrate the design.
+ * pp_create_site() provisions an additional site joining a shared database.
+ *
+ * NOTE: everything here uses the passed-in $pdo, never db() — these run while
+ * the connection is still being established.
  */
 
-function pp_seed(PDO $db): void
+function pp_seed_last_id(PDO $pdo, string $table): int
 {
+    return $pdo->getAttribute(PDO::ATTR_DRIVER_NAME) === 'pgsql'
+        ? (int) $pdo->lastInsertId($table . '_id_seq')
+        : (int) $pdo->lastInsertId();
+}
+
+/** Default per-site settings for a new site row. */
+function pp_site_default_settings(string $title): array
+{
+    return [
+        'site_title'         => $title,
+        'tagline'            => 'News to the horizon',
+        'meta_description'   => 'A regional daily for people who live between the towns: farm and market news alongside council, courts, weather and community.',
+        'footer_line'        => 'A regional daily for people who live between the towns: farm and market news alongside council, courts, weather and community.',
+        'newsletter_heading' => 'The 6 a.m.',
+        'newsletter_copy'    => 'One email before the day starts: council, markets, weather, and what happened overnight.',
+        'weather_line'       => '',
+        'regions'            => json_encode([
+            'local'       => 'Local & county',
+            'alberta'     => 'Alberta',
+            'canada'      => 'Canada',
+            'agriculture' => 'Agriculture wire',
+        ]),
+        'markets'            => '',
+        'markets_note'       => '',
+        'weather_today'      => '',
+        'ad_top'             => '',
+        'ad_rail'            => '',
+        'ad_article'         => '',
+        'analytics_code'     => '',
+        'cron_secret'        => bin2hex(random_bytes(16)),
+    ];
+}
+
+/** Create a site row plus its default settings; returns the site row. */
+function pp_create_site(PDO $pdo, string $slug, ?string $name = null): array
+{
+    $name = $name ?: ucwords(str_replace('-', ' ', $slug));
+    $pdo->prepare('INSERT INTO sites (name, slug, created_at) VALUES (?, ?, ?)')
+        ->execute([$name, $slug, date('Y-m-d H:i:s')]);
+    $siteId = pp_seed_last_id($pdo, 'sites');
+
+    $ins = $pdo->prepare('INSERT INTO settings (site_id, skey, svalue) VALUES (?, ?, ?)');
+    foreach (pp_site_default_settings($name) as $k => $v) {
+        $ins->execute([$siteId, $k, $v]);
+    }
+
+    $stmt = $pdo->prepare('SELECT * FROM sites WHERE id = ?');
+    $stmt->execute([$siteId]);
+    return $stmt->fetch();
+}
+
+function pp_seed(PDO $pdo): void
+{
+    /* --- The founding site ----------------------------------------------- */
+    $slug = slugify((string) pp_config('site_slug', 'prairiepost'));
+    $pdo->prepare('INSERT INTO sites (name, slug, created_at) VALUES (?, ?, ?)')
+        ->execute(['The Prairie Post', $slug, date('Y-m-d H:i:s')]);
+    $siteId = pp_seed_last_id($pdo, 'sites');
+
     /* --- Desks: each one owns a colour ---------------------------------- */
     $desks = [
         // name, slug, colour, colour is fill-only, description, sort
@@ -19,48 +81,31 @@ function pp_seed(PDO $db): void
         ['Opinion',            'opinion',     '#9C3B22', 0, 'Signed columns and the editorial board. Rationed, like the red.', 6],
         ['Weather',            'weather',     '#77B2D6', 1, 'The forecast to the horizon, and what it means for the field.', 7],
     ];
-    $insCat = $db->prepare('INSERT INTO categories (name, slug, color, color_is_fill, description, sort) VALUES (?, ?, ?, ?, ?, ?)');
+    $insCat = $pdo->prepare('INSERT INTO categories (name, slug, color, color_is_fill, description, sort) VALUES (?, ?, ?, ?, ?, ?)');
     $catId = [];
     foreach ($desks as $d) {
         $insCat->execute($d);
-        $catId[$d[1]] = (int) $db->lastInsertId();
+        $catId[$d[1]] = pp_seed_last_id($pdo, 'categories');
     }
 
     /* --- Settings -------------------------------------------------------- */
-    $settings = [
-        'site_title'         => 'The Prairie Post',
-        'tagline'            => 'News to the horizon',
-        'meta_description'   => 'A regional daily for people who live between the towns: farm and market news alongside council, courts, weather and community.',
-        'footer_line'        => 'A regional daily for people who live between the towns: farm and market news alongside council, courts, weather and community.',
-        'newsletter_heading' => 'The 6 a.m.',
-        'newsletter_copy'    => 'One email before the day starts: council, markets, weather, and what happened overnight.',
-        'weather_line'       => '21° and clearing · Wind NW 30 km/h',
-        'regions'            => json_encode([
-            'local'       => 'Local & county',
-            'alberta'     => 'Alberta',
-            'canada'      => 'Canada',
-            'agriculture' => 'Agriculture wire',
-        ]),
-        'markets'            => json_encode([
+    $settings = array_merge(pp_site_default_settings('The Prairie Post'), [
+        'weather_line'  => '21° and clearing · Wind NW 30 km/h',
+        'markets'       => json_encode([
             ['Canola Nov',  '687.40', '+4.10'],
             ['Wheat CWRS',  '318.75', '-1.25'],
             ['Barley Feed', '241.00', '+0.75'],
             ['Steers 850lb','402.50', '+2.00'],
         ]),
-        'markets_note'       => 'Prices last updated 4:15 p.m.',
-        'weather_today'      => json_encode([
+        'markets_note'  => 'Prices last updated 4:15 p.m.',
+        'weather_today' => json_encode([
             'temp' => '21°', 'hi' => '24°', 'lo' => '9°',
             'line' => 'Sun through the afternoon, wind out of the northwest at 30 km/h. Frost risk in the valley bottoms overnight.',
         ]),
-        'ad_top'             => '',
-        'ad_rail'            => '',
-        'ad_article'         => '',
-        'analytics_code'     => '',
-        'cron_secret'        => bin2hex(random_bytes(16)),
-    ];
-    $insSet = $db->prepare('INSERT INTO settings (skey, svalue) VALUES (?, ?)');
+    ]);
+    $insSet = $pdo->prepare('INSERT INTO settings (site_id, skey, svalue) VALUES (?, ?, ?)');
     foreach ($settings as $k => $v) {
-        $insSet->execute([$k, $v]);
+        $insSet->execute([$siteId, $k, $v]);
     }
 
     /* --- Wire sources (verified working at build time) ------------------- */
@@ -80,7 +125,7 @@ function pp_seed(PDO $db): void
         ['Manitoba Co-operator', 'https://www.manitobacooperator.ca/feed/',                  'agriculture'],
         ['Farmtario',            'https://farmtario.com/feed/',                              'agriculture'],
     ];
-    $insSrc = $db->prepare('INSERT INTO sources (name, url, region, enabled) VALUES (?, ?, ?, 1)');
+    $insSrc = $pdo->prepare('INSERT INTO sources (name, url, region, enabled) VALUES (?, ?, ?, 1)');
     foreach ($sources as $s) {
         $insSrc->execute($s);
     }
@@ -260,10 +305,14 @@ function pp_seed(PDO $db): void
         ],
     ];
 
-    $insPost = $db->prepare('INSERT INTO posts
+    $insPost = $pdo->prepare('INSERT INTO posts
         (title, slug, category_id, byline, dateline, lede, body, image, image_caption, image_credit,
          meta_description, status, is_featured, published_at, created_at, updated_at)
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
+    $insMap = $pdo->prepare('INSERT INTO post_sites (post_id, site_id) VALUES (?, ?)');
+    $selTag = $pdo->prepare('SELECT id FROM tags WHERE slug = ?');
+    $insTag = $pdo->prepare('INSERT INTO tags (name, slug) VALUES (?, ?)');
+    $insPT  = $pdo->prepare('INSERT INTO post_tags (post_id, tag_id) VALUES (?, ?)');
 
     foreach ($stories as $s) {
         $insPost->execute([
@@ -271,9 +320,18 @@ function pp_seed(PDO $db): void
             $s['lede'], $s['body'], $s['image'], $s['image_caption'], $s['image_credit'],
             excerpt($s['lede'], 155), 'published', $s['featured'], $s['published'], $s['published'], $s['published'],
         ]);
-        $postId = (int) $db->lastInsertId();
-        if (!empty($s['tags'])) {
-            set_post_tags($postId, $s['tags']);
+        $postId = pp_seed_last_id($pdo, 'posts');
+        $insMap->execute([$postId, $siteId]);
+        foreach (array_filter(array_map('trim', explode(',', $s['tags'] ?? ''))) as $name) {
+            $tslug = slugify($name);
+            $selTag->execute([$tslug]);
+            $tag = $selTag->fetch();
+            $tagId = $tag ? (int) $tag['id'] : null;
+            if ($tagId === null) {
+                $insTag->execute([$name, $tslug]);
+                $tagId = pp_seed_last_id($pdo, 'tags');
+            }
+            $insPT->execute([$postId, $tagId]);
         }
     }
 }

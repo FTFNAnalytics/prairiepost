@@ -2,7 +2,7 @@
 /** Desks: each one owns a colour, a slug, and a line of description. */
 require dirname(__DIR__) . '/app/bootstrap.php';
 require __DIR__ . '/_layout.php';
-require_login();
+require_editor();
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     csrf_check();

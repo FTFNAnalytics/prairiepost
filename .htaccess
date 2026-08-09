@@ -10,6 +10,7 @@ RewriteRule ^(app|data)/ - [F,L]
 # Pretty URLs.
 RewriteRule ^story/([a-z0-9-]+)/?$ article.php?slug=$1 [L,QSA]
 RewriteRule ^desk/([a-z0-9-]+)/?$ section.php?slug=$1 [L,QSA]
+RewriteRule ^author/([a-z0-9-]+)/?$ author.php?slug=$1 [L,QSA]
 RewriteRule ^search/?$ search.php [L,QSA]
 RewriteRule ^feed/?$ feed.php [L]
 RewriteRule ^sitemap\.xml$ sitemap.php [L]

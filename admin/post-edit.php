@@ -1,8 +1,13 @@
 <?php
-/** Story editor: write, schedule, publish. */
+/**
+ * Story editor: write, submit for review, schedule, publish, syndicate.
+ * Authors work on their own stories and hand them to the review queue;
+ * editors and admins publish, schedule, pin, and choose sites.
+ */
 require dirname(__DIR__) . '/app/bootstrap.php';
 require __DIR__ . '/_layout.php';
 $user = require_login();
+$editor = is_editor($user);
 
 $id = (int) ($_GET['id'] ?? 0);
 $post = null;
@@ -14,7 +19,15 @@ if ($id) {
         flash_set('That story no longer exists — it may have been deleted.', true);
         redirect('posts.php');
     }
+    if (!can_edit_post($user, $post)) {
+        http_response_code(403);
+        exit('That story belongs to another author. Editors can open anything; authors open their own.');
+    }
 }
+
+$allowedStatuses = $editor
+    ? ['draft', 'in_review', 'published', 'scheduled']
+    : ['draft', 'in_review'];
 
 $error = '';
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -22,7 +35,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $title    = trim((string) ($_POST['title'] ?? ''));
     $lede     = trim((string) ($_POST['lede'] ?? ''));
     $body     = sanitize_html((string) ($_POST['body'] ?? ''));
-    $status   = in_array($_POST['status'] ?? '', ['draft', 'published', 'scheduled'], true) ? $_POST['status'] : 'draft';
+    $status   = in_array($_POST['status'] ?? '', $allowedStatuses, true) ? $_POST['status'] : 'draft';
     $publishedAt = trim((string) ($_POST['published_at'] ?? ''));
 
     if ($title === '') {
@@ -54,13 +67,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             'meta_description' => mb_substr(trim((string) ($_POST['meta_description'] ?? '')), 0, 255),
             'source_url' => trim((string) ($_POST['source_url'] ?? '')),
             'status' => $status,
-            'is_featured' => isset($_POST['is_featured']) ? 1 : 0,
             'published_at' => $publishedAt ?: null,
             'updated_at' => now(),
         ];
-        if ($fields['is_featured']) {
-            db()->exec('UPDATE posts SET is_featured = 0');
+
+        if ($editor) {
+            $fields['is_featured'] = isset($_POST['is_featured']) ? 1 : 0;
+            $fields['review_note'] = trim((string) ($_POST['review_note'] ?? ''));
+            if ($fields['is_featured']) {
+                db()->exec('UPDATE posts SET is_featured = 0');
+            }
         }
+
         if ($post) {
             $fields['slug'] = unique_post_slug($title, (int) $post['id']);
             $set = implode(', ', array_map(fn ($k) => "$k = ?", array_keys($fields)));
@@ -74,11 +92,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $cols = implode(', ', array_keys($fields));
             $marks = implode(', ', array_fill(0, count($fields), '?'));
             db()->prepare("INSERT INTO posts ($cols) VALUES ($marks)")->execute(array_values($fields));
-            $id = (int) db()->lastInsertId();
+            $id = pp_last_id('posts');
         }
         set_post_tags($id, (string) ($_POST['tags'] ?? ''));
-        flash_set($status === 'published' ? 'Published. The story is live on the site.'
-            : ($status === 'scheduled' ? 'Scheduled. It goes live at the set time (the cron job flips it).' : 'Draft saved.'));
+
+        // Syndication: editors pick sites; authors' stories default to this site.
+        if ($editor && isset($_POST['sites'])) {
+            $picked = array_map('intval', (array) $_POST['sites']);
+            set_post_sites($id, $picked ?: [current_site_id()]);
+        } elseif (!site_ids_for_post($id)) {
+            set_post_sites($id, [current_site_id()]);
+        }
+
+        flash_set(match ($status) {
+            'published' => 'Published. The story is live.',
+            'scheduled' => 'Scheduled. It goes live at the set time (the cron job flips it).',
+            'in_review' => 'Submitted. An editor will pick it up from the review queue.',
+            default     => 'Draft saved.',
+        });
         redirect('post-edit.php?id=' . $id);
     }
 
@@ -92,21 +123,30 @@ if ($id && empty($error)) {
 } elseif (isset($_POST['tags'])) {
     $tagsValue = (string) $_POST['tags'];
 }
+$postSites = $id ? site_ids_for_post($id) : [current_site_id()];
+$allSites = sites_all();
 
 $v = fn (string $key, string $default = '') => e((string) ($post[$key] ?? $default));
+$st = (string) ($post['status'] ?? 'draft');
 
 admin_header($id ? 'Edit story' : 'New story', 'posts');
 flash_show();
 if ($error) {
     echo '<div class="flash flash--error">' . e($error) . '</div>';
 }
+if (!$editor && !empty($post['review_note'])) {
+    echo '<div class="flash flash--error"><strong>From the editor:</strong> ' . e($post['review_note']) . '</div>';
+}
 ?>
 
 <div class="headrow">
   <h1 class="pagetitle"><?= $id ? 'Edit story' : 'New story' ?></h1>
-  <?php if ($id && ($post['status'] ?? '') === 'published'): ?>
-  <a class="btn btn--ghost" href="/story/<?= $v('slug') ?>" target="_blank">View on the site →</a>
-  <?php endif; ?>
+  <div>
+    <?php if ($st === 'in_review'): ?><span class="chip chip--scheduled">In review</span><?php endif; ?>
+    <?php if ($id && $st === 'published'): ?>
+    <a class="btn btn--ghost" href="/story/<?= $v('slug') ?>" target="_blank">View on the site →</a>
+    <?php endif; ?>
+  </div>
 </div>
 
 <form method="post" id="storyform">
@@ -180,25 +220,47 @@ if ($error) {
       <div>
         <label for="status">Status</label>
         <select id="status" name="status">
-          <?php $st = (string) ($post['status'] ?? 'draft'); ?>
           <option value="draft"<?= $st === 'draft' ? ' selected' : '' ?>>Draft — visible to the newsroom only</option>
+          <option value="in_review"<?= $st === 'in_review' ? ' selected' : '' ?>>Submit for review — an editor signs off</option>
+          <?php if ($editor): ?>
           <option value="published"<?= $st === 'published' ? ' selected' : '' ?>>Published — live on the site</option>
           <option value="scheduled"<?= $st === 'scheduled' ? ' selected' : '' ?>>Scheduled — goes live at the set time</option>
+          <?php endif; ?>
         </select>
+        <?php if ($editor): ?>
         <label for="published_at">Publish time</label>
         <input type="datetime-local" id="published_at" name="published_at"
                value="<?= !empty($post['published_at']) ? e(date('Y-m-d\TH:i', strtotime($post['published_at']))) : '' ?>">
         <p class="help">Leave blank on publish to use right now.</p>
+        <label for="review_note">Note to the author · shown when you send a story back</label>
+        <textarea id="review_note" name="review_note" class="prose" style="min-height:64px"><?= $v('review_note') ?></textarea>
+        <?php else: ?>
+        <p class="help">Publishing and scheduling happen at the editor's desk. Submit for review when the story is ready.</p>
+        <?php endif; ?>
       </div>
       <div>
         <label for="meta_description">Search description · 155 characters</label>
         <textarea id="meta_description" name="meta_description" maxlength="255" style="min-height:64px"><?= $v('meta_description') ?></textarea>
         <label for="source_url">Source link · when started from the wire</label>
         <input type="url" id="source_url" name="source_url" value="<?= $v('source_url') ?>">
+        <?php if ($editor): ?>
         <label style="display:flex;align-items:center;gap:8px;margin-top:18px;text-transform:none;letter-spacing:.04em">
           <input type="checkbox" name="is_featured" style="width:auto"<?= !empty($post['is_featured']) ? ' checked' : '' ?>>
           Pin to the top of the front page
         </label>
+        <?php if (count($allSites) > 1): ?>
+        <label>Runs on</label>
+        <?php foreach ($allSites as $site): ?>
+        <label style="display:flex;align-items:center;gap:8px;text-transform:none;letter-spacing:.04em;margin:6px 0">
+          <input type="checkbox" name="sites[]" value="<?= (int) $site['id'] ?>" style="width:auto"<?= in_array((int) $site['id'], $postSites, true) ? ' checked' : '' ?>>
+          <?= e($site['name']) ?><?= (int) $site['id'] === current_site_id() ? ' (this site)' : '' ?>
+        </label>
+        <?php endforeach; ?>
+        <p class="help">A story runs on every site ticked here — one filing, the whole network.</p>
+        <?php else: ?>
+        <input type="hidden" name="sites[]" value="<?= current_site_id() ?>">
+        <?php endif; ?>
+        <?php endif; ?>
       </div>
     </div>
   </div>

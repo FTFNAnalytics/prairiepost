@@ -5,6 +5,7 @@
  */
 
 define('PP_ROOT', dirname(__DIR__));
+define('PP_SCHEMA_VERSION', 2);
 
 $configFile = PP_ROOT . '/config.php';
 $GLOBALS['pp_config'] = is_file($configFile)
@@ -41,7 +42,7 @@ function pp_config(string $key, $default = null)
     return $GLOBALS['pp_config'][$key] ?? $default;
 }
 
-/** Lazily connected PDO handle; installs the schema on first run. */
+/** Lazily connected PDO handle; installs or migrates the schema on first use. */
 function db(): PDO
 {
     static $pdo = null;
@@ -50,15 +51,34 @@ function db(): PDO
     }
 
     $cfg = $GLOBALS['pp_config']['db'];
-    if (($cfg['driver'] ?? 'sqlite') === 'mysql') {
+    $driver = $cfg['driver'] ?? 'sqlite';
+
+    if ($driver === 'mysql') {
         $m = $cfg['mysql'];
         $dsn = sprintf('mysql:host=%s;dbname=%s;charset=%s', $m['host'], $m['name'], $m['charset'] ?? 'utf8mb4');
         $pdo = new PDO($dsn, $m['user'], $m['pass'], [
             PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
             PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
         ]);
-        $driver = 'mysql';
+    } elseif ($driver === 'pgsql') {
+        $p = $cfg['pgsql'];
+        $dsn = sprintf(
+            'pgsql:host=%s;port=%d;dbname=%s;sslmode=%s',
+            $p['host'],
+            (int) ($p['port'] ?? 5432),
+            $p['name'] ?? 'postgres',
+            $p['sslmode'] ?? 'require'
+        );
+        $pdo = new PDO($dsn, $p['user'], $p['pass'], [
+            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+            PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+            // Supabase's poolers (PgBouncer) don't hold server-side prepared
+            // statements across transactions; emulation keeps every query safe
+            // on both the session (5432) and transaction (6543) pooler.
+            PDO::ATTR_EMULATE_PREPARES => true,
+        ]);
     } else {
+        $driver = 'sqlite';
         $path = $cfg['sqlite_path'] ?? PP_ROOT . '/data/prairiepost.sqlite';
         if (!is_dir(dirname($path))) {
             mkdir(dirname($path), 0775, true);
@@ -69,25 +89,71 @@ function db(): PDO
         ]);
         $pdo->exec('PRAGMA foreign_keys = ON');
         $pdo->exec('PRAGMA journal_mode = WAL');
-        $driver = 'sqlite';
     }
 
     if (!pp_schema_installed($pdo, $driver)) {
         require_once PP_ROOT . '/app/seed.php';
         pp_install($pdo, $driver);
         pp_seed($pdo);
+    } else {
+        pp_migrate($pdo, $driver);
     }
 
     return $pdo;
 }
 
-/** Read a runtime setting (cached per request). */
+/** Insert id of the last row, across drivers. */
+function pp_last_id(string $table): int
+{
+    $pdo = db();
+    if ($pdo->getAttribute(PDO::ATTR_DRIVER_NAME) === 'pgsql') {
+        return (int) $pdo->lastInsertId($table . '_id_seq');
+    }
+    return (int) $pdo->lastInsertId();
+}
+
+/** Case-insensitive LIKE operator for the active driver. */
+function pp_like(): string
+{
+    return db()->getAttribute(PDO::ATTR_DRIVER_NAME) === 'pgsql' ? 'ILIKE' : 'LIKE';
+}
+
+/**
+ * The site this deployment serves, resolved by config 'site_slug'.
+ * Joining an existing shared database creates the site row (and its default
+ * settings) on first request — no manual setup step.
+ */
+function current_site(): array
+{
+    static $site = null;
+    if ($site !== null) {
+        return $site;
+    }
+    $slug = slugify((string) pp_config('site_slug', 'prairiepost'));
+    $stmt = db()->prepare('SELECT * FROM sites WHERE slug = ?');
+    $stmt->execute([$slug]);
+    $site = $stmt->fetch();
+    if (!$site) {
+        require_once PP_ROOT . '/app/seed.php';
+        $site = pp_create_site(db(), $slug);
+    }
+    return $site;
+}
+
+function current_site_id(): int
+{
+    return (int) current_site()['id'];
+}
+
+/** Read a per-site runtime setting (cached per request). */
 function setting(string $key, string $default = ''): string
 {
     static $cache = null;
     if ($cache === null) {
         $cache = [];
-        foreach (db()->query('SELECT skey, svalue FROM settings') as $row) {
+        $stmt = db()->prepare('SELECT skey, svalue FROM settings WHERE site_id = ?');
+        $stmt->execute([current_site_id()]);
+        foreach ($stmt as $row) {
             $cache[$row['skey']] = $row['svalue'];
         }
     }
@@ -104,12 +170,14 @@ function setting_json(string $key, array $default = []): array
     return is_array($decoded) ? $decoded : $default;
 }
 
-function set_setting(string $key, string $value): void
+function set_setting(string $key, string $value, ?int $siteId = null): void
 {
-    $sql = db()->getAttribute(PDO::ATTR_DRIVER_NAME) === 'mysql'
-        ? 'INSERT INTO settings (skey, svalue) VALUES (?, ?) ON DUPLICATE KEY UPDATE svalue = VALUES(svalue)'
-        : 'INSERT INTO settings (skey, svalue) VALUES (?, ?) ON CONFLICT(skey) DO UPDATE SET svalue = excluded.svalue';
-    db()->prepare($sql)->execute([$key, $value]);
+    $siteId = $siteId ?? current_site_id();
+    $driver = db()->getAttribute(PDO::ATTR_DRIVER_NAME);
+    $sql = $driver === 'mysql'
+        ? 'INSERT INTO settings (site_id, skey, svalue) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE svalue = VALUES(svalue)'
+        : 'INSERT INTO settings (site_id, skey, svalue) VALUES (?, ?, ?) ON CONFLICT(site_id, skey) DO UPDATE SET svalue = excluded.svalue';
+    db()->prepare($sql)->execute([$siteId, $key, $value]);
 }
 
 /** Canonical absolute base URL, no trailing slash. */

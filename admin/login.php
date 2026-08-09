@@ -18,9 +18,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         } elseif (strlen($pass) < 10) {
             $error = 'Pick a passphrase of at least 10 characters — a few words will do.';
         } else {
-            db()->prepare('INSERT INTO users (name, email, pass_hash, role, created_at) VALUES (?, ?, ?, ?, ?)')
-                ->execute([$name, $email, password_hash($pass, PASSWORD_DEFAULT), 'admin', now()]);
-            $_SESSION['uid'] = (int) db()->lastInsertId();
+            db()->prepare('INSERT INTO users (name, email, pass_hash, role, slug, created_at) VALUES (?, ?, ?, ?, ?, ?)')
+                ->execute([$name, $email, password_hash($pass, PASSWORD_DEFAULT), 'admin', unique_user_slug($name), now()]);
+            $_SESSION['uid'] = pp_last_id('users');
             session_regenerate_id(true);
             redirect('index.php');
         }

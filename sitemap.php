@@ -11,8 +11,9 @@ $rows[] = [$base . '/', date('Y-m-d'), 'hourly', '1.0'];
 foreach (categories_all() as $cat) {
     $rows[] = [$base . '/desk/' . $cat['slug'], date('Y-m-d'), 'daily', '0.7'];
 }
-$stmt = db()->prepare("SELECT slug, published_at, updated_at FROM posts
-    WHERE status = 'published' AND published_at <= ? ORDER BY published_at DESC LIMIT 5000");
+$stmt = db()->prepare("SELECT p.slug, p.published_at, p.updated_at FROM posts p
+    JOIN post_sites ps ON ps.post_id = p.id AND ps.site_id = " . current_site_id() . "
+    WHERE p.status = 'published' AND p.published_at <= ? ORDER BY p.published_at DESC LIMIT 5000");
 $stmt->execute([now()]);
 foreach ($stmt as $post) {
     $rows[] = [
@@ -21,6 +22,13 @@ foreach ($stmt as $post) {
         'monthly',
         '0.6',
     ];
+}
+$authors = db()->query("SELECT DISTINCT u.slug FROM users u
+    JOIN posts p ON p.author_id = u.id AND p.status = 'published'
+    JOIN post_sites ps ON ps.post_id = p.id AND ps.site_id = " . current_site_id() . "
+    WHERE u.slug != ''")->fetchAll();
+foreach ($authors as $a) {
+    $rows[] = [$base . '/author/' . $a['slug'], date('Y-m-d'), 'weekly', '0.4'];
 }
 ?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">

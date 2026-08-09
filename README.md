@@ -1,8 +1,9 @@
 # The Prairie Post
 
 A regional news site and newsroom CMS built on the Prairie Post brand system —
-*News to the horizon*. PHP 8 + SQLite (or MySQL), no framework, no build step,
-no Composer. Upload it to shared hosting, or run it locally with one command.
+*News to the horizon*. PHP 8 with SQLite, a shared Postgres/Supabase network
+database, or MySQL. No framework, no build step, no Composer. Upload it to
+shared hosting, or run it locally with one command.
 
 The full brand package (guide, tokens, logos) lives in [`design/`](design/) —
 open `design/prairie-post-brand-guide.html` in a browser.
@@ -16,10 +17,25 @@ Open Graph / Twitter cards / NewsArticle JSON-LD.
 
 **Newsroom** (`/admin/`) — dashboard with the morning wire pull (regional tabs;
 *Start draft* turns a headline into a draft with the source linked, *Mark used*
-ticks it off), story editor (formatting toolbar, image upload, drafts,
-scheduling, search description), stories list with filters, desks, wire sources
-with per-feed test, subscriber list with CSV export, accounts (admin/editor),
-settings.
+ticks it off) and the **review queue**, story editor (formatting toolbar, image
+upload, drafts, submit-for-review, scheduling, syndication picker, search
+description), stories list with filters, desks, wire sources with per-feed
+test, subscriber list with CSV export, accounts, profiles, settings.
+
+**Editorial workflow** — three roles. *Authors* write and edit their own
+stories and submit them for review; they cannot publish (enforced server-side,
+not just hidden in the UI). *Editors* review the queue, send stories back with
+a note, publish, schedule, pin to the front page, and choose which sites a
+story runs on. *Admins* additionally manage accounts and settings. Public
+**author profiles** live at `/author/{slug}` — photo, title, bio, and the
+byline archive; every account edits its own under **Your profile**.
+
+**The network** — point several sites at one shared Postgres database
+(Supabase) and they become a content network: stories, newsroom accounts,
+desks, tags and the wire pool are shared, while settings (title, tagline,
+ads, markets) and subscribers stay per-site. Each deployment sets a
+`site_slug` in `config.php`; an editor's *Runs on* checkboxes decide which
+papers a story appears in. One filing, the whole network.
 
 **Automation** — `cron/fetch-news.php` fetches every enabled feed,
 de-duplicates by URL, prunes stale unused items, and publishes scheduled
@@ -61,9 +77,38 @@ sign-in page becomes a one-time form that creates the founding administrator.
    No shell cron? Use the authenticated URL shown in **Settings → The cron
    job** with any uptime/cron pinger.
 
-Requirements: PHP 8.1+ with `pdo_sqlite` (or `pdo_mysql`), `simplexml`, `curl`,
-`fileinfo`. Apache with `mod_rewrite` for pretty URLs (the standard shared-host
-setup); the PHP built-in server uses `router.php` instead.
+Requirements: PHP 8.1+ with `pdo_sqlite` / `pdo_pgsql` / `pdo_mysql` to match
+your driver, plus `simplexml`, `curl`, `fileinfo`. Apache with `mod_rewrite`
+for pretty URLs (the standard shared-host setup); the PHP built-in server uses
+`router.php` instead.
+
+## Running a network on Supabase
+
+One Supabase project can feed any number of Prairie Post sites:
+
+1. In `config.php` on **every** site, set the `db` driver to `pgsql` and fill
+   the `pgsql` block with the **Session pooler** details from Supabase
+   (Dashboard → Connect → Session pooler):
+   host `aws-0-<region>.pooler.supabase.com`, port `5432`, database
+   `postgres`, user `postgres.<project-ref>`, and the database password.
+   Do **not** use the `db.<ref>.supabase.co` host — it is IPv6-only and
+   unreachable from most shared hosting.
+2. Give each site its own `site_slug`. First boot provisions the site row and
+   its default settings automatically; the first site to ever touch the
+   database also installs the schema and seed content. (The same schema is in
+   `supabase/schema.sql` if you prefer to run it yourself in the SQL Editor.)
+3. Newsroom accounts are shared — one sign-in works on every site's `/admin`.
+   Stories are filed once and syndicated with the editor's *Runs on*
+   checkboxes. Settings, branding, ads, markets and subscribers stay per-site.
+4. If outbound Postgres (port 5432) is blocked by your host, ask support to
+   open it — it's the one network requirement the shared database adds.
+
+A single-site install that started on SQLite upgrades in place: the app
+migrates the old schema on first request after updating the code.
+
+Keep the database password out of the repository — it belongs only in
+`config.php`, which is gitignored. Rotate it in Supabase if it has ever been
+shared anywhere less private.
 
 ## Wire sources
 
@@ -104,14 +149,15 @@ and keeps every request on your own domain.
 ## Layout
 
 ```
-index.php  article.php  section.php  search.php     public pages
-feed.php   sitemap.php  subscribe.php robots.txt    syndication & signup
-router.php                                          dev server routing
-app/        bootstrap, schema, models, helpers, feed engine, seed
-admin/      the newsroom
+index.php  article.php  section.php  search.php  author.php   public pages
+feed.php   sitemap.php  subscribe.php robots.txt              syndication & signup
+router.php                                                    dev server routing
+app/        bootstrap, schema + migrations, models, helpers, feed engine, seed
+admin/      the newsroom (dashboard, editor, review queue, accounts, profiles)
 assets/     stylesheets, editor JS, logos, placeholder art
 cron/       fetch-news.php
 data/       SQLite database (blocked from the web, gitignored)
 design/     the original brand package
+supabase/   schema.sql — the shared network database schema
 uploads/    reader-visible images (PHP execution disabled)
 ```

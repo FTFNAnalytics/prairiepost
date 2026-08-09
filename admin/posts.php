@@ -2,18 +2,31 @@
 /** Stories list: filter, edit, feature, delete. */
 require dirname(__DIR__) . '/app/bootstrap.php';
 require __DIR__ . '/_layout.php';
-require_login();
+$user = require_login();
+$editor = is_editor($user);
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     csrf_check();
     $id = (int) ($_POST['id'] ?? 0);
     $action = (string) ($_POST['action'] ?? '');
-    if ($action === 'delete' && $id) {
-        db()->prepare('DELETE FROM posts WHERE id = ?')->execute([$id]);
-        db()->prepare('DELETE FROM post_tags WHERE post_id = ?')->execute([$id]);
-        flash_set('Story deleted. It is gone from the site and the archive.');
+    $target = null;
+    if ($id) {
+        $stmt = db()->prepare('SELECT * FROM posts WHERE id = ?');
+        $stmt->execute([$id]);
+        $target = $stmt->fetch();
     }
-    if ($action === 'feature' && $id) {
+    if ($action === 'delete' && $target) {
+        // Authors clear their own unpublished work; editors delete anything.
+        if (!$editor && ((int) $target['author_id'] !== (int) $user['id'] || $target['status'] === 'published')) {
+            flash_set("Only editors can delete a published story or another author's work.", true);
+        } else {
+            db()->prepare('DELETE FROM posts WHERE id = ?')->execute([$id]);
+            db()->prepare('DELETE FROM post_tags WHERE post_id = ?')->execute([$id]);
+            db()->prepare('DELETE FROM post_sites WHERE post_id = ?')->execute([$id]);
+            flash_set('Story deleted. It is gone from the site and the archive.');
+        }
+    }
+    if ($action === 'feature' && $target && $editor) {
         db()->exec('UPDATE posts SET is_featured = 0');
         db()->prepare('UPDATE posts SET is_featured = 1 WHERE id = ?')->execute([$id]);
         flash_set('Pinned to the top of the front page.');
@@ -31,7 +44,11 @@ $perPage = 25;
 
 $where = [];
 $params = [];
-if (in_array($status, ['draft', 'published', 'scheduled'], true)) {
+if (!$editor) {
+    $where[] = 'p.author_id = ?';
+    $params[] = (int) $user['id'];
+}
+if (in_array($status, ['draft', 'in_review', 'published', 'scheduled'], true)) {
     $where[] = 'p.status = ?';
     $params[] = $status;
 }
@@ -67,13 +84,13 @@ flash_show();
   <h1 class="pagetitle">Stories</h1>
   <a class="btn" href="post-edit.php">+ New story</a>
 </div>
-<p class="pagesub"><?= $total ?> <?= $total === 1 ? 'story' : 'stories' ?> in the system.</p>
+<p class="pagesub"><?= $total ?> <?= $total === 1 ? 'story' : 'stories' ?><?= $editor ? ' in the system.' : ' of yours.' ?></p>
 
 <form method="get" class="formrow">
   <select name="status" aria-label="Status">
     <option value="">Any status</option>
-    <?php foreach (['published', 'draft', 'scheduled'] as $s): ?>
-    <option value="<?= $s ?>"<?= $status === $s ? ' selected' : '' ?>><?= ucfirst($s) ?></option>
+    <?php foreach (['published' => 'Published', 'draft' => 'Draft', 'in_review' => 'In review', 'scheduled' => 'Scheduled'] as $s => $label): ?>
+    <option value="<?= $s ?>"<?= $status === $s ? ' selected' : '' ?>><?= $label ?></option>
     <?php endforeach; ?>
   </select>
   <select name="category" aria-label="Desk">
@@ -97,13 +114,15 @@ flash_show();
         <div class="mono" style="color:#5A6A5C"><?= e($p['byline']) ?><?= $p['dateline'] ? ' · ' . e(mb_strtoupper($p['dateline'])) : '' ?></div>
       </td>
       <td><?php if ($p['category_name']): ?><span class="deskdot" style="background:<?= e($p['category_color']) ?>"></span><?= e($p['category_name']) ?><?php endif; ?></td>
-      <td><span class="chip chip--<?= e($p['status']) ?>"><?= e($p['status']) ?></span></td>
+      <td><span class="chip chip--<?= e($p['status']) ?>"><?= e(str_replace('_', ' ', $p['status'])) ?></span></td>
       <td class="mono"><?= e(fmt_date($p['published_at'] ?: $p['updated_at'], 'M j, Y g:i a')) ?></td>
       <td style="white-space:nowrap">
-        <?php if ($p['status'] === 'published' && !$p['is_featured']): ?>
+        <?php if ($editor && $p['status'] === 'published' && !$p['is_featured']): ?>
         <form method="post" class="inline"><?= csrf_field() ?><input type="hidden" name="action" value="feature"><input type="hidden" name="id" value="<?= (int) $p['id'] ?>"><button class="btn btn--ghost btn--small" type="submit">Pin to front</button></form>
         <?php endif; ?>
+        <?php if ($editor || ($p['status'] !== 'published' && (int) $p['author_id'] === (int) $user['id'])): ?>
         <form method="post" class="inline" onsubmit="return confirm('Delete this story? It is removed from the site immediately.')"><?= csrf_field() ?><input type="hidden" name="action" value="delete"><input type="hidden" name="id" value="<?= (int) $p['id'] ?>"><button class="btn btn--danger btn--small" type="submit">Delete</button></form>
+        <?php endif; ?>
       </td>
     </tr>
     <?php endforeach; ?>

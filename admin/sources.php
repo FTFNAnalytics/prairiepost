@@ -3,7 +3,7 @@
 require dirname(__DIR__) . '/app/bootstrap.php';
 require dirname(__DIR__) . '/app/fetch.php';
 require __DIR__ . '/_layout.php';
-require_login();
+require_editor();
 
 $regions = setting_json('regions', ['local' => 'Local']);
 

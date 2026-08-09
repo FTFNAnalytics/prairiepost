@@ -10,8 +10,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if ($honeypot === '' && filter_var($email, FILTER_VALIDATE_EMAIL)) {
         try {
-            db()->prepare('INSERT INTO subscribers (email, created_at) VALUES (?, ?)')
-                ->execute([$email, now()]);
+            db()->prepare('INSERT INTO subscribers (site_id, email, created_at) VALUES (?, ?, ?)')
+                ->execute([current_site_id(), $email, now()]);
         } catch (PDOException) {
             // Already subscribed — the confirmation reads the same either way.
         }

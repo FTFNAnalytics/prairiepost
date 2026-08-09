@@ -20,16 +20,19 @@ function admin_header(string $title, string $active = ''): void
 {
     $user = current_user();
     $items = [
-        'dashboard'   => ['index.php', 'Dashboard'],
-        'posts'       => ['posts.php', 'Stories'],
-        'categories'  => ['categories.php', 'Desks'],
-        'sources'     => ['sources.php', 'Sources'],
-        'subscribers' => ['subscribers.php', 'Subscribers'],
+        'dashboard' => ['index.php', 'Dashboard'],
+        'posts'     => ['posts.php', 'Stories'],
     ];
+    if (is_editor($user)) {
+        $items['categories']  = ['categories.php', 'Desks'];
+        $items['sources']     = ['sources.php', 'Sources'];
+        $items['subscribers'] = ['subscribers.php', 'Subscribers'];
+    }
     if ($user && $user['role'] === 'admin') {
         $items['users'] = ['users.php', 'Accounts'];
         $items['settings'] = ['settings.php', 'Settings'];
     }
+    $items['profile'] = ['profile.php', 'Your profile'];
     ?>
 <!DOCTYPE html>
 <html lang="en">

@@ -27,7 +27,11 @@ $jsonld = [
     'datePublished' => date('c', strtotime($post['published_at'])),
     'dateModified'  => date('c', strtotime($post['updated_at'] ?: $post['published_at'])),
     'mainEntityOfPage' => $canonical,
-    'author' => ['@type' => 'Person', 'name' => $post['byline'] ?: setting('site_title')],
+    'author' => array_filter([
+        '@type' => 'Person',
+        'name'  => $post['byline'] ?: setting('site_title'),
+        'url'   => !empty($post['author_slug']) ? site_url() . '/author/' . $post['author_slug'] : null,
+    ]),
     'publisher' => [
         '@type' => 'NewsMediaOrganization',
         'name'  => setting('site_title', 'The Prairie Post'),
@@ -56,7 +60,21 @@ page_header([
     <?= eyebrow($post) ?>
     <h1><?= e($post['title']) ?></h1>
     <?php if ($post['lede']): ?><p class="lede"><?= e($post['lede']) ?></p><?php endif; ?>
-    <p class="byline dateline"><?= dateline($post) ?></p>
+    <p class="byline dateline"><?php
+      $parts = [];
+      if ($post['dateline']) {
+          $parts[] = e(mb_strtoupper($post['dateline']));
+      }
+      if ($post['byline']) {
+          $parts[] = !empty($post['author_slug'])
+              ? 'By <a href="' . e(url('author/' . $post['author_slug'])) . '">' . e($post['byline']) . '</a>'
+              : 'By ' . e($post['byline']);
+      }
+      if ($post['published_at']) {
+          $parts[] = e(time_label($post['published_at']));
+      }
+      echo implode(' · ', $parts);
+    ?></p>
   </div>
 
   <div class="pp-horizon" style="margin-top:18px"></div>

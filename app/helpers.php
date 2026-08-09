@@ -85,6 +85,28 @@ function require_admin(): array
     return $user;
 }
 
+/** Editors and admins run the paper; authors write for it. */
+function is_editor(?array $user): bool
+{
+    return $user !== null && in_array($user['role'], ['admin', 'editor'], true);
+}
+
+function require_editor(): array
+{
+    $user = require_login();
+    if (!is_editor($user)) {
+        http_response_code(403);
+        exit('That page needs an editor or administrator account.');
+    }
+    return $user;
+}
+
+/** Authors may open only their own stories; editors and admins open any. */
+function can_edit_post(array $user, array $post): bool
+{
+    return is_editor($user) || (int) ($post['author_id'] ?? 0) === (int) $user['id'];
+}
+
 /* --- Text --------------------------------------------------------------- */
 
 function excerpt(string $html, int $chars = 180): string
@@ -156,6 +178,43 @@ function dateline(array $post): string
         $parts[] = time_label($post['published_at']);
     }
     return implode(' · ', array_map('e', $parts));
+}
+
+/* --- Uploads ------------------------------------------------------------- */
+
+/**
+ * Validate and store an uploaded image. Returns [public_url|null, error|null].
+ * Shared by the editor's upload endpoint and the profile page.
+ */
+function pp_handle_image_upload(array $file): array
+{
+    if (($file['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_OK) {
+        return [null, 'The upload failed (code ' . (int) ($file['error'] ?? -1) . '). Try a smaller file.'];
+    }
+    if ($file['size'] > 8 * 1024 * 1024) {
+        return [null, 'That file is over 8 MB. Resize it and try again.'];
+    }
+    $finfo = new finfo(FILEINFO_MIME_TYPE);
+    $mime = $finfo->file($file['tmp_name']);
+    $extensions = [
+        'image/jpeg' => 'jpg',
+        'image/png'  => 'png',
+        'image/webp' => 'webp',
+        'image/gif'  => 'gif',
+    ];
+    if (!isset($extensions[$mime])) {
+        return [null, 'Only JPEG, PNG, WebP or GIF images can be uploaded.'];
+    }
+    $dir = PP_ROOT . '/uploads/' . date('Y/m');
+    if (!is_dir($dir)) {
+        mkdir($dir, 0775, true);
+    }
+    $base = slugify(pathinfo($file['name'], PATHINFO_FILENAME)) ?: 'image';
+    $name = $base . '-' . substr(bin2hex(random_bytes(4)), 0, 6) . '.' . $extensions[$mime];
+    if (!move_uploaded_file($file['tmp_name'], $dir . '/' . $name)) {
+        return [null, "The server couldn't write the file. Check that /uploads/ is writable."];
+    }
+    return ['/uploads/' . date('Y/m') . '/' . $name, null];
 }
 
 /* --- Feeds (shared by cron and the sources admin) ----------------------- */

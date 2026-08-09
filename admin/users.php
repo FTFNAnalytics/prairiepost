@@ -12,8 +12,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($action === 'save') {
         $name = trim((string) ($_POST['name'] ?? ''));
         $email = mb_strtolower(trim((string) ($_POST['email'] ?? '')));
-        $role = ($_POST['role'] ?? '') === 'admin' ? 'admin' : 'editor';
+        $role = in_array($_POST['role'] ?? '', ['admin', 'editor', 'author'], true) ? $_POST['role'] : 'author';
         $pass = (string) ($_POST['password'] ?? '');
+        $title = trim((string) ($_POST['title'] ?? ''));
+        $bio = trim((string) ($_POST['bio'] ?? ''));
 
         if ($name === '' || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
             flash_set('An account needs a name and a working email address.', true);
@@ -24,8 +26,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if ($existing && (int) $existing['id'] !== $id) {
                 flash_set('That email already has an account.', true);
             } elseif ($id) {
-                db()->prepare('UPDATE users SET name = ?, email = ?, role = ? WHERE id = ?')
-                    ->execute([$name, $email, $role, $id]);
+                db()->prepare('UPDATE users SET name = ?, email = ?, role = ?, title = ?, bio = ? WHERE id = ?')
+                    ->execute([$name, $email, $role, $title, $bio, $id]);
                 if ($pass !== '') {
                     if (strlen($pass) < 10) {
                         flash_set('Passphrase unchanged — it needs at least 10 characters.', true);
@@ -36,8 +38,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
                 flash_set('Account updated.');
             } else {
-                db()->prepare('INSERT INTO users (name, email, pass_hash, role, created_at) VALUES (?, ?, ?, ?, ?)')
-                    ->execute([$name, $email, password_hash($pass, PASSWORD_DEFAULT), $role, now()]);
+                db()->prepare('INSERT INTO users (name, email, pass_hash, role, slug, title, bio, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)')
+                    ->execute([$name, $email, password_hash($pass, PASSWORD_DEFAULT), $role, unique_user_slug($name), $title, $bio, now()]);
                 flash_set('Account created. They can sign in at /admin/ now.');
             }
         }
@@ -65,7 +67,7 @@ flash_show();
 ?>
 
 <h1 class="pagetitle">Accounts</h1>
-<p class="pagesub">Admins can manage accounts, settings and desks. Editors write, publish and run the wire.</p>
+<p class="pagesub">Admins run the paper. Editors publish, review, and manage desks and the wire. Authors write and submit for review — an editor signs off before anything goes live. Accounts are shared across every site on the network database.</p>
 
 <div class="panel">
   <table class="tbl">
@@ -74,7 +76,7 @@ flash_show();
     <tr>
       <td><strong><?= e($u['name']) ?></strong><?= (int) $u['id'] === (int) $me['id'] ? ' <span class="chip chip--used">you</span>' : '' ?></td>
       <td class="mono"><?= e($u['email']) ?></td>
-      <td><span class="chip <?= $u['role'] === 'admin' ? 'chip--published' : 'chip--draft' ?>"><?= e($u['role']) ?></span></td>
+      <td><span class="chip <?= $u['role'] === 'admin' ? 'chip--published' : ($u['role'] === 'editor' ? 'chip--scheduled' : 'chip--draft') ?>"><?= e($u['role']) ?></span></td>
       <td class="mono"><?= e(fmt_date($u['created_at'])) ?></td>
       <td style="white-space:nowrap">
         <a class="btn btn--ghost btn--small" href="users.php?edit=<?= (int) $u['id'] ?>">Edit</a>
@@ -103,11 +105,16 @@ flash_show();
       <div>
         <label for="role">Role</label>
         <select id="role" name="role">
-          <option value="editor"<?= ($editing['role'] ?? '') === 'editor' ? ' selected' : '' ?>>Editor</option>
-          <option value="admin"<?= ($editing['role'] ?? '') === 'admin' ? ' selected' : '' ?>>Admin</option>
+          <option value="author"<?= ($editing['role'] ?? '') === 'author' ? ' selected' : '' ?>>Author — writes and submits for review</option>
+          <option value="editor"<?= ($editing['role'] ?? '') === 'editor' ? ' selected' : '' ?>>Editor — reviews and publishes</option>
+          <option value="admin"<?= ($editing['role'] ?? '') === 'admin' ? ' selected' : '' ?>>Admin — everything, plus accounts and settings</option>
         </select>
         <label for="password">Passphrase<?= $editing ? ' · leave blank to keep the current one' : ' · at least 10 characters' ?></label>
         <input type="password" id="password" name="password" autocomplete="new-password">
+        <label for="title">Profile title · e.g. “Agriculture reporter”</label>
+        <input type="text" id="title" name="title" value="<?= e($editing['title'] ?? '') ?>">
+        <label for="bio">Profile bio</label>
+        <textarea id="bio" name="bio" class="prose" style="min-height:64px"><?= e($editing['bio'] ?? '') ?></textarea>
       </div>
     </div>
     <p style="margin-top:16px">

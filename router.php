@@ -15,6 +15,11 @@ if (preg_match('#^/desk/([a-z0-9-]+)/?$#', $path, $m)) {
     require __DIR__ . '/section.php';
     return true;
 }
+if (preg_match('#^/author/([a-z0-9-]+)/?$#', $path, $m)) {
+    $_GET['slug'] = $m[1];
+    require __DIR__ . '/author.php';
+    return true;
+}
 $map = [
     '/search'      => '/search.php',
     '/feed'        => '/feed.php',
