@@ -19,8 +19,10 @@ Open Graph / Twitter cards / NewsArticle JSON-LD.
 *Start draft* turns a headline into a draft with the source linked, *Mark used*
 ticks it off) and the **review queue**, story editor (formatting toolbar, image
 upload, drafts, submit-for-review, scheduling, syndication picker, search
-description), stories list with filters, desks, wire sources with per-feed
-test, subscriber list with CSV export, accounts, profiles, settings.
+description, live word count, 30-second autosave for drafts, images inside
+story text), stories list with filters, desks, wire sources with per-feed
+test, the ad manager, subscriber list with CSV export, accounts, profiles,
+settings.
 
 **Editorial workflow** — three roles. *Authors* write and edit their own
 stories and submit them for review; they cannot publish (enforced server-side,
@@ -36,6 +38,22 @@ desks, tags and the wire pool are shared, while settings (title, tagline,
 ads, markets) and subscribers stay per-site. Each deployment sets a
 `site_slug` in `config.php`; an editor's *Runs on* checkboxes decide which
 papers a story appears in. One filing, the whole network.
+
+**Advertising** — an ad manager per site (Newsroom → Ads) with the three
+labelled slots: top of the front page, the rail, and after story text. Three
+kinds of creative: **house ads** set in the brand (no artwork needed — kicker,
+heading, a sentence, a button), uploaded **image + link** creatives, and
+pasted **embed code**. Several ads in a slot rotate evenly; clicks route
+through a counter, so served/click numbers in the admin are real. Empty slots
+render nothing.
+
+**Social cards** — every story gets a generated 1200×630 Open Graph card at
+`/card/{slug}.png`: desk kicker, the horizon rule, the headline in condensed
+type, the five-band prairie ground. Cards are drawn server-side with the
+bundled OFL fonts (`assets/fonts/`), cached in `data/cards/`, and re-render
+when the story changes. Story pages carry a share row (Facebook, X, Bluesky,
+LinkedIn, email, copy link) and the editor links each published story's card
+for manual posting.
 
 **Automation** — `cron/fetch-news.php` fetches every enabled feed,
 de-duplicates by URL, prunes stale unused items, and publishes scheduled

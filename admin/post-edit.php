@@ -145,11 +145,12 @@ if (!$editor && !empty($post['review_note'])) {
     <?php if ($st === 'in_review'): ?><span class="chip chip--scheduled">In review</span><?php endif; ?>
     <?php if ($id && $st === 'published'): ?>
     <a class="btn btn--ghost" href="/story/<?= $v('slug') ?>" target="_blank">View on the site →</a>
+    <a class="btn btn--ghost" href="/card/<?= $v('slug') ?>.png" target="_blank">Social card</a>
     <?php endif; ?>
   </div>
 </div>
 
-<form method="post" id="storyform">
+<form method="post" id="storyform" data-post-id="<?= (int) $id ?>">
   <?= csrf_field() ?>
 
   <label for="title">Headline · sentence case</label>
@@ -191,10 +192,13 @@ if (!$editor && !empty($post['review_note'])) {
     <button type="button" data-cmd="insertUnorderedList">List</button>
     <button type="button" data-link="1">Link</button>
     <button type="button" data-cmd="unlink">Unlink</button>
+    <button type="button" data-bodyimg="1">Image</button>
     <button type="button" data-cmd="removeFormat">Clear</button>
   </div>
   <div class="editor" id="editor" contenteditable="true"><?= sanitize_html((string) ($post['body'] ?? '')) ?></div>
   <textarea name="body" id="bodyfield" style="display:none"><?= e((string) ($post['body'] ?? '')) ?></textarea>
+  <input type="file" id="bodyimgupload" accept="image/jpeg,image/png,image/webp,image/gif" style="display:none">
+  <div class="edmeta"><span id="wordcount"></span><span id="autosavenote"><?= $id ? 'Autosaves every 30 seconds while drafting.' : 'Autosave starts after the first save.' ?></span></div>
 
   <div class="panel">
     <h2>Photo</h2>

@@ -20,12 +20,18 @@ if (preg_match('#^/author/([a-z0-9-]+)/?$#', $path, $m)) {
     require __DIR__ . '/author.php';
     return true;
 }
+if (preg_match('#^/card/([a-z0-9-]+)\.png$#', $path, $m)) {
+    $_GET['slug'] = $m[1];
+    require __DIR__ . '/card.php';
+    return true;
+}
 $map = [
     '/search'      => '/search.php',
     '/feed'        => '/feed.php',
     '/feed/'       => '/feed.php',
     '/sitemap.xml' => '/sitemap.php',
     '/subscribe'   => '/subscribe.php',
+    '/ad'          => '/ad.php',
 ];
 if (isset($map[$path])) {
     require __DIR__ . $map[$path];

@@ -136,6 +136,14 @@ input:focus,select:focus,textarea:focus{border-color:var(--pp-bigsky);outline:no
 .editor h2{font-family:var(--pp-display);font-weight:700;font-stretch:78%;font-variation-settings:'wdth' 78,'wght' 700}
 .editor blockquote{border-left:4px solid var(--pp-quarter);margin:1em 0;padding-left:16px;font-style:italic;color:var(--pp-quarter)}
 
+.edmeta{
+  display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;
+  font-family:var(--pp-mono);font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;
+  color:#5A6A5C;padding:8px 2px;
+}
+.editor figure{margin:1em 0}
+.editor figcaption{font-size:14px;font-style:italic;color:#3C4F3F}
+
 .login{max-width:430px;margin:8vh auto 0;padding:0 20px}
 .login .panel{padding:26px}
 .login .mast{display:block;margin:0 auto 8px;max-width:340px}

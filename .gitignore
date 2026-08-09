@@ -5,6 +5,7 @@ config.php
 data/*.sqlite
 data/*.sqlite-*
 data/*.sqlite3
+data/cards/
 
 # Reader uploads.
 uploads/*

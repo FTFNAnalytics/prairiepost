@@ -142,11 +142,33 @@ function pp_schema_ddl(string $driver): array
             PRIMARY KEY (site_id, skey)
         )$suffix",
 
+        "CREATE TABLE ads (
+            id $id,
+            site_id INTEGER NOT NULL,
+            name VARCHAR(160) NOT NULL,
+            placement VARCHAR(20) NOT NULL DEFAULT 'rail',
+            kind VARCHAR(20) NOT NULL DEFAULT 'house',
+            image VARCHAR(255) NOT NULL DEFAULT '',
+            link_url VARCHAR(500) NOT NULL DEFAULT '',
+            html TEXT,
+            kicker VARCHAR(80) NOT NULL DEFAULT '',
+            heading VARCHAR(160) NOT NULL DEFAULT '',
+            body_text VARCHAR(255) NOT NULL DEFAULT '',
+            button_label VARCHAR(60) NOT NULL DEFAULT '',
+            start_at $dt,
+            end_at $dt,
+            enabled INTEGER NOT NULL DEFAULT 1,
+            impressions INTEGER NOT NULL DEFAULT 0,
+            clicks INTEGER NOT NULL DEFAULT 0,
+            created_at $dt NOT NULL
+        )$suffix",
+
         'CREATE INDEX idx_posts_status ON posts (status, published_at)',
         'CREATE INDEX idx_posts_category ON posts (category_id)',
         'CREATE INDEX idx_posts_author ON posts (author_id)',
         'CREATE INDEX idx_news_region ON news_items (region, fetched_at)',
         'CREATE INDEX idx_post_sites_site ON post_sites (site_id)',
+        'CREATE INDEX idx_ads_site_placement ON ads (site_id, placement)',
     ];
 }
 
@@ -236,5 +258,33 @@ function pp_migrate(PDO $pdo, string $driver): void
             $ins->execute([$siteId, $row['skey'], $row['svalue']]);
         }
         $ins->execute([0, 'schema_version', '2']);
+    }
+
+    if ($version < 3) {
+        $dt = $driver === 'pgsql' ? 'TIMESTAMP' : 'DATETIME';
+        $id = $driver === 'mysql' ? 'INT UNSIGNED AUTO_INCREMENT PRIMARY KEY'
+            : ($driver === 'pgsql' ? 'INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY' : 'INTEGER PRIMARY KEY AUTOINCREMENT');
+        $pdo->exec("CREATE TABLE ads (
+            id $id,
+            site_id INTEGER NOT NULL,
+            name VARCHAR(160) NOT NULL,
+            placement VARCHAR(20) NOT NULL DEFAULT 'rail',
+            kind VARCHAR(20) NOT NULL DEFAULT 'house',
+            image VARCHAR(255) NOT NULL DEFAULT '',
+            link_url VARCHAR(500) NOT NULL DEFAULT '',
+            html TEXT,
+            kicker VARCHAR(80) NOT NULL DEFAULT '',
+            heading VARCHAR(160) NOT NULL DEFAULT '',
+            body_text VARCHAR(255) NOT NULL DEFAULT '',
+            button_label VARCHAR(60) NOT NULL DEFAULT '',
+            start_at $dt,
+            end_at $dt,
+            enabled INTEGER NOT NULL DEFAULT 1,
+            impressions INTEGER NOT NULL DEFAULT 0,
+            clicks INTEGER NOT NULL DEFAULT 0,
+            created_at $dt NOT NULL
+        )");
+        $pdo->exec('CREATE INDEX idx_ads_site_placement ON ads (site_id, placement)');
+        $pdo->exec("UPDATE settings SET svalue = '3' WHERE site_id = 0 AND skey = 'schema_version'");
     }
 }

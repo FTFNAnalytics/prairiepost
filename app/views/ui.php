@@ -202,12 +202,49 @@ function signup_block(): string
     return $html;
 }
 
-/** An ad slot renders only when there is code to show; always labelled. */
+/**
+ * An ad slot renders only when there is something to show; always labelled.
+ * The ad manager (Ads in the newsroom) takes precedence; the raw-code
+ * settings remain as a fallback for pasted network tags.
+ */
 function ad_slot(string $key): string
 {
+    $ad = ad_for_placement($key);
+    if ($ad) {
+        return '<div class="adslot adslot--' . e($key) . '"><p class="k">Advertisement</p>' . render_ad($ad) . '</div>';
+    }
     $code = setting('ad_' . $key);
     if (trim($code) === '') {
         return '';
     }
     return '<div class="adslot"><p class="k">Advertisement</p>' . $code . '</div>';
+}
+
+/** Render one ad's creative. House ads are built from the brand system. */
+function render_ad(array $ad): string
+{
+    $click = url('ad') . '?id=' . (int) $ad['id'];
+    switch ($ad['kind']) {
+        case 'image':
+            $img = '<img src="' . e($ad['image']) . '" alt="' . e($ad['name']) . '" loading="lazy">';
+            return $ad['link_url'] !== ''
+                ? '<a class="ad-image" href="' . e($click) . '" rel="nofollow sponsored">' . $img . '</a>'
+                : '<span class="ad-image">' . $img . '</span>';
+        case 'html':
+            return (string) $ad['html'];
+        default: // house — Shelterbelt bed, mono kicker, condensed heading, sky button
+            $html  = '<div class="housead">';
+            if ($ad['kicker'] !== '') {
+                $html .= '<p class="k2">' . e($ad['kicker']) . '</p>';
+            }
+            $html .= '<p class="h">' . e($ad['heading'] ?: $ad['name']) . '</p>';
+            if ($ad['body_text'] !== '') {
+                $html .= '<p class="b">' . e($ad['body_text']) . '</p>';
+            }
+            if ($ad['link_url'] !== '') {
+                $html .= '<a class="btn" href="' . e($click) . '" rel="nofollow sponsored">' . e($ad['button_label'] ?: 'Find out more') . '</a>';
+            }
+            $html .= '</div>';
+            return $html;
+    }
 }

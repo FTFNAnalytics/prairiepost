@@ -284,6 +284,54 @@ function sources_all(): array
     return db()->query('SELECT * FROM sources ORDER BY region, name')->fetchAll();
 }
 
+/* --- Advertising ----------------------------------------------------------- */
+
+/** All ads for this site, newest first. */
+function ads_all(): array
+{
+    $stmt = db()->prepare('SELECT * FROM ads WHERE site_id = ? ORDER BY placement, name');
+    $stmt->execute([current_site_id()]);
+    return $stmt->fetchAll();
+}
+
+function ad_by_id(int $id): ?array
+{
+    $stmt = db()->prepare('SELECT * FROM ads WHERE id = ? AND site_id = ?');
+    $stmt->execute([$id, current_site_id()]);
+    return $stmt->fetch() ?: null;
+}
+
+/** Whether an ad is inside its schedule window right now. */
+function ad_is_live(array $ad): bool
+{
+    if (!$ad['enabled']) {
+        return false;
+    }
+    $now = now();
+    if (!empty($ad['start_at']) && $ad['start_at'] > $now) {
+        return false;
+    }
+    if (!empty($ad['end_at']) && $ad['end_at'] < $now) {
+        return false;
+    }
+    return true;
+}
+
+/** Pick one live ad for a placement — round-robin by fewest impressions. */
+function ad_for_placement(string $placement): ?array
+{
+    $stmt = db()->prepare('SELECT * FROM ads WHERE site_id = ? AND placement = ? AND enabled = 1');
+    $stmt->execute([current_site_id(), $placement]);
+    $live = array_values(array_filter($stmt->fetchAll(), 'ad_is_live'));
+    if (!$live) {
+        return null;
+    }
+    usort($live, fn ($a, $b) => $a['impressions'] <=> $b['impressions']);
+    $ad = $live[0];
+    db()->prepare('UPDATE ads SET impressions = impressions + 1 WHERE id = ?')->execute([$ad['id']]);
+    return $ad;
+}
+
 /* --- Stats for the dashboard ---------------------------------------------- */
 
 function pp_counts(): array

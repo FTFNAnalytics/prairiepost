@@ -38,8 +38,10 @@ $jsonld = [
         'logo'  => ['@type' => 'ImageObject', 'url' => site_url() . '/assets/img/mark.svg'],
     ],
 ];
+$cardUrl = site_url() . '/card/' . $post['slug'] . '.png';
+$jsonld['image'] = [$cardUrl];
 if ($post['image']) {
-    $jsonld['image'] = [site_url() . $post['image']];
+    $jsonld['image'][] = site_url() . $post['image'];
 }
 if ($post['dateline']) {
     $jsonld['dateline'] = mb_strtoupper($post['dateline']);
@@ -50,7 +52,7 @@ page_header([
     'description' => $post['meta_description'] ?: excerpt((string) $post['lede'], 155),
     'canonical'   => $canonical,
     'og_type'     => 'article',
-    'og_image'    => $post['image'] ? site_url() . $post['image'] : null,
+    'og_image'    => $cardUrl,
     'jsonld'      => $jsonld,
 ], (string) $post['category_slug']);
 ?>
@@ -102,6 +104,31 @@ page_header([
     <?php endforeach; ?>
   </div>
   <?php endif; ?>
+
+  <?php
+    $shareUrl = $canonical;
+    $shareText = $post['title'];
+  ?>
+  <div class="sharerow">
+    <span class="k">Share the story</span>
+    <a href="https://www.facebook.com/sharer/sharer.php?u=<?= e(urlencode($shareUrl)) ?>" target="_blank" rel="noopener">Facebook</a>
+    <a href="https://twitter.com/intent/tweet?url=<?= e(urlencode($shareUrl)) ?>&amp;text=<?= e(urlencode($shareText)) ?>" target="_blank" rel="noopener">X</a>
+    <a href="https://bsky.app/intent/compose?text=<?= e(urlencode($shareText . ' ' . $shareUrl)) ?>" target="_blank" rel="noopener">Bluesky</a>
+    <a href="https://www.linkedin.com/sharing/share-offsite/?url=<?= e(urlencode($shareUrl)) ?>" target="_blank" rel="noopener">LinkedIn</a>
+    <a href="mailto:?subject=<?= e(rawurlencode($shareText)) ?>&amp;body=<?= e(rawurlencode($shareUrl)) ?>">Email</a>
+    <button type="button" id="copylink" data-url="<?= e($shareUrl) ?>">Copy the link</button>
+  </div>
+  <script>
+  (function () {
+    var btn = document.getElementById('copylink');
+    if (!btn) return;
+    btn.addEventListener('click', function () {
+      var done = function () { btn.textContent = 'Copied'; setTimeout(function () { btn.textContent = 'Copy the link'; }, 2000); };
+      if (navigator.clipboard) { navigator.clipboard.writeText(btn.dataset.url).then(done); }
+      else { window.prompt('Copy the link:', btn.dataset.url); }
+    });
+  })();
+  </script>
 </article>
 
 <?php $related = related_posts($post['category_id'] ? (int) $post['category_id'] : null, (int) $post['id']); ?>
