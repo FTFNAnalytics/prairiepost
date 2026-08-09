@@ -3,20 +3,47 @@
 require __DIR__ . '/app/bootstrap.php';
 require __DIR__ . '/app/views/ui.php';
 
+require __DIR__ . '/app/newsletter.php';
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Honeypot: real readers never see or fill the hidden field.
     $honeypot = (string) ($_POST['website'] ?? '');
     $email = mb_strtolower(trim((string) ($_POST['email'] ?? '')));
+    $confirming = false;
 
     if ($honeypot === '' && filter_var($email, FILTER_VALIDATE_EMAIL)) {
-        try {
-            db()->prepare('INSERT INTO subscribers (site_id, email, created_at) VALUES (?, ?, ?)')
-                ->execute([current_site_id(), $email, now()]);
-        } catch (PDOException) {
-            // Already subscribed — the confirmation reads the same either way.
+        $stmt = db()->prepare('SELECT * FROM subscribers WHERE site_id = ? AND email = ?');
+        $stmt->execute([current_site_id(), $email]);
+        $existing = $stmt->fetch();
+
+        // With mail configured, CASL-grade double opt-in; without it, the
+        // form's submission is recorded as the consent.
+        $doubleOptIn = pp_mail_configured();
+
+        if ($existing) {
+            if ($existing['status'] !== 'active') {
+                if ($doubleOptIn) {
+                    db()->prepare("UPDATE subscribers SET status = 'pending' WHERE id = ?")->execute([$existing['id']]);
+                    pp_send_confirmation($existing);
+                    $confirming = true;
+                } else {
+                    db()->prepare("UPDATE subscribers SET status = 'active', consent_note = 'web form (re-subscribed)' WHERE id = ?")
+                        ->execute([$existing['id']]);
+                }
+            }
+        } else {
+            $token = bin2hex(random_bytes(16));
+            $status = $doubleOptIn ? 'pending' : 'active';
+            $note = $doubleOptIn ? 'web form, confirmation email sent' : 'web form (single opt-in — mail not configured)';
+            db()->prepare('INSERT INTO subscribers (site_id, email, status, token, consent_note, created_at) VALUES (?, ?, ?, ?, ?, ?)')
+                ->execute([current_site_id(), $email, $status, $token, $note, now()]);
+            if ($doubleOptIn) {
+                pp_send_confirmation(['email' => $email, 'token' => $token]);
+                $confirming = true;
+            }
         }
     }
-    redirect(url('subscribe') . '?subscribed=1');
+    redirect(url('subscribe') . '?subscribed=1' . ($confirming ? '&confirm=1' : ''));
 }
 
 page_header([

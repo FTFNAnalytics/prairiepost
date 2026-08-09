@@ -27,6 +27,7 @@ function admin_header(string $title, string $active = ''): void
         $items['categories']  = ['categories.php', 'Desks'];
         $items['sources']     = ['sources.php', 'Sources'];
         $items['ads']         = ['ads.php', 'Ads'];
+        $items['newsletter']  = ['newsletter.php', 'The 6 a.m.'];
         $items['subscribers'] = ['subscribers.php', 'Subscribers'];
     }
     if ($user && $user['role'] === 'admin') {

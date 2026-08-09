@@ -81,6 +81,9 @@ function pp_schema_ddl(string $driver): array
             status VARCHAR(20) NOT NULL DEFAULT 'draft',
             review_note TEXT,
             is_featured INTEGER NOT NULL DEFAULT 0,
+            placement VARCHAR(20) NOT NULL DEFAULT '',
+            correction TEXT,
+            corrected_at $dt,
             published_at $dt,
             created_at $dt NOT NULL,
             updated_at $dt NOT NULL
@@ -131,8 +134,25 @@ function pp_schema_ddl(string $driver): array
             id $id,
             site_id INTEGER NOT NULL DEFAULT 1,
             email VARCHAR(191) NOT NULL,
+            status VARCHAR(20) NOT NULL DEFAULT 'active',
+            token VARCHAR(64) NOT NULL DEFAULT '',
+            confirmed_at $dt,
+            consent_note VARCHAR(255) NOT NULL DEFAULT '',
             created_at $dt NOT NULL,
             CONSTRAINT uq_sub UNIQUE (site_id, email)
+        )$suffix",
+
+        "CREATE TABLE newsletters (
+            id $id,
+            site_id INTEGER NOT NULL,
+            edition_date VARCHAR(10) NOT NULL,
+            subject VARCHAR(255) NOT NULL,
+            html TEXT,
+            status VARCHAR(20) NOT NULL DEFAULT 'sent',
+            recipients INTEGER NOT NULL DEFAULT 0,
+            sent_at $dt,
+            created_at $dt NOT NULL,
+            CONSTRAINT uq_edition UNIQUE (site_id, edition_date)
         )$suffix",
 
         "CREATE TABLE settings (
@@ -286,5 +306,49 @@ function pp_migrate(PDO $pdo, string $driver): void
         )");
         $pdo->exec('CREATE INDEX idx_ads_site_placement ON ads (site_id, placement)');
         $pdo->exec("UPDATE settings SET svalue = '3' WHERE site_id = 0 AND skey = 'schema_version'");
+    }
+
+    if ($version < 4) {
+        $dt = $driver === 'pgsql' ? 'TIMESTAMP' : 'DATETIME';
+        $id = $driver === 'mysql' ? 'INT UNSIGNED AUTO_INCREMENT PRIMARY KEY'
+            : ($driver === 'pgsql' ? 'INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY' : 'INTEGER PRIMARY KEY AUTOINCREMENT');
+
+        foreach ([
+            "ALTER TABLE posts ADD COLUMN placement VARCHAR(20) NOT NULL DEFAULT ''",
+            'ALTER TABLE posts ADD COLUMN correction TEXT',
+            "ALTER TABLE posts ADD COLUMN corrected_at $dt",
+            "ALTER TABLE subscribers ADD COLUMN status VARCHAR(20) NOT NULL DEFAULT 'active'",
+            "ALTER TABLE subscribers ADD COLUMN token VARCHAR(64) NOT NULL DEFAULT ''",
+            "ALTER TABLE subscribers ADD COLUMN confirmed_at $dt",
+            "ALTER TABLE subscribers ADD COLUMN consent_note VARCHAR(255) NOT NULL DEFAULT ''",
+        ] as $sql) {
+            $pdo->exec($sql);
+        }
+
+        $pdo->exec("CREATE TABLE newsletters (
+            id $id,
+            site_id INTEGER NOT NULL,
+            edition_date VARCHAR(10) NOT NULL,
+            subject VARCHAR(255) NOT NULL,
+            html TEXT,
+            status VARCHAR(20) NOT NULL DEFAULT 'sent',
+            recipients INTEGER NOT NULL DEFAULT 0,
+            sent_at $dt,
+            created_at $dt NOT NULL,
+            CONSTRAINT uq_edition UNIQUE (site_id, edition_date)
+        )");
+
+        // The old single pin becomes the hero placement.
+        $pdo->exec("UPDATE posts SET placement = 'hero' WHERE is_featured = 1");
+
+        // Existing subscribers predate the token system: grandfather them in
+        // as active with a consent note, and give each an unsubscribe token.
+        $rows = $pdo->query('SELECT id FROM subscribers')->fetchAll();
+        $upd = $pdo->prepare("UPDATE subscribers SET token = ?, consent_note = 'web form (pre-token import)' WHERE id = ?");
+        foreach ($rows as $row) {
+            $upd->execute([bin2hex(random_bytes(16)), $row['id']]);
+        }
+
+        $pdo->exec("UPDATE settings SET svalue = '4' WHERE site_id = 0 AND skey = 'schema_version'");
     }
 }

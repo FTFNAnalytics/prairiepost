@@ -25,13 +25,19 @@ if (preg_match('#^/card/([a-z0-9-]+)\.png$#', $path, $m)) {
     require __DIR__ . '/card.php';
     return true;
 }
+if (preg_match('#^/newsletter(/.*)?$#', $path, $m)) {
+    $_GET['path'] = $m[1] ?? '';
+    require __DIR__ . '/newsletter.php';
+    return true;
+}
 $map = [
-    '/search'      => '/search.php',
-    '/feed'        => '/feed.php',
-    '/feed/'       => '/feed.php',
-    '/sitemap.xml' => '/sitemap.php',
-    '/subscribe'   => '/subscribe.php',
-    '/ad'          => '/ad.php',
+    '/search'       => '/search.php',
+    '/feed'         => '/feed.php',
+    '/feed/'        => '/feed.php',
+    '/sitemap.xml'  => '/sitemap.php',
+    '/subscribe'    => '/subscribe.php',
+    '/ad'           => '/ad.php',
+    '/corrections'  => '/corrections.php',
 ];
 if (isset($map[$path])) {
     require __DIR__ . $map[$path];

@@ -168,9 +168,11 @@ figcaption .credit{font-family:var(--pp-mono);font-size:10.5px;font-style:normal
 .lead h1 a:hover,.lead h2 a:hover{color:var(--pp-quarter)}
 .lead .standfirst{font-size:18px;margin:0;max-width:none}
 
-/* Secondary stories under the lead */
+/* Secondary stories under the lead; grows into the featured band when set */
 .duo{display:grid;grid-template-columns:1fr 1fr;gap:26px;margin-top:30px;padding-top:24px;border-top:1px solid var(--pp-board)}
 @media(max-width:600px){.duo{grid-template-columns:1fr}}
+.duo--band{grid-template-columns:repeat(auto-fit,minmax(200px,1fr))}
+@media(max-width:600px){.duo--band{grid-template-columns:1fr}}
 
 .card h3{
   font-family:var(--pp-display);font-weight:700;font-stretch:78%;

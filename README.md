@@ -10,10 +10,33 @@ open `design/prairie-post-brand-guide.html` in a browser.
 
 ## What's here
 
-**Public site** — front page (pinned hero, latest river, desk blocks, closing
-prices, forecast, newsletter signup), story pages, desk archives, archive
-search, RSS feed (`/feed/`), `sitemap.xml`, `robots.txt`, labelled ad slots,
-Open Graph / Twitter cards / NewsArticle JSON-LD.
+**Public site** — front page (editor-set hero, featured band, desk blocks with
+desk leads, latest river, closing prices, forecast, newsletter signup), story
+pages, desk archives, archive search, RSS feed (`/feed/`), `sitemap.xml`,
+`robots.txt`, labelled ad slots, Open Graph / Twitter cards / NewsArticle
+JSON-LD, the public corrections file (`/corrections`), and the newsletter
+archive (`/newsletter/`).
+
+**Front page placements** — each published story can carry one placement, set
+in the editor: **Hero** (the lead; setting a new one demotes the old), **Front
+featured** (the photo-card band under the hero, up to four), or **Desk lead**
+(tops its desk block and archive). The dashboard shows the front page as
+currently set. With nothing placed, the latest stories stand in.
+
+**The 6 a.m., delivered** — the daily newsletter compiles itself from the last
+24 hours (hero first, then by desk, with the forecast and closing prices),
+renders as email-safe HTML in the brand, and sends to the active list through
+your host's SMTP (or PHP `mail()`); the cron sends once per day after the
+configured hour. Every edition is archived publicly at `/newsletter/{date}`.
+Admin page (Newsroom → The 6 a.m.): mail settings, preview, send-me-a-test,
+send-now, and the send log. **CASL is built in**: double opt-in confirmation
+emails with a stored consent note, per-subscriber tokens, one-click
+unsubscribe honoured instantly, `List-Unsubscribe` header, and the paper's
+mailing address in every footer. Deliverability note: set SPF/DKIM for the
+From domain in DNS or editions land in spam.
+
+**Corrections** — editors file a correction on any story; it renders as the
+Bin Red block above the text and joins the public corrections file.
 
 **Newsroom** (`/admin/`) — dashboard with the morning wire pull (regional tabs;
 *Start draft* turns a headline into a draft with the source linked, *Mark used*

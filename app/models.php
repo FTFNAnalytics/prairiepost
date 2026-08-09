@@ -29,11 +29,28 @@ function now(): string
 function featured_post(): ?array
 {
     $sql = 'SELECT ' . PP_POST_COLS . ' FROM posts p' . pp_site_join() . PP_POST_JOINS . '
-            WHERE ' . pp_published_where() . '
-            ORDER BY p.is_featured DESC, p.published_at DESC LIMIT 1';
+            WHERE ' . pp_published_where() . "
+            ORDER BY CASE WHEN p.placement = 'hero' THEN 0 ELSE 1 END, p.published_at DESC LIMIT 1";
     $stmt = db()->prepare($sql);
     $stmt->execute([now()]);
     return $stmt->fetch() ?: null;
+}
+
+/** The front-featured band: up to four stories an editor placed there. */
+function front_featured_posts(array $excludeIds = [], int $limit = 4): array
+{
+    $params = [now()];
+    $not = '';
+    if ($excludeIds) {
+        $not = ' AND p.id NOT IN (' . implode(',', array_fill(0, count($excludeIds), '?')) . ')';
+        $params = array_merge($params, array_map('intval', $excludeIds));
+    }
+    $sql = 'SELECT ' . PP_POST_COLS . ' FROM posts p' . pp_site_join() . PP_POST_JOINS . '
+            WHERE ' . pp_published_where() . " AND p.placement = 'featured'" . $not . '
+            ORDER BY p.published_at DESC LIMIT ' . (int) $limit;
+    $stmt = db()->prepare($sql);
+    $stmt->execute($params);
+    return $stmt->fetchAll();
 }
 
 function latest_posts(int $limit, array $excludeIds = [], int $offset = 0): array
@@ -61,8 +78,8 @@ function posts_in_category(int $categoryId, int $limit, array $excludeIds = [], 
         $params = array_merge($params, array_map('intval', $excludeIds));
     }
     $sql = 'SELECT ' . PP_POST_COLS . ' FROM posts p' . pp_site_join() . PP_POST_JOINS . '
-            WHERE ' . pp_published_where() . ' AND p.category_id = ?' . $not . '
-            ORDER BY p.published_at DESC LIMIT ' . (int) $limit . ' OFFSET ' . (int) $offset;
+            WHERE ' . pp_published_where() . ' AND p.category_id = ?' . $not . "
+            ORDER BY CASE WHEN p.placement = 'desk_lead' THEN 0 ELSE 1 END, p.published_at DESC LIMIT " . (int) $limit . ' OFFSET ' . (int) $offset;
     $stmt = db()->prepare($sql);
     $stmt->execute($params);
     return $stmt->fetchAll();
@@ -282,6 +299,53 @@ function news_items_for_region(string $region, int $limit = 40, bool $includeUse
 function sources_all(): array
 {
     return db()->query('SELECT * FROM sources ORDER BY region, name')->fetchAll();
+}
+
+/* --- Corrections ------------------------------------------------------------ */
+
+/** Published stories carrying a correction, newest correction first. */
+function corrected_posts(int $limit = 50): array
+{
+    $sql = 'SELECT ' . PP_POST_COLS . ' FROM posts p' . pp_site_join() . PP_POST_JOINS . '
+            WHERE ' . pp_published_where() . " AND p.correction IS NOT NULL AND p.correction != ''
+            ORDER BY p.corrected_at DESC LIMIT " . (int) $limit;
+    $stmt = db()->prepare($sql);
+    $stmt->execute([now()]);
+    return $stmt->fetchAll();
+}
+
+/* --- Subscribers & newsletters ---------------------------------------------- */
+
+function subscriber_by_token(string $token): ?array
+{
+    if ($token === '') {
+        return null;
+    }
+    $stmt = db()->prepare('SELECT * FROM subscribers WHERE token = ? AND site_id = ?');
+    $stmt->execute([$token, current_site_id()]);
+    return $stmt->fetch() ?: null;
+}
+
+function active_subscribers(): array
+{
+    $stmt = db()->prepare("SELECT * FROM subscribers WHERE site_id = ? AND status = 'active' ORDER BY id");
+    $stmt->execute([current_site_id()]);
+    return $stmt->fetchAll();
+}
+
+function newsletter_by_date(string $date): ?array
+{
+    $stmt = db()->prepare('SELECT * FROM newsletters WHERE site_id = ? AND edition_date = ?');
+    $stmt->execute([current_site_id(), $date]);
+    return $stmt->fetch() ?: null;
+}
+
+function newsletters_recent(int $limit = 30): array
+{
+    $stmt = db()->prepare('SELECT id, edition_date, subject, status, recipients, sent_at FROM newsletters
+        WHERE site_id = ? ORDER BY edition_date DESC LIMIT ' . (int) $limit);
+    $stmt->execute([current_site_id()]);
+    return $stmt->fetchAll();
 }
 
 /* --- Advertising ----------------------------------------------------------- */

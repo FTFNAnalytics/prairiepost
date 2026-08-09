@@ -17,6 +17,8 @@ RewriteRule ^sitemap\.xml$ sitemap.php [L]
 RewriteRule ^subscribe/?$ subscribe.php [L,QSA]
 RewriteRule ^ad/?$ ad.php [L,QSA]
 RewriteRule ^card/([a-z0-9-]+)\.png$ card.php?slug=$1 [L]
+RewriteRule ^corrections/?$ corrections.php [L]
+RewriteRule ^newsletter(/.*)?$ newsletter.php?path=$1 [L,QSA]
 </IfModule>
 
 <FilesMatch "^(config\.php|config\.example\.php)$">

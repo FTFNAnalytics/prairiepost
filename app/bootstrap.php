@@ -5,7 +5,7 @@
  */
 
 define('PP_ROOT', dirname(__DIR__));
-define('PP_SCHEMA_VERSION', 3);
+define('PP_SCHEMA_VERSION', 4);
 
 $configFile = PP_ROOT . '/config.php';
 $GLOBALS['pp_config'] = is_file($configFile)
@@ -148,16 +148,16 @@ function current_site_id(): int
 /** Read a per-site runtime setting (cached per request). */
 function setting(string $key, string $default = ''): string
 {
-    static $cache = null;
-    if ($cache === null) {
+    if (!isset($GLOBALS['pp_setting_cache'])) {
         $cache = [];
         $stmt = db()->prepare('SELECT skey, svalue FROM settings WHERE site_id = ?');
         $stmt->execute([current_site_id()]);
         foreach ($stmt as $row) {
             $cache[$row['skey']] = $row['svalue'];
         }
+        $GLOBALS['pp_setting_cache'] = $cache;
     }
-    return $cache[$key] ?? $default;
+    return $GLOBALS['pp_setting_cache'][$key] ?? $default;
 }
 
 function setting_json(string $key, array $default = []): array
@@ -178,6 +178,9 @@ function set_setting(string $key, string $value, ?int $siteId = null): void
         ? 'INSERT INTO settings (site_id, skey, svalue) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE svalue = VALUES(svalue)'
         : 'INSERT INTO settings (site_id, skey, svalue) VALUES (?, ?, ?) ON CONFLICT(site_id, skey) DO UPDATE SET svalue = excluded.svalue';
     db()->prepare($sql)->execute([$siteId, $key, $value]);
+    if ($siteId === current_site_id() && isset($GLOBALS['pp_setting_cache'])) {
+        $GLOBALS['pp_setting_cache'][$key] = $value;
+    }
 }
 
 /** Canonical absolute base URL, no trailing slash. */

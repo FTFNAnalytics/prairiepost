@@ -5,7 +5,9 @@ require __DIR__ . '/app/views/ui.php';
 
 $hero = featured_post();
 $heroId = $hero ? [(int) $hero['id']] : [];
-$secondary = latest_posts(2, $heroId);
+$featured = front_featured_posts($heroId);
+// The band an editor set; when empty, the two latest stories stand in.
+$secondary = $featured ?: latest_posts(2, $heroId);
 $shownIds = array_merge($heroId, array_map('intval', array_column($secondary, 'id')));
 $river = latest_posts(10, $shownIds);
 $markets = setting_json('markets');
@@ -42,7 +44,7 @@ page_header([
       <?php endif; ?>
 
       <?php if ($secondary): ?>
-      <div class="duo">
+      <div class="duo<?= count($secondary) > 2 ? ' duo--band' : '' ?>">
         <?php foreach ($secondary as $post): ?><?= story_card($post) ?><?php endforeach; ?>
       </div>
       <?php endif; ?>

@@ -8,11 +8,11 @@ if (isset($_GET['export'])) {
     header('Content-Type: text/csv; charset=utf-8');
     header('Content-Disposition: attachment; filename="prairiepost-subscribers-' . date('Y-m-d') . '.csv"');
     $out = fopen('php://output', 'w');
-    fputcsv($out, ['email', 'subscribed_at']);
-    $stmt = db()->prepare('SELECT email, created_at FROM subscribers WHERE site_id = ? ORDER BY created_at');
+    fputcsv($out, ['email', 'status', 'consent', 'confirmed_at', 'subscribed_at']);
+    $stmt = db()->prepare('SELECT email, status, consent_note, confirmed_at, created_at FROM subscribers WHERE site_id = ? ORDER BY created_at');
     $stmt->execute([current_site_id()]);
     foreach ($stmt as $row) {
-        fputcsv($out, [$row['email'], $row['created_at']]);
+        fputcsv($out, [$row['email'], $row['status'], $row['consent_note'], $row['confirmed_at'], $row['created_at']]);
     }
     fclose($out);
     exit;
@@ -42,17 +42,19 @@ flash_show();
   <h1 class="pagetitle">The 6 a.m. list</h1>
   <a class="btn" href="subscribers.php?export=csv">Download the list as CSV</a>
 </div>
-<p class="pagesub"><?= $total ?> subscriber<?= $total === 1 ? '' : 's' ?>. The signup form feeds this list; sending the newsletter itself is a job for your mail tool — export the CSV and import it there.</p>
+<p class="pagesub"><?= $total ?> subscriber<?= $total === 1 ? '' : 's' ?>. The signup form feeds this list, and <a href="newsletter.php">The 6 a.m.</a> sends to everyone marked active. The CSV export carries the consent trail.</p>
 
 <div class="panel">
   <?php if (!$subs): ?>
   <p>Nobody on the list yet. The signup block is on the front page rail and at /subscribe.</p>
   <?php else: ?>
   <table class="tbl">
-    <tr><th>Email</th><th>Signed up</th><th></th></tr>
+    <tr><th>Email</th><th>Status</th><th>Consent</th><th>Signed up</th><th></th></tr>
     <?php foreach ($subs as $s): ?>
     <tr>
       <td class="mono"><?= e($s['email']) ?></td>
+      <td><span class="chip <?= $s['status'] === 'active' ? 'chip--ok' : ($s['status'] === 'pending' ? 'chip--scheduled' : 'chip--used') ?>"><?= e($s['status']) ?></span></td>
+      <td class="mono" style="font-size:11px;color:#5A6A5C"><?= e($s['consent_note']) ?></td>
       <td class="mono"><?= e(fmt_date($s['created_at'], 'M j, Y g:i a')) ?></td>
       <td><form method="post" class="inline" onsubmit="return confirm('Remove this address?')"><?= csrf_field() ?><input type="hidden" name="action" value="delete"><input type="hidden" name="id" value="<?= (int) $s['id'] ?>"><button class="btn btn--danger btn--small" type="submit">Remove</button></form></td>
     </tr>

@@ -27,9 +27,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
     if ($action === 'feature' && $target && $editor) {
-        db()->exec('UPDATE posts SET is_featured = 0');
-        db()->prepare('UPDATE posts SET is_featured = 1 WHERE id = ?')->execute([$id]);
-        flash_set('Pinned to the top of the front page.');
+        db()->exec("UPDATE posts SET placement = '' WHERE placement = 'hero'");
+        db()->prepare("UPDATE posts SET placement = 'hero' WHERE id = ?")->execute([$id]);
+        flash_set('Set as the front-page hero.');
     }
     redirect('posts.php?' . http_build_query(array_filter([
         'status' => $_GET['status'] ?? '', 'category' => $_GET['category'] ?? '', 'q' => $_GET['q'] ?? '',
@@ -110,15 +110,17 @@ flash_show();
     <tr>
       <td>
         <a class="rowtitle" href="post-edit.php?id=<?= (int) $p['id'] ?>"><?= e($p['title']) ?></a>
-        <?php if ($p['is_featured']): ?> <span class="chip chip--scheduled">Front</span><?php endif; ?>
+        <?php if ($p['placement'] === 'hero'): ?> <span class="chip chip--scheduled">Hero</span>
+        <?php elseif ($p['placement'] === 'featured'): ?> <span class="chip chip--scheduled">Featured</span>
+        <?php elseif ($p['placement'] === 'desk_lead'): ?> <span class="chip chip--used">Desk lead</span><?php endif; ?>
         <div class="mono" style="color:#5A6A5C"><?= e($p['byline']) ?><?= $p['dateline'] ? ' · ' . e(mb_strtoupper($p['dateline'])) : '' ?></div>
       </td>
       <td><?php if ($p['category_name']): ?><span class="deskdot" style="background:<?= e($p['category_color']) ?>"></span><?= e($p['category_name']) ?><?php endif; ?></td>
       <td><span class="chip chip--<?= e($p['status']) ?>"><?= e(str_replace('_', ' ', $p['status'])) ?></span></td>
       <td class="mono"><?= e(fmt_date($p['published_at'] ?: $p['updated_at'], 'M j, Y g:i a')) ?></td>
       <td style="white-space:nowrap">
-        <?php if ($editor && $p['status'] === 'published' && !$p['is_featured']): ?>
-        <form method="post" class="inline"><?= csrf_field() ?><input type="hidden" name="action" value="feature"><input type="hidden" name="id" value="<?= (int) $p['id'] ?>"><button class="btn btn--ghost btn--small" type="submit">Pin to front</button></form>
+        <?php if ($editor && $p['status'] === 'published' && $p['placement'] !== 'hero'): ?>
+        <form method="post" class="inline"><?= csrf_field() ?><input type="hidden" name="action" value="feature"><input type="hidden" name="id" value="<?= (int) $p['id'] ?>"><button class="btn btn--ghost btn--small" type="submit">Make hero</button></form>
         <?php endif; ?>
         <?php if ($editor || ($p['status'] !== 'published' && (int) $p['author_id'] === (int) $user['id'])): ?>
         <form method="post" class="inline" onsubmit="return confirm('Delete this story? It is removed from the site immediately.')"><?= csrf_field() ?><input type="hidden" name="action" value="delete"><input type="hidden" name="id" value="<?= (int) $p['id'] ?>"><button class="btn btn--danger btn--small" type="submit">Delete</button></form>

@@ -9,6 +9,7 @@
  */
 require dirname(__DIR__) . '/app/bootstrap.php';
 require dirname(__DIR__) . '/app/fetch.php';
+require dirname(__DIR__) . '/app/newsletter.php';
 
 if (PHP_SAPI !== 'cli') {
     $key = (string) ($_GET['key'] ?? '');
@@ -33,6 +34,7 @@ foreach ($report as $r) {
 
 $pruned = pp_prune_news($db);
 $publishedNow = pp_publish_due($db);
+echo pp_maybe_send_daily() . "\n";
 
 printf(
     "----\n%d new item(s), %d stale item(s) pruned, %d scheduled story(ies) published. %.1fs.\n",

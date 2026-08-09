@@ -163,7 +163,8 @@ function page_footer(): void
           <ul>
             <li><a href="<?= e(url('search')) ?>">Search the archive</a></li>
             <li><a href="<?= e(url('feed/')) ?>">RSS feed</a></li>
-            <li><a href="<?= e(url('subscribe')) ?>">The 6 a.m. newsletter</a></li>
+            <li><a href="<?= e(url('newsletter/')) ?>">The 6 a.m. newsletter</a></li>
+            <li><a href="<?= e(url('corrections')) ?>">The corrections file</a></li>
             <li><a href="/admin/">Newsroom sign-in</a></li>
           </ul>
         </div>
@@ -189,7 +190,9 @@ function signup_block(): string
     $html  = '<div class="signup">';
     $html .= '<p class="k">' . e($heading) . '</p>';
     if ($ok) {
-        $html .= '<p>You\'re on the list. The next edition lands at 6 a.m.</p>';
+        $html .= isset($_GET['confirm'])
+            ? '<p>Nearly there — we\'ve emailed you a confirmation link. One click and the next edition lands at 6 a.m.</p>'
+            : '<p>You\'re on the list. The next edition lands at 6 a.m.</p>';
     } else {
         $html .= '<p>' . e($copy) . '</p>';
         $html .= '<form method="post" action="' . e(url('subscribe')) . '">';

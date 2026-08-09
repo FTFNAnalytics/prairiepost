@@ -63,7 +63,10 @@ CREATE TABLE posts (
     source_url VARCHAR(500) NOT NULL DEFAULT '',
     status VARCHAR(20) NOT NULL DEFAULT 'draft',  -- draft | in_review | scheduled | published
     review_note TEXT,
-    is_featured INTEGER NOT NULL DEFAULT 0,
+    is_featured INTEGER NOT NULL DEFAULT 0,       -- superseded by placement; kept for compatibility
+    placement VARCHAR(20) NOT NULL DEFAULT '',    -- '' | hero | featured | desk_lead
+    correction TEXT,
+    corrected_at TIMESTAMP,
     published_at TIMESTAMP,
     created_at TIMESTAMP NOT NULL,
     updated_at TIMESTAMP NOT NULL
@@ -115,8 +118,26 @@ CREATE TABLE subscribers (
     id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     site_id INTEGER NOT NULL DEFAULT 1,
     email VARCHAR(191) NOT NULL,
+    status VARCHAR(20) NOT NULL DEFAULT 'active', -- pending | active | unsubscribed
+    token VARCHAR(64) NOT NULL DEFAULT '',        -- confirm & unsubscribe link token
+    confirmed_at TIMESTAMP,
+    consent_note VARCHAR(255) NOT NULL DEFAULT '',-- CASL consent record
     created_at TIMESTAMP NOT NULL,
     CONSTRAINT uq_sub UNIQUE (site_id, email)
+);
+
+-- Sent editions of each site's daily newsletter, archived as delivered.
+CREATE TABLE newsletters (
+    id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    site_id INTEGER NOT NULL,
+    edition_date VARCHAR(10) NOT NULL,
+    subject VARCHAR(255) NOT NULL,
+    html TEXT,
+    status VARCHAR(20) NOT NULL DEFAULT 'sent',
+    recipients INTEGER NOT NULL DEFAULT 0,
+    sent_at TIMESTAMP,
+    created_at TIMESTAMP NOT NULL,
+    CONSTRAINT uq_edition UNIQUE (site_id, edition_date)
 );
 
 CREATE TABLE settings (
@@ -157,4 +178,4 @@ CREATE INDEX idx_news_region ON news_items (region, fetched_at);
 CREATE INDEX idx_post_sites_site ON post_sites (site_id);
 CREATE INDEX idx_ads_site_placement ON ads (site_id, placement);
 
-INSERT INTO settings (site_id, skey, svalue) VALUES (0, 'schema_version', '3');
+INSERT INTO settings (site_id, skey, svalue) VALUES (0, 'schema_version', '4');

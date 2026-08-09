@@ -76,6 +76,25 @@ flash_show();
   <div class="stat"><div class="n"><?= $counts['sources'] ?></div><span class="k">Feeds on</span></div>
 </div>
 
+<?php if ($editor): ?>
+<?php
+$fpHero = featured_post();
+$fpBand = front_featured_posts($fpHero ? [(int) $fpHero['id']] : []);
+$fpLeads = db()->query("SELECT p.id, p.title, c.name AS desk FROM posts p
+    LEFT JOIN categories c ON c.id = p.category_id
+    WHERE p.placement = 'desk_lead' AND p.status = 'published' ORDER BY c.sort")->fetchAll();
+?>
+<div class="panel">
+  <h2>The front page, as set</h2>
+  <table class="tbl">
+    <tr><th>Slot</th><th>Story</th></tr>
+    <tr><td>Hero</td><td><?php if ($fpHero): ?><a class="rowtitle" href="post-edit.php?id=<?= (int) $fpHero['id'] ?>"><?= e($fpHero['title']) ?></a><?= $fpHero['placement'] !== 'hero' ? ' <span class="chip chip--used">latest story standing in — no hero set</span>' : '' ?><?php else: ?>—<?php endif; ?></td></tr>
+    <tr><td>Featured band</td><td><?php if ($fpBand): ?><?php foreach ($fpBand as $i => $fp): ?><?= $i ? ' · ' : '' ?><a class="rowtitle" href="post-edit.php?id=<?= (int) $fp['id'] ?>"><?= e($fp['title']) ?></a><?php endforeach; ?><?php else: ?><span class="chip chip--used">empty — two latest stand in</span><?php endif; ?></td></tr>
+    <tr><td>Desk leads</td><td><?php if ($fpLeads): ?><?php foreach ($fpLeads as $i => $fp): ?><?= $i ? ' · ' : '' ?><a class="rowtitle" href="post-edit.php?id=<?= (int) $fp['id'] ?>"><?= e($fp['title']) ?></a> <span class="chip chip--used"><?= e($fp['desk'] ?? '—') ?></span><?php endforeach; ?><?php else: ?>—<?php endif; ?></td></tr>
+  </table>
+</div>
+<?php endif; ?>
+
 <?php if ($editor && $queue): ?>
 <div class="panel" style="border-top:4px solid var(--pp-bigsky)">
   <h2>The review queue — waiting on an editor</h2>

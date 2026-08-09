@@ -41,6 +41,17 @@ function pp_site_default_settings(string $title): array
         'ad_article'         => '',
         'analytics_code'     => '',
         'cron_secret'        => bin2hex(random_bytes(16)),
+        /* --- Mail & the 6 a.m. ------------------------------------------ */
+        'smtp_host'          => '',      // empty = PHP mail() fallback
+        'smtp_port'          => '587',
+        'smtp_user'          => '',
+        'smtp_pass'          => '',
+        'smtp_secure'        => 'tls',   // tls | ssl | none
+        'mail_from'          => '',      // e.g. sixam@prairiepost.com
+        'mail_from_name'     => $title,
+        'paper_address'      => '',      // CASL: the paper's mailing address
+        'newsletter_enabled' => '0',
+        'newsletter_send_hour' => '6',
     ];
 }
 
@@ -305,20 +316,31 @@ function pp_seed(PDO $pdo): void
         ],
     ];
 
+    // Front-page placements for the sample paper: canola is the hero; the
+    // culvert, policing and grocery stories fill the featured band.
+    $placements = [
+        'canola-contracts-move-early-as-growers-watch-a-dry-june' => 'hero',
+        'ninety-minutes-on-one-culvert-how-hanna-council-decides-what-a-road-is-worth' => 'featured',
+        'province-rewrites-the-rural-policing-grant-and-the-counties-do-the-math' => 'featured',
+        'the-last-grocery-store-between-trochu-and-delia-changes-hands' => 'featured',
+    ];
+
     $insPost = $pdo->prepare('INSERT INTO posts
         (title, slug, category_id, byline, dateline, lede, body, image, image_caption, image_credit,
-         meta_description, status, is_featured, published_at, created_at, updated_at)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
+         meta_description, status, is_featured, placement, published_at, created_at, updated_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
     $insMap = $pdo->prepare('INSERT INTO post_sites (post_id, site_id) VALUES (?, ?)');
     $selTag = $pdo->prepare('SELECT id FROM tags WHERE slug = ?');
     $insTag = $pdo->prepare('INSERT INTO tags (name, slug) VALUES (?, ?)');
     $insPT  = $pdo->prepare('INSERT INTO post_tags (post_id, tag_id) VALUES (?, ?)');
 
     foreach ($stories as $s) {
+        $slug = slugify($s['title']);
         $insPost->execute([
-            $s['title'], slugify($s['title']), $catId[$s['desk']], $s['byline'], $s['dateline'],
+            $s['title'], $slug, $catId[$s['desk']], $s['byline'], $s['dateline'],
             $s['lede'], $s['body'], $s['image'], $s['image_caption'], $s['image_credit'],
-            excerpt($s['lede'], 155), 'published', $s['featured'], $s['published'], $s['published'], $s['published'],
+            excerpt($s['lede'], 155), 'published', $s['featured'], $placements[$slug] ?? '',
+            $s['published'], $s['published'], $s['published'],
         ]);
         $postId = pp_seed_last_id($pdo, 'posts');
         $insMap->execute([$postId, $siteId]);

@@ -72,10 +72,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         ];
 
         if ($editor) {
-            $fields['is_featured'] = isset($_POST['is_featured']) ? 1 : 0;
+            $placement = in_array($_POST['placement'] ?? '', ['', 'hero', 'featured', 'desk_lead'], true)
+                ? $_POST['placement'] : '';
+            $fields['placement'] = $placement;
             $fields['review_note'] = trim((string) ($_POST['review_note'] ?? ''));
-            if ($fields['is_featured']) {
-                db()->exec('UPDATE posts SET is_featured = 0');
+            if ($placement === 'hero') {
+                db()->exec("UPDATE posts SET placement = '' WHERE placement = 'hero'");
+            }
+            $newCorrection = trim((string) ($_POST['correction'] ?? ''));
+            $fields['correction'] = $newCorrection;
+            $hadCorrection = trim((string) ($post['correction'] ?? ''));
+            if ($newCorrection !== '' && $newCorrection !== $hadCorrection) {
+                $fields['corrected_at'] = now();
+            } elseif ($newCorrection === '') {
+                $fields['corrected_at'] = null;
             }
         }
 
@@ -248,10 +258,17 @@ if (!$editor && !empty($post['review_note'])) {
         <label for="source_url">Source link · when started from the wire</label>
         <input type="url" id="source_url" name="source_url" value="<?= $v('source_url') ?>">
         <?php if ($editor): ?>
-        <label style="display:flex;align-items:center;gap:8px;margin-top:18px;text-transform:none;letter-spacing:.04em">
-          <input type="checkbox" name="is_featured" style="width:auto"<?= !empty($post['is_featured']) ? ' checked' : '' ?>>
-          Pin to the top of the front page
-        </label>
+        <label for="placement">Front page placement</label>
+        <?php $pl = (string) ($post['placement'] ?? ''); ?>
+        <select id="placement" name="placement">
+          <option value=""<?= $pl === '' ? ' selected' : '' ?>>None — runs in the normal flow</option>
+          <option value="hero"<?= $pl === 'hero' ? ' selected' : '' ?>>Hero — the lead story (replaces the current hero)</option>
+          <option value="featured"<?= $pl === 'featured' ? ' selected' : '' ?>>Front featured — the band under the hero (up to four)</option>
+          <option value="desk_lead"<?= $pl === 'desk_lead' ? ' selected' : '' ?>>Desk lead — tops its desk, front page and archive</option>
+        </select>
+        <label for="correction">Correction · what was wrong, and what's right</label>
+        <textarea id="correction" name="correction" class="prose" style="min-height:64px" placeholder="An earlier version of this story said… In fact…"><?= $v('correction') ?></textarea>
+        <p class="help">A correction renders in Bin Red above the story and joins the public corrections file.</p>
         <?php if (count($allSites) > 1): ?>
         <label>Runs on</label>
         <?php foreach ($allSites as $site): ?>

@@ -87,6 +87,13 @@ page_header([
   </div>
   <?php endif; ?>
 
+  <?php if (!empty($post['correction'])): ?>
+  <div class="correction" style="max-width:var(--pp-measure);margin-top:26px">
+    <span class="k">Correction · <?= e(fmt_date($post['corrected_at'], 'M j, Y')) ?></span>
+    <p style="margin:6px 0 0"><?= e((string) $post['correction']) ?></p>
+  </div>
+  <?php endif; ?>
+
   <div class="bodycopy">
     <?= sanitize_html((string) $post['body']) ?>
   </div>
