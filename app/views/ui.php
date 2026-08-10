@@ -18,7 +18,7 @@ function eyebrow(array $post): string
     if (!empty($post['category_color_is_fill'])) {
         return '<a class="eyebrow eyebrow--weather" href="' . e($href) . '">' . e($post['category_name']) . '</a>';
     }
-    return '<a class="eyebrow" href="' . e($href) . '"' . desk_style($post['category_color']) . '>'
+    return '<a class="eyebrow" href="' . e($href) . '"' . desk_style(pp_desk_hex($post['category_slug'] ?? null, $post['category_color'])) . '>'
          . e($post['category_name']) . '</a>';
 }
 
@@ -128,7 +128,7 @@ function page_header(array $meta = [], string $activeDesk = ''): void
 <nav class="desknav" aria-label="Desks">
   <div class="wrap">
     <?php foreach (categories_all() as $cat): ?>
-    <a href="<?= e(url('desk/' . $cat['slug'])) ?>"<?= desk_style($cat['color']) ?><?= !empty($cat['color_is_fill']) ? ' class="is-weather"' : '' ?><?= $activeDesk === $cat['slug'] ? ' aria-current="page"' : '' ?>><?= e($cat['name']) ?></a>
+    <a href="<?= e(url('desk/' . $cat['slug'])) ?>"<?= desk_style(pp_desk_hex($cat['slug'], $cat['color'])) ?><?= !empty($cat['color_is_fill']) ? ' class="is-weather"' : '' ?><?= $activeDesk === $cat['slug'] ? ' aria-current="page"' : '' ?>><?= e($cat['name']) ?></a>
     <?php endforeach; ?>
   </div>
 </nav>

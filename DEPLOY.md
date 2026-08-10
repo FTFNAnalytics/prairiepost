@@ -254,11 +254,16 @@ for the first two are already committed under `assets/sites/`.
 
 Per new paper:
 
-1. **Brand** (if not already in the repo):
-   `python3 tools/make-brand.py <slug> "The Paper Name"` generates the three
-   lockups into `assets/sites/<slug>/`; anything not generated (favicon,
-   mark, og-default, brand.css palette overrides) falls back to the network
-   default. Commit, release.
+1. **Brand** (if not already in the repo): a site's whole identity lives in
+   `assets/sites/<slug>/` —
+   `python3 tools/make-brand.py <slug> "The Paper Name" --ink "#14263B" --paper "#F2F4F6" --board "#C2C9D1"`
+   generates the lockups in the paper's own ink; `palette.json` sets the
+   colours for social cards, the newsletter and per-site **desk accent
+   colours** (`"desks": {...}` — desks are shared data, colours are per
+   paper); `brand.css` overrides the `--pp-*` tokens for the site chrome.
+   Anything absent falls back to the network default. Edmonton Echo (blue &
+   orange) and Grande Prairie Gazette (aurora purple) are complete worked
+   examples. Commit, release.
 2. **Deploy**: new nginx server block (§3a pattern) + TLS for the new
    domain. The document root can be the **same release directory** — put the
    per-site choice in `config.php` by mapping the host, e.g.:

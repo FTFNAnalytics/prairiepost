@@ -1,0 +1,22 @@
+{
+  "palette": {
+    "ink":     "#241A47",
+    "paper":   "#F4F2F9",
+    "board":   "#C9C3D8",
+    "sky":     "#8FE0BE",
+    "hill":    "#3E2C77",
+    "field":   "#1B7A5C",
+    "stubble": "#2C8C84",
+    "red":     "#B0246B",
+    "muted":   "#5B5273"
+  },
+  "desks": {
+    "news":        "#241A47",
+    "politics":    "#5D3AA6",
+    "agriculture": "#1B7A5C",
+    "business":    "#21707A",
+    "community":   "#6B4790",
+    "opinion":     "#B0246B",
+    "weather":     "#8FE0BE"
+  }
+}

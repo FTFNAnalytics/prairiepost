@@ -212,6 +212,7 @@ function pp_brand_palette(): array
 {
     static $palette = null;
     if ($palette === null) {
+        $hex = fn ($v) => is_string($v) && preg_match('/^#[0-9A-Fa-f]{6}$/', $v);
         $palette = array_merge([
             'ink'     => '#17301C',   // primary ink, the rule
             'paper'   => '#F1F2F0',   // page ground
@@ -222,9 +223,43 @@ function pp_brand_palette(): array
             'stubble' => '#7A661F',   // band 5
             'red'     => '#9C3B22',   // signal
             'muted'   => '#5A6A5C',   // secondary text
-        ], array_filter(setting_json('brand_palette'), fn ($v) => is_string($v) && preg_match('/^#[0-9A-Fa-f]{6}$/', $v)));
+        ], array_filter(pp_brand_file()['palette'] ?? [], $hex),
+           array_filter(setting_json('brand_palette'), $hex));
     }
     return $palette;
+}
+
+/** The site's committed brand file (assets/sites/<slug>/palette.json), if any. */
+function pp_brand_file(): array
+{
+    static $brand = null;
+    if ($brand === null) {
+        $brand = [];
+        $slug = current_site()['slug'] ?? '';
+        $file = PP_ROOT . '/assets/sites/' . $slug . '/palette.json';
+        if ($slug !== '' && is_file($file)) {
+            $decoded = json_decode((string) file_get_contents($file), true);
+            if (is_array($decoded)) {
+                $brand = $decoded;
+            }
+        }
+    }
+    return $brand;
+}
+
+/**
+ * The accent colour a desk carries on THIS site. Desks (categories) are
+ * shared across the network, but each paper may recolour them in its
+ * palette.json under "desks": {"politics": "#20618F", …}.
+ */
+function pp_desk_hex(?string $categorySlug, ?string $default): string
+{
+    $default = $default ?: '#17301C';
+    if (!$categorySlug) {
+        return $default;
+    }
+    $override = pp_brand_file()['desks'][$categorySlug] ?? null;
+    return (is_string($override) && preg_match('/^#[0-9A-Fa-f]{6}$/', $override)) ? $override : $default;
 }
 
 /* --- Uploads ------------------------------------------------------------- */

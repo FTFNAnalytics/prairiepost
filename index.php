@@ -106,7 +106,7 @@ page_header([
     }
     ?>
   <section class="deskblock" aria-label="<?= e($cat['name']) ?>">
-    <div class="deskhead"<?= desk_style(empty($cat['color_is_fill']) ? $cat['color'] : '#17301C') ?>>
+    <div class="deskhead"<?= desk_style(empty($cat['color_is_fill']) ? pp_desk_hex($cat['slug'], $cat['color']) : pp_brand_palette()['ink']) ?>>
       <h2><a href="<?= e(url('desk/' . $cat['slug'])) ?>"><?= e($cat['name']) ?></a></h2>
       <a class="more" href="<?= e(url('desk/' . $cat['slug'])) ?>">All <?= e($cat['name']) ?> →</a>
     </div>

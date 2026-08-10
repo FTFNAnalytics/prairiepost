@@ -55,7 +55,7 @@ function pp_compile_edition(): array
         // Hero.
         $heroPost = $posts[0];
         if (!empty($heroPost['category_name'])) {
-            $deskColor = empty($heroPost['category_color_is_fill']) ? $heroPost['category_color'] : $ink;
+            $deskColor = empty($heroPost['category_color_is_fill']) ? pp_desk_hex($heroPost['category_slug'] ?? null, $heroPost['category_color']) : $ink;
             $out .= "<tr><td style=\"$mono;font-size:10px;color:" . $h($deskColor) . ';padding:2px 0 6px;">' . $h($heroPost['category_name']) . '</td></tr>';
         }
         $out .= "<tr><td style=\"$head;font-size:26px;line-height:1.1;padding:0 0 8px;\"><a href=\"" . $h($link($heroPost)) . "\" style=\"color:$ink;text-decoration:none;\">" . $h($heroPost['title']) . '</a></td></tr>';
@@ -71,7 +71,7 @@ function pp_compile_edition(): array
         }
         foreach ($byDesk as $desk => $deskPosts) {
             $first = $deskPosts[0];
-            $deskColor = (!empty($first['category_color']) && empty($first['category_color_is_fill'])) ? $first['category_color'] : $ink;
+            $deskColor = (!empty($first['category_color']) && empty($first['category_color_is_fill'])) ? pp_desk_hex($first['category_slug'] ?? null, $first['category_color']) : $ink;
             $out .= "<tr><td style=\"border-top:2px solid $ink;padding:14px 0 4px;\"><span style=\"$mono;font-size:10px;color:" . $h($deskColor) . ';">' . $h($desk) . '</span></td></tr>';
             foreach ($deskPosts as $p) {
                 $out .= "<tr><td style=\"padding:4px 0 2px;\"><a href=\"" . $h($link($p)) . "\" style=\"$head;font-size:17px;line-height:1.25;color:$ink;text-decoration:none;\">" . $h($p['title']) . '</a></td></tr>';

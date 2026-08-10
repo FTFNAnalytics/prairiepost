@@ -31,7 +31,7 @@ MONO = os.path.join(ROOT, 'assets/fonts/plex-mono-600.ttf')
 INK, PAPER, BOARD = '#17301C', '#F1F2F0', '#C4C0B4'
 
 # The farmstead mark for the stacked lockup (five-band homestead silhouette).
-FARMSTEAD = '''<g transform="translate({fx},62) scale(0.55)" fill="#17301C">
+FARMSTEAD_TPL = '''<g transform="translate({fx},62) scale(0.55)" fill="#17301C">
     <polygon points="24,-30 34,-92 44,-30"/>
     <polygon points="48,-34 57,-84 66,-34"/>
     <ellipse cx="22" cy="-28" rx="22" ry="28"/>
@@ -92,7 +92,13 @@ def main():
     ap.add_argument('slug')
     ap.add_argument('name')
     ap.add_argument('--tagline', default='News to the horizon')
+    ap.add_argument('--ink', default='#17301C')
+    ap.add_argument('--paper', default='#F1F2F0')
+    ap.add_argument('--board', default='#C4C0B4')
     args = ap.parse_args()
+
+    global INK, PAPER, BOARD
+    INK, PAPER, BOARD = args.ink, args.paper, args.board
 
     if not re.match(r'^[a-z0-9-]+$', args.slug):
         sys.exit('slug must be lowercase letters, digits and hyphens')
@@ -141,7 +147,7 @@ def main():
     line2_el = f'\n  <path d="{l2_d}" transform="translate({fmt(x2)},224)" fill="{INK}"/>' if line2 else ''
     with open(os.path.join(out, 'logo-stacked.svg'), 'w') as f:
         f.write(f'''<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {sw} 250" width="{sw}" height="250" role="img" aria-label="{args.name}">
-  {FARMSTEAD.format(fx=fmt(fx))}
+  {FARMSTEAD_TPL.format(fx=fmt(fx)).replace('#17301C', INK)}
   <rect x="0" y="66" width="{sw}" height="4" fill="{INK}"/>
   <rect x="0" y="72" width="{sw}" height="1" fill="{BOARD}"/>
   <path d="{l1_d}" transform="translate({fmt(x1)},146)" fill="{INK}"/>{line2_el}

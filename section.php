@@ -22,7 +22,7 @@ $pages = max(1, (int) ceil($total / $perPage));
 $page = min($page, $pages);
 $posts = posts_in_category((int) $cat['id'], $perPage, [], ($page - 1) * $perPage);
 
-$deskColor = empty($cat['color_is_fill']) ? $cat['color'] : '#17301C';
+$deskColor = empty($cat['color_is_fill']) ? pp_desk_hex($cat['slug'], $cat['color']) : pp_brand_palette()['ink'];
 
 page_header([
     'title'       => $cat['name'],

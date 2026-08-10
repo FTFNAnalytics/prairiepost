@@ -1,0 +1,19 @@
+/* The Grande Prairie Gazette — dark purple under northern lights. Loaded
+   after prairie.css; overrides the token layer only. */
+:root{
+  --pp-shelterbelt:#241A47;   /* ink — midnight purple                      */
+  --pp-cloudbank:#F4F2F9;     /* paper — pale violet white                  */
+  --pp-board:#C9C3D8;         /* hairlines                                  */
+  --pp-bigsky:#5D3AA6;        /* links — aurora violet                      */
+  --pp-noonsky:#8FE0BE;       /* fills — aurora green, ink type on top      */
+  --pp-highsky:#C9BCEC;       /* tints, hover beds                          */
+  --pp-straw:#63D9A8;         /* highlight fills — bright curtain green     */
+  --pp-binred:#B0246B;        /* signal — aurora magenta                    */
+  --pp-quarter:#3E2C77;       /* secondary ink, positive numbers            */
+  --pp-field:#1B7A5C;         /* charts                                     */
+  --pp-fencepost:#6B4790;     /* feature ink                                */
+  --pp-stubble:#21707A;       /* labels                                     */
+}
+/* The aurora band: dark sky into curtain green. Light type belongs on it. */
+.skybar{background:linear-gradient(90deg,#241A47 0%,#3E2C77 40%,#1B7A5C 75%,#63D9A8 100%);color:#EDE9F7}
+.skybar a{color:#EDE9F7}

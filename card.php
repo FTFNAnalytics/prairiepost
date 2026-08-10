@@ -74,7 +74,7 @@ if (!is_file($cacheFile)) {
     $kickerY = $pad + 20;
     $deskName = (string) ($post['category_name'] ?? '');
     $deskHex = (!empty($post['category_color']) && empty($post['category_color_is_fill']))
-        ? $post['category_color'] : $pal['ink'];
+        ? pp_desk_hex($post['category_slug'] ?? null, $post['category_color']) : $pal['ink'];
     $x = $pad;
     if ($deskName !== '') {
         $x = $track(19, $x, $kickerY, $col($deskHex), $deskName, 4.5);
@@ -126,7 +126,7 @@ if (!is_file($cacheFile)) {
     imagefilledrectangle($im, 0, $bandTop + 142, CARD_W, CARD_H, $stubble);
 
     // Tagline riding just above the sky band.
-    $track(15, $pad, $bandTop - 18, $col('#5A6A5C'), setting('tagline', 'News to the horizon'), 4);
+    $track(15, $pad, $bandTop - 18, $col($pal['muted']), setting('tagline', 'News to the horizon'), 4);
 
     imagepng($im, $cacheFile);
     imagedestroy($im);
