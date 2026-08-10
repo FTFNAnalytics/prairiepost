@@ -57,6 +57,8 @@ function pp_site_default_settings(string $title): array
         'contact_email'      => '',
         'traffic_items'      => '',
         'events_items'       => '',
+        'field_notes_text'   => '',
+        'field_notes_url'    => '',
     ];
 }
 

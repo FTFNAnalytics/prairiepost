@@ -1,0 +1,240 @@
+/* ============================================================
+   The chronicle template — navy banner over paper white, greens
+   carried as the working register, the whole page set in serif.
+   First user: the Kermode Chronicle. Loaded only when
+   chrome.template = "chronicle"; a site's brand.css may re-tune
+   the --kc-* tokens.
+   ============================================================ */
+@import url('https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,300..900;1,8..60,300..700&display=swap');
+
+body.t-chronicle{
+  --kc-navy:   #0E2233;   /* the banner and footer               */
+  --kc-deep:   #0A1A28;   /* the utility strip                   */
+  --kc-ink:    #131E28;   /* headline ink on paper               */
+  --kc-text:   #1B2621;   /* body ink                            */
+  --kc-muted:  #66727C;
+  --kc-line:   #E2E6E2;
+  --kc-paper:  #FDFDFB;
+  --kc-green:  #1C5342;   /* the working accent                  */
+  --kc-link:   #2F6B4B;   /* kickers and links on paper          */
+  --kc-pine:   #143A2E;
+  --kc-mint:   #A9D0B3;   /* accents on the navy                 */
+  --kc-wash:   #E6F0E7;   /* field notes / coast report ground   */
+  --kc-chalk:  #D7E2DC;   /* quiet type on the navy              */
+  --kc-serif:  'Source Serif 4', Georgia, serif;
+
+  /* Inner pages read as the brand: paper white, green links. */
+  --pp-shelterbelt: var(--kc-ink);
+  --pp-cloudbank:   var(--kc-paper);
+  --pp-board:       var(--kc-line);
+  --pp-bigsky:      var(--kc-green);
+  --pp-noonsky:     var(--kc-link);
+  --pp-highsky:     var(--kc-wash);
+  --pp-straw:       #DCEBDF;
+  --pp-binred:      #8A5A17;
+  --pp-quarter:     var(--kc-pine);
+  --pp-fencepost:   var(--kc-green);
+  --pp-stubble:     #4A5A51;
+
+  background: var(--kc-paper);
+  color: var(--kc-text);
+  font-family: var(--kc-serif);
+}
+
+body.t-chronicle h1, body.t-chronicle h2, body.t-chronicle h3,
+body.t-chronicle .card h3, body.t-chronicle .storyhead h1{
+  font-family: var(--kc-serif);
+  letter-spacing: 0;
+}
+body.t-chronicle .storybody, body.t-chronicle .storybody p{
+  font-family: var(--kc-serif);
+}
+body.t-chronicle .storyhead .standfirst, body.t-chronicle .standfirst{
+  font-family: var(--kc-serif);
+  font-style: italic;
+}
+body.t-chronicle .storybody blockquote{
+  border-left: 3px solid var(--kc-green);
+  padding-left: 18px;
+  font-style: italic;
+  font-size: 1.1em;
+  color: var(--kc-ink);
+}
+
+.kc-caps{font-family:var(--kc-serif);font-size:11.5px;font-weight:600;
+  letter-spacing:.18em;text-transform:uppercase}
+
+/* ---- The utility strip -------------------------------------- */
+.kc-strip{background:var(--kc-deep);color:var(--kc-chalk);font-size:13px}
+.kc-strip .wrap{display:flex;justify-content:space-between;align-items:center;
+  max-width:1160px;margin:0 auto;padding:9px 20px;gap:14px}
+.kc-strip .grp{display:flex;gap:18px;align-items:center;flex-wrap:wrap}
+.kc-strip a{color:var(--kc-chalk);text-decoration:none}
+.kc-strip a:hover{color:#fff;text-decoration:underline}
+
+/* ---- The masthead ------------------------------------------- */
+.kc-head{background:var(--kc-navy)}
+.kc-head .wrap{display:flex;justify-content:space-between;align-items:center;
+  max-width:1160px;margin:0 auto;padding:20px 20px 16px;gap:18px}
+.kc-head .brand{display:flex;align-items:center;gap:20px;text-decoration:none}
+.kc-head .brand img{display:block;width:64px;height:auto}
+.kc-head .brand .t1{display:block;font-family:var(--kc-serif);font-size:38px;
+  line-height:1.05;font-weight:600;color:#fff}
+.kc-head .brand .t2{display:block;margin-top:6px;font-size:11px;font-weight:600;
+  letter-spacing:.22em;text-transform:uppercase;color:var(--kc-mint)}
+.kc-head .acts{display:flex;gap:12px;align-items:center}
+.kc-btn{display:inline-block;font-family:var(--kc-serif);font-size:14px;
+  font-weight:600;padding:10px 18px;border-radius:2px;text-decoration:none;
+  cursor:pointer}
+.kc-btn--mint{background:var(--kc-mint);color:var(--kc-navy);border:1px solid var(--kc-mint)}
+.kc-btn--mint:hover{background:#BFDCC7}
+.kc-btn--ghost{background:transparent;color:#fff;border:1px solid rgba(255,255,255,.35)}
+.kc-btn--ghost:hover{border-color:#fff}
+
+/* ---- The nav ------------------------------------------------ */
+.kc-nav{background:var(--kc-navy);border-top:1px solid rgba(255,255,255,.14)}
+.kc-nav .wrap{max-width:1160px;margin:0 auto;padding:0 20px;
+  display:flex;gap:24px;align-items:center;overflow-x:auto}
+.kc-nav a{display:block;padding:12px 0;white-space:nowrap;
+  font-family:var(--kc-serif);font-size:15px;color:var(--kc-chalk);
+  text-decoration:none;border-bottom:2px solid transparent}
+.kc-nav a:hover{color:#fff}
+.kc-nav a[aria-current="page"]{color:#fff;border-bottom-color:var(--kc-mint)}
+.kc-nav .sp{margin-left:auto}
+
+/* ---- The hero ----------------------------------------------- */
+.kc-hero{position:relative;min-height:470px;display:flex;align-items:flex-end;
+  background-size:cover;background-position:center;background-color:var(--kc-navy)}
+.kc-hero::before{content:"";position:absolute;inset:0;
+  background:linear-gradient(180deg,rgba(14,34,51,.10) 0%,rgba(14,34,51,.42) 55%,rgba(14,34,51,.94) 100%)}
+.kc-hero .inner{position:relative;max-width:1160px;margin:0 auto;width:100%;
+  padding:60px 20px 42px}
+.kc-hero .kick{display:inline-block;margin-bottom:14px;color:var(--kc-mint);
+  text-decoration:none}
+.kc-hero .kick:hover{text-decoration:underline}
+.kc-hero h1{margin:0;max-width:820px;font-size:clamp(30px,4vw,46px);
+  line-height:1.1;font-weight:600}
+.kc-hero h1 a{color:#fff;text-decoration:none}
+.kc-hero h1 a:hover{text-decoration:underline;text-decoration-thickness:2px}
+.kc-hero .dek{max-width:640px;margin:16px 0 0;font-size:18px;line-height:1.55;
+  color:rgba(253,253,251,.9)}
+.kc-hero .by{margin:16px 0 0;font-size:13.5px;color:var(--kc-chalk)}
+
+/* ---- The front grid ----------------------------------------- */
+.kc-front{max-width:1160px;margin:0 auto;padding:44px 20px 0;
+  display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:52px}
+.kc-kick{display:inline-block;margin:0 0 10px;color:var(--kc-link);
+  text-decoration:none}
+.kc-kick:hover{text-decoration:underline}
+.kc-lead2 .ph{display:block;aspect-ratio:16/9;overflow:hidden;
+  background:var(--kc-wash);margin-bottom:16px}
+.kc-lead2 .ph img{width:100%;height:100%;object-fit:cover;display:block}
+.kc-lead2 h2{margin:0 0 10px;font-size:30px;line-height:1.18;font-weight:600;
+  color:var(--kc-ink)}
+.kc-lead2 h2 a{color:inherit;text-decoration:none}
+.kc-lead2 h2 a:hover{color:var(--kc-green)}
+.kc-lead2 .dek{margin:0 0 10px;font-size:16.5px;line-height:1.55}
+.kc-by{margin:0;font-size:13px;color:var(--kc-muted)}
+
+/* ---- The latest rail ---------------------------------------- */
+.kc-rail{min-width:0}
+.kc-railhead{display:flex;justify-content:space-between;align-items:baseline;
+  border-bottom:2px solid var(--kc-ink);padding-bottom:8px;margin-bottom:4px}
+.kc-railhead .upd{font-size:12.5px;color:var(--kc-muted)}
+.kc-latest{list-style:none;margin:0;padding:0}
+.kc-latest li{padding:13px 0;border-bottom:1px solid var(--kc-line)}
+.kc-latest .m{display:block;margin-bottom:4px;font-size:11.5px;font-weight:600;
+  letter-spacing:.14em;text-transform:uppercase;color:var(--kc-muted)}
+.kc-latest .m b{color:var(--kc-link);font-weight:600}
+.kc-latest a{font-size:17px;line-height:1.35;font-weight:600;
+  color:var(--kc-ink);text-decoration:none}
+.kc-latest a:hover{color:var(--kc-green)}
+
+/* ---- Field notes -------------------------------------------- */
+.kc-notes{background:var(--kc-wash);padding:20px;margin-top:28px}
+.kc-notes .h{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.kc-notes .h img{width:34px;height:auto;display:block}
+.kc-notes .h span{color:var(--kc-pine)}
+.kc-notes p{margin:0 0 10px;font-size:15.5px;line-height:1.55}
+.kc-notes a{font-size:14.5px;font-weight:600;color:var(--kc-link);
+  text-decoration:none}
+.kc-notes a:hover{text-decoration:underline}
+
+/* ---- Three-up cards ----------------------------------------- */
+.kc-cards{max-width:1160px;margin:0 auto;padding:40px 20px 48px;
+  display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:30px}
+.kc-card .ph{display:block;aspect-ratio:3/2;overflow:hidden;
+  background:var(--kc-wash);margin-bottom:12px}
+.kc-card .ph img{width:100%;height:100%;object-fit:cover;display:block}
+.kc-card h3{margin:0 0 8px;font-size:20.5px;line-height:1.25;font-weight:600}
+.kc-card h3 a{color:var(--kc-ink);text-decoration:none}
+.kc-card h3 a:hover{color:var(--kc-green)}
+.kc-card p{margin:0 0 8px;font-size:14.5px;line-height:1.5}
+
+/* ---- The Coast Report band ---------------------------------- */
+.kc-band{background:var(--kc-wash)}
+.kc-band .inner{max-width:1160px;margin:0 auto;padding:40px 20px;
+  display:grid;grid-template-columns:minmax(0,1fr) 440px;gap:44px;
+  align-items:center}
+.kc-band h3{margin:0 0 8px;font-size:27px;font-weight:600;color:var(--kc-pine)}
+.kc-band .note{margin:0;font-size:15.5px;line-height:1.55;max-width:480px}
+.kc-band form{display:flex;gap:10px}
+.kc-band input[type="email"]{flex:1;padding:12px 14px;border:1px solid #B9CDC0;
+  border-radius:2px;font-family:var(--kc-serif);font-size:15px;
+  background:#fff;color:var(--kc-text)}
+.kc-band input[type="email"]:focus{outline:2px solid var(--kc-green);outline-offset:1px}
+.kc-band .kc-btn--pine{background:var(--kc-green);color:#fff;border:0}
+.kc-band .kc-btn--pine:hover{background:var(--kc-pine)}
+.kc-band .done{font-size:16px;color:var(--kc-pine)}
+
+/* ---- Opinion + Communities ---------------------------------- */
+.kc-double{max-width:1160px;margin:0 auto;padding:44px 20px 56px;
+  display:grid;grid-template-columns:1.55fr 1fr;gap:52px}
+.kc-colhead{border-bottom:2px solid var(--kc-ink);padding-bottom:8px;
+  margin-bottom:2px;color:var(--kc-ink)}
+.kc-op{display:grid;grid-template-columns:1fr 1fr;gap:28px}
+.kc-op article{padding-top:16px}
+.kc-op h3{margin:0 0 8px;font-size:21px;line-height:1.25;font-weight:600}
+.kc-op h3 a{color:var(--kc-ink);text-decoration:none}
+.kc-op h3 a:hover{color:var(--kc-green)}
+.kc-op .dek{margin:0 0 8px;font-size:15px;line-height:1.5;font-style:italic}
+.kc-comm{list-style:none;margin:0;padding:0}
+.kc-comm li{padding:12px 0;border-bottom:1px solid var(--kc-line)}
+.kc-comm a{font-size:16.5px;line-height:1.4;font-weight:600;
+  color:var(--kc-ink);text-decoration:none}
+.kc-comm a:hover{color:var(--kc-green)}
+
+/* ---- Ads in the flow ---------------------------------------- */
+body.t-chronicle .adslot{margin:28px auto;max-width:1160px}
+
+/* ---- The footer --------------------------------------------- */
+.kc-foot{background:var(--kc-navy);color:var(--kc-chalk)}
+.kc-foot .cols{max-width:1160px;margin:0 auto;padding:46px 20px 34px;
+  display:grid;grid-template-columns:1.2fr 1fr 1fr 1fr;gap:36px}
+.kc-foot .brand img{display:block;width:64px;height:auto;margin-bottom:12px}
+.kc-foot .brand .t{font-family:var(--kc-serif);font-size:21px;font-weight:600;
+  color:#fff;line-height:1.2}
+.kc-foot .fh{margin:0 0 14px;color:var(--kc-mint)}
+.kc-foot .lnks{display:flex;flex-direction:column;gap:9px}
+.kc-foot .lnks a{color:var(--kc-chalk);text-decoration:none;font-size:14.5px}
+.kc-foot .lnks a:hover{color:#fff;text-decoration:underline}
+.kc-foot .legal{border-top:1px solid rgba(255,255,255,.12)}
+.kc-foot .legal .wrap{max-width:1160px;margin:0 auto;padding:16px 20px;
+  font-size:13px;color:var(--kc-chalk);display:flex;
+  justify-content:space-between;gap:12px;flex-wrap:wrap}
+
+/* ---- Small screens ------------------------------------------ */
+@media (max-width: 960px){
+  .kc-front{grid-template-columns:minmax(0,1fr)}
+  .kc-cards{grid-template-columns:minmax(0,1fr)}
+  .kc-band .inner{grid-template-columns:minmax(0,1fr)}
+  .kc-double{grid-template-columns:minmax(0,1fr)}
+  .kc-foot .cols{grid-template-columns:1fr 1fr}
+}
+@media (max-width: 620px){
+  .kc-head .brand .t1{font-size:28px}
+  .kc-head .acts .kc-btn--ghost{display:none}
+  .kc-op{grid-template-columns:minmax(0,1fr)}
+  .kc-band form{flex-direction:column}
+  .kc-foot .cols{grid-template-columns:1fr}
+}

@@ -1,0 +1,60 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 450" role="img" aria-label="The loading berth at Kitimat at dusk">
+  <defs>
+    <linearGradient id="lng-sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#0E2233"/>
+      <stop offset="0.7" stop-color="#28455C"/>
+      <stop offset="1" stop-color="#4A6B7A"/>
+    </linearGradient>
+  </defs>
+  <rect width="800" height="450" fill="url(#lng-sky)"/>
+  <!-- mountain backdrop -->
+  <polygon points="0,180 160,70 320,170 500,90 660,170 800,120 800,240 0,240" fill="#1E3D50"/>
+  <polygon points="130,96 160,70 196,98 172,112" fill="#C9D8DC" opacity="0.8"/>
+  <polygon points="468,112 500,90 536,116 508,128" fill="#C9D8DC" opacity="0.7"/>
+  <!-- storage tanks -->
+  <g>
+    <rect x="80" y="180" width="110" height="60" rx="10" fill="#3D4750"/>
+    <ellipse cx="135" cy="180" rx="55" ry="14" fill="#66727C"/>
+    <rect x="210" y="192" width="90" height="48" rx="9" fill="#3D4750"/>
+    <ellipse cx="255" cy="192" rx="45" ry="12" fill="#66727C"/>
+  </g>
+  <g fill="#A9D0B3">
+    <circle cx="100" cy="176" r="3"/><circle cx="170" cy="176" r="3"/><circle cx="240" cy="188" r="3"/>
+  </g>
+  <!-- pipe rack to jetty -->
+  <g stroke="#3D4750" stroke-width="6">
+    <line x1="300" y1="226" x2="560" y2="250"/>
+    <line x1="300" y1="234" x2="560" y2="258"/>
+  </g>
+  <g stroke="#2C3A44" stroke-width="4">
+    <line x1="340" y1="230" x2="340" y2="262"/><line x1="420" y1="238" x2="420" y2="268"/>
+    <line x1="500" y1="246" x2="500" y2="276"/>
+  </g>
+  <!-- water -->
+  <rect y="240" width="800" height="210" fill="#0E2233"/>
+  <g stroke="#A9D0B3" stroke-width="2" fill="none" opacity="0.3">
+    <path d="M 60 300 q 80 -6 160 0"/><path d="M 300 340 q 90 -8 180 0"/><path d="M 560 300 q 80 -6 160 0"/>
+  </g>
+  <!-- jetty -->
+  <rect x="540" y="252" width="240" height="14" fill="#2C3A44"/>
+  <g stroke="#2C3A44" stroke-width="5">
+    <line x1="570" y1="266" x2="570" y2="300"/><line x1="650" y1="266" x2="650" y2="300"/>
+    <line x1="730" y1="266" x2="730" y2="300"/>
+  </g>
+  <!-- carrier with spherical tanks -->
+  <g>
+    <path d="M 380 392 L 400 356 L 700 356 L 720 392 Z" fill="#131E28"/>
+    <rect x="410" y="336" width="40" height="20" fill="#3D4750"/>
+    <circle cx="500" cy="348" r="24" fill="#66727C"/>
+    <circle cx="560" cy="348" r="24" fill="#66727C"/>
+    <circle cx="620" cy="348" r="24" fill="#66727C"/>
+    <circle cx="425" cy="342" r="3" fill="#A9D0B3"/>
+  </g>
+  <!-- berth lights reflecting -->
+  <g fill="#E8DFC8" opacity="0.9">
+    <circle cx="570" cy="248" r="4"/><circle cx="650" cy="248" r="4"/><circle cx="730" cy="248" r="4"/>
+  </g>
+  <g stroke="#E8DFC8" stroke-width="2" opacity="0.35">
+    <line x1="570" y1="300" x2="570" y2="330"/><line x1="650" y1="300" x2="650" y2="326"/>
+  </g>
+</svg>

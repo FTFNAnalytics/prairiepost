@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 450" role="img" aria-label="The snow course at 1,900 metres, bare by May">
+  <defs>
+    <linearGradient id="sp-sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#28455C"/>
+      <stop offset="1" stop-color="#C9D8DC"/>
+    </linearGradient>
+  </defs>
+  <rect width="800" height="450" fill="url(#sp-sky)"/>
+  <!-- main peaks: thin snow, bare rock showing -->
+  <polygon points="0,320 190,90 400,320" fill="#4A5A64"/>
+  <polygon points="150,138 190,90 236,146 206,166 172,158" fill="#E8EDEA"/>
+  <polygon points="300,320 500,60 720,320" fill="#3D4750"/>
+  <polygon points="452,124 500,60 556,130 520,156 480,148" fill="#E8EDEA"/>
+  <polygon points="486,180 520,156 548,186 516,200" fill="#C9D8DC" opacity="0.7"/>
+  <polygon points="560,320 690,180 800,320" fill="#4A5A64"/>
+  <polygon points="664,208 690,180 720,212 692,224" fill="#E8EDEA"/>
+  <!-- bare couloirs -->
+  <g stroke="#2C3A44" stroke-width="5" opacity="0.6">
+    <line x1="192" y1="150" x2="230" y2="280"/>
+    <line x1="502" y1="140" x2="470" y2="300"/>
+    <line x1="530" y1="170" x2="560" y2="300"/>
+  </g>
+  <!-- treeline -->
+  <rect y="320" width="800" height="130" fill="#143A2E"/>
+  <g fill="#1C5342">
+    <polygon points="40,330 62,282 84,330"/><polygon points="100,338 120,292 140,338"/>
+    <polygon points="180,332 202,284 224,332"/><polygon points="280,340 300,296 320,340"/>
+    <polygon points="420,336 442,288 464,336"/><polygon points="540,340 560,296 580,340"/>
+    <polygon points="640,334 662,286 684,334"/><polygon points="730,340 750,298 770,340"/>
+  </g>
+  <!-- survey plot: stakes and a bare patch -->
+  <ellipse cx="360" cy="398" rx="120" ry="26" fill="#6B5B48" opacity="0.8"/>
+  <g stroke="#E8DFC8" stroke-width="4">
+    <line x1="300" y1="386" x2="300" y2="414"/>
+    <line x1="360" y1="380" x2="360" y2="410"/>
+    <line x1="420" y1="386" x2="420" y2="414"/>
+  </g>
+  <g fill="#B03A2E">
+    <rect x="296" y="384" width="8" height="6"/><rect x="356" y="378" width="8" height="6"/><rect x="416" y="384" width="8" height="6"/>
+  </g>
+  <!-- lingering snow patch beside -->
+  <ellipse cx="600" cy="404" rx="70" ry="16" fill="#E8EDEA" opacity="0.9"/>
+</svg>

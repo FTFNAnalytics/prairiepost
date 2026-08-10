@@ -1,0 +1,69 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 450" role="img" aria-label="Wolves on the beach at the north end of Aristazabal">
+  <defs>
+    <linearGradient id="wf-sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#28455C"/>
+      <stop offset="1" stop-color="#7FA5B0"/>
+    </linearGradient>
+  </defs>
+  <rect width="800" height="450" fill="url(#wf-sky)"/>
+  <!-- outer islands -->
+  <polygon points="60,180 140,160 220,180 220,190 60,190" fill="#1E3D50" opacity="0.7"/>
+  <polygon points="580,172 660,150 760,174 760,186 580,186" fill="#1E3D50" opacity="0.7"/>
+  <!-- sea -->
+  <rect y="186" width="800" height="120" fill="#1E5C6E"/>
+  <g stroke="#A9D0B3" stroke-width="2" fill="none" opacity="0.35">
+    <path d="M 60 220 q 90 -6 180 0"/><path d="M 320 240 q 100 -8 200 0"/><path d="M 580 216 q 80 -6 160 0"/>
+  </g>
+  <!-- surf line -->
+  <path d="M 0 300 q 200 -14 400 -4 q 220 10 400 -8 l 0 16 q -200 16 -400 8 q -200 -8 -400 4 Z" fill="#E8EDEA" opacity="0.8"/>
+  <!-- beach -->
+  <path d="M 0 306 q 200 -12 400 -2 q 220 10 400 -8 l 0 154 l -800 0 Z" fill="#C9B896"/>
+  <!-- drift logs -->
+  <g fill="#8A7A62">
+    <rect x="60" y="352" width="150" height="12" rx="6" transform="rotate(-3 60 352)"/>
+    <rect x="600" y="366" width="130" height="11" rx="5" transform="rotate(2 600 366)"/>
+  </g>
+  <!-- forest edge -->
+  <g fill="#143A2E">
+    <polygon points="0,306 20,258 40,306"/><polygon points="34,306 56,248 78,306"/>
+    <polygon points="72,306 92,262 112,306"/><polygon points="710,300 732,252 754,300"/>
+    <polygon points="748,304 768,262 788,304"/>
+  </g>
+  <!-- wolves: two adults, two pups -->
+  <g fill="#4A5A51">
+    <g transform="translate(330,368)">
+      <ellipse cx="0" cy="0" rx="30" ry="12"/>
+      <rect x="-26" y="0" width="6" height="20"/><rect x="18" y="0" width="6" height="20"/>
+      <rect x="24" y="-16" width="8" height="16" transform="rotate(20 24 -16)"/>
+      <circle cx="36" cy="-18" r="8"/>
+      <polygon points="32,-24 35,-32 39,-24"/><polygon points="38,-24 41,-32 45,-24"/>
+      <path d="M -30 -2 q -12 -6 -16 -16" stroke="#4A5A51" stroke-width="5" fill="none"/>
+    </g>
+    <g transform="translate(430,384) scale(0.92)">
+      <ellipse cx="0" cy="0" rx="30" ry="12"/>
+      <rect x="-26" y="0" width="6" height="18"/><rect x="18" y="0" width="6" height="18"/>
+      <circle cx="34" cy="-14" r="8"/>
+      <polygon points="30,-20 33,-28 37,-20"/><polygon points="36,-20 39,-28 43,-20"/>
+    </g>
+  </g>
+  <g fill="#66727C">
+    <g transform="translate(520,396) scale(0.5)">
+      <ellipse cx="0" cy="0" rx="30" ry="13"/>
+      <rect x="-24" y="0" width="7" height="18"/><rect x="16" y="0" width="7" height="18"/>
+      <circle cx="34" cy="-12" r="10"/>
+      <polygon points="28,-20 32,-30 37,-20"/><polygon points="36,-20 40,-30 45,-20"/>
+    </g>
+    <g transform="translate(560,384) scale(0.45)">
+      <ellipse cx="0" cy="0" rx="30" ry="13"/>
+      <rect x="-24" y="0" width="7" height="18"/><rect x="16" y="0" width="7" height="18"/>
+      <circle cx="34" cy="-12" r="10"/>
+      <polygon points="28,-20 32,-30 37,-20"/><polygon points="36,-20 40,-30 45,-20"/>
+    </g>
+  </g>
+  <!-- trail camera on post -->
+  <g>
+    <line x1="120" y1="380" x2="120" y2="330" stroke="#5A4632" stroke-width="5"/>
+    <rect x="112" y="318" width="22" height="14" rx="3" fill="#131E28"/>
+    <circle cx="130" cy="325" r="3" fill="#A9D0B3"/>
+  </g>
+</svg>

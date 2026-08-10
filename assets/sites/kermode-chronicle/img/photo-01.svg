@@ -1,0 +1,48 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 450" role="img" aria-label="Old-growth cedar above the Cranberry River, mist in the valley">
+  <defs>
+    <linearGradient id="og-sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#0E2233"/>
+      <stop offset="0.6" stop-color="#28455C"/>
+      <stop offset="1" stop-color="#7FA5B0"/>
+    </linearGradient>
+  </defs>
+  <rect width="800" height="450" fill="url(#og-sky)"/>
+  <!-- far ridge -->
+  <polygon points="0,220 140,130 300,210 470,110 640,200 800,150 800,270 0,270" fill="#1E3D50" opacity="0.85"/>
+  <!-- mist band -->
+  <rect y="240" width="800" height="46" fill="#C9D8DC" opacity="0.55"/>
+  <path d="M 0 262 q 200 -20 400 0 q 200 20 400 0 l 0 40 l -800 0 Z" fill="#C9D8DC" opacity="0.35"/>
+  <!-- mid forest -->
+  <g fill="#143A2E">
+    <polygon points="40,300 70,180 100,300"/><polygon points="90,300 122,150 154,300"/>
+    <polygon points="150,300 180,190 210,300"/><polygon points="620,300 652,160 684,300"/>
+    <polygon points="680,300 710,200 740,300"/><polygon points="730,300 762,180 794,300"/>
+  </g>
+  <!-- great cedars foreground -->
+  <g>
+    <rect x="250" y="150" width="26" height="170" fill="#3A2E22"/>
+    <polygon points="222,200 263,60 304,200" fill="#1C5342"/>
+    <polygon points="228,250 263,140 298,250" fill="#1C5342"/>
+    <polygon points="234,300 263,210 292,300" fill="#143A2E"/>
+    <rect x="480" y="130" width="30" height="190" fill="#3A2E22"/>
+    <polygon points="448,190 495,40 542,190" fill="#1C5342"/>
+    <polygon points="454,245 495,120 536,245" fill="#1C5342"/>
+    <polygon points="460,300 495,200 530,300" fill="#143A2E"/>
+  </g>
+  <!-- cutblock scar on far slope -->
+  <polygon points="560,196 640,158 700,190 660,214 590,220" fill="#8A6E4B" opacity="0.7"/>
+  <g stroke="#5A4632" stroke-width="3" opacity="0.7">
+    <line x1="585" y1="200" x2="600" y2="192"/><line x1="615" y1="192" x2="630" y2="184"/>
+    <line x1="640" y1="200" x2="656" y2="192"/>
+  </g>
+  <!-- valley floor and river -->
+  <rect y="300" width="800" height="150" fill="#0F3B33"/>
+  <path d="M 0 372 q 160 -26 320 -8 q 180 20 480 -14 l 0 100 l -800 0 Z" fill="#1E5C6E"/>
+  <path d="M 60 380 q 120 -16 240 -4" stroke="#A9D0B3" stroke-width="3" fill="none" opacity="0.5"/>
+  <path d="M 460 372 q 140 -14 280 -8" stroke="#A9D0B3" stroke-width="3" fill="none" opacity="0.4"/>
+  <!-- bank trees -->
+  <g fill="#143A2E">
+    <polygon points="60,340 82,290 104,340"/><polygon points="110,346 130,300 150,346"/>
+    <polygon points="690,336 712,286 734,336"/><polygon points="740,344 758,306 776,344"/>
+  </g>
+</svg>

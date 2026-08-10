@@ -1,0 +1,61 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 450" role="img" aria-label="Sockeye moving up the test-fishery reach at Mission">
+  <defs>
+    <linearGradient id="rv-sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#28455C"/>
+      <stop offset="1" stop-color="#7FA5B0"/>
+    </linearGradient>
+    <linearGradient id="rv-wtr" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#1E5C6E"/>
+      <stop offset="1" stop-color="#0E2233"/>
+    </linearGradient>
+  </defs>
+  <rect width="800" height="450" fill="url(#rv-sky)"/>
+  <!-- far bank -->
+  <rect y="130" width="800" height="34" fill="#1E3D50"/>
+  <g fill="#143A2E">
+    <polygon points="80,130 100,88 120,130"/><polygon points="130,130 152,78 174,130"/>
+    <polygon points="560,130 580,92 600,130"/><polygon points="620,130 644,80 668,130"/>
+    <polygon points="690,130 710,96 730,130"/>
+  </g>
+  <!-- water -->
+  <rect y="164" width="800" height="286" fill="url(#rv-wtr)"/>
+  <g stroke="#A9D0B3" stroke-width="2.5" fill="none" opacity="0.35">
+    <path d="M 40 210 q 90 -8 180 0"/><path d="M 300 236 q 100 -10 200 0"/>
+    <path d="M 540 200 q 90 -8 180 0"/><path d="M 120 300 q 110 -10 220 0"/>
+    <path d="M 460 320 q 100 -8 200 0"/>
+  </g>
+  <!-- sockeye, red bodies green heads -->
+  <g>
+    <g transform="translate(180,260)">
+      <ellipse cx="0" cy="0" rx="46" ry="14" fill="#B03A2E"/>
+      <polygon points="-46,0 -68,-12 -68,12" fill="#B03A2E"/>
+      <circle cx="34" cy="-2" r="12" fill="#2F6B4B"/>
+    </g>
+    <g transform="translate(400,310) scale(0.85)">
+      <ellipse cx="0" cy="0" rx="46" ry="14" fill="#B03A2E"/>
+      <polygon points="-46,0 -68,-12 -68,12" fill="#B03A2E"/>
+      <circle cx="34" cy="-2" r="12" fill="#2F6B4B"/>
+    </g>
+    <g transform="translate(560,250) scale(0.9)">
+      <ellipse cx="0" cy="0" rx="46" ry="14" fill="#B03A2E"/>
+      <polygon points="-46,0 -68,-12 -68,12" fill="#B03A2E"/>
+      <circle cx="34" cy="-2" r="12" fill="#2F6B4B"/>
+    </g>
+    <g transform="translate(300,390) scale(0.7)">
+      <ellipse cx="0" cy="0" rx="46" ry="14" fill="#8A2E24"/>
+      <polygon points="-46,0 -68,-12 -68,12" fill="#8A2E24"/>
+      <circle cx="34" cy="-2" r="12" fill="#254D3C"/>
+    </g>
+    <g transform="translate(640,380) scale(0.75)">
+      <ellipse cx="0" cy="0" rx="46" ry="14" fill="#8A2E24"/>
+      <polygon points="-46,0 -68,-12 -68,12" fill="#8A2E24"/>
+      <circle cx="34" cy="-2" r="12" fill="#254D3C"/>
+    </g>
+  </g>
+  <!-- drift net float line of the test fishery -->
+  <path d="M 0 190 q 200 22 400 10 q 200 -12 400 6" stroke="#E8DFC8" stroke-width="4" fill="none" opacity="0.8"/>
+  <g fill="#E8DFC8" opacity="0.9">
+    <circle cx="120" cy="200" r="6"/><circle cx="300" cy="204" r="6"/>
+    <circle cx="480" cy="198" r="6"/><circle cx="660" cy="198" r="6"/>
+  </g>
+</svg>

@@ -1,0 +1,54 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 450" role="img" aria-label="Evening vessel traffic southbound through Fitz Hugh Sound">
+  <defs>
+    <linearGradient id="fh-sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#0E2233"/>
+      <stop offset="0.6" stop-color="#28455C"/>
+      <stop offset="1" stop-color="#C9A96A"/>
+    </linearGradient>
+  </defs>
+  <rect width="800" height="450" fill="url(#fh-sky)"/>
+  <circle cx="410" cy="216" r="30" fill="#F3EFC2" opacity="0.85"/>
+  <!-- fjord walls -->
+  <polygon points="0,240 0,60 90,110 200,200 260,240" fill="#143A2E"/>
+  <polygon points="0,240 120,180 240,236 260,240 0,240" fill="#1C5342"/>
+  <polygon points="800,240 800,40 700,100 600,190 540,240" fill="#143A2E"/>
+  <polygon points="800,240 690,170 570,232 540,240 800,240" fill="#1C5342"/>
+  <!-- water -->
+  <rect y="240" width="800" height="210" fill="#1E5C6E"/>
+  <path d="M 0 240 L 800 240 L 800 260 Q 400 250 0 260 Z" fill="#C9A96A" opacity="0.25"/>
+  <g stroke="#A9D0B3" stroke-width="2" fill="none" opacity="0.3">
+    <path d="M 100 300 q 90 -6 180 0"/><path d="M 420 330 q 100 -8 200 0"/><path d="M 560 290 q 80 -6 160 0"/>
+  </g>
+  <!-- expedition vessel -->
+  <g>
+    <path d="M 300 316 L 316 288 L 470 288 L 484 316 Z" fill="#FDFDFB"/>
+    <rect x="330" y="266" width="110" height="22" rx="3" fill="#E8EDEA"/>
+    <rect x="352" y="248" width="40" height="18" rx="3" fill="#FDFDFB"/>
+    <rect x="398" y="252" width="8" height="14" fill="#131E28"/>
+    <g fill="#1E3D50">
+      <rect x="340" y="272" width="12" height="8"/><rect x="360" y="272" width="12" height="8"/>
+      <rect x="380" y="272" width="12" height="8"/><rect x="412" y="272" width="12" height="8"/>
+    </g>
+  </g>
+  <!-- small boats -->
+  <g>
+    <path d="M 130 356 L 140 340 L 210 340 L 220 356 Z" fill="#131E28"/>
+    <rect x="158" y="326" width="26" height="14" rx="2" fill="#3D4750"/>
+    <circle cx="182" cy="330" r="2.5" fill="#A9D0B3"/>
+  </g>
+  <g>
+    <path d="M 590 380 L 600 364 L 680 364 L 690 380 Z" fill="#131E28"/>
+    <rect x="620" y="350" width="28" height="14" rx="2" fill="#3D4750"/>
+  </g>
+  <!-- wakes -->
+  <g stroke="#E8EDEA" stroke-width="2.5" fill="none" opacity="0.5">
+    <path d="M 484 312 q 60 10 120 26"/>
+    <path d="M 220 352 q 50 8 100 20"/>
+  </g>
+  <!-- patrol skiff, mint stripe -->
+  <g>
+    <path d="M 340 404 L 350 388 L 430 388 L 440 404 Z" fill="#FDFDFB"/>
+    <rect x="340" y="398" width="100" height="4" fill="#2F6B4B"/>
+    <rect x="372" y="374" width="24" height="14" rx="2" fill="#1C5342"/>
+  </g>
+</svg>

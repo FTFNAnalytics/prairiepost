@@ -8,6 +8,7 @@ $textKeys = [
     'site_title', 'tagline', 'meta_description', 'footer_line', 'weather_line',
     'newsletter_heading', 'newsletter_copy', 'markets_note', 'analytics_code',
     'breaking_label', 'breaking_url', 'contact_email',
+    'field_notes_text', 'field_notes_url',
     'ad_top', 'ad_rail', 'ad_article',
 ];
 $jsonKeys = ['regions', 'markets', 'weather_today', 'traffic_items', 'events_items'];
@@ -98,6 +99,10 @@ flash_show();
         <textarea id="events_items" name="events_items" class="mono"><?= e(setting('events_items')) ?></textarea>
         <label for="contact_email">Contact email · shown in the footer</label>
         <input type="text" id="contact_email" name="contact_email" value="<?= e(setting('contact_email')) ?>">
+        <label for="field_notes_text">Field notes box · a standing note on the rail</label>
+        <textarea id="field_notes_text" name="field_notes_text" style="min-height:64px"><?= e(setting('field_notes_text')) ?></textarea>
+        <label for="field_notes_url">Field notes · link</label>
+        <input type="text" id="field_notes_url" name="field_notes_url" value="<?= e(setting('field_notes_url')) ?>">
         <p class="help">Blank any field to hide its block.</p>
       </div>
     </div>

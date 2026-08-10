@@ -1,0 +1,63 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 450" role="img" aria-label="The legislature from the harbour, lights on for estimates week">
+  <defs>
+    <linearGradient id="vic-sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#0E2233"/>
+      <stop offset="0.7" stop-color="#28455C"/>
+      <stop offset="1" stop-color="#4A6B7A"/>
+    </linearGradient>
+  </defs>
+  <rect width="800" height="450" fill="url(#vic-sky)"/>
+  <g fill="#E8EDEA" opacity="0.6">
+    <circle cx="120" cy="60" r="1.4"/><circle cx="300" cy="40" r="1.2"/><circle cx="620" cy="56" r="1.4"/>
+  </g>
+  <!-- building mass -->
+  <g fill="#131E28">
+    <rect x="150" y="240" width="500" height="80"/>
+    <rect x="330" y="196" width="140" height="124"/>
+    <rect x="180" y="220" width="70" height="100"/>
+    <rect x="550" y="220" width="70" height="100"/>
+  </g>
+  <!-- corner cupolas -->
+  <path d="M 186 220 A 32 32 0 0 1 244 220 Z" fill="#2F6B4B"/>
+  <path d="M 556 220 A 32 32 0 0 1 614 220 Z" fill="#2F6B4B"/>
+  <!-- main dome, weathered copper green -->
+  <path d="M 336 196 A 64 64 0 0 1 464 196 Z" fill="#3F7A66"/>
+  <path d="M 352 196 A 48 48 0 0 1 448 196 Z" fill="#2F6B4B"/>
+  <rect x="394" y="112" width="12" height="28" fill="#3F7A66"/>
+  <circle cx="400" cy="106" r="6" fill="#E8DFC8"/>
+  <path d="M 376 140 A 26 26 0 0 1 424 140 L 424 152 L 376 152 Z" fill="#3F7A66"/>
+  <rect x="370" y="152" width="60" height="8" fill="#131E28"/>
+  <!-- outline lights along the roofline (the famous bulbs) -->
+  <g fill="#E8DFC8">
+    <circle cx="340" cy="196" r="2.5"/><circle cx="360" cy="182" r="2.5"/><circle cx="382" cy="172" r="2.5"/>
+    <circle cx="400" cy="168" r="2.5"/><circle cx="418" cy="172" r="2.5"/><circle cx="440" cy="182" r="2.5"/>
+    <circle cx="460" cy="196" r="2.5"/>
+    <circle cx="190" cy="220" r="2.2"/><circle cx="204" cy="206" r="2.2"/><circle cx="222" cy="200" r="2.2"/>
+    <circle cx="240" cy="206" r="2.2"/><circle cx="252" cy="220" r="2.2"/>
+    <circle cx="560" cy="220" r="2.2"/><circle cx="574" cy="206" r="2.2"/><circle cx="592" cy="200" r="2.2"/>
+    <circle cx="610" cy="206" r="2.2"/><circle cx="622" cy="220" r="2.2"/>
+    <circle cx="160" cy="240" r="2.2"/><circle cx="240" cy="240" r="2.2"/><circle cx="320" cy="240" r="2.2"/>
+    <circle cx="480" cy="240" r="2.2"/><circle cx="560" cy="240" r="2.2"/><circle cx="640" cy="240" r="2.2"/>
+  </g>
+  <!-- lit windows -->
+  <g fill="#F3EFC2" opacity="0.85">
+    <rect x="200" y="262" width="9" height="14"/><rect x="260" y="262" width="9" height="14"/>
+    <rect x="360" y="240" width="9" height="14"/><rect x="404" y="240" width="9" height="14"/>
+    <rect x="540" y="262" width="9" height="14"/><rect x="600" y="262" width="9" height="14"/>
+  </g>
+  <!-- lawns -->
+  <rect y="320" width="800" height="36" fill="#1C5342"/>
+  <!-- harbour water with reflections -->
+  <rect y="356" width="800" height="94" fill="#0E2233"/>
+  <g stroke="#E8DFC8" stroke-width="2" opacity="0.4">
+    <line x1="340" y1="366" x2="340" y2="392"/><line x1="400" y1="370" x2="400" y2="400"/>
+    <line x1="460" y1="366" x2="460" y2="390"/><line x1="222" y1="368" x2="222" y2="388"/>
+    <line x1="592" y1="368" x2="592" y2="388"/>
+  </g>
+  <!-- harbour ferry -->
+  <g>
+    <path d="M 90 414 L 98 400 L 160 400 L 168 414 Z" fill="#131E28"/>
+    <rect x="112" y="388" width="34" height="14" rx="3" fill="#2F6B4B"/>
+    <circle cx="142" cy="392" r="2.5" fill="#F3EFC2"/>
+  </g>
+</svg>

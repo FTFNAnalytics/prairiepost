@@ -1,0 +1,34 @@
+{
+  "palette": {
+    "ink":     "#131E28",
+    "paper":   "#FDFDFB",
+    "board":   "#E2E6E2",
+    "sky":     "#A9D0B3",
+    "hill":    "#0E2233",
+    "field":   "#1C5342",
+    "stubble": "#2F6B4B",
+    "red":     "#8A5A17",
+    "muted":   "#66727C"
+  },
+  "desks": {
+    "environment": "#1C5342",
+    "wildlife":    "#2F6B4B",
+    "climate":     "#3F7A66",
+    "politics":    "#0E2233",
+    "resources":   "#8A5A17",
+    "culture":     "#6B4A9C",
+    "communities": "#4A5A51",
+    "coast":       "#1E5C6E",
+    "interior":    "#7A5A2E",
+    "opinion":     "#143A2E",
+    "news":        "#131E28",
+    "weather":     "#A9D0B3"
+  },
+  "chrome": {
+    "template": "chronicle",
+    "trending": true,
+    "nav": ["environment", "wildlife", "climate", "politics", "resources", "culture", "communities", "coast", "interior", "opinion"],
+    "field_notes_label": "Field notes",
+    "field_notes_link": "Read the record →"
+  }
+}

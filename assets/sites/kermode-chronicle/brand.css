@@ -1,0 +1,12 @@
+/* The Kermode Chronicle — navy banner, coastal greens, the bear crest
+   (template: chronicle). Layout lives in /assets/css/chronicle.css;
+   this file only tunes tokens. */
+body.t-chronicle{
+  --kc-navy:  #0E2233;
+  --kc-deep:  #0A1A28;
+  --kc-green: #1C5342;
+  --kc-link:  #2F6B4B;
+  --kc-pine:  #143A2E;
+  --kc-mint:  #A9D0B3;
+  --kc-wash:  #E6F0E7;
+}
