@@ -2,8 +2,10 @@
    Layout lives in /assets/css/aurora.css; this file only tunes tokens.
    Deep purple chrome, paper-white reading surface, emerald working accent. */
 body.t-aurora{
-  --ga-deep:   #1A0E33;
-  --ga-purple: #2D1B4E;
+  /* Chrome matches the logo lockup's own night-sky ground (#0D0730),
+     so the card sits seamlessly in the masthead and footer. */
+  --ga-deep:   #0D0730;
+  --ga-purple: #0D0730;
   --ga-violet: #4A2C7A;
   --ga-green:  #0F5C4C;
   --ga-teal:   #1A6B5A;
