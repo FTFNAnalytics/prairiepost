@@ -301,6 +301,24 @@ function sources_all(): array
     return db()->query('SELECT * FROM sources ORDER BY region, name')->fetchAll();
 }
 
+/* --- Trending ---------------------------------------------------------------- */
+
+/** Most-read published stories of the past 48 hours; latest fill the gaps. */
+function trending_posts(int $limit = 5): array
+{
+    $since = date('Y-m-d H:i:s', strtotime('-48 hours'));
+    $sql = 'SELECT ' . PP_POST_COLS . ' FROM posts p' . pp_site_join() . PP_POST_JOINS . '
+            WHERE ' . pp_published_where() . ' AND p.published_at >= ? AND p.views > 0
+            ORDER BY p.views DESC, p.published_at DESC LIMIT ' . (int) $limit;
+    $stmt = db()->prepare($sql);
+    $stmt->execute([now(), $since]);
+    $posts = $stmt->fetchAll();
+    if (count($posts) < $limit) {
+        $posts = array_merge($posts, latest_posts($limit - count($posts), array_map('intval', array_column($posts, 'id'))));
+    }
+    return $posts;
+}
+
 /* --- Corrections ------------------------------------------------------------ */
 
 /** Published stories carrying a correction, newest correction first. */

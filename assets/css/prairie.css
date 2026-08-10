@@ -377,3 +377,83 @@ figcaption .credit{font-family:var(--pp-mono);font-size:10.5px;font-style:normal
   font-family:var(--pp-mono);font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;
   color:var(--pp-board);margin-top:30px;display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap;
 }
+
+/* ==========================================================================
+   Chrome options — activated per site via palette.json "chrome"
+   ========================================================================== */
+
+/* Header bar: compact ink bar with logo, desk nav, breaking, weather, search */
+.topbar{background:var(--pp-shelterbelt);color:var(--pp-cloudbank)}
+.topbar .wrap{display:flex;align-items:center;gap:18px;flex-wrap:wrap;padding-top:12px;padding-bottom:12px}
+.topbar .tb-logo img{height:40px;width:auto;display:block}
+.topbar .tb-nav{display:flex;gap:2px;flex-wrap:wrap;margin-left:auto}
+.topbar .tb-nav a{
+  color:var(--pp-cloudbank);text-decoration:none;font-family:var(--pp-mono);
+  font-size:11px;letter-spacing:.12em;text-transform:uppercase;font-weight:600;
+  padding:9px 11px;border-bottom:3px solid transparent;
+}
+.topbar .tb-nav a:hover,.topbar .tb-nav a[aria-current="page"]{border-bottom-color:var(--desk,var(--pp-noonsky))}
+.topbar .tb-breaking{
+  background:var(--pp-binred);color:var(--pp-cloudbank);font-family:var(--pp-mono);
+  font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;font-weight:600;
+  padding:9px 13px;text-decoration:none;
+}
+.topbar .tb-breaking:hover{background:var(--pp-straw);color:var(--pp-shelterbelt)}
+.topbar .tb-weather{
+  font-family:var(--pp-mono);font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--pp-highsky);text-decoration:none;
+}
+.topbar .tb-weather:hover{color:var(--pp-cloudbank)}
+.topbar .tb-search{
+  font-family:var(--pp-mono);font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;
+  color:var(--pp-cloudbank);text-decoration:none;border:1px solid var(--pp-quarter);padding:8px 12px;
+}
+.topbar .tb-search:hover{background:var(--pp-quarter);color:var(--pp-cloudbank)}
+
+/* Hero overlay: the top story set over its photograph */
+.lead--overlay{
+  position:relative;background-size:cover;background-position:center;
+  min-height:clamp(320px,42vw,460px);display:flex;align-items:flex-end;
+}
+.lead--overlay .ov-inner{
+  position:relative;width:100%;padding:clamp(18px,3vw,34px);
+  background:linear-gradient(180deg,rgba(0,0,0,0) 0%,rgba(0,0,0,.55) 40%,rgba(0,0,0,.78) 100%);
+}
+.lead--overlay .ov-kicker{
+  font-family:var(--pp-mono);font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;
+  font-weight:600;color:var(--pp-straw);
+}
+.lead--overlay h1{margin-top:8px}
+.lead--overlay h1 a{color:#fff}
+.lead--overlay h1 a:hover{color:var(--pp-highsky)}
+.lead--overlay .standfirst{color:#E8EAEC}
+.lead--overlay .byline{color:#C9CFD4}
+
+/* Panel cards: white cards with the desk chip riding the photo */
+body.cards-panel .card{background:#fff;border:1px solid var(--pp-board);padding:0 0 16px}
+body.cards-panel .card .photo{margin:0}
+body.cards-panel .card .eyebrow{
+  background:var(--desk,var(--pp-shelterbelt));color:#fff;padding:4px 9px;
+  margin:-13px 0 0 12px;position:relative;
+}
+body.cards-panel .card .eyebrow--weather{background:var(--pp-noonsky);color:var(--pp-shelterbelt)}
+body.cards-panel .card h3,body.cards-panel .card p,body.cards-panel .card .byline{padding-left:14px;padding-right:14px}
+body.cards-panel .duo,body.cards-panel .deskgrid{gap:18px}
+
+/* Trending: numbered most-read list */
+.trendmod ol{list-style:none;margin:0;padding:0;counter-reset:trend}
+.trendmod li{
+  counter-increment:trend;display:flex;gap:12px;align-items:baseline;
+  padding:10px 0;border-bottom:1px solid var(--pp-board);
+}
+.trendmod li::before{
+  content:counter(trend);font-family:var(--pp-mono);font-weight:600;font-size:13px;
+  color:var(--pp-binred);min-width:16px;
+}
+.trendmod a{
+  font-family:var(--pp-display);font-weight:700;font-stretch:80%;
+  font-variation-settings:'wdth' 80,'wght' 700;font-size:15.5px;line-height:1.25;
+  color:var(--pp-shelterbelt);text-decoration:none;flex:1;
+}
+.trendmod a:hover{color:var(--pp-bigsky)}
+.trendmod .when{font-family:var(--pp-mono);font-size:10px;color:#5A6A5C;white-space:nowrap}

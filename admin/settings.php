@@ -7,6 +7,7 @@ require_admin();
 $textKeys = [
     'site_title', 'tagline', 'meta_description', 'footer_line', 'weather_line',
     'newsletter_heading', 'newsletter_copy', 'markets_note', 'analytics_code',
+    'breaking_label', 'breaking_url',
     'ad_top', 'ad_rail', 'ad_article',
 ];
 $jsonKeys = ['regions', 'markets', 'weather_today'];
@@ -65,6 +66,10 @@ flash_show();
         <input type="text" id="tagline" name="tagline" value="<?= e(setting('tagline')) ?>">
         <label for="weather_line">Sky-bar weather line</label>
         <input type="text" id="weather_line" name="weather_line" value="<?= e(setting('weather_line')) ?>">
+        <label for="breaking_label">Breaking banner · label (blank = no banner)</label>
+        <input type="text" id="breaking_label" name="breaking_label" value="<?= e(setting('breaking_label')) ?>" placeholder="BREAKING">
+        <label for="breaking_url">Breaking banner · link</label>
+        <input type="text" id="breaking_url" name="breaking_url" value="<?= e(setting('breaking_url')) ?>" placeholder="/story/…">
       </div>
       <div>
         <label for="meta_description">Search description</label>

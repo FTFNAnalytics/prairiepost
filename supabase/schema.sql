@@ -72,6 +72,7 @@ CREATE TABLE posts (
     review_note TEXT,
     is_featured INTEGER NOT NULL DEFAULT 0,       -- superseded by placement; kept for compatibility
     placement VARCHAR(20) NOT NULL DEFAULT '',    -- '' | hero | featured | desk_lead
+    views INTEGER NOT NULL DEFAULT 0,             -- article read count
     correction TEXT,
     corrected_at TIMESTAMP,
     published_at TIMESTAMP,
@@ -185,4 +186,4 @@ CREATE INDEX idx_news_region ON news_items (region, fetched_at);
 CREATE INDEX idx_post_sites_site ON post_sites (site_id);
 CREATE INDEX idx_ads_site_placement ON ads (site_id, placement);
 
-INSERT INTO settings (site_id, skey, svalue) VALUES (0, 'schema_version', '5');
+INSERT INTO settings (site_id, skey, svalue) VALUES (0, 'schema_version', '6');

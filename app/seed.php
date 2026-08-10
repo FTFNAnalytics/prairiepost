@@ -52,6 +52,8 @@ function pp_site_default_settings(string $title): array
         'paper_address'      => '',      // CASL: the paper's mailing address
         'newsletter_enabled' => '0',
         'newsletter_send_hour' => '6',
+        'breaking_label'     => '',
+        'breaking_url'       => '',
     ];
 }
 

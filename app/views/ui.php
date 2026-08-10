@@ -1,6 +1,24 @@
 <?php
 /** The Prairie Dispatch — public page chrome and shared render helpers. */
 
+/** Per-site chrome options from palette.json ("chrome": {...}). */
+function pp_chrome(string $key, $default = null)
+{
+    return pp_brand_file()['chrome'][$key] ?? $default;
+}
+
+/** Desks shown in this site's nav, optionally filtered/ordered by chrome.nav. */
+function pp_nav_categories(): array
+{
+    $cats = categories_all();
+    $order = pp_chrome('nav');
+    if (!is_array($order) || !$order) {
+        return $cats;
+    }
+    $bySlug = array_column($cats, null, 'slug');
+    return array_values(array_filter(array_map(fn ($slug) => $bySlug[$slug] ?? null, $order)));
+}
+
 /** Inline style carrying the desk colour for eyebrows, nav and section heads. */
 function desk_style(?string $color): string
 {
@@ -102,9 +120,30 @@ function page_header(array $meta = [], string $activeDesk = ''): void
 <?php endif; ?>
 <?php $analytics = setting('analytics_code'); if ($analytics !== '') { echo $analytics . "\n"; } ?>
 </head>
-<body>
+<body class="<?= pp_chrome('cards') === 'panel' ? 'cards-panel' : '' ?>">
 <a class="pp-meta" href="#content" style="position:absolute;left:-9999px" onfocus="this.style.left='8px';this.style.top='8px'" onblur="this.style.left='-9999px'">Skip to the news</a>
 
+<?php if (pp_chrome('header') === 'bar'): ?>
+<header class="topbar">
+  <div class="wrap">
+    <a class="tb-logo" href="/" aria-label="<?= e($siteTitle) ?> — front page">
+      <img src="<?= e(site_asset('logo-reversed.svg')) ?>" alt="<?= e($siteTitle) ?>">
+    </a>
+    <nav class="tb-nav" aria-label="Desks">
+      <?php foreach (pp_nav_categories() as $cat): ?>
+      <a href="<?= e(url('desk/' . $cat['slug'])) ?>"<?= desk_style(pp_desk_hex($cat['slug'], $cat['color'])) ?><?= $activeDesk === $cat['slug'] ? ' aria-current="page"' : '' ?>><?= e($cat['name']) ?></a>
+      <?php endforeach; ?>
+    </nav>
+    <?php if (setting('breaking_label') !== '' && setting('breaking_url') !== ''): ?>
+    <a class="tb-breaking" href="<?= e(setting('breaking_url')) ?>"><?= e(setting('breaking_label')) ?></a>
+    <?php endif; ?>
+    <?php if (setting('weather_line') !== ''): ?>
+    <a class="tb-weather" href="<?= e(url('desk/weather')) ?>"><?= e(setting('weather_line')) ?></a>
+    <?php endif; ?>
+    <a class="tb-search" href="<?= e(url('search')) ?>" aria-label="Search the archive">Search</a>
+  </div>
+</header>
+<?php else: ?>
 <div class="skybar">
   <div class="wrap pp-meta">
     <span><?= e(date('l, F j, Y')) ?></span>
@@ -127,11 +166,13 @@ function page_header(array $meta = [], string $activeDesk = ''): void
 
 <nav class="desknav" aria-label="Desks">
   <div class="wrap">
-    <?php foreach (categories_all() as $cat): ?>
+    <?php foreach (pp_nav_categories() as $cat): ?>
     <a href="<?= e(url('desk/' . $cat['slug'])) ?>"<?= desk_style(pp_desk_hex($cat['slug'], $cat['color'])) ?><?= !empty($cat['color_is_fill']) ? ' class="is-weather"' : '' ?><?= $activeDesk === $cat['slug'] ? ' aria-current="page"' : '' ?>><?= e($cat['name']) ?></a>
     <?php endforeach; ?>
   </div>
 </nav>
+
+<?php endif; ?>
 
 <main id="content">
 <?php

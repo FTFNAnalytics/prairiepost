@@ -88,6 +88,7 @@ function pp_schema_ddl(string $driver): array
             review_note TEXT,
             is_featured INTEGER NOT NULL DEFAULT 0,
             placement VARCHAR(20) NOT NULL DEFAULT '',
+            views INTEGER NOT NULL DEFAULT 0,
             correction TEXT,
             corrected_at $dt,
             published_at $dt,
@@ -373,5 +374,11 @@ function pp_migrate(PDO $pdo, string $driver): void
             $updSite->execute([str_replace(['The Prairie Post', 'Prairie Post'], ['The Prairie Dispatch', 'Prairie Dispatch'], $site['name']), $site['id']]);
         }
         $pdo->exec("UPDATE settings SET svalue = '5' WHERE site_id = 0 AND skey = 'schema_version'");
+    }
+
+    if ($version < 6) {
+        // Read counts, for the Trending panel and the newsroom's own numbers.
+        $pdo->exec('ALTER TABLE posts ADD COLUMN views INTEGER NOT NULL DEFAULT 0');
+        $pdo->exec("UPDATE settings SET svalue = '6' WHERE site_id = 0 AND skey = 'schema_version'");
     }
 }

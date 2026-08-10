@@ -19,6 +19,11 @@ if (!$post) {
 $canonical = site_url() . '/story/' . $post['slug'];
 $tags = tags_for_post((int) $post['id']);
 
+// Count the read (crawlers that identify themselves don't count).
+if (!preg_match('/bot|crawl|spider|slurp|preview/i', $_SERVER['HTTP_USER_AGENT'] ?? '')) {
+    db()->prepare('UPDATE posts SET views = views + 1 WHERE id = ?')->execute([(int) $post['id']]);
+}
+
 $jsonld = [
     '@context' => 'https://schema.org',
     '@type'    => 'NewsArticle',

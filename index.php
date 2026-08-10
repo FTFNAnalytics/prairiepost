@@ -31,7 +31,16 @@ page_header([
 
   <div class="frontgrid">
     <div class="mainwell">
-      <?php if ($hero): ?>
+      <?php if ($hero && pp_chrome('hero') === 'overlay' && $hero['image']): ?>
+      <article class="lead lead--overlay" style="background-image:url('<?= e($hero['image']) ?>')">
+        <div class="ov-inner">
+          <span class="ov-kicker">Top story</span>
+          <h1><a href="<?= e(url('story/' . $hero['slug'])) ?>"><?= e($hero['title']) ?></a></h1>
+          <?php if ($hero['lede']): ?><p class="standfirst"><?= e($hero['lede']) ?></p><?php endif; ?>
+          <p class="byline"><?= dateline($hero) ?></p>
+        </div>
+      </article>
+      <?php elseif ($hero): ?>
       <article class="lead">
         <?= story_photo($hero) ?>
         <?= eyebrow($hero) ?>
@@ -67,6 +76,18 @@ page_header([
     </div>
 
     <aside class="rail">
+      <?php if (pp_chrome('trending')): ?>
+      <div class="railmod trendmod">
+        <h4>Trending now</h4>
+        <ol>
+          <?php foreach (trending_posts(5) as $tp): ?>
+          <li><a href="<?= e(url('story/' . $tp['slug'])) ?>"><?= e($tp['title']) ?></a>
+            <span class="when"><?= e(time_label($tp['published_at'])) ?></span></li>
+          <?php endforeach; ?>
+        </ol>
+      </div>
+      <?php endif; ?>
+
       <?php if ($markets): ?>
       <div class="railmod">
         <h4>Closing prices</h4>
