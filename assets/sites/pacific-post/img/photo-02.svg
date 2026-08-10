@@ -1,0 +1,63 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 450" role="img" aria-label="Sockeye holding below the Mission test fishery">
+  <defs>
+    <linearGradient id="ms-sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#BFD5E2"/>
+      <stop offset="1" stop-color="#E8EDEA"/>
+    </linearGradient>
+    <linearGradient id="ms-wtr" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#4A8FB5"/>
+      <stop offset="1" stop-color="#0F4C6E"/>
+    </linearGradient>
+  </defs>
+  <rect width="800" height="450" fill="url(#ms-sky)"/>
+  <!-- far bank + bridge hint -->
+  <rect y="120" width="800" height="26" fill="#7A8B7E"/>
+  <g fill="#1E5631">
+    <polygon points="60,120 82,84 104,120"/><polygon points="120,120 144,76 168,120"/>
+    <polygon points="600,120 622,88 644,120"/><polygon points="660,120 684,80 708,120"/>
+  </g>
+  <g stroke="#3D4750" stroke-width="5">
+    <line x1="320" y1="120" x2="320" y2="80"/><line x1="480" y1="120" x2="480" y2="80"/>
+  </g>
+  <line x1="280" y1="86" x2="520" y2="86" stroke="#3D4750" stroke-width="7"/>
+  <!-- river -->
+  <rect y="146" width="800" height="304" fill="url(#ms-wtr)"/>
+  <g stroke="#BFD5E2" stroke-width="2.5" fill="none" opacity="0.4">
+    <path d="M 60 190 q 90 -8 180 0"/><path d="M 340 220 q 100 -10 200 0"/>
+    <path d="M 540 180 q 90 -8 180 0"/><path d="M 140 290 q 110 -10 220 0"/>
+  </g>
+  <!-- test-fishery skiff and net -->
+  <g>
+    <path d="M 520 190 L 534 168 L 640 168 L 654 190 Z" fill="#E8E4DC"/>
+    <rect x="560" y="152" width="30" height="16" rx="3" fill="#1E5631"/>
+    <circle cx="620" cy="160" r="7" fill="#F2C230"/>
+  </g>
+  <path d="M 100 208 q 180 26 420 -12" stroke="#F3EFC2" stroke-width="4" fill="none" opacity="0.85"/>
+  <g fill="#F3EFC2" opacity="0.95">
+    <circle cx="150" cy="212" r="6"/><circle cx="280" cy="222" r="6"/>
+    <circle cx="410" cy="212" r="6"/><circle cx="500" cy="200" r="6"/>
+  </g>
+  <!-- sockeye -->
+  <g>
+    <g transform="translate(220,300)">
+      <ellipse cx="0" cy="0" rx="48" ry="15" fill="#C0392B"/>
+      <polygon points="-48,0 -72,-13 -72,13" fill="#C0392B"/>
+      <circle cx="36" cy="-2" r="13" fill="#1E5631"/>
+    </g>
+    <g transform="translate(430,346) scale(0.85)">
+      <ellipse cx="0" cy="0" rx="48" ry="15" fill="#C0392B"/>
+      <polygon points="-48,0 -72,-13 -72,13" fill="#C0392B"/>
+      <circle cx="36" cy="-2" r="13" fill="#1E5631"/>
+    </g>
+    <g transform="translate(610,300) scale(0.9)">
+      <ellipse cx="0" cy="0" rx="48" ry="15" fill="#C0392B"/>
+      <polygon points="-48,0 -72,-13 -72,13" fill="#C0392B"/>
+      <circle cx="36" cy="-2" r="13" fill="#1E5631"/>
+    </g>
+    <g transform="translate(320,398) scale(0.7)">
+      <ellipse cx="0" cy="0" rx="48" ry="15" fill="#96271B"/>
+      <polygon points="-48,0 -72,-13 -72,13" fill="#96271B"/>
+      <circle cx="36" cy="-2" r="13" fill="#14402A"/>
+    </g>
+  </g>
+</svg>

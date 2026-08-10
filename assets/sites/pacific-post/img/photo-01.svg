@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 450" role="img" aria-label="The tunnel boring machine breaks through at Arbutus">
+  <rect width="800" height="450" fill="#3D4750"/>
+  <!-- tunnel vault -->
+  <path d="M 60 450 A 340 340 0 0 1 740 450 Z" fill="#2C333B"/>
+  <path d="M 120 450 A 280 280 0 0 1 680 450 Z" fill="#232930"/>
+  <!-- segment rings -->
+  <g stroke="#3D4750" stroke-width="4" fill="none">
+    <path d="M 150 450 A 250 250 0 0 1 650 450"/>
+    <path d="M 190 450 A 210 210 0 0 1 610 450"/>
+  </g>
+  <g stroke="#4A545E" stroke-width="3">
+    <line x1="400" y1="200" x2="400" y2="238"/>
+    <line x1="292" y1="228" x2="310" y2="262"/>
+    <line x1="508" y1="228" x2="490" y2="262"/>
+  </g>
+  <!-- breakthrough face: cutterhead emerging into light -->
+  <circle cx="400" cy="330" r="118" fill="#F3EFC2"/>
+  <circle cx="400" cy="330" r="118" fill="#E8DFC8" opacity="0.6"/>
+  <g transform="translate(400,330)">
+    <circle r="104" fill="#C2591A"/>
+    <circle r="96" fill="#A84A12"/>
+    <g fill="#C2591A">
+      <rect x="-88" y="-12" width="176" height="24" rx="6"/>
+      <rect x="-12" y="-88" width="24" height="176" rx="6"/>
+      <rect x="-70" y="-70" width="140" height="20" rx="6" transform="rotate(45)"/>
+      <rect x="-70" y="-70" width="140" height="20" rx="6" transform="rotate(-45)"/>
+    </g>
+    <circle r="26" fill="#8A3B0C"/>
+    <g fill="#F3EFC2">
+      <circle cx="-52" cy="0" r="6"/><circle cx="52" cy="0" r="6"/>
+      <circle cx="0" cy="-52" r="6"/><circle cx="0" cy="52" r="6"/>
+    </g>
+  </g>
+  <!-- debris/light rays -->
+  <g stroke="#F3EFC2" stroke-width="3" opacity="0.6">
+    <line x1="286" y1="270" x2="256" y2="240"/>
+    <line x1="514" y1="270" x2="544" y2="240"/>
+    <line x1="400" y1="204" x2="400" y2="170"/>
+  </g>
+  <!-- floor + crew -->
+  <rect y="418" width="800" height="32" fill="#1B1F24"/>
+  <g>
+    <circle cx="150" cy="396" r="9" fill="#F2C230"/>
+    <rect x="141" y="404" width="18" height="30" rx="6" fill="#E86A10"/>
+    <circle cx="210" cy="400" r="9" fill="#F2C230"/>
+    <rect x="201" y="408" width="18" height="28" rx="6" fill="#0F6E9E"/>
+    <circle cx="640" cy="398" r="9" fill="#F2C230"/>
+    <rect x="631" y="406" width="18" height="28" rx="6" fill="#E86A10"/>
+  </g>
+</svg>

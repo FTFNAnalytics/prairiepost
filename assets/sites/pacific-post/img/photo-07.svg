@@ -1,0 +1,62 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 450" role="img" aria-label="Keeper training at the Burnaby academy grounds">
+  <defs>
+    <linearGradient id="ac-sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#9EC0D6"/>
+      <stop offset="1" stop-color="#DCE8EE"/>
+    </linearGradient>
+  </defs>
+  <rect width="800" height="450" fill="url(#ac-sky)"/>
+  <!-- mountains -->
+  <polygon points="480,140 620,60 760,140" fill="#7A98A8"/>
+  <polygon points="596,76 620,60 646,78 622,90" fill="#F3F2F2"/>
+  <!-- treeline + clubhouse -->
+  <rect y="140" width="800" height="30" fill="#1E5631"/>
+  <g fill="#2E6B45">
+    <circle cx="80" cy="140" r="18"/><circle cx="130" cy="144" r="14"/><circle cx="700" cy="142" r="16"/>
+  </g>
+  <rect x="300" y="108" width="200" height="62" fill="#E8E4DC"/>
+  <rect x="300" y="98" width="200" height="14" fill="#0F6E9E"/>
+  <g fill="#9EC0D6">
+    <rect x="316" y="126" width="30" height="22"/><rect x="358" y="126" width="30" height="22"/>
+    <rect x="400" y="126" width="30" height="22"/><rect x="442" y="126" width="30" height="22"/>
+  </g>
+  <!-- pitch -->
+  <rect y="170" width="800" height="280" fill="#4E8A5E"/>
+  <g fill="#458054">
+    <rect y="170" width="800" height="35"/><rect y="240" width="800" height="35"/>
+    <rect y="310" width="800" height="35"/><rect y="380" width="800" height="35"/>
+  </g>
+  <!-- goal -->
+  <g stroke="#F3F2F2" stroke-width="6" fill="none">
+    <line x1="200" y1="200" x2="200" y2="330"/>
+    <line x1="560" y1="200" x2="560" y2="330"/>
+    <line x1="200" y1="200" x2="560" y2="200"/>
+  </g>
+  <g stroke="#F3F2F2" stroke-width="2" opacity="0.7">
+    <line x1="200" y1="212" x2="560" y2="212"/><line x1="200" y1="228" x2="560" y2="228"/>
+    <line x1="212" y1="200" x2="212" y2="330"/><line x1="548" y1="200" x2="548" y2="330"/>
+  </g>
+  <!-- box line -->
+  <path d="M 120 400 L 180 300 L 580 300 L 640 400" stroke="#F3F2F2" stroke-width="5" fill="none"/>
+  <!-- keeper diving -->
+  <g transform="translate(430,296) rotate(-24)">
+    <ellipse cx="0" cy="0" rx="34" ry="13" fill="#C2591A"/>
+    <circle cx="40" cy="-6" r="11" fill="#C9A227"/>
+    <rect x="-52" y="-6" width="22" height="9" rx="4" fill="#201E1D"/>
+    <rect x="24" y="-24" width="30" height="9" rx="4" fill="#C2591A"/>
+  </g>
+  <!-- ball -->
+  <circle cx="512" cy="252" r="13" fill="#F3F2F2"/>
+  <circle cx="512" cy="252" r="13" fill="none" stroke="#201E1D" stroke-width="2"/>
+  <path d="M 505 248 l 7 -4 l 7 4 l -3 8 l -8 0 Z" fill="#201E1D"/>
+  <!-- coach + cones -->
+  <g>
+    <circle cx="120" cy="360" r="10" fill="#F2C230"/>
+    <rect x="110" y="368" width="20" height="34" rx="6" fill="#0F6E9E"/>
+  </g>
+  <g fill="#C2591A">
+    <polygon points="300,392 312,368 324,392"/>
+    <polygon points="360,404 372,380 384,404"/>
+    <polygon points="240,404 252,380 264,404"/>
+  </g>
+</svg>

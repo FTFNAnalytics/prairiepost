@@ -1,0 +1,59 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 450" role="img" aria-label="The grain terminal at first light, vessels loading">
+  <defs>
+    <linearGradient id="pt-sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#E8C9A0"/>
+      <stop offset="0.55" stop-color="#BFD5E2"/>
+      <stop offset="1" stop-color="#9EC0D6"/>
+    </linearGradient>
+  </defs>
+  <rect width="800" height="450" fill="url(#pt-sky)"/>
+  <circle cx="140" cy="96" r="30" fill="#F3EFC2"/>
+  <!-- north shore mountains -->
+  <polygon points="300,170 460,80 620,170" fill="#7A98A8"/>
+  <polygon points="560,170 680,100 800,170" fill="#8AA8B8"/>
+  <polygon points="436,96 460,80 486,98 462,110" fill="#F3F2F2"/>
+  <!-- grain silos -->
+  <g>
+    <rect x="60" y="150" width="44" height="130" rx="10" fill="#C9C3B8"/>
+    <rect x="108" y="150" width="44" height="130" rx="10" fill="#D8D2C6"/>
+    <rect x="156" y="150" width="44" height="130" rx="10" fill="#C9C3B8"/>
+    <rect x="204" y="150" width="44" height="130" rx="10" fill="#D8D2C6"/>
+    <rect x="60" y="136" width="188" height="18" fill="#B0A896"/>
+    <rect x="130" y="104" width="30" height="34" fill="#B0A896"/>
+  </g>
+  <!-- loading gallery to ship -->
+  <g stroke="#8A8378" stroke-width="7">
+    <line x1="248" y1="180" x2="420" y2="230"/>
+  </g>
+  <line x1="420" y1="230" x2="420" y2="272" stroke="#8A8378" stroke-width="5"/>
+  <!-- water -->
+  <rect y="280" width="800" height="170" fill="#2E6B8A"/>
+  <g stroke="#BFD5E2" stroke-width="2.5" fill="none" opacity="0.4">
+    <path d="M 60 330 q 90 -6 180 0"/><path d="M 420 360 q 100 -8 200 0"/><path d="M 560 316 q 80 -6 160 0"/>
+  </g>
+  <!-- bulker at berth -->
+  <g>
+    <path d="M 300 322 L 322 278 L 700 278 L 722 322 Z" fill="#8A3B2E"/>
+    <rect x="322" y="292" width="378" height="10" fill="#5E2A20"/>
+    <rect x="620" y="240" width="52" height="38" fill="#F3F2F2"/>
+    <rect x="636" y="222" width="20" height="18" fill="#F3F2F2"/>
+    <rect x="641" y="206" width="10" height="16" fill="#C2591A"/>
+    <g fill="#5E2A20">
+      <rect x="350" y="252" width="56" height="26" rx="4"/>
+      <rect x="430" y="252" width="56" height="26" rx="4"/>
+      <rect x="510" y="252" width="56" height="26" rx="4"/>
+    </g>
+  </g>
+  <!-- waiting vessels at anchor, horizon -->
+  <g fill="#3D4750" opacity="0.8">
+    <path d="M 80 306 L 90 292 L 170 292 L 180 306 Z"/>
+    <rect x="140" y="280" width="16" height="12"/>
+    <path d="M 210 312 L 220 300 L 288 300 L 296 312 Z"/>
+    <rect x="266" y="290" width="14" height="10"/>
+  </g>
+  <!-- gulls -->
+  <g stroke="#F3F2F2" stroke-width="3" fill="none" opacity="0.9">
+    <path d="M 500 120 q 8 -8 16 0 q 8 -8 16 0"/>
+    <path d="M 300 100 q 7 -7 14 0 q 7 -7 14 0"/>
+  </g>
+</svg>

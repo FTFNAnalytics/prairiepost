@@ -42,6 +42,11 @@ if (pp_chrome('template') === 'chronicle') {
     require PP_ROOT . '/app/views/front-chronicle.php';
     page_footer();
     return;
+}
+if (pp_chrome('template') === 'pacific') {
+    require PP_ROOT . '/app/views/front-pacific.php';
+    page_footer();
+    return;
 } ?>
 
 <div class="front wrap">

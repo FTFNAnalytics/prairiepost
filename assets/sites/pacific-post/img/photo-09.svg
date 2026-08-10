@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 450" role="img" aria-label="The Sound from the Squamish waterfront, terminal lights across the water">
+  <defs>
+    <linearGradient id="hs-sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#2E4A6B"/>
+      <stop offset="0.65" stop-color="#6B7A9E"/>
+      <stop offset="1" stop-color="#C9A96A"/>
+    </linearGradient>
+  </defs>
+  <rect width="800" height="450" fill="url(#hs-sky)"/>
+  <!-- the Chief -->
+  <path d="M 40 260 L 120 60 L 200 130 L 250 260 Z" fill="#4A545E"/>
+  <path d="M 90 200 L 120 60 L 150 120 L 130 200 Z" fill="#5A6470" opacity="0.8"/>
+  <!-- far shore mountains -->
+  <polygon points="240,260 400,120 560,260" fill="#3D4A5E"/>
+  <polygon points="500,260 640,150 800,260" fill="#46546B"/>
+  <polygon points="378,140 400,120 424,142 402,154" fill="#E8EDEA" opacity="0.9"/>
+  <!-- water -->
+  <rect y="260" width="800" height="190" fill="#1E4258"/>
+  <g stroke="#C9A96A" stroke-width="2.5" fill="none" opacity="0.4">
+    <path d="M 100 300 q 90 -6 180 0"/><path d="M 420 330 q 100 -8 200 0"/>
+  </g>
+  <!-- terminal across the water: tanks + jetty lights -->
+  <g>
+    <rect x="560" y="238" width="46" height="22" rx="6" fill="#2C3A44"/>
+    <rect x="614" y="242" width="38" height="18" rx="5" fill="#2C3A44"/>
+    <rect x="540" y="260" width="150" height="6" fill="#232930"/>
+  </g>
+  <g fill="#F2C230">
+    <circle cx="552" cy="258" r="3"/><circle cx="586" cy="258" r="3"/><circle cx="620" cy="258" r="3"/>
+    <circle cx="654" cy="258" r="3"/><circle cx="684" cy="258" r="3"/>
+  </g>
+  <g stroke="#F2C230" stroke-width="2" opacity="0.4">
+    <line x1="586" y1="264" x2="586" y2="292"/><line x1="654" y1="264" x2="654" y2="288"/>
+  </g>
+  <!-- windsurfer -->
+  <g transform="translate(300,352)">
+    <path d="M -18 8 L 22 8 L 14 14 L -12 14 Z" fill="#E8E4DC"/>
+    <line x1="0" y1="8" x2="10" y2="-38" stroke="#201E1D" stroke-width="3"/>
+    <path d="M 10 -38 Q 44 -20 12 4" fill="#C0392B"/>
+    <circle cx="-2" cy="-8" r="6" fill="#201E1D"/>
+    <rect x="-7" y="-3" width="10" height="13" rx="4" fill="#201E1D"/>
+  </g>
+  <!-- foreground dock -->
+  <rect y="414" width="800" height="36" fill="#3A2E22"/>
+  <g stroke="#2A2018" stroke-width="4">
+    <line x1="80" y1="414" x2="80" y2="450"/><line x1="240" y1="414" x2="240" y2="450"/>
+    <line x1="400" y1="414" x2="400" y2="450"/><line x1="560" y1="414" x2="560" y2="450"/>
+    <line x1="720" y1="414" x2="720" y2="450"/>
+  </g>
+</svg>

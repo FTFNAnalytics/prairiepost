@@ -46,18 +46,18 @@ body.t-aurora{
 /* Serif headlines everywhere the template runs. */
 body.t-aurora h1, body.t-aurora h2, body.t-aurora h3,
 body.t-aurora .lead h1, body.t-aurora .card h3,
-body.t-aurora .storyhead h1{
+body.t-aurora .headwrap h1{
   font-family: var(--ga-serif);
   letter-spacing: 0;
 }
-body.t-aurora .storybody, body.t-aurora .storybody p{
+body.t-aurora .bodycopy, body.t-aurora .bodycopy p{
   font-family: var(--ga-serif);
 }
-body.t-aurora .storyhead .standfirst, body.t-aurora .standfirst{
+body.t-aurora .lede, body.t-aurora .standfirst{
   font-family: var(--ga-serif);
   font-style: italic;
 }
-body.t-aurora .storybody blockquote{
+body.t-aurora .bodycopy blockquote{
   border-left: 3px solid var(--ga-teal);
   padding-left: 18px;
   font-family: var(--ga-serif);

@@ -1,0 +1,8 @@
+/* The Pacific Post — newsprint, cedar and inlet (template: pacific).
+   Layout lives in /assets/css/pacific.css; this file only tunes tokens. */
+body.t-pacific{
+  --pf-cedar:  #1E5631;
+  --pf-inlet:  #0F6E9E;
+  --pf-deep:   #0B5279;
+  --pf-signal: #C2591A;
+}

@@ -1,0 +1,228 @@
+/* ============================================================
+   The pacific template — newsprint broadsheet, everything set in
+   the serif; cedar and inlet carry the colour, signal orange is
+   reserved for breaking news. First user: The Pacific Post.
+   Loaded only when chrome.template = "pacific"; a site's brand.css
+   may re-tune the --pf-* tokens.
+   ============================================================ */
+@import url('https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,300..900;1,8..60,300..700&display=swap');
+
+body.t-pacific{
+  --pf-ink:    #201E1D;   /* body copy, headlines, rules       */
+  --pf-paper:  #FBFAF8;   /* the sheet                         */
+  --pf-ground: #F3F2F2;   /* tinted wells                      */
+  --pf-line:   #DDDBD6;
+  --pf-muted:  #6E6A64;
+  --pf-cedar:  #1E5631;   /* section fronts, reversed panels   */
+  --pf-inlet:  #0F6E9E;   /* every interactive element         */
+  --pf-deep:   #0B5279;   /* inlet pressed                     */
+  --pf-signal: #C2591A;   /* breaking news only                */
+  --pf-serif:  'Source Serif 4', Georgia, serif;
+
+  /* Inner pages read as the brand. */
+  --pp-shelterbelt: var(--pf-ink);
+  --pp-cloudbank:   var(--pf-paper);
+  --pp-board:       var(--pf-line);
+  --pp-bigsky:      var(--pf-inlet);
+  --pp-noonsky:     var(--pf-cedar);
+  --pp-highsky:     #E3EDF3;
+  --pp-straw:       #E8F0E9;
+  --pp-binred:      var(--pf-signal);
+  --pp-quarter:     var(--pf-cedar);
+  --pp-fencepost:   var(--pf-cedar);
+  --pp-stubble:     #6E6A64;
+
+  background: var(--pf-paper);
+  color: var(--pf-ink);
+  font-family: var(--pf-serif);
+}
+
+body.t-pacific h1, body.t-pacific h2, body.t-pacific h3,
+body.t-pacific .card h3, body.t-pacific .headwrap h1{
+  font-family: var(--pf-serif);
+  letter-spacing: 0;
+}
+body.t-pacific .bodycopy, body.t-pacific .bodycopy p{
+  font-family: var(--pf-serif);
+}
+body.t-pacific .lede, body.t-pacific .standfirst{
+  font-family: var(--pf-serif);
+  font-style: italic;
+}
+/* The drop cap: the first letter of a story, in cedar. */
+body.t-pacific .bodycopy > p:first-of-type::first-letter{
+  float: left;
+  font-size: 58px;
+  line-height: 0.82;
+  padding: 6px 10px 0 0;
+  font-weight: 700;
+  color: var(--pf-cedar);
+}
+body.t-pacific .bodycopy blockquote{
+  border-left: 3px solid var(--pf-inlet);
+  padding-left: 18px;
+  font-style: italic;
+  font-size: 1.15em;
+  color: var(--pf-ink);
+}
+
+.pf-caps{font-family:var(--pf-serif);font-size:11.5px;font-weight:700;
+  letter-spacing:.18em;text-transform:uppercase}
+
+/* ---- The utility strip -------------------------------------- */
+.pf-strip{background:var(--pf-paper)}
+.pf-strip .wrap{display:flex;justify-content:space-between;align-items:center;
+  max-width:1180px;margin:0 auto;padding:12px 20px;gap:14px;
+  font-size:12px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;
+  color:var(--pf-muted)}
+.pf-strip .grp{display:flex;gap:20px;align-items:center;flex-wrap:wrap}
+.pf-strip a{color:var(--pf-inlet);text-decoration:none}
+.pf-strip a:hover{color:var(--pf-deep);text-decoration:underline}
+.pf-strip a.pf-btn--inlet{color:#fff}
+.pf-strip a.pf-btn--inlet:hover{color:#fff;text-decoration:none}
+.pf-btn{display:inline-block;font-family:var(--pf-serif);font-size:12px;
+  font-weight:700;letter-spacing:.12em;text-transform:uppercase;
+  padding:9px 16px;border-radius:2px;text-decoration:none;cursor:pointer;border:0}
+.pf-btn--inlet{background:var(--pf-inlet);color:#fff}
+.pf-btn--inlet:hover{background:var(--pf-deep)}
+.pf-btn--cedar{background:var(--pf-cedar);color:#fff}
+.pf-btn--cedar:hover{background:#174226}
+
+/* ---- The nameplate ------------------------------------------ */
+.pf-plate{border-top:4px solid var(--pf-ink)}
+.pf-plate .inner{max-width:1180px;margin:0 auto;padding:26px 20px 18px;
+  text-align:center}
+.pf-plate .the{display:block;font-size:13px;font-weight:600;
+  letter-spacing:.5em;text-transform:uppercase;color:var(--pf-ink);
+  margin-bottom:2px}
+.pf-plate a{text-decoration:none;color:var(--pf-ink)}
+.pf-plate .name{display:inline-flex;align-items:center;gap:18px;
+  font-size:clamp(38px,5.5vw,64px);font-weight:900;letter-spacing:.015em;
+  text-transform:uppercase;line-height:1}
+.pf-plate .mark{display:block;width:.82em;height:auto;flex:none}
+
+/* ---- The nav ------------------------------------------------ */
+.pf-nav{border-top:1px solid var(--pf-line);border-bottom:1px solid var(--pf-ink)}
+.pf-nav .wrap{max-width:1180px;margin:0 auto;padding:0 20px;
+  display:flex;gap:26px;align-items:center;overflow-x:auto}
+.pf-nav a{display:block;padding:13px 0 11px;white-space:nowrap;
+  font-family:var(--pf-serif);font-size:15.5px;font-weight:600;
+  color:var(--pf-ink);text-decoration:none;border-bottom:3px solid transparent}
+.pf-nav a:hover{color:var(--pf-inlet)}
+.pf-nav a[aria-current="page"]{color:var(--pf-inlet);border-bottom-color:var(--pf-inlet)}
+.pf-nav .sp{margin-left:auto;color:var(--pf-muted);font-weight:400}
+
+/* ---- The breaking strip (Signal — breaking news only) ------- */
+.pf-breaking{background:var(--pf-signal);color:#fff}
+.pf-breaking .wrap{max-width:1180px;margin:0 auto;padding:11px 20px;
+  display:flex;gap:16px;align-items:center}
+.pf-breaking .b{font-size:11.5px;font-weight:700;letter-spacing:.2em;
+  text-transform:uppercase;flex:none;border-right:1px solid rgba(255,255,255,.5);
+  padding-right:16px}
+.pf-breaking a{color:#fff;text-decoration:none;font-size:16px;font-weight:600}
+.pf-breaking a:hover{text-decoration:underline}
+
+/* ---- The front grid ----------------------------------------- */
+.pf-front{max-width:1180px;margin:0 auto;padding:34px 20px 0;
+  display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:52px}
+.pf-kick{display:inline-block;margin:0 0 10px;color:var(--pf-inlet);
+  text-decoration:none}
+.pf-kick:hover{text-decoration:underline}
+.pf-lead .ph{display:block;aspect-ratio:16/9;overflow:hidden;
+  background:var(--pf-ground);border:1px solid var(--pf-line);margin-bottom:18px}
+.pf-lead .ph img{width:100%;height:100%;object-fit:cover;display:block}
+.pf-lead h1{margin:0 0 12px;font-size:clamp(30px,3.6vw,44px);line-height:1.08;
+  font-weight:800;color:var(--pf-ink)}
+.pf-lead h1 a{color:inherit;text-decoration:none}
+.pf-lead h1 a:hover{color:var(--pf-inlet)}
+.pf-lead .dek{margin:0 0 12px;font-size:18px;line-height:1.5}
+.pf-by{margin:0;font-size:13.5px;color:var(--pf-muted)}
+.pf-duo{display:grid;grid-template-columns:1fr 1fr;gap:34px;
+  border-top:1px solid var(--pf-line);margin-top:28px;padding-top:26px}
+.pf-duo .ph{display:block;aspect-ratio:3/2;overflow:hidden;
+  background:var(--pf-ground);border:1px solid var(--pf-line);margin-bottom:12px}
+.pf-duo .ph img{width:100%;height:100%;object-fit:cover;display:block}
+.pf-duo h3{margin:0 0 8px;font-size:23px;line-height:1.2;font-weight:700}
+.pf-duo h3 a{color:var(--pf-ink);text-decoration:none}
+.pf-duo h3 a:hover{color:var(--pf-inlet)}
+.pf-duo p{margin:0 0 8px;font-size:15px;line-height:1.5}
+
+/* ---- The rail ----------------------------------------------- */
+.pf-rail{min-width:0}
+.pf-railmod{margin-bottom:38px}
+.pf-railmod .rule{height:4px;background:var(--pf-cedar);margin-bottom:2px}
+.pf-railmod .rule--inlet{background:var(--pf-inlet)}
+.pf-railmod h4{margin:10px 0 4px;font-size:22px;font-weight:800;color:var(--pf-ink)}
+.pf-oplist article{padding:13px 0;border-bottom:1px solid var(--pf-line)}
+.pf-oplist h5{margin:0 0 5px;font-size:17.5px;line-height:1.3;font-weight:700;
+  font-style:italic}
+.pf-oplist h5 a{color:var(--pf-ink);text-decoration:none}
+.pf-oplist h5 a:hover{color:var(--pf-inlet)}
+.pf-oplist .a{margin:0;font-size:13px;color:var(--pf-muted)}
+.pf-chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.pf-chips a{display:inline-block;padding:6px 10px;background:#E3EDF3;
+  color:var(--pf-deep);font-size:13px;font-weight:600;text-decoration:none;
+  border-radius:2px}
+.pf-chips a:nth-child(even){background:#E8F0E9;color:var(--pf-cedar)}
+.pf-chips a:hover{text-decoration:underline}
+.pf-nlcard{margin-top:10px}
+.pf-nlcard p{margin:0 0 12px;font-size:15px;line-height:1.5}
+.pf-nlcard input[type="email"]{width:100%;box-sizing:border-box;
+  padding:11px 12px;border:1px solid var(--pf-line);border-radius:2px;
+  font-family:var(--pf-serif);font-size:14.5px;background:#fff;
+  color:var(--pf-ink);margin-bottom:10px}
+.pf-nlcard input[type="email"]:focus{outline:2px solid var(--pf-inlet);outline-offset:1px}
+.pf-nlcard button{width:100%}
+.pf-nlcard .done{font-size:15px;color:var(--pf-cedar)}
+.pf-rail .adslot{border:0;padding:0;margin:0 0 38px}
+
+/* ---- Across the province band ------------------------------- */
+.pf-band{max-width:1180px;margin:0 auto;padding:40px 20px 20px}
+.pf-bandhead{display:flex;justify-content:space-between;align-items:baseline;
+  padding-bottom:8px;border-bottom:4px solid var(--pf-ink);position:relative}
+.pf-bandhead::after{content:"";position:absolute;left:0;right:0;bottom:-7px;
+  height:1px;background:var(--pf-ink)}
+.pf-bandhead h2{margin:0;font-size:26px;font-weight:800}
+.pf-bandhead a{font-size:12.5px;font-weight:700;letter-spacing:.14em;
+  text-transform:uppercase;color:var(--pf-inlet);text-decoration:none}
+.pf-bandhead a:hover{text-decoration:underline}
+.pf-bandgrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:34px;padding-top:26px}
+.pf-cell .ph{display:block;aspect-ratio:3/2;overflow:hidden;
+  background:var(--pf-ground);border:1px solid var(--pf-line);margin-bottom:12px}
+.pf-cell .ph img{width:100%;height:100%;object-fit:cover;display:block}
+.pf-cell h3{margin:0 0 6px;font-size:20px;line-height:1.22;font-weight:700}
+.pf-cell h3 a{color:var(--pf-ink);text-decoration:none}
+.pf-cell h3 a:hover{color:var(--pf-inlet)}
+.pf-cell .meta{margin:0;font-size:12.5px;color:var(--pf-muted)}
+
+/* ---- The footer --------------------------------------------- */
+.pf-foot{background:var(--pf-cedar);color:#DCE8DE;margin-top:44px}
+.pf-foot .cols{max-width:1180px;margin:0 auto;padding:44px 20px 32px;
+  display:grid;grid-template-columns:1.4fr 1fr 1fr 1fr;gap:36px}
+.pf-foot .brand{display:flex;align-items:center;gap:12px;margin-bottom:14px;
+  color:#fff;text-decoration:none}
+.pf-foot .brand img{display:block;width:30px;height:auto}
+.pf-foot .brand .t{font-size:21px;font-weight:800}
+.pf-foot .ack{margin:0;font-size:14px;line-height:1.6;max-width:300px}
+.pf-foot .fh{margin:0 0 14px;font-size:11.5px;font-weight:700;
+  letter-spacing:.18em;text-transform:uppercase;color:#A8C5AE}
+.pf-foot .lnks{display:flex;flex-direction:column;gap:9px}
+.pf-foot .lnks a{color:#DCE8DE;text-decoration:none;font-size:14.5px}
+.pf-foot .lnks a:hover{color:#fff;text-decoration:underline}
+.pf-foot .legal{border-top:1px solid rgba(255,255,255,.16)}
+.pf-foot .legal .wrap{max-width:1180px;margin:0 auto;padding:16px 20px;
+  font-size:13px;display:flex;justify-content:space-between;gap:12px;
+  flex-wrap:wrap;color:#A8C5AE}
+
+/* ---- Small screens ------------------------------------------ */
+@media (max-width: 960px){
+  .pf-front{grid-template-columns:minmax(0,1fr)}
+  .pf-bandgrid{grid-template-columns:minmax(0,1fr)}
+  .pf-foot .cols{grid-template-columns:1fr 1fr}
+}
+@media (max-width: 620px){
+  .pf-duo{grid-template-columns:minmax(0,1fr)}
+  .pf-strip .grp .hide-s{display:none}
+  .pf-foot .cols{grid-template-columns:1fr}
+}

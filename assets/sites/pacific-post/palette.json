@@ -1,0 +1,31 @@
+{
+  "palette": {
+    "ink":     "#201E1D",
+    "paper":   "#FBFAF8",
+    "board":   "#DDDBD6",
+    "sky":     "#7FB3D3",
+    "hill":    "#1E5631",
+    "field":   "#0F6E9E",
+    "stubble": "#6E6A64",
+    "red":     "#C2591A",
+    "muted":   "#6E6A64"
+  },
+  "desks": {
+    "news":        "#0F6E9E",
+    "bc-news":     "#1E5631",
+    "environment": "#1E5631",
+    "politics":    "#0F6E9E",
+    "business":    "#1E5631",
+    "culture":     "#0F6E9E",
+    "sports":      "#1E5631",
+    "opinion":     "#201E1D",
+    "communities": "#0F6E9E",
+    "weather":     "#7FB3D3"
+  },
+  "chrome": {
+    "template": "pacific",
+    "trending": true,
+    "nav": ["news", "bc-news", "environment", "politics", "business", "culture", "sports", "opinion"],
+    "crosshead": "Across British Columbia"
+  }
+}

@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 450" role="img" aria-label="The legislature in Victoria, between sessions">
+  <defs>
+    <linearGradient id="vl-sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#9EC0D6"/>
+      <stop offset="1" stop-color="#DCE8EE"/>
+    </linearGradient>
+  </defs>
+  <rect width="800" height="450" fill="url(#vl-sky)"/>
+  <!-- building -->
+  <g fill="#8A8378">
+    <rect x="150" y="240" width="500" height="80"/>
+    <rect x="325" y="196" width="150" height="124"/>
+    <rect x="180" y="220" width="70" height="100"/>
+    <rect x="550" y="220" width="70" height="100"/>
+  </g>
+  <g fill="#7A7368">
+    <rect x="342" y="208" width="12" height="112"/><rect x="368" y="208" width="12" height="112"/>
+    <rect x="394" y="208" width="12" height="112"/><rect x="420" y="208" width="12" height="112"/>
+    <rect x="446" y="208" width="12" height="112"/>
+    <rect x="196" y="256" width="10" height="64"/><rect x="226" y="256" width="10" height="64"/>
+    <rect x="566" y="256" width="10" height="64"/><rect x="596" y="256" width="10" height="64"/>
+  </g>
+  <!-- domes: weathered copper -->
+  <path d="M 331 196 A 64 64 0 0 1 459 196 Z" fill="#3F8A6E"/>
+  <path d="M 348 196 A 47 47 0 0 1 442 196 Z" fill="#2F7A5E"/>
+  <rect x="389" y="112" width="12" height="28" fill="#3F8A6E"/>
+  <circle cx="395" cy="106" r="6" fill="#E8DFC8"/>
+  <path d="M 371 140 A 26 26 0 0 1 419 140 L 419 152 L 371 152 Z" fill="#3F8A6E"/>
+  <path d="M 186 220 A 32 32 0 0 1 244 220 Z" fill="#3F8A6E"/>
+  <path d="M 556 220 A 32 32 0 0 1 614 220 Z" fill="#3F8A6E"/>
+  <!-- lawns and pool -->
+  <rect y="320" width="800" height="130" fill="#4E8A5E"/>
+  <rect y="320" width="800" height="8" fill="#3E7A4E"/>
+  <ellipse cx="400" cy="392" rx="150" ry="24" fill="#2E6B8A"/>
+  <ellipse cx="400" cy="388" rx="130" ry="17" fill="#4A8FB5"/>
+  <!-- flower beds -->
+  <g>
+    <ellipse cx="150" cy="360" rx="46" ry="12" fill="#C0392B" opacity="0.8"/>
+    <ellipse cx="650" cy="360" rx="46" ry="12" fill="#C2591A" opacity="0.8"/>
+  </g>
+  <!-- strollers -->
+  <g fill="#201E1D">
+    <circle cx="260" cy="424" r="7"/><rect x="254" y="430" width="12" height="18" rx="4"/>
+    <circle cx="540" cy="428" r="7"/><rect x="534" y="434" width="12" height="16" rx="4"/>
+  </g>
+</svg>

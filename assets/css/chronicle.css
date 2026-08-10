@@ -42,18 +42,18 @@ body.t-chronicle{
 }
 
 body.t-chronicle h1, body.t-chronicle h2, body.t-chronicle h3,
-body.t-chronicle .card h3, body.t-chronicle .storyhead h1{
+body.t-chronicle .card h3, body.t-chronicle .headwrap h1{
   font-family: var(--kc-serif);
   letter-spacing: 0;
 }
-body.t-chronicle .storybody, body.t-chronicle .storybody p{
+body.t-chronicle .bodycopy, body.t-chronicle .bodycopy p{
   font-family: var(--kc-serif);
 }
-body.t-chronicle .storyhead .standfirst, body.t-chronicle .standfirst{
+body.t-chronicle .lede, body.t-chronicle .standfirst{
   font-family: var(--kc-serif);
   font-style: italic;
 }
-body.t-chronicle .storybody blockquote{
+body.t-chronicle .bodycopy blockquote{
   border-left: 3px solid var(--kc-green);
   padding-left: 18px;
   font-style: italic;
