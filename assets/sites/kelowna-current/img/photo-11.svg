@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 375" role="img" aria-label="The lake at evening, working">
+  <rect width="500" height="375" fill="#dce8e6"/>
+  <path d="M0 205c88-66 172-57 251 26 64 68 147 69 249 5v139H0z" fill="#0c3448"/>
+  <path d="M0 286c110-34 219-34 329 0s112 31 171 15v74H0z" fill="#2a8c86"/>
+  <path d="M194 256h110l-18 55h-74z" fill="#fbfaf5"/>
+  <circle cx="120" cy="72" r="32" fill="#d6a84b"/>
+</svg>

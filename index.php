@@ -47,6 +47,11 @@ if (pp_chrome('template') === 'pacific') {
     require PP_ROOT . '/app/views/front-pacific.php';
     page_footer();
     return;
+}
+if (pp_chrome('template') === 'current') {
+    require PP_ROOT . '/app/views/front-current.php';
+    page_footer();
+    return;
 } ?>
 
 <div class="front wrap">

@@ -1,0 +1,43 @@
+{
+  "palette": {
+    "ink":     "#17242A",
+    "paper":   "#FBFAF5",
+    "board":   "#D8E0DF",
+    "sky":     "#8FD0CC",
+    "hill":    "#0C3448",
+    "field":   "#1C6F8A",
+    "stubble": "#2A8C86",
+    "red":     "#B4533F",
+    "muted":   "#607078"
+  },
+  "desks": {
+    "okanagan":    "#1C6F8A",
+    "bc-news":     "#1C6F8A",
+    "politics":    "#B4533F",
+    "economy":     "#8B641B",
+    "housing":     "#1C6F8A",
+    "climate":     "#365B46",
+    "culture":     "#2A8C86",
+    "opinion":     "#17242A",
+    "news":        "#1C6F8A",
+    "environment": "#365B46",
+    "weather":     "#8FD0CC"
+  },
+  "chrome": {
+    "template": "current",
+    "trending": true,
+    "strip_tone": "teal",
+    "nav": ["okanagan", "bc-news", "politics", "economy", "housing", "climate", "culture", "opinion"],
+    "region_desk": "okanagan",
+    "mast_left": "Okanagan-born\nBritish Columbia-wide",
+    "mast_right": "Independent news, analysis\nand regional intelligence",
+    "brief_head": "B.C. in Brief",
+    "regions_head": "Across the Regions",
+    "regions_sub": "Kelowna is home base. The reporting map spans the Interior, Lower Mainland, Island, North and every community between them.",
+    "politics_head": "Politics & Public Life",
+    "politics_sub": "Institutions, decisions, money and power — reported for readers who want to know how British Columbia actually works.",
+    "life_head": "Okanagan Life",
+    "life_sub": "Food, wine, art, water, outdoors and the people shaping the cultural life of the valley.",
+    "news_head": "Start with the province in focus."
+  }
+}

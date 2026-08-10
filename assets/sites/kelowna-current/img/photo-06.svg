@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 700 440" role="img" aria-label="One valley, many councils">
+  <defs><linearGradient id="rsky" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#c5e3e4"/><stop offset="1" stop-color="#f2d392"/></linearGradient></defs>
+  <rect width="700" height="440" fill="url(#rsky)"/>
+  <path d="M0 230c130-81 238-70 330 25 66 68 173 61 370-22v207H0z" fill="#365b46"/>
+  <path d="M0 314c151-42 278-31 382 32 82 50 188 47 318-11v105H0z" fill="#2a8c86"/>
+  <g fill="#fbfaf5"><rect x="168" y="235" width="68" height="72"/><path d="m158 235 44-35 44 35z"/></g>
+  <path d="M56 375c102-18 204-18 306 0s204 18 306 0" fill="none" stroke="#8fd0cc" stroke-width="5"/>
+</svg>

@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 500" role="img" aria-label="The capital plan by region and year">
+  <rect width="800" height="500" fill="#f4ecd8"/>
+  <path d="M110 420V310h95v110zm190 0V225h95v195zm190 0V120h95v300z" fill="#b4533f"/>
+  <path d="M110 420V368h95v52z" fill="#8a3b2e"/>
+  <path d="m95 250 160-92 132 50 218-172" fill="none" stroke="#0c3448" stroke-width="14" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="605" cy="36" r="12" fill="#0c3448"/>
+  <line x1="70" y1="440" x2="730" y2="440" stroke="#0c3448" stroke-width="6"/>
+</svg>

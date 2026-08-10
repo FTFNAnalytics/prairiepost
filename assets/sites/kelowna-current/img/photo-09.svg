@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 520 630" role="img" aria-label="The buildings where the fine print lives">
+  <rect width="520" height="630" fill="#c9dbdc"/>
+  <circle cx="100" cy="110" r="55" fill="#d6a84b"/>
+  <path d="M0 318c115-96 225-95 331 4 71 66 134 67 189 34v274H0z" fill="#365b46"/>
+  <path d="M112 390h296v150H112z" fill="#fbfaf5"/>
+  <path d="m92 390 168-112 168 112z" fill="#0c3448"/>
+  <g fill="#1c6f8a"><rect x="150" y="424" width="28" height="116"/><rect x="222" y="424" width="28" height="116"/><rect x="294" y="424" width="28" height="116"/><rect x="366" y="424" width="28" height="116"/></g>
+  <path d="M0 560h520v70H0z" fill="#294c3b"/>
+</svg>

@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 375" role="img" aria-label="Studio light, north Okanagan">
+  <rect width="500" height="375" fill="#f4ecd8"/>
+  <rect x="100" y="65" width="300" height="250" fill="#fbfaf5"/>
+  <circle cx="250" cy="190" r="78" fill="#b4533f"/>
+  <path d="M185 215c43-55 87-55 130 0" fill="none" stroke="#0c3448" stroke-width="17" stroke-linecap="round"/>
+  <circle cx="216" cy="167" r="10" fill="#0c3448"/>
+  <circle cx="284" cy="167" r="10" fill="#0c3448"/>
+</svg>

@@ -1,0 +1,10 @@
+/* Kelowna Current — lake calm, newsroom clarity (template: current).
+   Layout lives in /assets/css/current.css; this file only tunes tokens. */
+body.t-current{
+  --cu-lake: #0C3448;
+  --cu-blue: #1C6F8A;
+  --cu-teal: #2A8C86;
+  --cu-pine: #365B46;
+  --cu-gold: #D6A84B;
+  --cu-clay: #B4533F;
+}

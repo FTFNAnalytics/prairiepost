@@ -1,0 +1,289 @@
+/* ============================================================
+   The current template — lake calm, newsroom clarity. Newsreader
+   carries the headlines, Inter the interface; the palette is
+   Okanagan water, forest, orchards and dry summer light.
+   First user: Kelowna Current. Loaded only when
+   chrome.template = "current"; a site's brand.css may re-tune
+   the --cu-* tokens.
+   ============================================================ */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;550;650;750&family=Newsreader:opsz,wght@6..72,400;6..72,600;6..72,700&display=swap');
+
+body.t-current{
+  --cu-lake:  #0C3448;   /* masthead, footer, rules, authority   */
+  --cu-blue:  #1C6F8A;   /* links, kickers, regional emphasis    */
+  --cu-teal:  #2A8C86;   /* interactive, focus, the motif line   */
+  --cu-pine:  #365B46;   /* land, forestry and climate           */
+  --cu-gold:  #D6A84B;   /* numbers, membership, highlights      */
+  --cu-clay:  #B4533F;   /* breaking, live, accountability only  */
+  --cu-paper: #FBFAF5;   /* the editorial canvas                 */
+  --cu-mist:  #F1F6F5;   /* cool panels                          */
+  --cu-ink:   #17242A;   /* headlines and body                   */
+  --cu-slate: #607078;
+  --cu-line:  #D8E0DF;
+  --cu-display: 'Newsreader', Georgia, serif;
+  --cu-sans:  'Inter', Arial, sans-serif;
+
+  /* Inner pages read as the brand. */
+  --pp-shelterbelt: var(--cu-ink);
+  --pp-cloudbank:   var(--cu-paper);
+  --pp-board:       var(--cu-line);
+  --pp-bigsky:      var(--cu-blue);
+  --pp-noonsky:     var(--cu-teal);
+  --pp-highsky:     var(--cu-mist);
+  --pp-straw:       #F4ECD8;
+  --pp-binred:      var(--cu-clay);
+  --pp-quarter:     var(--cu-lake);
+  --pp-fencepost:   var(--cu-pine);
+  --pp-stubble:     var(--cu-slate);
+
+  background: var(--cu-paper);
+  color: var(--cu-ink);
+  font-family: var(--cu-sans);
+}
+
+body.t-current h1, body.t-current h2, body.t-current h3,
+body.t-current .card h3, body.t-current .headwrap h1{
+  font-family: var(--cu-display);
+  letter-spacing: -.02em;
+}
+body.t-current .lede, body.t-current .standfirst{
+  font-family: var(--cu-display);
+}
+body.t-current .bodycopy blockquote{
+  border-left: 3px solid var(--cu-teal);
+  padding-left: 18px;
+  font-family: var(--cu-display);
+  font-style: italic;
+  font-size: 1.12em;
+  color: var(--cu-ink);
+}
+body.t-current :focus-visible{outline:3px solid var(--cu-teal);outline-offset:4px}
+
+.cu-eyebrow{font-family:var(--cu-sans);font-size:11.5px;font-weight:750;
+  letter-spacing:.12em;text-transform:uppercase;color:var(--cu-blue);
+  text-decoration:none;display:inline-block}
+a.cu-eyebrow:hover{text-decoration:underline}
+
+/* ---- Utility bar -------------------------------------------- */
+.cu-util{background:var(--cu-lake);color:#DCE8E6;font-size:12.5px}
+.cu-util .wrap{max-width:1240px;margin:0 auto;padding:0 24px;min-height:38px;
+  display:flex;align-items:center;justify-content:space-between;gap:16px}
+.cu-util .grp{display:flex;align-items:center;gap:20px;flex-wrap:wrap}
+.cu-util strong{color:#fff;font-weight:650}
+.cu-util a{color:#DCE8E6;text-decoration:underline;text-underline-offset:.2em}
+.cu-util a:hover{color:#fff}
+
+/* ---- Masthead ----------------------------------------------- */
+.cu-mast{background:var(--cu-paper);padding:26px 0 20px}
+.cu-mast .wrap{max-width:1240px;margin:0 auto;padding:0 24px;
+  display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:16px}
+.cu-mast .side{color:var(--cu-slate);font-size:12px;line-height:1.5}
+.cu-mast .side:last-child{text-align:right}
+.cu-mast .lockup{text-align:center;text-decoration:none;display:block}
+.cu-mast .l1{display:block;color:var(--cu-blue);font-family:var(--cu-sans);
+  font-size:17px;font-weight:750;letter-spacing:.42em;text-indent:.42em}
+.cu-mast .l2{display:block;margin:2px 0 0;color:var(--cu-ink);
+  font-family:var(--cu-display);font-size:clamp(44px,6vw,62px);font-weight:600;
+  letter-spacing:-.02em;line-height:1.02}
+.cu-mast .wave{display:block;margin:2px auto 6px;width:min(300px,60%);height:auto}
+.cu-mast .l3{display:block;color:var(--cu-slate);font-family:var(--cu-sans);
+  font-size:10.5px;font-weight:650;letter-spacing:.19em;text-transform:uppercase}
+
+/* ---- Sticky nav --------------------------------------------- */
+.cu-nav{position:sticky;top:0;z-index:20;background:rgba(251,250,245,.96);
+  border-top:1px solid var(--cu-line);border-bottom:1px solid var(--cu-line);
+  backdrop-filter:blur(12px)}
+.cu-nav .wrap{max-width:1240px;margin:0 auto;padding:0 24px;
+  display:flex;align-items:center;min-height:48px;overflow-x:auto;
+  scrollbar-width:none}
+.cu-nav .wrap::-webkit-scrollbar{display:none}
+.cu-nav a{flex:0 0 auto;padding:15px 14px;font-size:12px;font-weight:750;
+  letter-spacing:.05em;text-transform:uppercase;color:var(--cu-ink);
+  text-decoration:none}
+.cu-nav a:first-child{padding-left:0}
+.cu-nav a:hover{color:var(--cu-blue)}
+.cu-nav a[aria-current="page"]{color:var(--cu-blue)}
+.cu-nav .sp{margin-left:auto;color:var(--cu-slate)}
+
+/* ---- The Current strip -------------------------------------- */
+.cu-strip{background:var(--cu-clay);color:#fff}
+.cu-strip--teal{background:var(--cu-teal)}
+.cu-strip .wrap{max-width:1240px;margin:0 auto;padding:0 24px;min-height:45px;
+  display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:16px}
+.cu-strip .lab{font-size:11px;font-weight:750;letter-spacing:.12em;
+  text-transform:uppercase;white-space:nowrap}
+.cu-strip .lab::before{content:"";display:inline-block;width:8px;height:8px;
+  border-radius:50%;margin-right:8px;background:#fff;
+  box-shadow:0 0 0 5px rgba(255,255,255,.18)}
+.cu-strip .cp{font-family:var(--cu-display);font-size:16px;font-weight:600}
+.cu-strip .cp a{color:#fff;text-decoration:none}
+.cu-strip .cp a:hover{text-decoration:underline}
+.cu-strip .go{font-size:11.5px;font-weight:750;text-transform:uppercase;
+  color:#fff;text-decoration:underline;text-underline-offset:.2em;
+  white-space:nowrap}
+
+/* ---- Layout shell ------------------------------------------- */
+.cu-main{max-width:1240px;margin:0 auto;padding:clamp(32px,4vw,56px) 24px 0}
+.cu-headline{margin:9px 0 11px;font-family:var(--cu-display);font-weight:650;
+  line-height:1.05;letter-spacing:-.025em}
+.cu-dek{margin:0;color:var(--cu-slate);line-height:1.55}
+.cu-meta{margin-top:14px;color:var(--cu-slate);font-size:11.5px}
+
+/* ---- Lead package ------------------------------------------- */
+.cu-lead{display:grid;grid-template-columns:minmax(0,2.05fr) minmax(280px,.95fr);
+  gap:34px}
+.cu-hero a{text-decoration:none;color:inherit;display:block}
+.cu-hero .art{position:relative;overflow:hidden;aspect-ratio:16/8.5;
+  margin-bottom:19px;background:var(--cu-lake)}
+.cu-hero .art img{width:100%;height:100%;object-fit:cover;display:block}
+.cu-hero .art::after{content:"";position:absolute;inset:auto 0 0;height:36%;
+  background:linear-gradient(transparent,rgba(12,52,72,.38));pointer-events:none}
+.cu-hero h1{font-size:clamp(40px,4.6vw,72px);max-width:14ch;margin:9px 0 11px}
+.cu-hero:hover h1{color:var(--cu-blue)}
+.cu-hero .cu-dek{max-width:880px;font-family:var(--cu-display);
+  font-size:clamp(18px,2vw,22px)}
+.cu-brief{border-top:5px solid var(--cu-lake)}
+.cu-brief .ti{display:flex;justify-content:space-between;align-items:baseline;
+  padding:13px 0 11px;border-bottom:1px solid var(--cu-line)}
+.cu-brief .ti h2{margin:0;font-family:var(--cu-display);font-size:26px}
+.cu-brief .ti span{color:var(--cu-slate);font-size:11px;font-weight:650;
+  letter-spacing:.08em;text-transform:uppercase}
+.cu-brief a.it{display:grid;grid-template-columns:1fr 92px;gap:16px;
+  padding:17px 0;border-bottom:1px solid var(--cu-line);
+  text-decoration:none;color:inherit}
+.cu-brief a.it h3{margin:6px 0 0;font-family:var(--cu-display);font-size:19px;
+  line-height:1.14;font-weight:600}
+.cu-brief a.it:hover h3{color:var(--cu-blue)}
+.cu-brief .th{overflow:hidden;aspect-ratio:1/1;background:var(--cu-mist)}
+.cu-brief .th img{width:100%;height:100%;object-fit:cover;display:block}
+
+/* ---- Section scaffolding ------------------------------------ */
+.cu-section{margin-top:clamp(52px,7vw,96px)}
+.cu-sechead{display:flex;align-items:flex-end;justify-content:space-between;
+  gap:16px;padding-bottom:13px;margin-bottom:24px;
+  border-bottom:3px solid var(--cu-lake)}
+.cu-sechead h2{margin:0;font-family:var(--cu-display);
+  font-size:clamp(30px,3.5vw,48px);line-height:1}
+.cu-sechead p{max-width:520px;margin:0;color:var(--cu-slate);font-size:13.5px;
+  line-height:1.5;text-align:right}
+
+/* ---- B.C. in Brief ------------------------------------------ */
+.cu-briefgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:26px}
+.cu-briefcard{padding-right:26px;border-right:1px solid var(--cu-line);
+  text-decoration:none;color:inherit;display:block}
+.cu-briefcard:last-child{padding-right:0;border-right:0}
+.cu-briefcard .no{display:block;color:var(--cu-gold);
+  font-family:var(--cu-display);font-size:34px;font-weight:700;line-height:1;
+  margin-bottom:8px}
+.cu-briefcard h3{margin:7px 0;font-family:var(--cu-display);font-size:21px;
+  line-height:1.13;font-weight:600}
+.cu-briefcard:hover h3{color:var(--cu-blue)}
+
+/* ---- Across the Regions ------------------------------------- */
+.cu-regions{display:grid;grid-template-columns:1.35fr 1fr 1fr;gap:26px}
+.cu-scard{background:#fff;box-shadow:0 10px 30px rgba(12,52,72,.08);
+  text-decoration:none;color:inherit;display:block}
+.cu-scard .art{aspect-ratio:16/10;overflow:hidden;background:var(--cu-mist)}
+.cu-scard .art img{width:100%;height:100%;object-fit:cover;display:block}
+.cu-scard .cp{padding:18px 19px 21px}
+.cu-scard h3{margin:7px 0 9px;font-family:var(--cu-display);font-size:24px;
+  line-height:1.08;font-weight:600}
+.cu-scard.feature h3{font-size:31px}
+.cu-scard:hover h3{color:var(--cu-blue)}
+.cu-scard .cu-dek{font-size:14px}
+
+/* ---- Politics & Public Life --------------------------------- */
+.cu-policy{display:grid;grid-template-columns:1.2fr 1fr;gap:40px}
+.cu-plead{display:grid;grid-template-columns:1.08fr .92fr;background:var(--cu-lake);
+  color:#fff;text-decoration:none}
+.cu-plead .art{overflow:hidden;background:var(--cu-lake);min-height:280px}
+.cu-plead .art img{width:100%;height:100%;object-fit:cover;display:block}
+.cu-plead .cp{align-self:end;padding:clamp(22px,3vw,38px)}
+.cu-plead .cu-eyebrow{color:#8FD0CC}
+.cu-plead h3{margin:10px 0 13px;font-family:var(--cu-display);
+  font-size:clamp(30px,3.5vw,52px);line-height:1.02;font-weight:600}
+.cu-plead:hover h3{text-decoration:underline}
+.cu-plead .cu-dek{color:#DCE8E6}
+.cu-plist{border-top:1px solid var(--cu-line)}
+.cu-prow{display:grid;grid-template-columns:120px 1fr;gap:19px;
+  padding:20px 0;border-bottom:1px solid var(--cu-line);
+  text-decoration:none;color:inherit}
+.cu-prow h3{margin:0;font-family:var(--cu-display);font-size:22px;
+  line-height:1.12;font-weight:600}
+.cu-prow:hover h3{color:var(--cu-blue)}
+
+/* ---- Okanagan Life ------------------------------------------ */
+.cu-life{padding:clamp(24px,4vw,48px);background:var(--cu-mist);
+  border-top:7px solid var(--cu-teal)}
+.cu-lifegrid{display:grid;grid-template-columns:1.4fr 1fr 1fr;gap:26px}
+.cu-lifecard{text-decoration:none;color:inherit;display:block}
+.cu-lifecard .art{aspect-ratio:4/3;margin-bottom:16px;overflow:hidden;
+  background:#fff}
+.cu-lifecard .art img{width:100%;height:100%;object-fit:cover;display:block}
+.cu-lifecard h3{margin:8px 0;font-family:var(--cu-display);font-size:23px;
+  line-height:1.1;font-weight:600}
+.cu-lifecard:first-child h3{font-size:33px}
+.cu-lifecard:hover h3{color:var(--cu-blue)}
+.cu-lifecard .cu-dek{font-size:14px}
+
+/* ---- Newsletter block --------------------------------------- */
+.cu-news{display:grid;grid-template-columns:1fr auto;gap:32px;
+  align-items:center;margin-top:clamp(52px,7vw,96px);
+  padding:clamp(28px,4vw,52px);color:#fff;background:var(--cu-lake)}
+.cu-news .cu-eyebrow{color:#8FD0CC}
+.cu-news h2{margin:7px 0 8px;font-family:var(--cu-display);
+  font-size:clamp(30px,4vw,54px);font-weight:600}
+.cu-news p{max-width:640px;margin:0;color:#DCE8E6;line-height:1.55;font-size:15px}
+.cu-news form{display:flex;min-width:min(100%,440px)}
+.cu-news input{min-width:0;flex:1;min-height:50px;padding:0 16px;border:0;
+  border-radius:0;font:inherit}
+.cu-news button{min-height:50px;padding:0 20px;border:0;color:var(--cu-lake);
+  background:var(--cu-gold);font:750 12px var(--cu-sans);letter-spacing:.07em;
+  text-transform:uppercase;cursor:pointer}
+.cu-news button:hover{background:#E4BC63}
+.cu-news .done{font-family:var(--cu-display);font-size:17px;color:#fff}
+
+/* ---- Ads ---------------------------------------------------- */
+body.t-current .adslot{margin:28px 0}
+
+/* ---- Footer ------------------------------------------------- */
+.cu-foot{margin-top:64px;padding:48px 0 32px;color:#DCE8E6;background:#082B3C}
+.cu-foot .grid{max-width:1240px;margin:0 auto;padding:0 24px;
+  display:grid;grid-template-columns:1.4fr repeat(3,1fr);gap:32px}
+.cu-foot .brand h2{margin:0;color:#fff;font-family:var(--cu-display);
+  font-size:35px;font-weight:600}
+.cu-foot .brand p{max-width:420px;color:#B9CCCA;font-size:13.5px;line-height:1.6}
+.cu-foot .col h3{margin:0 0 13px;color:var(--cu-gold);font-size:11.5px;
+  font-weight:750;letter-spacing:.12em;text-transform:uppercase;
+  font-family:var(--cu-sans)}
+.cu-foot .col a{display:block;min-height:30px;font-size:13px;color:#DCE8E6;
+  text-decoration:none}
+.cu-foot .col a:hover{color:#fff;text-decoration:underline}
+.cu-foot .bottom{max-width:1240px;margin:40px auto 0;padding:19px 24px 0;
+  border-top:1px solid rgba(255,255,255,.14);color:#9FB6B4;font-size:11px;
+  display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
+
+/* ---- Small screens ------------------------------------------ */
+@media (max-width: 980px){
+  .cu-mast .wrap{grid-template-columns:1fr}
+  .cu-mast .side{display:none}
+  .cu-lead{grid-template-columns:minmax(0,1fr)}
+  .cu-briefgrid{grid-template-columns:repeat(2,1fr)}
+  .cu-briefcard:nth-child(2){border-right:0}
+  .cu-regions,.cu-lifegrid{grid-template-columns:repeat(2,1fr)}
+  .cu-regions .feature,.cu-lifecard:first-child{grid-column:1/-1}
+  .cu-policy{grid-template-columns:1fr}
+  .cu-news{grid-template-columns:1fr}
+  .cu-foot .grid{grid-template-columns:1fr 1fr}
+}
+@media (max-width: 680px){
+  .cu-sechead{display:block}
+  .cu-sechead p{margin-top:9px;text-align:left}
+  .cu-briefgrid,.cu-regions,.cu-lifegrid{grid-template-columns:1fr}
+  .cu-briefcard{padding:0 0 19px;border-right:0;border-bottom:1px solid var(--cu-line)}
+  .cu-regions .feature,.cu-lifecard:first-child{grid-column:auto}
+  .cu-plead{grid-template-columns:1fr}
+  .cu-strip .go{display:none}
+  .cu-news form{display:grid;min-width:100%}
+  .cu-foot .grid{grid-template-columns:1fr}
+}

@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 500" role="img" aria-label="The legislature before the session">
+  <rect width="800" height="500" fill="#e2ded1"/>
+  <circle cx="640" cy="110" r="52" fill="#d6a84b"/>
+  <path d="M0 330c130-70 260-64 380 6 96 56 220 52 420-14v178H0z" fill="#c9dbdc"/>
+  <path d="M120 335h560v120H120zM190 205h420v130H190zM150 190l250-140 250 140z" fill="#0c3448"/>
+  <g fill="#fbfaf5"><rect x="240" y="235" width="46" height="100"/><rect x="330" y="235" width="46" height="100"/><rect x="420" y="235" width="46" height="100"/><rect x="510" y="235" width="46" height="100"/></g>
+  <rect x="384" y="90" width="32" height="60" fill="#0c3448"/>
+  <circle cx="400" cy="82" r="12" fill="#2a8c86"/>
+  <path d="M0 455h800v45H0z" fill="#365b46"/>
+</svg>

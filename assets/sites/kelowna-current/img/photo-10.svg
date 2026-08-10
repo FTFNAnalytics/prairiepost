@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 700 520" role="img" aria-label="The bench in first light">
+  <rect width="700" height="520" fill="#f0d9a6"/>
+  <circle cx="560" cy="105" r="65" fill="#b4533f"/>
+  <path d="M0 250c150-85 288-67 413 54 82 79 178 82 287 10v206H0z" fill="#365b46"/>
+  <path d="M0 345c127-41 260-34 400 22s240 58 300 35v118H0z" fill="#8ba05a"/>
+  <g stroke="#d6a84b" stroke-width="7" fill="none"><path d="M70 410c130-70 255-71 375-3"/><path d="M142 470c122-65 244-66 366-2"/></g>
+</svg>

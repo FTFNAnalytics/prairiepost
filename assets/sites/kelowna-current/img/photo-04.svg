@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 500" role="img" aria-label="Water planning in the Interior">
+  <rect width="800" height="500" fill="#f1f6f5"/>
+  <circle cx="600" cy="115" r="58" fill="#d6a84b"/>
+  <path d="M0 215c200-85 375-80 535-15 96 40 184 40 265 15v285H0z" fill="#365b46"/>
+  <path d="M0 330c185-55 360-55 535 0s180 50 265 50v120H0z" fill="#2a8c86"/>
+  <path d="M0 415c165-33 330-33 495 0s205 33 305 15v70H0z" fill="#1c6f8a"/>
+  <g fill="none" stroke="#fbfaf5" stroke-width="5" opacity=".6"><path d="M90 372c95-22 190-22 285 0"/><path d="M430 440c105-24 210-24 315 0"/></g>
+</svg>
