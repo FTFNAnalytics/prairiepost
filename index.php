@@ -32,6 +32,11 @@ page_header([
     require PP_ROOT . '/app/views/front-v3.php';
     page_footer();
     return;
+}
+if (pp_chrome('template') === 'aurora') {
+    require PP_ROOT . '/app/views/front-aurora.php';
+    page_footer();
+    return;
 } ?>
 
 <div class="front wrap">

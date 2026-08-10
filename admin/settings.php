@@ -94,7 +94,7 @@ flash_show();
         <textarea id="weather_today" name="weather_today" class="mono"><?= e(setting('weather_today')) ?></textarea>
         <label for="traffic_items">Traffic box · JSON rows of [label, link]</label>
         <textarea id="traffic_items" name="traffic_items" class="mono"><?= e(setting('traffic_items')) ?></textarea>
-        <label for="events_items">Events box · JSON rows of [label, link]</label>
+        <label for="events_items">Events box · JSON rows of [label, link, date, venue] — date &amp; venue optional</label>
         <textarea id="events_items" name="events_items" class="mono"><?= e(setting('events_items')) ?></textarea>
         <label for="contact_email">Contact email · shown in the footer</label>
         <input type="text" id="contact_email" name="contact_email" value="<?= e(setting('contact_email')) ?>">

@@ -1,0 +1,246 @@
+/* ============================================================
+   The aurora template — dark northern-lights chrome over a
+   paper-white reading surface. First user: the Grande Prairie
+   Gazette. Loaded only when chrome.template = "aurora"; a site's
+   brand.css may re-tune the --ga-* tokens.
+   Type: Source Serif 4 carries headlines and body; Archivo stays
+   the interface voice (kickers, meta, nav, buttons).
+   ============================================================ */
+@import url('https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,300..900;1,8..60,300..700&display=swap');
+
+body.t-aurora{
+  --ga-deep:   #1A0E33;   /* chrome — the night sky            */
+  --ga-purple: #2D1B4E;   /* chrome panels / brand deep purple */
+  --ga-violet: #4A2C7A;
+  --ga-hed:    #0B1E3D;   /* headline ink on paper             */
+  --ga-text:   #2C2C2C;   /* body ink                          */
+  --ga-muted:  #9A9A9A;
+  --ga-line:   #E8E8E8;
+  --ga-wash:   #F7F7F7;
+  --ga-green:  #0F5C4C;   /* the working accent                */
+  --ga-teal:   #1A6B5A;
+  --ga-mint:   #5FD3A6;   /* accent on dark chrome             */
+  --ga-lav:    #9A8FC0;   /* muted label on dark chrome        */
+  --ga-lavlt:  #A9B6CE;   /* muted text on dark chrome         */
+  --ga-lift:   #E5E2F0;   /* light type on dark chrome         */
+  --ga-serif:  'Source Serif 4', Georgia, serif;
+
+  /* Repoint the classic tokens so inner pages read as the aurora
+     brand: white paper, midnight ink, green links. */
+  --pp-shelterbelt: var(--ga-hed);
+  --pp-cloudbank:   #FFFFFF;
+  --pp-board:       var(--ga-line);
+  --pp-bigsky:      var(--ga-green);
+  --pp-noonsky:     var(--ga-teal);
+  --pp-highsky:     #EAF3F0;
+  --pp-straw:       #DFF3EA;
+  --pp-binred:      var(--ga-violet);
+  --pp-quarter:     var(--ga-purple);
+  --pp-fencepost:   var(--ga-violet);
+  --pp-stubble:     var(--ga-teal);
+
+  background: #FFFFFF;
+  color: var(--ga-text);
+}
+
+/* Serif headlines everywhere the template runs. */
+body.t-aurora h1, body.t-aurora h2, body.t-aurora h3,
+body.t-aurora .lead h1, body.t-aurora .card h3,
+body.t-aurora .storyhead h1{
+  font-family: var(--ga-serif);
+  letter-spacing: 0;
+}
+body.t-aurora .storybody, body.t-aurora .storybody p{
+  font-family: var(--ga-serif);
+}
+body.t-aurora .storyhead .standfirst, body.t-aurora .standfirst{
+  font-family: var(--ga-serif);
+  font-style: italic;
+}
+body.t-aurora .storybody blockquote{
+  border-left: 3px solid var(--ga-teal);
+  padding-left: 18px;
+  font-family: var(--ga-serif);
+  font-style: italic;
+  font-size: 1.12em;
+  color: var(--ga-hed);
+}
+
+/* ---- The utility strip -------------------------------------- */
+.ga-strip{background:var(--ga-deep);color:var(--ga-lavlt);
+  font:500 12px/1 Archivo,sans-serif;letter-spacing:.02em}
+.ga-strip .wrap{display:flex;justify-content:space-between;align-items:center;
+  max-width:1200px;margin:0 auto;padding:10px 20px;gap:14px}
+.ga-strip .grp{display:flex;gap:16px;align-items:center;flex-wrap:wrap}
+.ga-strip a{color:var(--ga-lavlt);text-decoration:none}
+.ga-strip a:hover{color:#fff}
+.ga-strip a.hot{color:var(--ga-mint);font-weight:600}
+
+/* ---- The masthead band -------------------------------------- */
+.ga-head{background:var(--ga-purple)}
+.ga-head .wrap{display:flex;justify-content:space-between;align-items:center;
+  max-width:1200px;margin:0 auto;padding:16px 20px;gap:18px}
+.ga-head .logo img{display:block;width:168px;height:auto;border-radius:4px}
+.ga-head .acts{display:flex;gap:12px;align-items:center}
+.ga-head .acts .lnk{color:var(--ga-lift);text-decoration:none;
+  font:500 13.5px/1 Archivo,sans-serif}
+.ga-head .acts .lnk:hover{color:#fff}
+.ga-btn{display:inline-block;font:600 13px/1 Archivo,sans-serif;
+  padding:11px 16px;border-radius:3px;text-decoration:none;cursor:pointer;border:0}
+.ga-btn--solid{background:var(--ga-green);color:#fff}
+.ga-btn--solid:hover{background:var(--ga-teal)}
+.ga-btn--ghost{background:#fff;color:var(--ga-text)}
+.ga-btn--ghost:hover{background:var(--ga-wash)}
+
+/* ---- The section nav ---------------------------------------- */
+.ga-nav{background:#fff;border-bottom:1px solid var(--ga-line)}
+.ga-nav .wrap{max-width:1200px;margin:0 auto;padding:0 20px;
+  display:flex;gap:26px;overflow-x:auto}
+.ga-nav a{display:block;padding:15px 0 13px;white-space:nowrap;
+  font:600 12.5px/1 Archivo,sans-serif;letter-spacing:.08em;text-transform:uppercase;
+  color:var(--ga-text);text-decoration:none;border-bottom:2px solid transparent}
+.ga-nav a:hover{color:var(--ga-green)}
+.ga-nav a[aria-current="page"]{color:var(--ga-green);border-bottom-color:var(--ga-green)}
+
+/* ---- The hero ------------------------------------------------ */
+.ga-hero{position:relative;min-height:440px;display:flex;align-items:flex-end;
+  background-size:cover;background-position:center}
+.ga-hero::before{content:"";position:absolute;inset:0;
+  background:linear-gradient(180deg,rgba(26,14,51,.30) 0%,rgba(26,14,51,.45) 55%,rgba(11,30,61,.90) 100%)}
+.ga-hero .inner{position:relative;max-width:1200px;margin:0 auto;width:100%;
+  padding:56px 20px 40px}
+.ga-hero .kick{display:inline-block;background:var(--ga-green);color:#fff;
+  font:600 11px/1 Archivo,sans-serif;letter-spacing:.14em;text-transform:uppercase;
+  padding:6px 10px;border-radius:2px;text-decoration:none;margin-bottom:14px}
+.ga-hero h1{margin:0;max-width:860px;font-family:var(--ga-serif);
+  font-size:clamp(28px,4vw,46px);line-height:1.12;font-weight:600}
+.ga-hero h1 a{color:#fff;text-decoration:none}
+.ga-hero h1 a:hover{text-decoration:underline;text-decoration-thickness:2px}
+.ga-hero .dek{max-width:680px;margin:14px 0 0;font-family:var(--ga-serif);
+  font-size:18px;line-height:1.5;color:rgba(255,255,255,.92)}
+.ga-hero .by{margin:14px 0 0;font:500 13px/1 Archivo,sans-serif;color:var(--ga-lavlt)}
+
+/* ---- The front grid ------------------------------------------ */
+.ga-front{max-width:1200px;margin:0 auto;padding:40px 20px 56px;
+  display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:48px}
+.ga-h2row{display:flex;justify-content:space-between;align-items:baseline;
+  margin:0 0 18px}
+.ga-h2row h2{margin:0;font-family:var(--ga-serif);font-size:26px;font-weight:600;
+  color:var(--ga-hed)}
+.ga-h2row .more{font:600 13px/1 Archivo,sans-serif;color:var(--ga-green);
+  text-decoration:none}
+.ga-h2row .more:hover{text-decoration:underline}
+
+.ga-kick{display:inline-block;font:600 11px/1 Archivo,sans-serif;
+  letter-spacing:.14em;text-transform:uppercase;color:var(--ga-green);
+  text-decoration:none;margin:0 0 8px}
+.ga-kick:hover{text-decoration:underline}
+
+.ga-item{display:grid;grid-template-columns:168px minmax(0,1fr);gap:18px;
+  padding:18px 0;border-bottom:1px solid var(--ga-line)}
+.ga-item:first-of-type{padding-top:0}
+.ga-item .th{display:block;aspect-ratio:8/5;overflow:hidden;border-radius:2px;
+  background:var(--ga-wash)}
+.ga-item .th img{width:100%;height:100%;object-fit:cover;display:block}
+.ga-item h3{margin:0 0 6px;font-family:var(--ga-serif);font-size:21px;
+  line-height:1.22;font-weight:600}
+.ga-item h3 a{color:var(--ga-hed);text-decoration:none}
+.ga-item h3 a:hover{color:var(--ga-green)}
+.ga-item .dek{margin:0 0 8px;font-size:15px;line-height:1.5;color:var(--ga-text)}
+.ga-item .meta{margin:0;font:400 12.5px/1.4 Archivo,sans-serif;color:var(--ga-muted)}
+
+.ga-grid3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:24px}
+.ga-tile .th{display:block;aspect-ratio:16/10;overflow:hidden;border-radius:2px;
+  background:var(--ga-wash);margin-bottom:10px}
+.ga-tile .th img{width:100%;height:100%;object-fit:cover;display:block}
+.ga-tile h3{margin:0 0 6px;font-family:var(--ga-serif);font-size:18.5px;
+  line-height:1.25;font-weight:600}
+.ga-tile h3 a{color:var(--ga-hed);text-decoration:none}
+.ga-tile h3 a:hover{color:var(--ga-green)}
+.ga-tile .meta{margin:0;font:400 12.5px/1 Archivo,sans-serif;color:var(--ga-muted)}
+
+.ga-block{margin-top:44px}
+
+/* ---- The rail ------------------------------------------------ */
+.ga-rail{min-width:0}
+.ga-rail .lab{font:600 11px/1 Archivo,sans-serif;letter-spacing:.2em;
+  text-transform:uppercase;color:var(--ga-muted);margin:0 0 14px}
+.ga-railmod{margin-bottom:36px}
+.ga-mostread{list-style:none;margin:0;padding:0;counter-reset:mr}
+.ga-mostread li{display:grid;grid-template-columns:26px minmax(0,1fr);gap:12px;
+  padding:10px 0;border-bottom:1px solid var(--ga-line)}
+.ga-mostread li::before{counter-increment:mr;content:counter(mr);
+  font-family:var(--ga-serif);font-size:20px;line-height:1.1;color:var(--ga-teal)}
+.ga-mostread a{font-family:var(--ga-serif);font-size:16.5px;line-height:1.3;
+  font-weight:600;color:var(--ga-hed);text-decoration:none}
+.ga-mostread a:hover{color:var(--ga-green)}
+.ga-ev{display:grid;grid-template-columns:46px minmax(0,1fr);gap:12px;
+  padding:10px 0;border-bottom:1px solid var(--ga-line);align-items:start}
+.ga-ev .d{background:var(--ga-hed);color:#fff;text-align:center;
+  border-radius:2px;padding:6px 0 7px}
+.ga-ev .d .m{display:block;font:600 9.5px/1 Archivo,sans-serif;
+  letter-spacing:.12em;text-transform:uppercase;opacity:.85}
+.ga-ev .d .n{display:block;font-family:var(--ga-serif);font-size:18px;
+  line-height:1.15;font-weight:600}
+.ga-ev .t{font-family:var(--ga-serif);font-size:16.5px;line-height:1.3;
+  font-weight:600;color:var(--ga-hed);margin:0}
+.ga-ev .t a{color:inherit;text-decoration:none}
+.ga-ev .t a:hover{color:var(--ga-green)}
+.ga-ev .v{margin:3px 0 0;font:400 12.5px/1.4 Archivo,sans-serif;color:var(--ga-muted)}
+.ga-rail .adslot{border:0;padding:0;margin:0 0 36px}
+.ga-rail .adslot .k{font:600 11px/1 Archivo,sans-serif;letter-spacing:.2em;
+  text-transform:uppercase;color:var(--ga-muted);margin:0 0 14px}
+
+/* ---- The newsletter band ------------------------------------- */
+.ga-nlband{position:relative;background:var(--ga-wash) center/cover no-repeat;
+  border-top:1px solid var(--ga-line)}
+.ga-nlband::before{content:"";position:absolute;inset:0;
+  background:linear-gradient(90deg,rgba(255,255,255,.55) 0%,rgba(255,255,255,.86) 46%,#fff 72%)}
+.ga-nlband .inner{position:relative;max-width:1200px;margin:0 auto;
+  padding:52px 20px;display:grid;grid-template-columns:minmax(0,1fr) 460px;
+  gap:40px;align-items:center}
+.ga-nlband .lab{color:var(--ga-green);margin-bottom:10px;
+  font:600 11px/1 Archivo,sans-serif;letter-spacing:.2em;text-transform:uppercase}
+.ga-nlband h3{margin:0 0 10px;font-family:var(--ga-serif);font-size:34px;
+  font-weight:600;color:var(--ga-hed)}
+.ga-nlband p{margin:0;font-family:var(--ga-serif);font-size:17px;line-height:1.55;
+  color:var(--ga-text);max-width:420px}
+.ga-nlband form{display:flex;gap:10px}
+.ga-nlband input[type="email"]{flex:1;padding:12px 14px;border:1px solid #C9C3D8;
+  border-radius:3px;font:400 14.5px/1 Archivo,sans-serif;background:#fff;
+  color:var(--ga-text)}
+.ga-nlband input[type="email"]:focus{outline:2px solid var(--ga-green);outline-offset:1px}
+.ga-nlband .done{font-family:var(--ga-serif);font-size:17px;color:var(--ga-hed)}
+
+/* ---- The footer ---------------------------------------------- */
+.ga-foot{background:var(--ga-deep);color:var(--ga-lavlt);margin-top:0}
+.ga-foot .cols{max-width:1200px;margin:0 auto;padding:48px 20px 36px;
+  display:grid;grid-template-columns:1.4fr 1fr 1fr 1fr;gap:36px}
+.ga-foot .logo img{display:block;width:150px;height:auto;border-radius:4px;
+  margin-bottom:14px}
+.ga-foot .about{font:400 13.5px/1.6 Archivo,sans-serif;margin:0;max-width:280px}
+.ga-foot .fh{font:600 11px/1 Archivo,sans-serif;letter-spacing:.18em;
+  text-transform:uppercase;color:var(--ga-lav);margin:0 0 14px}
+.ga-foot .lnks{display:flex;flex-direction:column;gap:9px}
+.ga-foot .lnks a{color:var(--ga-lift);text-decoration:none;
+  font:400 14px/1.3 Archivo,sans-serif}
+.ga-foot .lnks a:hover{color:#fff;text-decoration:underline}
+.ga-foot .legal{border-top:1px solid rgba(255,255,255,.10)}
+.ga-foot .legal .wrap{max-width:1200px;margin:0 auto;padding:18px 20px;
+  font:400 12.5px/1.5 Archivo,sans-serif;color:var(--ga-lav);
+  display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
+
+/* ---- Small screens ------------------------------------------- */
+@media (max-width: 960px){
+  .ga-front{grid-template-columns:minmax(0,1fr)}
+  .ga-grid3{grid-template-columns:minmax(0,1fr)}
+  .ga-nlband .inner{grid-template-columns:minmax(0,1fr)}
+  .ga-foot .cols{grid-template-columns:1fr 1fr}
+}
+@media (max-width: 620px){
+  .ga-item{grid-template-columns:minmax(0,1fr)}
+  .ga-item .th{aspect-ratio:16/9}
+  .ga-head .acts .lnk{display:none}
+  .ga-foot .cols{grid-template-columns:1fr}
+  .ga-nlband form{flex-direction:column}
+}

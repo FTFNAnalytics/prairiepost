@@ -1,25 +1,31 @@
 {
   "palette": {
-    "ink":     "#241A47",
-    "paper":   "#F4F2F9",
-    "board":   "#C9C3D8",
-    "sky":     "#8FE0BE",
-    "hill":    "#3E2C77",
-    "field":   "#1B7A5C",
-    "stubble": "#2C8C84",
-    "red":     "#B0246B",
-    "muted":   "#5B5273"
+    "ink":     "#0B1E3D",
+    "paper":   "#FFFFFF",
+    "board":   "#E8E8E8",
+    "sky":     "#A9B6CE",
+    "hill":    "#2D1B4E",
+    "field":   "#0F5C4C",
+    "stubble": "#1A6B5A",
+    "red":     "#4A2C7A",
+    "muted":   "#9A9A9A"
   },
   "desks": {
-    "news":        "#241A47",
-    "politics":    "#5D3AA6",
-    "agriculture": "#1B7A5C",
-    "business":    "#21707A",
-    "community":   "#6B4790",
-    "opinion":     "#B0246B",
-    "weather":     "#8FE0BE"
+    "news":        "#0F5C4C",
+    "politics":    "#1E3A6E",
+    "energy":      "#1A6B5A",
+    "agriculture": "#0F5C4C",
+    "business":    "#1E3A6E",
+    "community":   "#4A2C7A",
+    "sports":      "#1A6B5A",
+    "opinion":     "#4A2C7A",
+    "weather":     "#A9B6CE"
   },
   "chrome": {
-    "nav": ["news", "politics", "agriculture", "business", "community", "opinion", "weather"]
+    "template": "aurora",
+    "trending": true,
+    "nav": ["news", "politics", "energy", "agriculture", "business", "sports", "opinion", "weather"],
+    "crosshead": "Across the Peace Country",
+    "events_label": "This week in Grande Prairie"
   }
 }

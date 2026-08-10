@@ -282,8 +282,9 @@ Per new paper:
    is touched. There is **no founding-account step** — newsroom accounts are
    network-wide, so existing admins sign in to the new `/admin` immediately.
 4. **Launch content**: if the paper has a committed launch package —
-   `assets/sites/<slug>/launch.php`; **the Edmonton Echo ships one** — run,
-   from the web root, after first boot:
+   `assets/sites/<slug>/launch.php`; **the Edmonton Echo and the Grande
+   Prairie Gazette both ship one** — run, from the web root, after first
+   boot:
    ```
    PP_SITE=edmonton-echo php tools/seed-launch.php
    ```
