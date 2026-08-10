@@ -1,4 +1,4 @@
-# Taking kelownacurrent.ca live — deployment runbook (v2)
+# Taking kelownacurrent.ca live — deployment runbook (v3)
 
 This runbook takes **Kelowna Current** live on the VPS that already
 serves the network. It assumes DEPLOY.md was followed for the Dispatch:
@@ -14,6 +14,11 @@ shape means the *server's copy* of the release is stale, partially
 pulled, or was hand-edited — step 0 detects and repairs all three.
 Do not transcribe or re-type file contents; always operate on the
 pulled files directly.
+
+**v3 note:** step 1 no longer depends on `dig`. A live attempt stopped
+at `dig: command not found`; the DNS check now includes an equivalent
+fallback (`getent`, part of glibc, always present), so a missing lookup
+tool is never a reason to halt.
 
 The Current's domain is **kelownacurrent.ca**. The bare domain is
 canonical; `www` serves via the same block.
@@ -71,13 +76,35 @@ clean.
 
 ## 1 · DNS check (both names)
 
+Any DNS lookup tool answers this step — which tool does not matter,
+only the addresses do. Use `dig` when the server has it:
+
 ```bash
 dig +short kelownacurrent.ca A
 dig +short www.kelownacurrent.ca A
 ```
 
-**Verify:** both return the VPS address. If either record is missing,
-report back to the owner with which one is needed before continuing.
+If the server reports `dig: command not found`, do **not** stop — use
+`getent`, which is part of glibc and needs no install:
+
+```bash
+getent ahostsv4 kelownacurrent.ca     | awk '{print $1}' | sort -u
+getent ahostsv4 www.kelownacurrent.ca | awk '{print $1}' | sort -u
+```
+
+One caveat with `getent`: it consults `/etc/hosts` before DNS. If its
+answer differs from what the registrar shows, check `/etc/hosts` for a
+stale entry for either name before trusting the result.
+
+Optionally install `dig` for next time — `apt-get install -y dnsutils`
+on Debian/Ubuntu, `dnf install -y bind-utils` on RHEL/Alma — but do not
+let a package problem block the deployment; the `getent` answer is
+sufficient.
+
+**Verify:** both names resolve to the VPS address (via either tool).
+If either record is missing, report back to the owner with which one
+is needed before continuing — certbot in step 3 needs every name it
+certifies to resolve.
 
 ## 2 · nginx server block
 
@@ -218,6 +245,7 @@ Per-domain, never inherited:
 
 | Symptom | Cause → fix |
 |---|---|
+| `dig: command not found` in step 1 | DNS utilities aren't installed on the VPS → use the `getent ahostsv4` fallback shown in step 1 (no install needed), or install `dnsutils` (Debian/Ubuntu) / `bind-utils` (RHEL/Alma) |
 | "Unexpected character" in any JSON | Server copy drifted from the repo → step 0's `git reset --hard`, then re-run the palette validation loop |
 | Front shows another paper's design | Host mapping not matching → check the `str_contains` strings in config.php against the actual Host header |
 | Seeder reports `0 stories added` on first run | It already ran (matched by slug) — not an error; verify the front instead |

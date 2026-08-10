@@ -45,6 +45,16 @@ dig +short edmontonecho.com A
 dig +short www.edmontonecho.com A
 ```
 
+If the server reports `dig: command not found`, do **not** stop — use
+`getent`, which is part of glibc and needs no install (note it consults
+`/etc/hosts` before DNS, so cross-check that file if the answer looks
+wrong):
+
+```bash
+getent ahostsv4 edmontonecho.com      | awk '{print $1}' | sort -u
+getent ahostsv4 www.edmontonecho.com  | awk '{print $1}' | sort -u
+```
+
 **Verify:** both return the VPS address. If either is missing, report
 back to the owner with which record is needed before continuing —
 certbot in step 3 needs every name it certifies to resolve.
