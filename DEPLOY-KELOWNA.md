@@ -1,4 +1,4 @@
-# Taking kelownacurrent.ca live — deployment runbook (v3)
+# Taking kelownacurrent.ca live — deployment runbook (v4)
 
 This runbook takes **Kelowna Current** live on the VPS that already
 serves the network. It assumes DEPLOY.md was followed for the Dispatch:
@@ -19,6 +19,13 @@ pulled files directly.
 at `dig: command not found`; the DNS check now includes an equivalent
 fallback (`getent`, part of glibc, always present), so a missing lookup
 tool is never a reason to halt.
+
+**v4 note:** step 4's verification no longer looks for the teal
+"The Current" briefing strip. The strip renders only when the
+`breaking_label` and `breaking_url` settings exist, and it is step 5's
+seeder that writes them — so before seeding, its absence is correct,
+not a failure. The strip check now lives in step 5's verification;
+step 4 checks only chrome that exists pre-seed.
 
 The Current's domain is **kelownacurrent.ca**. The bare domain is
 canonical; `www` serves via the same block.
@@ -162,9 +169,16 @@ $host = strtolower($_SERVER['HTTP_HOST'] ?? '');
 Everything else in config.php stays exactly as it is.
 
 **Verify:** `php -l config.php` passes, then:
-- `https://kelownacurrent.ca/` renders **the Current's design**: the
+- `https://kelownacurrent.ca/` renders **the Current's chrome**: the
   centred KELOWNA / Current masthead with the teal wave, the sticky
-  uppercase nav, and the teal "The Current" briefing strip.
+  uppercase nav, the title "Kelowna Current — News to the horizon",
+  and the `/assets/css/current.css` stylesheet.
+- Do **not** expect the teal "The Current" briefing strip yet, and do
+  not stop over its absence. The strip renders only when the
+  `breaking_label` and `breaking_url` settings are set, and step 5's
+  seeder is what writes them — before seeding it is correctly absent
+  (and the front page is otherwise nearly empty). Its check is in
+  step 5.
 - Every other live paper still renders its own chrome. If two domains
   show the same paper, the mapping isn't matching.
 
@@ -189,6 +203,9 @@ newsroom has already changed. Expect the output to end
 `Done — 20 stories added.`
 
 **Verify, all on https://kelownacurrent.ca:**
+- `/` — the teal "The Current" briefing strip now shows beneath the
+  nav (the seeder wrote `breaking_label` and `breaking_url`) — this is
+  the check deferred from step 4
 - `/` — "The valley's next decade…" hero with the lake illustration,
   Today's briefing rail with square thumbs, B.C. in Brief with gold
   numerals, Across the Regions fully illustrated, the navy Politics &
@@ -247,6 +264,7 @@ Per-domain, never inherited:
 |---|---|
 | `dig: command not found` in step 1 | DNS utilities aren't installed on the VPS → use the `getent ahostsv4` fallback shown in step 1 (no install needed), or install `dnsutils` (Debian/Ubuntu) / `bind-utils` (RHEL/Alma) |
 | "Unexpected character" in any JSON | Server copy drifted from the repo → step 0's `git reset --hard`, then re-run the palette validation loop |
+| Briefing strip absent right after step 4 | Expected, not a failure — the strip needs the `breaking_label`/`breaking_url` settings, which step 5's seeder writes → proceed to step 5, then confirm the strip there |
 | Front shows another paper's design | Host mapping not matching → check the `str_contains` strings in config.php against the actual Host header |
 | Seeder reports `0 stories added` on first run | It already ran (matched by slug) — not an error; verify the front instead |
 | Palette validates but the site 500s | `php -l config.php`; if clean, set `debug => true` temporarily and read the error |
