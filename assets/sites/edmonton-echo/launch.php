@@ -24,7 +24,7 @@ return [
         'tagline'          => 'Edmonton, first thing',
         'meta_description' => 'An independent daily for Edmonton: city hall, courts, transit, the neighbourhoods and the games — reported plainly, delivered before the day starts.',
         'footer_line'      => 'An independent daily for Edmonton: city hall, courts, transit, the neighbourhoods and the games — reported plainly, delivered before the day starts.',
-        'contact_email'    => 'tips@edmontonecho.ca',
+        'contact_email'    => 'tips@edmontonecho.com',
         'regions'          => json_encode([
             'edmonton' => 'Edmonton',
             'alberta'  => 'Alberta',
