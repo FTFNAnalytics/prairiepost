@@ -1,0 +1,61 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 640" role="img" aria-label="The morning queue at Queen and Main as the articulated bus arrives">
+  <rect width="1200" height="640" fill="#F3F2F2"/>
+  <rect width="1200" height="340" fill="#E8E6E3"/>
+  <!-- downtown behind -->
+  <g fill="#DBD9D4">
+    <rect x="30" y="120" width="150" height="220"/>
+    <rect x="210" y="80" width="180" height="260"/>
+    <rect x="420" y="150" width="130" height="190"/>
+    <rect x="900" y="110" width="160" height="230"/>
+    <rect x="1080" y="160" width="100" height="180"/>
+  </g>
+  <g fill="#8FC7B4" opacity=".8">
+    <rect x="240" y="110" width="120" height="14"/><rect x="240" y="140" width="120" height="14"/><rect x="240" y="170" width="120" height="14"/>
+    <rect x="930" y="140" width="100" height="12"/><rect x="930" y="166" width="100" height="12"/>
+  </g>
+  <!-- clock tower nod -->
+  <g>
+    <rect x="610" y="60" width="70" height="280" fill="#B03A2B"/>
+    <path d="M600 60 645 16l45 44Z" fill="#201E1D"/>
+    <circle cx="645" cy="120" r="26" fill="#F3F2F2"/>
+    <line x1="645" y1="120" x2="645" y2="102" stroke="#201E1D" stroke-width="4" stroke-linecap="round"/>
+    <line x1="645" y1="120" x2="658" y2="126" stroke="#201E1D" stroke-width="4" stroke-linecap="round"/>
+  </g>
+  <!-- street -->
+  <rect x="0" y="480" width="1200" height="160" fill="#6E6A64"/>
+  <rect x="0" y="472" width="1200" height="8" fill="#3A3836"/>
+  <!-- articulated bus -->
+  <g>
+    <rect x="60" y="330" width="420" height="142" rx="18" fill="#0B6E4F"/>
+    <rect x="500" y="330" width="300" height="142" rx="18" fill="#0B6E4F"/>
+    <!-- bellows -->
+    <g fill="#201E1D"><rect x="478" y="334" width="8" height="134"/><rect x="490" y="334" width="8" height="134"/></g>
+    <rect x="60" y="330" width="740" height="30" rx="15" fill="#095A41"/>
+    <g fill="#8FC7B4">
+      <rect x="90" y="372" width="80" height="52" rx="6"/><rect x="186" y="372" width="80" height="52" rx="6"/><rect x="282" y="372" width="80" height="52" rx="6"/>
+      <rect x="524" y="372" width="80" height="52" rx="6"/><rect x="620" y="372" width="80" height="52" rx="6"/>
+    </g>
+    <rect x="720" y="366" width="60" height="94" rx="8" fill="#8FC7B4"/>
+    <rect x="60" y="436" width="740" height="12" fill="#EDBB00"/>
+    <!-- route blade -->
+    <rect x="704" y="336" width="86" height="22" rx="6" fill="#EDBB00"/>
+    <circle cx="150" cy="474" r="24" fill="#201E1D"/><circle cx="390" cy="474" r="24" fill="#201E1D"/>
+    <circle cx="560" cy="474" r="24" fill="#201E1D"/><circle cx="740" cy="474" r="24" fill="#201E1D"/>
+  </g>
+  <!-- the queue -->
+  <g>
+    <g transform="translate(860 402)"><circle cx="0" cy="0" r="17" fill="#201E1D"/><rect x="-19" y="15" width="38" height="56" rx="13" fill="#B03A2B"/></g>
+    <g transform="translate(916 406)"><circle cx="0" cy="0" r="16" fill="#201E1D"/><rect x="-18" y="14" width="36" height="52" rx="12" fill="#095A41"/></g>
+    <g transform="translate(968 402)"><circle cx="0" cy="0" r="17" fill="#201E1D"/><rect x="-19" y="15" width="38" height="56" rx="13" fill="#EDBB00"/></g>
+    <g transform="translate(1024 408)"><circle cx="0" cy="0" r="15" fill="#201E1D"/><rect x="-17" y="13" width="34" height="50" rx="12" fill="#6E6A64"/></g>
+    <g transform="translate(1076 402)"><circle cx="0" cy="0" r="17" fill="#201E1D"/><rect x="-19" y="15" width="38" height="56" rx="13" fill="#0B6E4F"/></g>
+    <g transform="translate(1132 406)"><circle cx="0" cy="0" r="16" fill="#201E1D"/><rect x="-18" y="14" width="36" height="52" rx="12" fill="#B03A2B"/></g>
+  </g>
+  <!-- bus stop flag -->
+  <g transform="translate(826 330)">
+    <rect x="-4" y="0" width="8" height="142" fill="#201E1D"/>
+    <rect x="4" y="0" width="64" height="36" rx="6" fill="#0B6E4F"/>
+    <circle cx="22" cy="18" r="9" fill="#F3F2F2"/>
+    <rect x="38" y="12" width="24" height="12" rx="4" fill="#EDBB00"/>
+  </g>
+</svg>

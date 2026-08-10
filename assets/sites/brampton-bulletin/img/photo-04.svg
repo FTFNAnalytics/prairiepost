@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 640" role="img" aria-label="The Airport Road corridor at dusk: warehouses, trucks, and the last fields">
+  <defs>
+    <linearGradient id="bbdusk" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#201E1D"/><stop offset=".55" stop-color="#4A4340"/><stop offset="1" stop-color="#B03A2B"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="300" fill="url(#bbdusk)"/>
+  <rect y="300" width="1200" height="340" fill="#2B2927"/>
+  <!-- plane on approach -->
+  <g transform="translate(880 90) rotate(-8)" fill="#F3F2F2">
+    <ellipse cx="0" cy="0" rx="60" ry="10"/>
+    <path d="M-10 0l-26 26h14l22-20Z"/><path d="M-8 0l-24-24h14l20 18Z"/>
+    <path d="M-52 0l-16 12h10l12-8Z"/>
+  </g>
+  <g fill="#EDBB00"><circle cx="820" cy="84" r="4"/><circle cx="760" cy="70" r="3"/><circle cx="700" cy="58" r="2.5"/></g>
+  <!-- warehouse row -->
+  <g>
+    <rect x="40" y="330" width="380" height="130" fill="#3A3836"/>
+    <rect x="40" y="330" width="380" height="16" fill="#EDBB00"/>
+    <g fill="#201E1D"><rect x="70" y="392" width="48" height="68"/><rect x="140" y="392" width="48" height="68"/><rect x="210" y="392" width="48" height="68"/><rect x="280" y="392" width="48" height="68"/><rect x="350" y="392" width="48" height="68"/></g>
+    <rect x="460" y="310" width="440" height="150" fill="#464240"/>
+    <rect x="460" y="310" width="440" height="16" fill="#EDBB00"/>
+    <g fill="#201E1D"><rect x="492" y="386" width="54" height="74"/><rect x="572" y="386" width="54" height="74"/><rect x="652" y="386" width="54" height="74"/><rect x="732" y="386" width="54" height="74"/><rect x="812" y="386" width="54" height="74"/></g>
+    <g fill="#8FC7B4" opacity=".7"><rect x="492" y="332" width="330" height="10"/><rect x="70" y="352" width="290" height="8"/></g>
+  </g>
+  <!-- the last field, still green -->
+  <path d="M940 460h260v180H900c0-80 8-140 40-180Z" fill="#0B6E4F"/>
+  <g stroke="#095A41" stroke-width="10" fill="none">
+    <path d="M960 640c30-60 44-110 46-160"/>
+    <path d="M1040 640c26-52 38-96 40-140"/>
+    <path d="M1120 640c22-44 32-82 34-120"/>
+  </g>
+  <!-- road with trucks -->
+  <rect x="0" y="470" width="940" height="90" fill="#3A3836"/>
+  <path d="M0 514h940" stroke="#EDBB00" stroke-width="6" stroke-dasharray="40 34"/>
+  <g>
+    <g transform="translate(180 486)"><rect x="0" y="-26" width="150" height="52" rx="6" fill="#F3F2F2"/><rect x="150" y="-14" width="52" height="40" rx="6" fill="#B03A2B"/><circle cx="34" cy="30" r="14" fill="#201E1D"/><circle cx="120" cy="30" r="14" fill="#201E1D"/><circle cx="180" cy="30" r="14" fill="#201E1D"/></g>
+    <g transform="translate(560 486)"><rect x="0" y="-26" width="150" height="52" rx="6" fill="#0B6E4F"/><rect x="150" y="-14" width="52" height="40" rx="6" fill="#201E1D"/><circle cx="34" cy="30" r="14" fill="#201E1D"/><circle cx="120" cy="30" r="14" fill="#201E1D"/><circle cx="180" cy="30" r="14" fill="#201E1D"/></g>
+  </g>
+  <rect x="0" y="560" width="1200" height="80" fill="#201E1D"/>
+</svg>

@@ -1,0 +1,33 @@
+{
+  "palette": {
+    "ink":     "#201E1D",
+    "paper":   "#F3F2F2",
+    "board":   "#DBD9D4",
+    "sky":     "#8FC7B4",
+    "hill":    "#095A41",
+    "field":   "#0B6E4F",
+    "stubble": "#6E6A64",
+    "red":     "#B03A2B",
+    "muted":   "#6E6A64"
+  },
+  "desks": {
+    "city-hall":   "#0B6E4F",
+    "peel-courts": "#0B6E4F",
+    "transit":     "#0B6E4F",
+    "housing":     "#0B6E4F",
+    "business":    "#0B6E4F",
+    "sports":      "#0B6E4F",
+    "opinion":     "#201E1D",
+    "gta":         "#0B6E4F",
+    "news":        "#0B6E4F",
+    "weather":     "#8FC7B4"
+  },
+  "chrome": {
+    "template": "bulletin",
+    "trending": true,
+    "nav": ["city-hall", "peel-courts", "transit", "housing", "business", "sports", "opinion"],
+    "gta_desk": "gta",
+    "gta_head": "Around the GTA",
+    "mast_note": "Independent · reader-funded"
+  }
+}

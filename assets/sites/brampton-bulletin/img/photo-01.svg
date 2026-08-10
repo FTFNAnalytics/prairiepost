@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 640" role="img" aria-label="The council chamber, deep into the night">
+  <rect width="1200" height="640" fill="#201E1D"/>
+  <!-- night windows -->
+  <g fill="#2B2927">
+    <rect x="60" y="50" width="200" height="240" rx="6"/>
+    <rect x="300" y="50" width="200" height="240" rx="6"/>
+    <rect x="700" y="50" width="200" height="240" rx="6"/>
+    <rect x="940" y="50" width="200" height="240" rx="6"/>
+  </g>
+  <circle cx="820" cy="130" r="34" fill="#F3F2F2" opacity=".85"/>
+  <circle cx="808" cy="122" r="30" fill="#2B2927"/>
+  <!-- clock at 2:41 -->
+  <circle cx="600" cy="120" r="46" fill="#F3F2F2"/>
+  <circle cx="600" cy="120" r="40" fill="#E8E6E3"/>
+  <line x1="600" y1="120" x2="600" y2="90" stroke="#201E1D" stroke-width="5" stroke-linecap="round" transform="rotate(82 600 120)"/>
+  <line x1="600" y1="120" x2="600" y2="98" stroke="#B03A2B" stroke-width="6" stroke-linecap="round" transform="rotate(246 600 120)"/>
+  <!-- chamber wall panelling -->
+  <rect x="0" y="290" width="1200" height="60" fill="#095A41"/>
+  <rect x="0" y="344" width="1200" height="8" fill="#EDBB00"/>
+  <!-- curved dais -->
+  <path d="M40 640c60-170 260-260 560-260s500 90 560 260Z" fill="#0B6E4F"/>
+  <path d="M120 640c55-130 225-200 480-200s425 70 480 200Z" fill="#095A41"/>
+  <!-- desk lamps still on -->
+  <g fill="#EDBB00">
+    <circle cx="330" cy="470" r="12"/>
+    <circle cx="600" cy="452" r="12"/>
+    <circle cx="870" cy="470" r="12"/>
+  </g>
+  <!-- councillors, late -->
+  <g fill="#201E1D">
+    <circle cx="255" cy="500" r="24"/><rect x="223" y="522" width="64" height="60" rx="18"/>
+    <circle cx="430" cy="478" r="24"/><rect x="398" y="500" width="64" height="60" rx="18"/>
+    <circle cx="600" cy="470" r="24"/><rect x="568" y="492" width="64" height="60" rx="18"/>
+    <circle cx="770" cy="478" r="24"/><rect x="738" y="500" width="64" height="60" rx="18"/>
+    <circle cx="945" cy="500" r="24"/><rect x="913" y="522" width="64" height="60" rx="18"/>
+  </g>
+  <!-- papers on the dais -->
+  <g fill="#F3F2F2" opacity=".9">
+    <rect x="300" y="560" width="46" height="30" rx="3" transform="rotate(-6 323 575)"/>
+    <rect x="560" y="548" width="46" height="30" rx="3" transform="rotate(4 583 563)"/>
+    <rect x="830" y="560" width="46" height="30" rx="3" transform="rotate(-3 853 575)"/>
+  </g>
+  <!-- vote tally card -->
+  <rect x="1020" y="380" width="120" height="76" rx="8" fill="#F3F2F2"/>
+  <rect x="1032" y="394" width="52" height="20" rx="4" fill="#0B6E4F"/>
+  <rect x="1032" y="424" width="34" height="20" rx="4" fill="#B03A2B"/>
+</svg>

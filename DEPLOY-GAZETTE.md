@@ -99,11 +99,13 @@ $host = strtolower($_SERVER['HTTP_HOST'] ?? '');
 
 // ... inside the returned array:
 'site_slug' => match (true) {
+    str_contains($host, 'bramptonbulletin')     => 'brampton-bulletin',
     str_contains($host, 'grandeprairiegazette') => 'grande-prairie-gazette',
     str_contains($host, 'edmontonecho')         => 'edmonton-echo',
     default                                     => 'prairiedispatch',
 },
 'site_url' => match (true) {
+    str_contains($host, 'bramptonbulletin')     => 'https://bramptonbulletin.com',
     str_contains($host, 'grandeprairiegazette') => 'https://www.grandeprairiegazette.ca',
     str_contains($host, 'edmontonecho')         => 'https://edmontonecho.ca',
     default                                     => 'https://prairiedispatch.ca',

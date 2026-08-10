@@ -52,6 +52,11 @@ if (pp_chrome('template') === 'current') {
     require PP_ROOT . '/app/views/front-current.php';
     page_footer();
     return;
+}
+if (pp_chrome('template') === 'bulletin') {
+    require PP_ROOT . '/app/views/front-bulletin.php';
+    page_footer();
+    return;
 } ?>
 
 <div class="front wrap">

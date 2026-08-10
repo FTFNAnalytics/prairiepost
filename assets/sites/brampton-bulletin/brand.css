@@ -1,0 +1,9 @@
+/* The Brampton Bulletin — newsprint, Flower City green, heritage brick
+   (template: bulletin). Layout lives in /assets/css/bulletin.css; this
+   file only tunes tokens. */
+body.t-bulletin{
+  --bb-green:  #0B6E4F;
+  --bb-deep:   #095A41;
+  --bb-brick:  #B03A2B;
+  --bb-yellow: #EDBB00;
+}

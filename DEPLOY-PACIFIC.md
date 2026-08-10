@@ -80,7 +80,7 @@ certificate; plain http redirects to https.
 
 ## 4 · The host mapping in config.php
 
-Edit the server's existing `config.php`. The full five-paper pattern,
+Edit the server's existing `config.php`. The full seven-paper pattern,
 safe to install in one edit even for papers not yet deployed:
 
 ```php
@@ -88,6 +88,7 @@ $host = strtolower($_SERVER['HTTP_HOST'] ?? '');
 
 // ... inside the returned array:
 'site_slug' => match (true) {
+    str_contains($host, 'bramptonbulletin')     => 'brampton-bulletin',
     str_contains($host, 'thepacificpost')       => 'pacific-post',
     str_contains($host, 'kermodechronicle')     => 'kermode-chronicle',
     str_contains($host, 'edmontonecho')         => 'edmonton-echo',
@@ -95,6 +96,7 @@ $host = strtolower($_SERVER['HTTP_HOST'] ?? '');
     default                                     => 'prairiedispatch',
 },
 'site_url' => match (true) {
+    str_contains($host, 'bramptonbulletin')     => 'https://bramptonbulletin.com',
     str_contains($host, 'thepacificpost')       => 'https://thepacificpost.com',
     str_contains($host, 'kermodechronicle')     => 'https://kermodechronicle.ca',
     str_contains($host, 'edmontonecho')         => 'https://edmontonecho.com',
