@@ -1,0 +1,158 @@
+/* ==========================================================================
+   Broadsheet-dark template ("echo-v3") — loaded only for sites that choose
+   chrome.template = "echo-v3". Colour comes from the --v3-* tokens below;
+   a site's brand.css may override them. First user: The Edmonton Echo.
+   ========================================================================== */
+@import url('https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,300..900;1,8..60,300..900&display=swap');
+
+body.t-dark{
+  --v3-navy:#0a2240; --v3-deep:#04142a; --v3-panel:#102c52; --v3-line:#1e3f6b;
+  --v3-accent:#f26522; --v3-accent-700:#c14a10;
+  --v3-ink:#eaeef4; --v3-muted:#9fb2c9; --v3-dek:#c6d2e2;
+
+  /* Re-point the shared token layer at the dark ground so inner pages
+     (story, desk, search, newsletter, corrections) invert coherently. */
+  --pp-cloudbank:var(--v3-deep);
+  --pp-shelterbelt:var(--v3-ink);
+  --pp-board:var(--v3-line);
+  --pp-bigsky:var(--v3-accent);
+  --pp-noonsky:var(--v3-panel);
+  --pp-highsky:var(--v3-panel);
+  --pp-straw:var(--v3-accent);
+  --pp-quarter:#7fd18b;
+  --pp-binred:var(--v3-accent);
+
+  background:var(--v3-deep);color:var(--v3-ink);
+  font-family:'Source Serif 4',Georgia,serif;
+}
+body.t-dark *{border-radius:2px}
+body.t-dark .pp-horizon{border-top-color:var(--v3-accent)}
+body.t-dark .pp-horizon::after{background:var(--v3-line)}
+body.t-dark a{color:var(--v3-ink)}
+body.t-dark a:hover{color:var(--v3-accent)}
+
+/* Dark fixes for shared components that assume white beds */
+body.t-dark .empty,body.t-dark .correction,body.t-dark .adslot,
+body.t-dark .inv,body.t-dark .signup{background:var(--v3-navy);border-color:var(--v3-line);color:var(--v3-ink)}
+body.t-dark .signup .k{color:var(--v3-accent)}
+body.t-dark .signup input[type=email],body.t-dark .searchform input[type=search]{
+  background:var(--v3-panel);border:1px solid var(--v3-line);color:var(--v3-ink)}
+body.t-dark .btn{background:var(--v3-accent);color:#fff}
+body.t-dark .btn:hover{background:var(--v3-accent-700);color:#fff}
+body.t-dark .article .bodycopy,body.t-dark p{color:var(--v3-dek)}
+body.t-dark h1,body.t-dark h2,body.t-dark h3{color:#fff}
+body.t-dark .byline,body.t-dark figcaption{color:var(--v3-muted)}
+body.t-dark .tagsrow a{background:var(--v3-panel);color:var(--v3-ink)}
+body.t-dark .sharerow a,body.t-dark .sharerow button{background:var(--v3-panel);border-color:var(--v3-line);color:var(--v3-ink)}
+body.t-dark .sitefoot .inner{background:var(--v3-navy)}
+body.t-dark .prices td{color:var(--v3-ink)}
+body.t-dark .card h3 a:hover,body.t-dark .lead h1 a:hover{color:var(--v3-accent)}
+
+/* --- Utility strip -------------------------------------------------------- */
+.v3-strip{background:var(--v3-deep);border-bottom:1px solid var(--v3-line);padding:9px 0}
+.v3-strip .wrap{display:flex;align-items:center;justify-content:space-between;gap:24px;
+  font-size:13px;letter-spacing:.08em;text-transform:uppercase;color:var(--v3-muted)}
+.v3-strip a{color:var(--v3-muted)}
+.v3-strip a:hover,.v3-strip .hot{color:var(--v3-accent)}
+.v3-strip .grp{display:flex;gap:20px;align-items:center;flex-wrap:wrap}
+
+/* --- Boxed wordmark ------------------------------------------------------- */
+.v3-mast{padding:26px 0 22px;display:flex;justify-content:center;background:var(--v3-deep)}
+.v3-mast .box{border:3px solid var(--v3-accent);padding:14px 30px 12px;text-align:center;text-decoration:none;display:block}
+.v3-mast .l1{font-size:clamp(30px,5vw,44px);font-weight:700;letter-spacing:.03em;line-height:.95;color:#fff;text-transform:uppercase}
+.v3-mast .l2{font-size:clamp(17px,3vw,26px);font-weight:700;letter-spacing:.24em;line-height:1;color:var(--v3-accent);text-transform:uppercase;margin-top:4px}
+
+/* --- Tab nav --------------------------------------------------------------- */
+.v3-nav{background:var(--v3-navy);border-top:1px solid var(--v3-line);border-bottom:1px solid var(--v3-line)}
+.v3-nav .wrap{display:flex;justify-content:center;gap:6px;flex-wrap:wrap}
+.v3-nav a{padding:14px 24px;font-size:17px;color:var(--v3-ink)}
+.v3-nav a:hover{color:var(--v3-accent)}
+.v3-nav a[aria-current="page"]{background:var(--v3-panel);color:#fff}
+
+/* --- Banner ---------------------------------------------------------------- */
+.v3-banner{position:relative;height:230px;background:var(--v3-panel);background-size:cover;background-position:center}
+.v3-banner::after{content:"";position:absolute;inset:0;
+  background:linear-gradient(180deg,rgba(4,20,42,.55) 0%,rgba(4,20,42,0) 38%,rgba(4,20,42,.85) 100%)}
+
+/* --- Front grid ------------------------------------------------------------ */
+.v3-front{max-width:1280px;margin:0 auto;padding:32px clamp(16px,3vw,32px) 0;
+  display:grid;grid-template-columns:minmax(150px,200px) minmax(0,2.2fr) minmax(220px,300px);gap:28px;align-items:start}
+@media(max-width:980px){.v3-front{grid-template-columns:1fr}.v3-leftrail{order:3}.v3-rightrail{order:2}}
+
+/* Left rail boxes */
+.v3-leftrail{display:flex;flex-direction:column;gap:24px}
+.v3-box .bh{background:var(--v3-accent);color:#fff;padding:9px 14px;font-size:14px;
+  letter-spacing:.14em;text-transform:uppercase;font-weight:700}
+.v3-box .bl{display:flex;flex-direction:column}
+.v3-box .bl a{padding:11px 14px;font-size:15.5px;border-bottom:1px solid var(--v3-line);color:var(--v3-ink)}
+.v3-box .bl a:last-child{border-bottom:0}
+.v3-box .bl a:hover{color:var(--v3-accent)}
+
+/* Centre well */
+.v3-well h2.qn{margin:0;font-size:29px;color:#fff;font-weight:700;letter-spacing:-.01em}
+.v3-wellhead{display:flex;align-items:center;justify-content:space-between;gap:20px;flex-wrap:wrap;margin-bottom:16px}
+.v3-search{display:flex;align-items:stretch;max-width:280px;flex:1 1 200px}
+.v3-search input{flex:1;min-width:150px;background:var(--v3-panel);border:1px solid var(--v3-line);
+  color:var(--v3-ink);padding:9px 12px;font-family:inherit;font-size:14.5px;border-radius:2px 0 0 2px}
+.v3-search button{background:var(--v3-accent);color:#fff;border:0;padding:9px 14px;display:flex;align-items:center;
+  border-radius:0 2px 2px 0;cursor:pointer}
+
+.v3-lead{position:relative;aspect-ratio:16/9;overflow:hidden;background:var(--v3-panel)}
+.v3-lead img{width:100%;height:100%;object-fit:cover;display:block}
+.v3-lead .badge{position:absolute;left:0;top:16px;background:var(--v3-accent);color:#fff;
+  padding:6px 12px;font-size:12px;letter-spacing:.14em;text-transform:uppercase;font-weight:700}
+.v3-well h3.hed{margin:18px 0 0;font-size:clamp(24px,3vw,32px);line-height:1.14;font-weight:700;letter-spacing:-.015em;text-wrap:pretty}
+.v3-well h3.hed a{color:#fff}
+.v3-well .dek{margin:12px 0 0;font-size:16.5px;line-height:1.62;color:var(--v3-dek);max-width:62ch}
+.v3-well .leadmeta{margin-top:16px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.v3-well .leadmeta .go{background:var(--v3-accent);color:#fff;padding:10px 18px;font-size:13px;
+  letter-spacing:.12em;text-transform:uppercase;font-weight:700}
+.v3-well .leadmeta .go:hover{background:var(--v3-accent-700);color:#fff}
+.v3-well .leadmeta .m{font-size:13.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--v3-muted)}
+
+.v3-list{margin-top:28px;border-top:1px solid var(--v3-line)}
+.v3-item{display:grid;grid-template-columns:96px 1fr;gap:16px;padding:18px 0;border-bottom:1px solid var(--v3-line)}
+.v3-item:last-child{border-bottom:0}
+.v3-item .th{aspect-ratio:4/3;overflow:hidden;background:var(--v3-panel)}
+.v3-item .th img{width:100%;height:100%;object-fit:cover;display:block}
+.v3-item .t{font-size:19.5px;line-height:1.22;font-weight:700;color:#fff;display:block}
+.v3-item .t:hover{color:var(--v3-accent)}
+.v3-item p{margin:7px 0 0;font-size:14.5px;line-height:1.55;color:#a9bad0}
+.v3-item .m{margin-top:7px;font-size:13px;color:var(--v3-accent);letter-spacing:.06em;text-transform:uppercase}
+
+/* Right rail cards */
+.v3-rightrail{display:flex;flex-direction:column;gap:24px}
+.v3-card{background:var(--v3-navy);border:1px solid var(--v3-line);padding:18px}
+.v3-card .ch{font-size:15.5px;letter-spacing:.14em;text-transform:uppercase;color:#fff;font-weight:700;
+  padding-bottom:10px;border-bottom:3px solid var(--v3-accent);display:flex;justify-content:space-between;align-items:baseline;gap:12px}
+.v3-card .ch a{font-size:13.5px;color:var(--v3-accent);white-space:nowrap;letter-spacing:normal;text-transform:none;font-weight:400}
+.v3-trend .row{display:flex;gap:14px;padding:14px 0;border-bottom:1px solid var(--v3-line)}
+.v3-trend .row:last-child{border-bottom:0;padding-bottom:0}
+.v3-trend .n{font-size:19px;font-weight:700;color:var(--v3-accent);flex:none;line-height:1.25}
+.v3-trend a{font-size:16px;line-height:1.3;font-weight:600;color:#fff;display:block}
+.v3-trend a:hover{color:var(--v3-accent)}
+.v3-trend .when{margin-top:5px;font-size:12.5px;color:var(--v3-muted)}
+.v3-wx .now{display:flex;align-items:center;gap:14px;padding:18px 0;border-bottom:1px solid var(--v3-line)}
+.v3-wx .temp{font-size:34px;font-weight:700;color:#fff;line-height:1}
+.v3-wx .cond{font-size:14px;color:#b9c7da;margin-top:4px}
+.v3-wx .facts{padding-top:14px;display:grid;grid-template-columns:repeat(3,1fr);gap:10px;font-size:14px;color:#b9c7da}
+.v3-wx .facts .k{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--v3-muted)}
+.v3-wx .facts .v{margin-top:4px;color:#fff;font-weight:600}
+
+/* --- Footer ----------------------------------------------------------------- */
+.v3-foot{margin-top:44px;border-top:3px solid var(--v3-accent);background:var(--v3-navy)}
+.v3-foot .cols{max-width:1280px;margin:0 auto;padding:36px clamp(16px,3vw,32px) 30px;
+  display:grid;grid-template-columns:minmax(0,1fr) minmax(0,.7fr) minmax(0,.7fr) minmax(230px,1.2fr);gap:32px}
+@media(max-width:860px){.v3-foot .cols{grid-template-columns:1fr 1fr}}
+@media(max-width:520px){.v3-foot .cols{grid-template-columns:1fr}}
+.v3-foot .fh{font-size:15px;letter-spacing:.14em;text-transform:uppercase;color:#fff;font-weight:700;margin-bottom:14px}
+.v3-foot p,.v3-foot a{font-size:14.5px;line-height:1.6;color:#b9c7da}
+.v3-foot a:hover{color:var(--v3-accent)}
+.v3-foot .lnks{display:flex;flex-direction:column;gap:8px}
+.v3-foot .nl{display:flex;align-items:stretch}
+.v3-foot .nl input{flex:1;min-width:130px;background:var(--v3-panel);border:1px solid var(--v3-line);
+  color:var(--v3-ink);padding:10px 12px;font-family:inherit;font-size:14.5px;border-radius:2px 0 0 2px}
+.v3-foot .nl button{background:var(--v3-accent);color:#fff;border:0;padding:10px 16px;font-size:13px;
+  letter-spacing:.1em;text-transform:uppercase;font-weight:700;border-radius:0 2px 2px 0;cursor:pointer;white-space:nowrap}
+.v3-foot .legal{border-top:1px solid var(--v3-line);padding:16px 32px;text-align:center;
+  font-size:13px;letter-spacing:.08em;text-transform:uppercase;color:var(--v3-muted)}

@@ -1,18 +1,6 @@
-/* The Edmonton Echo — blue & orange. Loaded after prairie.css; overrides the
-   token layer only, so structure (horizon rule, zero radius) is untouched. */
-:root{
-  --pp-shelterbelt:#14263B;   /* ink — deep river-valley navy               */
-  --pp-cloudbank:#F2F4F6;     /* paper — cool morning white                 */
-  --pp-board:#C2C9D1;         /* hairlines                                  */
-  --pp-bigsky:#1D6396;        /* links                                      */
-  --pp-noonsky:#7FB3DC;       /* fills, weather block, subscribe button     */
-  --pp-highsky:#BAD5EA;       /* tints, hover beds                          */
-  --pp-straw:#F0A03C;         /* highlight fills — the orange               */
-  --pp-binred:#C2491A;        /* signal — burnt orange                      */
-  --pp-quarter:#1F4E79;       /* secondary ink, positive numbers            */
-  --pp-field:#2C5E8A;         /* charts                                     */
-  --pp-fencepost:#566B7C;     /* feature ink                                */
-  --pp-stubble:#A85413;       /* labels                                     */
+/* The Edmonton Echo — navy & orange broadsheet-dark (template: echo-v3).
+   Layout lives in /assets/css/broadsheet.css; this file only tunes tokens. */
+body.t-dark{
+  --v3-navy:#0a2240; --v3-deep:#04142a; --v3-panel:#102c52; --v3-line:#1e3f6b;
+  --v3-accent:#f26522; --v3-accent-700:#c14a10;
 }
-/* Sunrise band: the echo of first light over a blue city. */
-.skybar{background:linear-gradient(90deg,#F0A03C 0%,#BAD5EA 45%,#7FB3DC 100%)}

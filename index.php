@@ -13,6 +13,8 @@ $river = latest_posts(10, $shownIds);
 $markets = setting_json('markets');
 $weather = setting_json('weather_today');
 
+$GLOBALS['pp_front_page'] = true;
+
 page_header([
     'description' => setting('meta_description'),
     'jsonld' => [
@@ -25,6 +27,12 @@ page_header([
     ],
 ]);
 ?>
+
+<?php if (pp_chrome('template') === 'echo-v3') {
+    require PP_ROOT . '/app/views/front-v3.php';
+    page_footer();
+    return;
+} ?>
 
 <div class="front wrap">
   <?= ad_slot('top') ?>

@@ -7,10 +7,10 @@ require_admin();
 $textKeys = [
     'site_title', 'tagline', 'meta_description', 'footer_line', 'weather_line',
     'newsletter_heading', 'newsletter_copy', 'markets_note', 'analytics_code',
-    'breaking_label', 'breaking_url',
+    'breaking_label', 'breaking_url', 'contact_email',
     'ad_top', 'ad_rail', 'ad_article',
 ];
-$jsonKeys = ['regions', 'markets', 'weather_today'];
+$jsonKeys = ['regions', 'markets', 'weather_today', 'traffic_items', 'events_items'];
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     csrf_check();
@@ -92,7 +92,13 @@ flash_show();
       <div>
         <label for="weather_today">Forecast block · JSON with temp, hi, lo, line</label>
         <textarea id="weather_today" name="weather_today" class="mono"><?= e(setting('weather_today')) ?></textarea>
-        <p class="help">Blank either field to hide its block from the rail.</p>
+        <label for="traffic_items">Traffic box · JSON rows of [label, link]</label>
+        <textarea id="traffic_items" name="traffic_items" class="mono"><?= e(setting('traffic_items')) ?></textarea>
+        <label for="events_items">Events box · JSON rows of [label, link]</label>
+        <textarea id="events_items" name="events_items" class="mono"><?= e(setting('events_items')) ?></textarea>
+        <label for="contact_email">Contact email · shown in the footer</label>
+        <input type="text" id="contact_email" name="contact_email" value="<?= e(setting('contact_email')) ?>">
+        <p class="help">Blank any field to hide its block.</p>
       </div>
     </div>
   </div>

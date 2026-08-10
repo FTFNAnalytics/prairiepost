@@ -1,28 +1,41 @@
 {
   "palette": {
-    "ink": "#14263B",
-    "paper": "#F2F4F6",
+    "ink": "#0A2240",
+    "paper": "#F5F7FA",
     "board": "#C2C9D1",
-    "sky": "#7FB3DC",
-    "hill": "#1F4E79",
-    "field": "#E58A33",
-    "stubble": "#B54A1C",
-    "red": "#C2491A",
+    "sky": "#BBD3EA",
+    "hill": "#102C52",
+    "field": "#F26522",
+    "stubble": "#C14A10",
+    "red": "#C14A10",
     "muted": "#52616E"
   },
   "desks": {
-    "news": "#14263B",
+    "news": "#0A2240",
     "politics": "#1D6396",
     "agriculture": "#8A5A17",
     "business": "#A85413",
     "community": "#566B7C",
-    "opinion": "#C2491A",
-    "weather": "#7FB3DC"
+    "opinion": "#C14A10",
+    "weather": "#BBD3EA"
   },
   "chrome": {
-    "header": "bar",
-    "hero": "overlay",
-    "cards": "panel",
-    "trending": true
-  }
+    "template": "echo-v3",
+    "trending": true,
+    "banner": ""
+  },
+  "sections": [
+    {
+      "label": "City Hall",
+      "href": "/search?q=city+hall"
+    },
+    {
+      "label": "Courts",
+      "href": "/search?q=courts"
+    },
+    {
+      "label": "Opinion",
+      "href": "/desk/opinion"
+    }
+  ]
 }
