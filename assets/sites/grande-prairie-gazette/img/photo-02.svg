@@ -1,0 +1,57 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 450" role="img" aria-label="New lighting down 100 Avenue at dusk">
+  <defs>
+    <linearGradient id="ave-sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#0D0730"/>
+      <stop offset="0.7" stop-color="#2D1B4E"/>
+      <stop offset="1" stop-color="#4A2C7A"/>
+    </linearGradient>
+  </defs>
+  <rect width="800" height="450" fill="url(#ave-sky)"/>
+  <!-- faint aurora -->
+  <path d="M 520 20 q 20 90 -6 160 l 50 4 q 22 -86 8 -164 Z" fill="#5FD3A6" opacity="0.25"/>
+  <path d="M 610 40 q 16 80 -4 140 l 44 4 q 18 -78 6 -144 Z" fill="#9A8FC0" opacity="0.3"/>
+  <!-- buildings -->
+  <g fill="#1A0E33">
+    <rect x="0" y="140" width="120" height="180"/>
+    <rect x="130" y="170" width="100" height="150"/>
+    <rect x="560" y="150" width="110" height="170"/>
+    <rect x="680" y="180" width="120" height="140"/>
+  </g>
+  <g fill="#5FD3A6" opacity="0.7">
+    <rect x="24" y="170" width="14" height="12"/><rect x="66" y="200" width="14" height="12"/>
+    <rect x="152" y="196" width="12" height="10"/><rect x="196" y="230" width="12" height="10"/>
+    <rect x="584" y="180" width="13" height="11"/><rect x="622" y="216" width="13" height="11"/>
+    <rect x="704" y="206" width="12" height="10"/><rect x="748" y="240" width="12" height="10"/>
+  </g>
+  <!-- awnings -->
+  <rect x="0" y="300" width="120" height="12" fill="#0F5C4C"/>
+  <rect x="130" y="300" width="100" height="12" fill="#4A2C7A"/>
+  <rect x="560" y="300" width="110" height="12" fill="#0F5C4C"/>
+  <!-- avenue -->
+  <polygon points="240,320 540,320 660,450 140,450" fill="#120823"/>
+  <g fill="#9A8FC0" opacity="0.6">
+    <polygon points="392,330 406,330 402,362 388,362"/>
+    <polygon points="382,380 400,380 394,420 374,420"/>
+  </g>
+  <!-- sidewalks -->
+  <polygon points="140,450 240,320 0,320 0,450" fill="#1A0E33"/>
+  <polygon points="660,450 540,320 800,320 800,450" fill="#1A0E33"/>
+  <!-- new streetlights, lit -->
+  <g>
+    <line x1="250" y1="320" x2="250" y2="196" stroke="#2D1B4E" stroke-width="6"/>
+    <circle cx="250" cy="188" r="10" fill="#F3EFC2"/>
+    <ellipse cx="266" cy="330" rx="50" ry="10" fill="#F3EFC2" opacity="0.18"/>
+    <line x1="530" y1="320" x2="530" y2="196" stroke="#2D1B4E" stroke-width="6"/>
+    <circle cx="530" cy="188" r="10" fill="#F3EFC2"/>
+    <ellipse cx="514" cy="330" rx="50" ry="10" fill="#F3EFC2" opacity="0.18"/>
+    <line x1="320" y1="320" x2="320" y2="230" stroke="#2D1B4E" stroke-width="5"/>
+    <circle cx="320" cy="223" r="8" fill="#F3EFC2"/>
+    <line x1="470" y1="320" x2="470" y2="230" stroke="#2D1B4E" stroke-width="5"/>
+    <circle cx="470" cy="223" r="8" fill="#F3EFC2"/>
+  </g>
+  <!-- two walkers -->
+  <g fill="#0D0730">
+    <circle cx="360" cy="392" r="8"/><rect x="352" y="399" width="16" height="30" rx="5"/>
+    <circle cx="386" cy="396" r="7"/><rect x="379" y="402" width="14" height="26" rx="5"/>
+  </g>
+</svg>

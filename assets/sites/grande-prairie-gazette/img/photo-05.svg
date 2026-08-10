@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 450" role="img" aria-label="Swathing canola in the county under a big evening sky">
+  <defs>
+    <linearGradient id="ag-sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#2D1B4E"/>
+      <stop offset="0.55" stop-color="#4A2C7A"/>
+      <stop offset="1" stop-color="#C4A9E8"/>
+    </linearGradient>
+  </defs>
+  <rect width="800" height="450" fill="url(#ag-sky)"/>
+  <circle cx="640" cy="200" r="34" fill="#F3EFC2" opacity="0.9"/>
+  <!-- distant shelterbelt -->
+  <rect y="238" width="800" height="10" fill="#0F5C4C"/>
+  <g fill="#0F5C4C">
+    <circle cx="80" cy="234" r="12"/><circle cx="120" cy="236" r="10"/><circle cx="710" cy="234" r="12"/><circle cx="754" cy="236" r="9"/>
+  </g>
+  <!-- standing canola -->
+  <rect y="248" width="800" height="112" fill="#D8B93C"/>
+  <rect y="248" width="800" height="14" fill="#E8CF63"/>
+  <!-- cut swaths curving with the field -->
+  <g fill="#B08F23">
+    <path d="M 0 300 q 400 -18 800 0 l 0 16 q -400 -18 -800 0 Z"/>
+    <path d="M 0 336 q 400 -16 800 0 l 0 14 q -400 -16 -800 0 Z"/>
+  </g>
+  <!-- swather -->
+  <g>
+    <rect x="470" y="270" width="66" height="34" rx="5" fill="#1A6B5A"/>
+    <rect x="486" y="252" width="30" height="22" rx="4" fill="#0F5C4C"/>
+    <rect x="440" y="292" width="36" height="14" fill="#120823"/>
+    <circle cx="486" cy="308" r="12" fill="#120823"/>
+    <circle cx="524" cy="308" r="9" fill="#120823"/>
+    <rect x="536" y="286" width="52" height="18" rx="4" fill="#B08F23"/>
+  </g>
+  <!-- foreground stubble -->
+  <rect y="360" width="800" height="90" fill="#8A6E1C"/>
+  <g stroke="#6E5716" stroke-width="3" opacity="0.8">
+    <line x1="40" y1="380" x2="40" y2="404"/><line x1="90" y1="392" x2="90" y2="416"/>
+    <line x1="150" y1="376" x2="150" y2="400"/><line x1="210" y1="394" x2="210" y2="418"/>
+    <line x1="280" y1="380" x2="280" y2="404"/><line x1="350" y1="396" x2="350" y2="420"/>
+    <line x1="430" y1="380" x2="430" y2="404"/><line x1="510" y1="394" x2="510" y2="418"/>
+    <line x1="590" y1="378" x2="590" y2="402"/><line x1="660" y1="394" x2="660" y2="418"/>
+    <line x1="730" y1="380" x2="730" y2="404"/>
+  </g>
+</svg>

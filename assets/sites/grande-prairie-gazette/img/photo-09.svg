@@ -1,0 +1,52 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 450" role="img" aria-label="The legislature dome at dusk, read from the north">
+  <defs>
+    <linearGradient id="leg-au" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#0D0730"/>
+      <stop offset="0.55" stop-color="#2D1B4E"/>
+      <stop offset="1" stop-color="#4A2C7A"/>
+    </linearGradient>
+  </defs>
+  <rect width="800" height="450" fill="url(#leg-au)"/>
+  <!-- faint aurora -->
+  <path d="M 80 20 q 22 100 -6 180 l 54 6 q 24 -96 8 -186 Z" fill="#5FD3A6" opacity="0.22"/>
+  <path d="M 660 30 q 18 90 -4 160 l 48 4 q 20 -88 6 -164 Z" fill="#9A8FC0" opacity="0.28"/>
+  <g fill="#EAE6F5" opacity="0.7">
+    <circle cx="180" cy="50" r="1.4"/><circle cx="420" cy="30" r="1.2"/><circle cx="600" cy="70" r="1.3"/>
+  </g>
+  <!-- building -->
+  <g fill="#1A0E33">
+    <rect x="150" y="240" width="500" height="80"/>
+    <rect x="325" y="190" width="150" height="130"/>
+  </g>
+  <g fill="#120823">
+    <rect x="342" y="208" width="12" height="112"/><rect x="368" y="208" width="12" height="112"/>
+    <rect x="394" y="208" width="12" height="112"/><rect x="420" y="208" width="12" height="112"/>
+    <rect x="446" y="208" width="12" height="112"/>
+    <rect x="172" y="256" width="10" height="64"/><rect x="204" y="256" width="10" height="64"/>
+    <rect x="236" y="256" width="10" height="64"/><rect x="268" y="256" width="10" height="64"/>
+    <rect x="522" y="256" width="10" height="64"/><rect x="554" y="256" width="10" height="64"/>
+    <rect x="586" y="256" width="10" height="64"/><rect x="618" y="256" width="10" height="64"/>
+  </g>
+  <!-- dome -->
+  <path d="M 335 190 A 65 65 0 0 1 465 190 Z" fill="#2D1B4E"/>
+  <path d="M 352 190 A 48 48 0 0 1 448 190 Z" fill="#1A0E33"/>
+  <rect x="392" y="102" width="16" height="32" fill="#2D1B4E"/>
+  <circle cx="400" cy="98" r="7" fill="#5FD3A6"/>
+  <path d="M 370 134 A 30 30 0 0 1 430 134 L 430 148 L 370 148 Z" fill="#2D1B4E"/>
+  <rect x="364" y="148" width="72" height="8" fill="#120823"/>
+  <!-- lit windows -->
+  <g fill="#F3EFC2" opacity="0.85">
+    <rect x="188" y="270" width="8" height="12"/><rect x="252" y="270" width="8" height="12"/>
+    <rect x="538" y="270" width="8" height="12"/><rect x="602" y="270" width="8" height="12"/>
+    <rect x="384" y="234" width="8" height="12"/><rect x="408" y="234" width="8" height="12"/>
+  </g>
+  <!-- grounds -->
+  <rect y="320" width="800" height="130" fill="#08041F"/>
+  <g fill="#0D0730">
+    <circle cx="100" cy="318" r="22"/><circle cx="150" cy="326" r="15"/>
+    <circle cx="690" cy="318" r="20"/><circle cx="740" cy="326" r="14"/>
+  </g>
+  <!-- reflecting pool -->
+  <rect x="290" y="340" width="220" height="16" fill="#1E3A6E"/>
+  <rect x="330" y="345" width="140" height="3" fill="#5FD3A6" opacity="0.5"/>
+</svg>

@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 450" role="img" aria-label="Camp week at the rink, banners up">
+  <rect width="800" height="450" fill="#120823"/>
+  <!-- roof trusses -->
+  <g stroke="#2D1B4E" stroke-width="8" fill="none">
+    <path d="M 0 96 Q 400 16 800 96"/>
+    <path d="M 0 156 Q 400 76 800 156"/>
+  </g>
+  <!-- lights -->
+  <g fill="#F3EFC2" opacity="0.95">
+    <rect x="150" y="100" width="90" height="12"/>
+    <rect x="360" y="84" width="90" height="12"/>
+    <rect x="570" y="100" width="90" height="12"/>
+  </g>
+  <!-- banners -->
+  <g>
+    <rect x="70" y="146" width="54" height="66" fill="#4A2C7A"/>
+    <polygon points="70,212 97,199 124,212 124,226 70,226" fill="#4A2C7A"/>
+    <rect x="686" y="146" width="54" height="66" fill="#0F5C4C"/>
+    <polygon points="686,212 713,199 740,212 740,226 686,226" fill="#0F5C4C"/>
+  </g>
+  <!-- stands -->
+  <rect y="200" width="800" height="32" fill="#1A0E33"/>
+  <!-- boards -->
+  <rect y="232" width="800" height="24" fill="#EAE6F5"/>
+  <rect y="252" width="800" height="6" fill="#4A2C7A"/>
+  <!-- ice -->
+  <rect y="258" width="800" height="192" fill="#DCE6F2"/>
+  <ellipse cx="400" cy="330" rx="118" ry="32" fill="none" stroke="#4A2C7A" stroke-width="6"/>
+  <circle cx="400" cy="330" r="8" fill="#17A87A"/>
+  <rect y="352" width="800" height="8" fill="#17A87A" opacity="0.85"/>
+  <ellipse cx="95" cy="410" rx="88" ry="26" fill="none" stroke="#4A2C7A" stroke-width="6"/>
+  <ellipse cx="705" cy="410" rx="88" ry="26" fill="none" stroke="#4A2C7A" stroke-width="6"/>
+  <!-- skaters -->
+  <g fill="#1A0E33">
+    <circle cx="250" cy="380" r="8"/><rect x="242" y="387" width="16" height="26" rx="5"/>
+    <circle cx="540" cy="396" r="8"/><rect x="532" y="403" width="16" height="26" rx="5"/>
+  </g>
+  <g stroke="#9FB2C9" stroke-width="3" fill="none" opacity="0.6">
+    <path d="M 170 404 Q 250 372 330 406"/>
+    <path d="M 470 414 Q 540 384 620 412"/>
+  </g>
+</svg>

@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 450" role="img" aria-label="A drilling rig near Wembley against the last light">
+  <defs>
+    <linearGradient id="rig-sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#0D0730"/>
+      <stop offset="0.55" stop-color="#2D1B4E"/>
+      <stop offset="0.85" stop-color="#4A2C7A"/>
+      <stop offset="1" stop-color="#9A8FC0"/>
+    </linearGradient>
+  </defs>
+  <rect width="800" height="450" fill="url(#rig-sky)"/>
+  <!-- faint green band low -->
+  <rect y="330" width="800" height="12" fill="#17A87A" opacity="0.3"/>
+  <g fill="#EAE6F5" opacity="0.7">
+    <circle cx="90" cy="60" r="1.4"/><circle cx="240" cy="36" r="1.2"/><circle cx="700" cy="50" r="1.4"/><circle cx="560" cy="90" r="1.1"/>
+  </g>
+  <!-- derrick -->
+  <g stroke="#120823" stroke-width="7" fill="none">
+    <line x1="330" y1="342" x2="380" y2="80"/>
+    <line x1="470" y1="342" x2="420" y2="80"/>
+    <line x1="380" y1="80" x2="420" y2="80"/>
+    <line x1="342" y1="280" x2="458" y2="280"/>
+    <line x1="352" y1="220" x2="448" y2="220"/>
+    <line x1="362" y1="162" x2="438" y2="162"/>
+    <line x1="370" y1="118" x2="430" y2="118"/>
+    <line x1="342" y1="280" x2="448" y2="220"/>
+    <line x1="458" y1="280" x2="352" y2="220"/>
+    <line x1="352" y1="220" x2="438" y2="162"/>
+    <line x1="448" y1="220" x2="362" y2="162"/>
+  </g>
+  <rect x="386" y="60" width="28" height="22" fill="#120823"/>
+  <circle cx="400" cy="54" r="4" fill="#5FD3A6"/>
+  <!-- rig floor and tanks -->
+  <rect x="300" y="342" width="200" height="26" fill="#120823"/>
+  <rect x="540" y="330" width="60" height="38" rx="6" fill="#1A0E33"/>
+  <rect x="610" y="336" width="50" height="32" rx="6" fill="#1A0E33"/>
+  <rect x="180" y="336" width="70" height="32" rx="4" fill="#1A0E33"/>
+  <circle cx="215" cy="336" r="5" fill="#F3EFC2"/>
+  <!-- ground -->
+  <rect y="368" width="800" height="82" fill="#08041F"/>
+  <!-- lease road -->
+  <polygon points="60,450 130,368 170,368 140,450" fill="#1A0E33"/>
+  <!-- treeline -->
+  <g fill="#0D0730">
+    <polygon points="0,368 18,340 36,368"/><polygon points="30,368 50,332 70,368"/>
+    <polygon points="700,368 720,338 740,368"/><polygon points="734,368 756,344 778,368"/>
+  </g>
+</svg>
