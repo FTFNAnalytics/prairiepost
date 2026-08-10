@@ -281,17 +281,29 @@ Per new paper:
    self-provision; no sample stories are seeded; nothing else in the database
    is touched. There is **no founding-account step** — newsroom accounts are
    network-wide, so existing admins sign in to the new `/admin` immediately.
-4. **In the new site's admin**: title/tagline, wire **region tabs** (Settings
-   → regions JSON — e.g. Edmonton wants an `edmonton` region key; add feeds
-   under Sources with that key, and only that site needs to show the tab),
+4. **Launch content**: if the paper has a committed launch package —
+   `assets/sites/<slug>/launch.php`; **the Edmonton Echo ships one** — run,
+   from the web root, after first boot:
+   ```
+   PP_SITE=edmonton-echo php tools/seed-launch.php
+   ```
+   It fills the paper so it looks finished on day one: launch desks, settings
+   (title, regions, weather/traffic/events rails, contact email), wire
+   sources, and demonstration stories with commissioned art. Safe to re-run:
+   stories are matched by slug, sources by URL, and settings the newsroom has
+   already changed are never overwritten. The demonstration stories are
+   clearly-voiced launch content meant to be replaced by real reporting.
+5. **In the new site's admin**: whatever the launch package didn't cover —
+   title/tagline, wire **region tabs** (Settings → regions JSON; the Echo's
+   package already adds an `edmonton` region and three Edmonton feeds),
    newsletter identity + SMTP, **SPF/DKIM on the new domain** (per-domain,
    never inherited), CASL postal address, markets/weather, ads.
-5. **Cron**: one job per site. With the domain-mapped single directory, the
+6. **Cron**: one job per site. With the domain-mapped single directory, the
    CLI has no host to map, so set the site explicitly per job:
    `PP_SITE=edmonton-echo php cron/fetch-news.php`. Feed fetching is shared
    and de-duplicated, so overlap between sites' crons is harmless — each
    site's job matters for its own newsletter and scheduled stories.
-6. Syndication: editors tick "Runs on" per story.
+7. Syndication: editors tick "Runs on" per story.
 
 ## Troubleshooting quick table
 

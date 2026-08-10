@@ -17,12 +17,15 @@
     "business": "#A85413",
     "community": "#566B7C",
     "opinion": "#C14A10",
-    "weather": "#BBD3EA"
+    "weather": "#BBD3EA",
+    "sports": "#1D5C8C",
+    "culture": "#7A4E9E"
   },
   "chrome": {
     "template": "echo-v3",
     "trending": true,
-    "banner": ""
+    "banner": "",
+    "nav": ["news", "politics", "business", "sports", "culture", "community", "opinion", "weather"]
   },
   "sections": [
     {

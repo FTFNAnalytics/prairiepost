@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 450" role="img" aria-label="First ice of the season at the community rink">
+  <rect width="800" height="450" fill="#04142a"/>
+  <!-- roof trusses -->
+  <g stroke="#102c52" stroke-width="8" fill="none">
+    <path d="M 0 90 Q 400 10 800 90"/>
+    <path d="M 0 150 Q 400 70 800 150"/>
+  </g>
+  <!-- rink lights -->
+  <g>
+    <rect x="150" y="96" width="90" height="12" fill="#eaeef4" opacity="0.9"/>
+    <rect x="360" y="80" width="90" height="12" fill="#eaeef4" opacity="0.9"/>
+    <rect x="570" y="96" width="90" height="12" fill="#eaeef4" opacity="0.9"/>
+  </g>
+  <!-- banner -->
+  <g>
+    <rect x="60" y="140" width="56" height="70" fill="#f26522"/>
+    <polygon points="60,210 88,196 116,210 116,224 60,224" fill="#f26522"/>
+    <rect x="684" y="140" width="56" height="70" fill="#1d5c8c"/>
+    <polygon points="684,210 712,196 740,210 740,224 684,224" fill="#1d5c8c"/>
+  </g>
+  <!-- stands -->
+  <rect y="196" width="800" height="34" fill="#0a2240"/>
+  <!-- boards -->
+  <rect y="230" width="800" height="26" fill="#eaeef4"/>
+  <rect y="252" width="800" height="6" fill="#f26522"/>
+  <!-- ice -->
+  <rect y="258" width="800" height="192" fill="#d7e4f2"/>
+  <ellipse cx="400" cy="330" rx="120" ry="34" fill="none" stroke="#1d5c8c" stroke-width="6"/>
+  <circle cx="400" cy="330" r="8" fill="#f26522"/>
+  <rect x="0" y="352" width="800" height="8" fill="#f26522" opacity="0.85"/>
+  <ellipse cx="90" cy="410" rx="90" ry="28" fill="none" stroke="#1d5c8c" stroke-width="6"/>
+  <ellipse cx="710" cy="410" rx="90" ry="28" fill="none" stroke="#1d5c8c" stroke-width="6"/>
+  <!-- skate marks -->
+  <g stroke="#9fb2c9" stroke-width="3" fill="none" opacity="0.6">
+    <path d="M 180 400 Q 260 370 340 402"/>
+    <path d="M 470 386 Q 540 420 620 392"/>
+  </g>
+</svg>

@@ -1,0 +1,73 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 450" role="img" aria-label="New awnings on the avenue storefronts, a construction crane above">
+  <defs>
+    <linearGradient id="ave-sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#0a2240"/>
+      <stop offset="1" stop-color="#1e3f6b"/>
+    </linearGradient>
+  </defs>
+  <rect width="800" height="450" fill="url(#ave-sky)"/>
+  <!-- crane -->
+  <g stroke="#102c52" stroke-width="8">
+    <line x1="640" y1="240" x2="640" y2="40"/>
+    <line x1="520" y1="52" x2="780" y2="52"/>
+    <line x1="640" y1="40" x2="520" y2="52"/>
+    <line x1="640" y1="40" x2="780" y2="52"/>
+  </g>
+  <line x1="560" y1="52" x2="560" y2="96" stroke="#102c52" stroke-width="4"/>
+  <rect x="546" y="96" width="28" height="20" fill="#f26522"/>
+  <!-- building block -->
+  <rect x="0" y="140" width="800" height="180" fill="#102c52"/>
+  <rect x="0" y="140" width="800" height="10" fill="#0a2240"/>
+  <!-- upper windows -->
+  <g fill="#0a2240">
+    <rect x="40" y="170" width="44" height="56"/><rect x="120" y="170" width="44" height="56"/>
+    <rect x="200" y="170" width="44" height="56"/><rect x="280" y="170" width="44" height="56"/>
+    <rect x="360" y="170" width="44" height="56"/><rect x="440" y="170" width="44" height="56"/>
+    <rect x="520" y="170" width="44" height="56"/><rect x="600" y="170" width="44" height="56"/>
+    <rect x="680" y="170" width="44" height="56"/>
+  </g>
+  <g fill="#f26522" opacity="0.8">
+    <rect x="126" y="176" width="32" height="20"/>
+    <rect x="446" y="176" width="32" height="20"/>
+    <rect x="686" y="204" width="32" height="16"/>
+  </g>
+  <!-- awnings -->
+  <g>
+    <polygon points="20,268 180,268 168,240 32,240" fill="#f26522"/>
+    <polygon points="220,268 380,268 368,240 232,240" fill="#9fb2c9"/>
+    <polygon points="420,268 580,268 568,240 432,240" fill="#f26522"/>
+    <polygon points="620,268 780,268 768,240 632,240" fill="#c14a10"/>
+  </g>
+  <!-- shopfronts -->
+  <g fill="#0a2240">
+    <rect x="30" y="268" width="140" height="52"/>
+    <rect x="230" y="268" width="140" height="52"/>
+    <rect x="430" y="268" width="140" height="52"/>
+    <rect x="630" y="268" width="140" height="52"/>
+  </g>
+  <g fill="#f26522" opacity="0.75">
+    <rect x="42" y="278" width="116" height="32"/>
+    <rect x="242" y="278" width="116" height="32"/>
+    <rect x="442" y="278" width="116" height="32"/>
+    <rect x="642" y="278" width="116" height="32"/>
+  </g>
+  <g fill="#0a2240">
+    <rect x="92" y="286" width="16" height="24"/>
+    <rect x="292" y="286" width="16" height="24"/>
+    <rect x="492" y="286" width="16" height="24"/>
+    <rect x="692" y="286" width="16" height="24"/>
+  </g>
+  <!-- sidewalk and street -->
+  <rect y="320" width="800" height="34" fill="#0a2240"/>
+  <rect y="354" width="800" height="96" fill="#04142a"/>
+  <g fill="#f26522" opacity="0.6">
+    <rect x="60" y="396" width="70" height="6"/>
+    <rect x="220" y="396" width="70" height="6"/>
+    <rect x="380" y="396" width="70" height="6"/>
+    <rect x="540" y="396" width="70" height="6"/>
+    <rect x="700" y="396" width="70" height="6"/>
+  </g>
+  <!-- streetlamp -->
+  <line x1="400" y1="354" x2="400" y2="230" stroke="#102c52" stroke-width="6"/>
+  <circle cx="400" cy="224" r="9" fill="#eaeef4"/>
+</svg>

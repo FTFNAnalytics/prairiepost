@@ -271,7 +271,7 @@ function page_footer(): void
         <div>
           <p class="k">Desks</p>
           <ul>
-            <?php foreach (categories_all() as $cat): ?>
+            <?php foreach (pp_nav_categories() as $cat): ?>
             <li><a href="<?= e(url('desk/' . $cat['slug'])) ?>"><?= e($cat['name']) ?></a></li>
             <?php endforeach; ?>
           </ul>

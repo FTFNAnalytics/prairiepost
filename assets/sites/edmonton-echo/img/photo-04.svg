@@ -1,0 +1,55 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 450" role="img" aria-label="An LRT train crossing the river valley bridge at dusk">
+  <defs>
+    <linearGradient id="dusk" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#04142a"/>
+      <stop offset="0.65" stop-color="#0a2240"/>
+      <stop offset="1" stop-color="#1e3f6b"/>
+    </linearGradient>
+  </defs>
+  <rect width="800" height="450" fill="url(#dusk)"/>
+  <circle cx="120" cy="100" r="26" fill="#f26522" opacity="0.9"/>
+  <!-- far skyline -->
+  <g fill="#0a2240" opacity="0.9">
+    <rect x="580" y="120" width="40" height="120"/>
+    <rect x="630" y="90" width="30" height="150"/>
+    <rect x="670" y="140" width="46" height="100"/>
+    <rect x="726" y="112" width="34" height="128"/>
+  </g>
+  <!-- bridge arches -->
+  <g stroke="#102c52" stroke-width="10" fill="none">
+    <path d="M 40 300 Q 200 190 360 300"/>
+    <path d="M 360 300 Q 520 190 680 300"/>
+  </g>
+  <!-- deck -->
+  <rect y="240" width="800" height="14" fill="#102c52"/>
+  <!-- piers -->
+  <g fill="#102c52">
+    <rect x="34" y="254" width="14" height="130"/>
+    <rect x="353" y="254" width="14" height="130"/>
+    <rect x="673" y="254" width="14" height="130"/>
+  </g>
+  <!-- train -->
+  <g>
+    <rect x="150" y="204" width="380" height="38" rx="6" fill="#0a2240" stroke="#1e3f6b" stroke-width="2"/>
+    <rect x="150" y="204" width="380" height="9" fill="#f26522"/>
+    <g fill="#f26522" opacity="0.9">
+      <rect x="168" y="220" width="22" height="14"/><rect x="200" y="220" width="22" height="14"/>
+      <rect x="232" y="220" width="22" height="14"/><rect x="264" y="220" width="22" height="14"/>
+      <rect x="310" y="220" width="22" height="14"/><rect x="342" y="220" width="22" height="14"/>
+      <rect x="374" y="220" width="22" height="14"/><rect x="406" y="220" width="22" height="14"/>
+      <rect x="452" y="220" width="22" height="14"/><rect x="484" y="220" width="22" height="14"/>
+    </g>
+    <circle cx="524" cy="234" r="5" fill="#eaeef4"/>
+  </g>
+  <!-- river -->
+  <rect y="384" width="800" height="66" fill="#04142a"/>
+  <rect x="120" y="396" width="180" height="4" fill="#f26522" opacity="0.4"/>
+  <rect x="420" y="410" width="120" height="3" fill="#f26522" opacity="0.3"/>
+  <!-- banks -->
+  <polygon points="0,384 140,384 0,300" fill="#0a2240"/>
+  <polygon points="800,384 640,384 800,290" fill="#0a2240"/>
+  <g fill="#04142a">
+    <circle cx="60" cy="330" r="16"/><circle cx="100" cy="352" r="13"/>
+    <circle cx="740" cy="330" r="15"/><circle cx="706" cy="352" r="12"/>
+  </g>
+</svg>

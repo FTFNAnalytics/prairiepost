@@ -1,0 +1,5 @@
+{
+  "chrome": {
+    "nav": ["news", "politics", "agriculture", "business", "community", "opinion", "weather"]
+  }
+}

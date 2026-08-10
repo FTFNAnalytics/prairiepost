@@ -1,0 +1,51 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 450" role="img" aria-label="The legislature dome above the river valley">
+  <defs>
+    <linearGradient id="leg-sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#0a2240"/>
+      <stop offset="0.7" stop-color="#1e3f6b"/>
+      <stop offset="1" stop-color="#c14a10"/>
+    </linearGradient>
+  </defs>
+  <rect width="800" height="450" fill="url(#leg-sky)"/>
+  <circle cx="660" cy="200" r="30" fill="#f26522"/>
+  <!-- building -->
+  <g fill="#102c52">
+    <rect x="160" y="230" width="480" height="80"/>
+    <rect x="330" y="180" width="140" height="130"/>
+  </g>
+  <!-- columns -->
+  <g fill="#0a2240">
+    <rect x="345" y="200" width="12" height="110"/>
+    <rect x="371" y="200" width="12" height="110"/>
+    <rect x="397" y="200" width="12" height="110"/>
+    <rect x="423" y="200" width="12" height="110"/>
+    <rect x="449" y="200" width="12" height="110"/>
+    <rect x="180" y="248" width="10" height="62"/><rect x="210" y="248" width="10" height="62"/>
+    <rect x="240" y="248" width="10" height="62"/><rect x="270" y="248" width="10" height="62"/>
+    <rect x="520" y="248" width="10" height="62"/><rect x="550" y="248" width="10" height="62"/>
+    <rect x="580" y="248" width="10" height="62"/><rect x="610" y="248" width="10" height="62"/>
+  </g>
+  <!-- dome -->
+  <path d="M 340 180 A 60 60 0 0 1 460 180 Z" fill="#1e3f6b"/>
+  <path d="M 356 180 A 44 44 0 0 1 444 180 Z" fill="#102c52"/>
+  <rect x="392" y="96" width="16" height="30" fill="#1e3f6b"/>
+  <circle cx="400" cy="92" r="7" fill="#f26522"/>
+  <path d="M 372 126 A 28 28 0 0 1 428 126 L 428 140 L 372 140 Z" fill="#1e3f6b"/>
+  <rect x="366" y="140" width="68" height="8" fill="#0a2240"/>
+  <!-- windows -->
+  <g fill="#f26522" opacity="0.8">
+    <rect x="196" y="262" width="8" height="12"/><rect x="256" y="262" width="8" height="12"/>
+    <rect x="536" y="262" width="8" height="12"/><rect x="596" y="262" width="8" height="12"/>
+    <rect x="386" y="226" width="8" height="12"/><rect x="406" y="226" width="8" height="12"/>
+  </g>
+  <!-- grounds and bank -->
+  <rect y="310" width="800" height="30" fill="#0a2240"/>
+  <polygon points="0,340 800,340 800,450 0,450" fill="#04142a"/>
+  <g fill="#0a2240">
+    <circle cx="110" cy="336" r="22"/><circle cx="160" cy="344" r="16"/>
+    <circle cx="700" cy="338" r="20"/><circle cx="748" cy="346" r="14"/>
+  </g>
+  <!-- reflecting pool -->
+  <rect x="300" y="352" width="200" height="14" fill="#102c52"/>
+  <rect x="330" y="356" width="140" height="3" fill="#f26522" opacity="0.5"/>
+</svg>

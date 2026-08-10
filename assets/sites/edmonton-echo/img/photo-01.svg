@@ -1,0 +1,52 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 450" role="img" aria-label="Downtown Edmonton skyline in evening haze">
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#0a2240"/>
+      <stop offset="0.55" stop-color="#1e3f6b"/>
+      <stop offset="0.8" stop-color="#c14a10"/>
+      <stop offset="1" stop-color="#f26522"/>
+    </linearGradient>
+  </defs>
+  <rect width="800" height="450" fill="url(#sky)"/>
+  <circle cx="545" cy="278" r="46" fill="#f26522"/>
+  <circle cx="545" cy="278" r="46" fill="#ffffff" opacity="0.25"/>
+  <!-- distant bank -->
+  <rect y="296" width="800" height="20" fill="#c14a10" opacity="0.45"/>
+  <!-- skyline -->
+  <g fill="#0a2240">
+    <rect x="60"  y="196" width="52" height="110"/>
+    <rect x="122" y="156" width="40" height="150"/>
+    <rect x="174" y="216" width="58" height="90"/>
+    <rect x="244" y="120" width="34" height="186"/>
+    <polygon points="286,306 286,150 320,116 354,150 354,306"/>
+    <rect x="366" y="176" width="46" height="130"/>
+    <rect x="424" y="96"  width="30" height="210"/>
+    <rect x="462" y="186" width="54" height="120"/>
+    <rect x="596" y="170" width="44" height="136"/>
+    <rect x="650" y="220" width="60" height="86"/>
+    <rect x="720" y="188" width="36" height="118"/>
+  </g>
+  <!-- lit windows -->
+  <g fill="#f26522" opacity="0.85">
+    <rect x="252" y="140" width="6" height="8"/><rect x="264" y="168" width="6" height="8"/>
+    <rect x="252" y="210" width="6" height="8"/><rect x="264" y="246" width="6" height="8"/>
+    <rect x="430" y="116" width="5" height="7"/><rect x="441" y="150" width="5" height="7"/>
+    <rect x="430" y="188" width="5" height="7"/><rect x="441" y="226" width="5" height="7"/>
+    <rect x="132" y="176" width="6" height="8"/><rect x="146" y="206" width="6" height="8"/>
+    <rect x="316" y="160" width="7" height="9"/><rect x="304" y="196" width="7" height="9"/><rect x="330" y="232" width="7" height="9"/>
+    <rect x="608" y="190" width="6" height="8"/><rect x="622" y="224" width="6" height="8"/>
+    <rect x="734" y="206" width="5" height="7"/>
+  </g>
+  <!-- river -->
+  <rect y="306" width="800" height="58" fill="#102c52"/>
+  <rect x="470" y="316" width="150" height="4" fill="#f26522" opacity="0.55"/>
+  <rect x="510" y="330" width="80" height="3" fill="#f26522" opacity="0.35"/>
+  <!-- south bank -->
+  <polygon points="0,364 800,364 800,450 0,450" fill="#04142a"/>
+  <polygon points="0,364 220,364 120,450 0,450" fill="#0a2240"/>
+  <!-- bank trees -->
+  <g fill="#04142a">
+    <circle cx="80" cy="360" r="18"/><circle cx="130" cy="366" r="14"/>
+    <circle cx="680" cy="362" r="16"/><circle cx="730" cy="368" r="12"/><circle cx="770" cy="360" r="15"/>
+  </g>
+</svg>

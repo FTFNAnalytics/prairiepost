@@ -18,5 +18,8 @@
     "community":   "#6B4790",
     "opinion":     "#B0246B",
     "weather":     "#8FE0BE"
+  },
+  "chrome": {
+    "nav": ["news", "politics", "agriculture", "business", "community", "opinion", "weather"]
   }
 }
