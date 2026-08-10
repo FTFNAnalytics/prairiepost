@@ -171,6 +171,45 @@ function unique_post_slug(string $title, int $ignoreId = 0): string
     }
 }
 
+/* --- Regions (the aggregator's provinces) -------------------------------- */
+
+function posts_in_region(string $region, int $limit, array $excludeIds = [], int $offset = 0): array
+{
+    $params = [now(), $region];
+    $not = '';
+    if ($excludeIds) {
+        $not = ' AND p.id NOT IN (' . implode(',', array_fill(0, count($excludeIds), '?')) . ')';
+        $params = array_merge($params, array_map('intval', $excludeIds));
+    }
+    $sql = 'SELECT ' . PP_POST_COLS . ' FROM posts p' . pp_site_join() . PP_POST_JOINS . '
+            WHERE ' . pp_published_where() . ' AND p.region = ?' . $not . '
+            ORDER BY p.published_at DESC LIMIT ' . (int) $limit . ' OFFSET ' . (int) $offset;
+    $stmt = db()->prepare($sql);
+    $stmt->execute($params);
+    return $stmt->fetchAll();
+}
+
+function count_posts_in_region(string $region): int
+{
+    $stmt = db()->prepare('SELECT COUNT(*) AS n FROM posts p' . pp_site_join()
+        . ' WHERE ' . pp_published_where() . ' AND p.region = ?');
+    $stmt->execute([now(), $region]);
+    return (int) $stmt->fetch()['n'];
+}
+
+/** The site's most-used tags on published stories — the Topics rail. */
+function top_tags(int $limit = 8): array
+{
+    $sql = 'SELECT t.name, t.slug, COUNT(*) AS n FROM tags t
+            JOIN post_tags pt ON pt.tag_id = t.id
+            JOIN posts p ON p.id = pt.post_id' . pp_site_join() . '
+            WHERE ' . pp_published_where() . '
+            GROUP BY t.id, t.name, t.slug ORDER BY n DESC, t.name LIMIT ' . (int) $limit;
+    $stmt = db()->prepare($sql);
+    $stmt->execute([now()]);
+    return $stmt->fetchAll();
+}
+
 /* --- Sites & syndication ------------------------------------------------- */
 
 function sites_all(): array

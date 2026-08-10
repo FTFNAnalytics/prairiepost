@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 450" role="img" aria-label="A canola field to the horizon under a big prairie sky">
+  <rect width="800" height="450" fill="#F5F4F2"/>
+  <circle cx="620" cy="110" r="52" fill="#C08A2E" opacity="0.9"/>
+  <path d="M0 250 L800 230 L800 450 L0 450 Z" fill="#C08A2E"/>
+  <path d="M0 250 L800 230 L800 260 L0 282 Z" fill="#2B3442" opacity="0.25"/>
+  <g fill="#245A63">
+    <path d="M40 250 L56 196 L72 250 Z"/><path d="M70 250 L86 206 L102 250 Z"/>
+    <path d="M100 250 L116 200 L132 250 Z"/>
+  </g>
+  <g stroke="#1B212B" stroke-width="3" opacity="0.5" fill="none">
+    <path d="M0 330 Q400 310 800 322"/>
+    <path d="M0 380 Q400 356 800 372"/>
+  </g>
+  <rect y="420" width="800" height="8" fill="#1B212B"/>
+  <rect x="520" y="420" width="280" height="8" fill="#C08A2E"/>
+</svg>

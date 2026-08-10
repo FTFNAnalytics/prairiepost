@@ -1,0 +1,28 @@
+{
+  "palette": {
+    "ink":     "#1B212B",
+    "paper":   "#F5F4F2",
+    "board":   "#DAD8D3",
+    "sky":     "#3F8A86",
+    "hill":    "#245A63",
+    "field":   "#2B3442",
+    "stubble": "#C08A2E",
+    "red":     "#A23A2E",
+    "muted":   "#5C6470"
+  },
+  "desks": {
+    "news":     "#245A63",
+    "politics": "#245A63",
+    "business": "#245A63",
+    "energy":   "#245A63",
+    "sports":   "#245A63",
+    "culture":  "#245A63",
+    "opinion":  "#1B212B",
+    "weather":  "#3F8A86"
+  },
+  "chrome": {
+    "template": "westernwire",
+    "trending": true,
+    "nav": ["news", "politics", "business", "energy", "sports", "culture", "opinion"]
+  }
+}

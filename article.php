@@ -24,6 +24,13 @@ if (!preg_match('/bot|crawl|spider|slurp|preview/i', $_SERVER['HTTP_USER_AGENT']
     db()->prepare('UPDATE posts SET views = views + 1 WHERE id = ?')->execute([(int) $post['id']]);
 }
 
+// A wire link has no story page of its own — the permalink sends the reader
+// straight to the outlet that reported it (the read is counted above).
+if (is_link_post($post)) {
+    header('Location: ' . $post['source_url'], true, 302);
+    exit;
+}
+
 $jsonld = [
     '@context' => 'https://schema.org',
     '@type'    => 'NewsArticle',

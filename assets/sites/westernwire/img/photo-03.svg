@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 450" role="img" aria-label="A glacier-fed river bending through spruce banks, fish running upstream">
+  <rect width="800" height="450" fill="#245A63"/>
+  <path d="M0 0 L800 0 L800 120 Q560 180 400 140 Q200 100 0 170 Z" fill="#2B3442"/>
+  <path d="M0 170 Q200 100 400 140 Q560 180 800 120 L800 260 Q540 330 380 280 Q180 230 0 300 Z" fill="#3F8A86"/>
+  <path d="M0 300 Q180 230 380 280 Q540 330 800 260 L800 450 L0 450 Z" fill="#245A63"/>
+  <g fill="#F5F4F2" opacity="0.85">
+    <path d="M240 210 q18 -12 36 0 q-18 12 -36 0 Z"/>
+    <path d="M330 240 q18 -12 36 0 q-18 12 -36 0 Z"/>
+    <path d="M430 200 q18 -12 36 0 q-18 12 -36 0 Z"/>
+    <path d="M540 230 q18 -12 36 0 q-18 12 -36 0 Z"/>
+  </g>
+  <g fill="#1B212B">
+    <path d="M60 450 L90 360 L120 450 Z"/><path d="M110 450 L140 380 L170 450 Z"/>
+    <path d="M640 450 L670 370 L700 450 Z"/><path d="M690 450 L720 390 L750 450 Z"/>
+  </g>
+  <rect y="420" width="800" height="8" fill="#1B212B"/>
+  <rect x="240" y="420" width="240" height="8" fill="#C08A2E"/>
+</svg>

@@ -68,6 +68,9 @@ CREATE TABLE posts (
     image_credit VARCHAR(120) NOT NULL DEFAULT '',
     meta_description VARCHAR(255) NOT NULL DEFAULT '',
     source_url VARCHAR(500) NOT NULL DEFAULT '',
+    source_name VARCHAR(160) NOT NULL DEFAULT '', -- the outlet a wire link credits
+    post_type VARCHAR(20) NOT NULL DEFAULT 'story', -- story | link (headline links out)
+    region VARCHAR(40) NOT NULL DEFAULT '',       -- aggregator region key (e.g. bc, alberta)
     status VARCHAR(20) NOT NULL DEFAULT 'draft',  -- draft | in_review | scheduled | published
     review_note TEXT,
     is_featured INTEGER NOT NULL DEFAULT 0,       -- superseded by placement; kept for compatibility
@@ -182,6 +185,7 @@ CREATE TABLE ads (
 CREATE INDEX idx_posts_status ON posts (status, published_at);
 CREATE INDEX idx_posts_category ON posts (category_id);
 CREATE INDEX idx_posts_author ON posts (author_id);
+CREATE INDEX idx_posts_region ON posts (region);
 CREATE INDEX idx_news_region ON news_items (region, fetched_at);
 CREATE INDEX idx_post_sites_site ON post_sites (site_id);
 CREATE INDEX idx_ads_site_placement ON ads (site_id, placement);

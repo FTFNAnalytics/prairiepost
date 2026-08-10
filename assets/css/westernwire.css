@@ -1,0 +1,197 @@
+/* ============================================================
+   The westernwire template — the network's aggregator front.
+   Archivo for chrome, labels and the tracked-out wordmark;
+   Source Serif 4 for headlines and body. Slate Ink chrome over
+   Newsprint ground, Spruce links, Glacier hovers and live
+   indicators, and Gold held to one action per view — section
+   flags and the live segment of the wire rule.
+   First user: Western Wire. Loaded only when
+   chrome.template = "westernwire".
+   ============================================================ */
+@import url('https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=Source+Serif+4:ital,opsz,wght@0,8..60,300..900;1,8..60,300..700&display=swap');
+
+body.t-westernwire{
+  --ww-ink:     #1B212B;   /* Slate Ink — chrome, footer, body copy   */
+  --ww-range:   #2B3442;   /* Front Range — sub-nav, dividers on dark */
+  --ww-spruce:  #245A63;   /* links, quiet fills, topic panels        */
+  --ww-glacier: #3F8A86;   /* hovers, live indicators                 */
+  --ww-gold:    #C08A2E;   /* one action per view; the live wire      */
+  --ww-paper:   #F5F4F2;   /* page ground; cards sit on white         */
+  --ww-muted:   #5C6470;
+  --ww-line:    #DAD8D3;
+  --ww-sans:    'Archivo', system-ui, sans-serif;
+  --ww-serif:   'Source Serif 4', Georgia, serif;
+
+  /* Inner pages read as the brand. */
+  --pp-shelterbelt: var(--ww-ink);
+  --pp-cloudbank:   var(--ww-paper);
+  --pp-board:       var(--ww-line);
+  --pp-bigsky:      var(--ww-spruce);
+  --pp-noonsky:     var(--ww-glacier);
+  --pp-highsky:     #E4EDEC;
+  --pp-straw:       #F0E4CB;
+  --pp-binred:      #A23A2E;
+  --pp-quarter:     var(--ww-range);
+  --pp-fencepost:   var(--ww-spruce);
+  --pp-stubble:     var(--ww-muted);
+
+  background: var(--ww-paper);
+  color: var(--ww-ink);
+  font-family: var(--ww-serif);
+}
+
+body.t-westernwire h1, body.t-westernwire h2, body.t-westernwire h3{ font-family: var(--ww-serif); letter-spacing: 0; }
+body.t-westernwire .pp-meta, body.t-westernwire .eyebrow, body.t-westernwire .byline{ font-family: var(--ww-sans); }
+/* Kept at single-class specificity so component link colours below win. */
+.t-westernwire a{ color: var(--ww-spruce); }
+.t-westernwire a:hover{ color: var(--ww-glacier); }
+body.t-westernwire .card h3 a, body.t-westernwire .river a{ color: var(--ww-ink); }
+body.t-westernwire :focus-visible{ outline: 2px solid var(--ww-spruce); outline-offset: 2px; }
+
+/* --- Utility strip ------------------------------------------------------- */
+.ww-strip{ background: var(--ww-ink); color: #C9CDD4; font-family: var(--ww-sans); font-size: 13px; }
+.ww-strip .wrap{ max-width: 1180px; margin: 0 auto; padding: 8px 20px; display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+.ww-strip .grp{ display: flex; gap: 18px; align-items: center; }
+.ww-strip a{ color: #C9CDD4; text-decoration: none; }
+.ww-strip a:hover{ color: #fff; }
+.ww-strip .hot{ color: var(--ww-gold); font-weight: 600; }
+
+/* --- Masthead: the wordmark over the wire -------------------------------- */
+.ww-mast{ background: var(--ww-paper); }
+.ww-mast .wrap{ max-width: 1180px; margin: 0 auto; padding: 26px 20px 0; }
+.ww-mast .brand{ display: flex; align-items: center; justify-content: center; gap: 18px; text-decoration: none; }
+.ww-mast .brand img{ width: 58px; height: 58px; }
+.ww-mast .wm{
+  font-family: var(--ww-sans); font-weight: 600; color: var(--ww-ink);
+  font-size: clamp(30px, 6vw, 54px); letter-spacing: .14em; text-transform: uppercase;
+  padding-left: .14em; /* optical centre against the tracking's trailing space */
+}
+/* The wire: always the full width of the mark; Gold is the live segment. */
+.ww-mast .wire{ height: 3px; background: var(--ww-ink); margin-top: 14px; position: relative; }
+.ww-mast .wire .live{ position: absolute; left: 0; top: 0; bottom: 0; width: 22%; background: var(--ww-gold); }
+.ww-mast .tagline{ font-family: var(--ww-sans); font-size: 13px; color: var(--ww-muted); text-align: center; padding: 8px 0 10px; letter-spacing: .04em; }
+
+/* --- Section nav on Front Range ------------------------------------------ */
+.ww-nav{ background: var(--ww-range); font-family: var(--ww-sans); }
+.ww-nav .wrap{ max-width: 1180px; margin: 0 auto; padding: 0 20px; display: flex; align-items: center; gap: 2px; overflow-x: auto; }
+.ww-nav a{ color: #DDE1E6; text-decoration: none; font-size: 14px; font-weight: 500; padding: 11px 12px; white-space: nowrap; }
+.ww-nav a:hover{ color: #fff; background: rgba(255,255,255,.06); }
+.ww-nav a[aria-current="page"]{ color: #fff; box-shadow: inset 0 -3px 0 var(--ww-gold); }
+.ww-nav .rg{ font-size: 13px; color: #A7B0BC; }
+.ww-nav .sp{ margin-left: auto; }
+.ww-nav .div{ width: 1px; align-self: stretch; margin: 8px 8px; background: rgba(255,255,255,.18); flex: 0 0 1px; }
+
+/* Developing strip — Gold speaks once. */
+.ww-dev{ background: var(--ww-paper); border-bottom: 1px solid var(--ww-line); font-family: var(--ww-sans); }
+.ww-dev .wrap{ max-width: 1180px; margin: 0 auto; padding: 9px 20px; display: flex; gap: 12px; align-items: baseline; }
+.ww-dev .d{ color: var(--ww-gold); font-weight: 700; font-size: 12px; letter-spacing: .1em; text-transform: uppercase; }
+.ww-dev a{ color: var(--ww-ink); text-decoration: none; font-size: 14px; }
+.ww-dev a:hover{ color: var(--ww-spruce); }
+
+/* --- Front page ----------------------------------------------------------- */
+.ww-main{ max-width: 1180px; margin: 0 auto; padding: 26px 20px 60px; }
+.ww-front{ display: grid; grid-template-columns: minmax(0,1fr) 320px; gap: 44px; }
+@media (max-width: 940px){ .ww-front{ grid-template-columns: 1fr; } }
+
+.ww-onwire > .oh{ display: flex; justify-content: space-between; align-items: baseline; border-bottom: 3px solid var(--ww-ink); padding-bottom: 6px; }
+.ww-onwire > .oh h2{ font-family: var(--ww-sans); font-size: 15px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; margin: 0; }
+.ww-onwire > .oh .upd{ font-family: var(--ww-sans); font-size: 12px; color: var(--ww-muted); }
+.ww-onwire > .oh .upd::before{ content: ''; display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: var(--ww-glacier); margin-right: 6px; }
+
+.ww-item{ padding: 20px 0; border-bottom: 1px solid var(--ww-line); }
+.ww-item .kick{ font-family: var(--ww-sans); font-size: 12px; font-weight: 600; letter-spacing: .07em; text-transform: uppercase; display: flex; gap: 10px; }
+.ww-item .kick a{ color: var(--ww-spruce); text-decoration: none; }
+.ww-item .kick .rg{ color: var(--ww-muted); font-weight: 500; }
+.ww-item h3{ font-size: 24px; line-height: 1.22; margin: 6px 0 6px; font-weight: 600; }
+.ww-item h3 a{ color: var(--ww-ink); text-decoration: none; }
+.ww-item h3 a:hover{ color: var(--ww-spruce); }
+.ww-item p{ margin: 0 0 8px; font-size: 16px; line-height: 1.55; color: #3A4048; max-width: 68ch; }
+.ww-item .att{ font-family: var(--ww-sans); font-size: 13px; color: var(--ww-muted); }
+.ww-item .att b{ font-weight: 600; color: var(--ww-spruce); }
+
+.ww-item--lead{ padding-top: 0; }
+.ww-item--lead .ph{ margin: 0 0 14px; }
+.ww-item--lead .ph img{ width: 100%; display: block; }
+.ww-item--lead h3{ font-size: clamp(28px, 4vw, 38px); line-height: 1.14; }
+.ww-item--lead p{ font-size: 18px; }
+
+.ww-item .ph{ margin: 10px 0 4px; max-width: 420px; }
+.ww-item .ph img{ width: 100%; display: block; }
+
+/* --- Rail ------------------------------------------------------------------ */
+.ww-rail > *{ margin-bottom: 30px; }
+.ww-railhead{ font-family: var(--ww-sans); font-size: 13px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; border-bottom: 3px solid var(--ww-ink); padding-bottom: 6px; margin: 0 0 4px; }
+
+.ww-most ol{ list-style: none; margin: 0; padding: 0; counter-reset: most; }
+.ww-most li{ counter-increment: most; display: flex; gap: 14px; padding: 12px 0; border-bottom: 1px solid var(--ww-line); }
+.ww-most li::before{ content: counter(most); font-family: var(--ww-sans); font-weight: 700; font-size: 22px; color: var(--ww-glacier); line-height: 1; min-width: 20px; }
+.ww-most a{ color: var(--ww-ink); text-decoration: none; font-size: 15px; line-height: 1.35; font-weight: 600; display: block; }
+.ww-most a:hover{ color: var(--ww-spruce); }
+.ww-most .src{ font-family: var(--ww-sans); font-size: 12px; color: var(--ww-muted); margin-top: 3px; display: block; }
+
+.ww-topics .cloud{ display: flex; flex-wrap: wrap; gap: 8px; padding-top: 10px; }
+.ww-topics .cloud a{
+  font-family: var(--ww-sans); font-size: 13px; font-weight: 500; text-decoration: none;
+  color: var(--ww-spruce); background: #E4EDEC; padding: 5px 12px; border-radius: 2px;
+}
+.ww-topics .cloud a:hover{ background: var(--ww-spruce); color: #fff; }
+
+.ww-signup{ background: var(--ww-ink); color: #E7E9EC; padding: 20px 20px 22px; }
+.ww-signup .k{ font-family: var(--ww-sans); font-size: 13px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--ww-gold); display: block; margin-bottom: 8px; }
+.ww-signup p{ margin: 0 0 12px; font-size: 14.5px; line-height: 1.5; }
+.ww-signup input[type="email"]{
+  width: 100%; box-sizing: border-box; padding: 10px 12px; border: 1px solid var(--ww-range);
+  background: #fff; color: var(--ww-ink); font-family: var(--ww-sans); font-size: 14px; margin-bottom: 8px;
+}
+.ww-signup button{
+  width: 100%; padding: 10px 12px; background: var(--ww-gold); border: 0; cursor: pointer;
+  color: var(--ww-ink); font-family: var(--ww-sans); font-weight: 700; font-size: 14px; letter-spacing: .04em;
+}
+.ww-signup button:hover{ background: #D09A3E; }
+
+/* --- Across the four provinces --------------------------------------------- */
+.ww-provinces{ margin-top: 44px; }
+.ww-provinces > h2{ font-family: var(--ww-sans); font-size: 15px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; border-bottom: 3px solid var(--ww-ink); padding-bottom: 6px; margin: 0 0 0; }
+.ww-provinces .grid{ display: grid; grid-template-columns: repeat(4, 1fr); gap: 30px; }
+@media (max-width: 940px){ .ww-provinces .grid{ grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 560px){ .ww-provinces .grid{ grid-template-columns: 1fr; } }
+.ww-provinces .col > .ph{
+  font-family: var(--ww-sans); font-size: 13px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase;
+  padding: 12px 0 8px; border-bottom: 2px solid var(--ww-spruce); margin-bottom: 4px;
+}
+.ww-provinces .col > .ph a{ color: var(--ww-spruce); text-decoration: none; }
+.ww-provinces .col > .ph a:hover{ color: var(--ww-glacier); }
+.ww-provinces .it{ display: block; padding: 10px 0; border-bottom: 1px solid var(--ww-line); text-decoration: none; }
+.ww-provinces .it h3{ font-size: 15.5px; line-height: 1.35; margin: 0 0 4px; font-weight: 600; color: var(--ww-ink); }
+.ww-provinces .it:hover h3{ color: var(--ww-spruce); }
+.ww-provinces .it .src{ font-family: var(--ww-sans); font-size: 12px; color: var(--ww-muted); }
+
+/* --- Also filed today ------------------------------------------------------- */
+.ww-also{ margin-top: 44px; }
+.ww-also > h2{ font-family: var(--ww-sans); font-size: 15px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; border-bottom: 3px solid var(--ww-ink); padding-bottom: 6px; margin: 0; }
+.ww-also .grid{ display: grid; grid-template-columns: 1fr 1fr; gap: 0 44px; }
+@media (max-width: 700px){ .ww-also .grid{ grid-template-columns: 1fr; } }
+.ww-also a{ display: flex; justify-content: space-between; gap: 16px; align-items: baseline; padding: 11px 0; border-bottom: 1px solid var(--ww-line); text-decoration: none; color: var(--ww-ink); font-size: 15.5px; font-weight: 600; line-height: 1.35; }
+.ww-also a:hover{ color: var(--ww-spruce); }
+.ww-also .src{ font-family: var(--ww-sans); font-size: 12px; color: var(--ww-muted); white-space: nowrap; font-weight: 400; }
+
+/* --- Footer ----------------------------------------------------------------- */
+.ww-foot{ background: var(--ww-ink); color: #B8BEC7; font-family: var(--ww-sans); margin-top: 60px; }
+.ww-foot .cols{ max-width: 1180px; margin: 0 auto; padding: 40px 20px 30px; display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 30px; }
+@media (max-width: 800px){ .ww-foot .cols{ grid-template-columns: 1fr 1fr; } }
+.ww-foot .brand{ display: flex; align-items: center; gap: 12px; text-decoration: none; margin-bottom: 12px; }
+.ww-foot .brand img{ width: 40px; height: 40px; }
+.ww-foot .brand .t{ color: #F5F4F2; font-weight: 600; letter-spacing: .14em; text-transform: uppercase; font-size: 17px; }
+.ww-foot .about{ font-size: 13.5px; line-height: 1.55; margin: 0; max-width: 40ch; }
+.ww-foot .fh{ color: #F5F4F2; font-weight: 700; font-size: 12px; letter-spacing: .08em; text-transform: uppercase; margin-bottom: 10px; }
+.ww-foot .lnks{ display: flex; flex-direction: column; gap: 7px; }
+.ww-foot .lnks a{ color: #B8BEC7; text-decoration: none; font-size: 14px; }
+.ww-foot .lnks a:hover{ color: #fff; }
+.ww-foot .legal{ border-top: 1px solid var(--ww-range); }
+.ww-foot .legal .wrap{ max-width: 1180px; margin: 0 auto; padding: 14px 20px; display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; font-size: 12.5px; color: #8A93A0; }
+
+/* --- Inner pages: cards carry the wire credit -------------------------------- */
+body.t-westernwire .card .byline{ color: var(--ww-muted); }
+body.t-westernwire .eyebrow{ letter-spacing: .07em; }
+body.t-westernwire .pagehead h1{ font-family: var(--ww-serif); }
+body.t-westernwire .btn{ font-family: var(--ww-sans); }

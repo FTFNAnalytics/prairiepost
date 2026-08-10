@@ -62,6 +62,20 @@ ads, markets) and subscribers stay per-site. Each deployment sets a
 `site_slug` in `config.php`; an editor's *Runs on* checkboxes decide which
 papers a story appears in. One filing, the whole network.
 
+**The aggregator** — a site can run as a link aggregator (first user:
+Western Wire, westernwire.ca). A **wire link** is a post whose headline
+links straight to the outlet that reported it, credited by name — on
+cards, in the river, in the RSS feed; its `/story/` permalink redirects
+to the source. **Newsroom → Post a link** turns a pasted URL into a
+prefilled wire post: the tool reads the page's Open Graph tags
+(headline, summary, outlet, featured image — cached into `/uploads/` so
+cards don't rot), and the editor assigns a region, desk and tags.
+Headlines in the morning pull carry a one-click *Post link* button.
+Posts carry an optional **region**, with public archives at
+`/region/{key}` and the region keys per site in Settings (`regions`).
+Any post can be flipped between original story and wire link with the
+editor's *Kind* selector.
+
 **Advertising** — an ad manager per site (Newsroom → Ads) with the three
 labelled slots: top of the front page, the rail, and after story text. Three
 kinds of creative: **house ads** set in the brand (no artwork needed — kicker,

@@ -26,6 +26,34 @@ function desk_style(?string $color): string
     return preg_match('/^#[0-9A-Fa-f]{3,8}$/', $color) ? ' style="--desk:' . e($color) . '"' : '';
 }
 
+/** Whether a post is a wire link — its headline links to the source outlet. */
+function is_link_post(array $post): bool
+{
+    return ($post['post_type'] ?? '') === 'link' && !empty($post['source_url']);
+}
+
+/** Where a post's headline points: the story page, or straight to the outlet. */
+function post_href(array $post): string
+{
+    return is_link_post($post) ? (string) $post['source_url'] : url('story/' . $post['slug']);
+}
+
+/** Extra anchor attributes for outbound wire links. */
+function post_link_attr(array $post): string
+{
+    return is_link_post($post) ? ' target="_blank" rel="noopener"' : '';
+}
+
+/** The outlet a wire link credits: its saved name, or the link's hostname. */
+function post_source_label(array $post): string
+{
+    if (!empty($post['source_name'])) {
+        return (string) $post['source_name'];
+    }
+    $host = parse_url((string) ($post['source_url'] ?? ''), PHP_URL_HOST) ?: '';
+    return preg_replace('/^www\./', '', $host);
+}
+
 function eyebrow(array $post): string
 {
     if (empty($post['category_name'])) {
@@ -47,7 +75,7 @@ function story_photo(array $post, bool $withCaption = false): string
     }
     $img = '<img src="' . e($post['image']) . '" alt="' . e($post['image_caption'] ?: $post['title']) . '" loading="lazy">';
     if (!$withCaption || ($post['image_caption'] === '' && $post['image_credit'] === '')) {
-        return '<a class="photo" href="' . e(url('story/' . $post['slug'])) . '" tabindex="-1" aria-hidden="true">' . $img . '</a>';
+        return '<a class="photo" href="' . e(post_href($post)) . '"' . post_link_attr($post) . ' tabindex="-1" aria-hidden="true">' . $img . '</a>';
     }
     $cap = '<figcaption>' . e($post['image_caption']);
     if ($post['image_credit'] !== '') {
@@ -64,7 +92,7 @@ function story_card(array $post, bool $withPhoto = true): string
         $html .= story_photo($post);
     }
     $html .= eyebrow($post);
-    $html .= '<h3><a href="' . e(url('story/' . $post['slug'])) . '">' . e($post['title']) . '</a></h3>';
+    $html .= '<h3><a href="' . e(post_href($post)) . '"' . post_link_attr($post) . '>' . e($post['title']) . '</a></h3>';
     if (!empty($post['lede'])) {
         $html .= '<p>' . e(excerpt($post['lede'], 140)) . '</p>';
     }
@@ -112,6 +140,7 @@ function page_header(array $meta = [], string $activeDesk = ''): void
 <?php endif; ?><?php if (pp_chrome('template') === 'pacific'): ?><link rel="stylesheet" href="/assets/css/pacific.css">
 <?php endif; ?><?php if (pp_chrome('template') === 'current'): ?><link rel="stylesheet" href="/assets/css/current.css">
 <?php endif; ?><?php if (pp_chrome('template') === 'bulletin'): ?><link rel="stylesheet" href="/assets/css/bulletin.css">
+<?php endif; ?><?php if (pp_chrome('template') === 'westernwire'): ?><link rel="stylesheet" href="/assets/css/westernwire.css">
 <?php endif; ?><?php if (site_asset('brand.css') !== '/assets/img/brand.css'): ?><link rel="stylesheet" href="<?= e(site_asset('brand.css')) ?>">
 <?php endif; ?>
 <meta property="og:site_name" content="<?= e($siteTitle) ?>">
@@ -126,7 +155,7 @@ function page_header(array $meta = [], string $activeDesk = ''): void
 <?php endif; ?>
 <?php $analytics = setting('analytics_code'); if ($analytics !== '') { echo $analytics . "\n"; } ?>
 </head>
-<body class="<?= trim((pp_chrome('cards') === 'panel' ? 'cards-panel ' : '') . (pp_chrome('template') === 'echo-v3' ? 't-dark' : '') . (pp_chrome('template') === 'aurora' ? 't-aurora' : '') . (pp_chrome('template') === 'chronicle' ? 't-chronicle' : '') . (pp_chrome('template') === 'pacific' ? 't-pacific' : '') . (pp_chrome('template') === 'current' ? 't-current' : '') . (pp_chrome('template') === 'bulletin' ? 't-bulletin' : '')) ?>">
+<body class="<?= trim((pp_chrome('cards') === 'panel' ? 'cards-panel ' : '') . (pp_chrome('template') === 'echo-v3' ? 't-dark' : '') . (pp_chrome('template') === 'aurora' ? 't-aurora' : '') . (pp_chrome('template') === 'chronicle' ? 't-chronicle' : '') . (pp_chrome('template') === 'pacific' ? 't-pacific' : '') . (pp_chrome('template') === 'current' ? 't-current' : '') . (pp_chrome('template') === 'bulletin' ? 't-bulletin' : '') . (pp_chrome('template') === 'westernwire' ? 't-westernwire' : '')) ?>">
 <a class="pp-meta" href="#content" style="position:absolute;left:-9999px" onfocus="this.style.left='8px';this.style.top='8px'" onblur="this.style.left='-9999px'">Skip to the news</a>
 
 <?php if (pp_chrome('template') === 'echo-v3'): ?>
@@ -331,6 +360,54 @@ function page_header(array $meta = [], string $activeDesk = ''): void
   </div>
 </div>
 <?php endif; ?>
+<?php elseif (pp_chrome('template') === 'westernwire'): ?>
+<div class="ww-strip">
+  <div class="wrap">
+    <div class="grp">
+      <span>Western Canada · <?= e(date('l, j F Y')) ?></span>
+    </div>
+    <div class="grp">
+      <a href="<?= e(url('newsletter/')) ?>">Newsletters</a>
+      <?php if (setting('contact_email') !== ''): ?>
+      <a href="mailto:<?= e(setting('contact_email')) ?>">Submit a tip</a>
+      <?php endif; ?>
+      <a href="/admin/">Sign in</a>
+      <a class="hot" href="<?= e(url('subscribe')) ?>">Subscribe</a>
+    </div>
+  </div>
+</div>
+<header class="ww-mast">
+  <div class="wrap">
+    <a class="brand" href="/" aria-label="<?= e($siteTitle) ?> — front page">
+      <img src="<?= e(site_asset('mark.svg')) ?>" alt="">
+      <span class="wm"><?= e($siteTitle) ?></span>
+    </a>
+    <div class="wire" aria-hidden="true"><span class="live"></span></div>
+    <p class="tagline"><?= e($tagline) ?></p>
+  </div>
+</header>
+<nav class="ww-nav" aria-label="Sections">
+  <div class="wrap">
+    <?php foreach (pp_nav_categories() as $cat): ?>
+    <a href="<?= e(url('desk/' . $cat['slug'])) ?>"<?= $activeDesk === $cat['slug'] ? ' aria-current="page"' : '' ?>><?= e($cat['name']) ?></a>
+    <?php endforeach; ?>
+    <?php $wwRegions = setting_json('regions'); if ($wwRegions): ?>
+    <span class="div" aria-hidden="true"></span>
+    <?php foreach ($wwRegions as $rk => $rl): ?>
+    <a class="rg" href="<?= e(url('region/' . $rk)) ?>"><?= e($rl) ?></a>
+    <?php endforeach; ?>
+    <?php endif; ?>
+    <a class="sp" href="<?= e(url('search')) ?>" aria-label="Search the archive">Search</a>
+  </div>
+</nav>
+<?php if (setting('breaking_label') !== '' && setting('breaking_url') !== ''): ?>
+<div class="ww-dev">
+  <div class="wrap">
+    <span class="d">Developing</span>
+    <a href="<?= e(setting('breaking_url')) ?>"><?= e(setting('breaking_label')) ?></a>
+  </div>
+</div>
+<?php endif; ?>
 <?php elseif (pp_chrome('template') === 'bulletin'): ?>
 <div class="bb-util">
   <div class="wrap">
@@ -432,6 +509,58 @@ function page_footer(): void
     $siteTitle = setting('site_title', 'The Prairie Dispatch');
     ?>
 </main>
+
+<?php if (pp_chrome('template') === 'westernwire'): ?>
+<footer class="ww-foot">
+  <div class="cols">
+    <div>
+      <a class="brand" href="/">
+        <img src="<?= e(site_asset('mark.svg')) ?>" alt="">
+        <span class="t"><?= e($siteTitle) ?></span>
+      </a>
+      <p class="about"><?= e(setting('footer_line')) ?></p>
+    </div>
+    <div>
+      <div class="fh">Sections</div>
+      <div class="lnks">
+        <?php foreach (pp_nav_categories() as $cat): ?>
+        <a href="<?= e(url('desk/' . $cat['slug'])) ?>"><?= e($cat['name']) ?></a>
+        <?php endforeach; ?>
+      </div>
+    </div>
+    <div>
+      <div class="fh">By province</div>
+      <div class="lnks">
+        <?php foreach (setting_json('regions') as $rk => $rl): ?>
+        <a href="<?= e(url('region/' . $rk)) ?>"><?= e($rl) ?></a>
+        <?php endforeach; ?>
+      </div>
+    </div>
+    <div>
+      <div class="fh">The wire</div>
+      <div class="lnks">
+        <a href="<?= e(url('search')) ?>">Search the archive</a>
+        <a href="<?= e(url('feed/')) ?>">RSS feed</a>
+        <a href="<?= e(url('newsletter/')) ?>">Newsletters</a>
+        <a href="<?= e(url('corrections')) ?>">Corrections</a>
+        <a href="<?= e(url('subscribe')) ?>">Subscribe</a>
+        <?php if (setting('contact_email') !== ''): ?>
+        <a href="mailto:<?= e(setting('contact_email')) ?>">Submit a tip</a>
+        <?php endif; ?>
+        <a href="/admin/">Desk sign-in</a>
+      </div>
+    </div>
+  </div>
+  <div class="legal">
+    <div class="wrap">
+      <span>© <?= e(date('Y')) ?> <?= e($siteTitle) ?> · <?= e(setting('tagline')) ?></span>
+      <span>Every headline links to the outlet that reported it</span>
+    </div>
+  </div>
+</footer>
+</body>
+</html>
+<?php return; endif; ?>
 
 <?php if (pp_chrome('template') === 'bulletin'): ?>
 <footer class="bb-foot">

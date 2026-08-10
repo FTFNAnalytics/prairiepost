@@ -54,6 +54,114 @@ function pp_fetch_all(PDO $db): array
     return $report;
 }
 
+/* --- The aggregator: paste a link, get a prefilled wire post -------------- */
+
+/**
+ * Fetch a page and read its Open Graph / Twitter card metadata.
+ * Returns [title, description, image, site_name, published_at, host, error];
+ * on error everything else is best-effort empty.
+ */
+function pp_fetch_link_meta(string $url): array
+{
+    $meta = ['title' => '', 'description' => '', 'image' => '', 'site_name' => '',
+             'published_at' => null, 'host' => '', 'error' => null];
+
+    if (!filter_var($url, FILTER_VALIDATE_URL) || !preg_match('#^https?://#i', $url)) {
+        $meta['error'] = 'That doesn\'t look like a full http(s) link.';
+        return $meta;
+    }
+    $meta['host'] = preg_replace('/^www\./', '', parse_url($url, PHP_URL_HOST) ?: '');
+
+    [$body, $err] = http_get($url);
+    if ($err !== null) {
+        $meta['error'] = 'The page couldn\'t be fetched (' . $err . '). You can still fill the fields in by hand.';
+        return $meta;
+    }
+
+    libxml_use_internal_errors(true);
+    $doc = new DOMDocument();
+    // The XML prologue pins the parser to UTF-8 regardless of the page's own headers.
+    if (!@$doc->loadHTML('<?xml encoding="utf-8"?>' . $body)) {
+        $meta['error'] = 'The page fetched but couldn\'t be parsed. Fill the fields in by hand.';
+        return $meta;
+    }
+
+    $tags = [];
+    foreach ($doc->getElementsByTagName('meta') as $m) {
+        $key = strtolower($m->getAttribute('property') ?: $m->getAttribute('name'));
+        $val = trim($m->getAttribute('content'));
+        if ($key !== '' && $val !== '' && !isset($tags[$key])) {
+            $tags[$key] = $val;
+        }
+    }
+
+    $meta['title'] = $tags['og:title'] ?? $tags['twitter:title'] ?? '';
+    if ($meta['title'] === '') {
+        $titles = $doc->getElementsByTagName('title');
+        $meta['title'] = $titles->length ? trim($titles->item(0)->textContent) : '';
+    }
+    $meta['description'] = $tags['og:description'] ?? $tags['twitter:description'] ?? $tags['description'] ?? '';
+    $meta['site_name']   = $tags['og:site_name'] ?? '';
+    $meta['image']       = $tags['og:image'] ?? $tags['og:image:url'] ?? $tags['twitter:image'] ?? '';
+
+    // A relative image path resolves against the article's own URL.
+    if ($meta['image'] !== '' && !preg_match('#^https?://#i', $meta['image'])) {
+        $scheme = parse_url($url, PHP_URL_SCHEME) ?: 'https';
+        $host = parse_url($url, PHP_URL_HOST) ?: '';
+        $meta['image'] = str_starts_with($meta['image'], '//')
+            ? $scheme . ':' . $meta['image']
+            : $scheme . '://' . $host . '/' . ltrim($meta['image'], '/');
+    }
+
+    $when = $tags['article:published_time'] ?? $tags['og:article:published_time'] ?? '';
+    if ($when !== '' && ($ts = strtotime($when))) {
+        $meta['published_at'] = date('Y-m-d H:i:s', $ts);
+    }
+
+    $meta['title'] = mb_substr(html_entity_decode($meta['title'], ENT_QUOTES | ENT_HTML5, 'UTF-8'), 0, 255);
+    $meta['description'] = mb_substr(html_entity_decode($meta['description'], ENT_QUOTES | ENT_HTML5, 'UTF-8'), 0, 500);
+    $meta['site_name'] = mb_substr(html_entity_decode($meta['site_name'], ENT_QUOTES | ENT_HTML5, 'UTF-8'), 0, 160);
+    return $meta;
+}
+
+/**
+ * Download a remote image into /uploads/ so wire cards never break when the
+ * source site moves or resizes theirs. Returns [public_path|null, error|null].
+ */
+function pp_cache_remote_image(string $url): array
+{
+    if (!filter_var($url, FILTER_VALIDATE_URL) || !preg_match('#^https?://#i', $url)) {
+        return [null, 'not a valid image URL'];
+    }
+    [$body, $err] = http_get($url, 20);
+    if ($err !== null) {
+        return [null, $err];
+    }
+    if (strlen($body) > 8 * 1024 * 1024) {
+        return [null, 'the image is over 8 MB'];
+    }
+    $finfo = new finfo(FILEINFO_MIME_TYPE);
+    $mime = $finfo->buffer($body);
+    $extensions = [
+        'image/jpeg' => 'jpg',
+        'image/png'  => 'png',
+        'image/webp' => 'webp',
+        'image/gif'  => 'gif',
+    ];
+    if (!isset($extensions[$mime])) {
+        return [null, 'not a JPEG, PNG, WebP or GIF (' . $mime . ')'];
+    }
+    $dir = PP_ROOT . '/uploads/' . date('Y/m');
+    if (!is_dir($dir) && !mkdir($dir, 0775, true)) {
+        return [null, 'the uploads folder isn\'t writable'];
+    }
+    $name = 'wire-' . substr(bin2hex(random_bytes(5)), 0, 8) . '.' . $extensions[$mime];
+    if (file_put_contents($dir . '/' . $name, $body) === false) {
+        return [null, 'the server couldn\'t write the file'];
+    }
+    return ['/uploads/' . date('Y/m') . '/' . $name, null];
+}
+
 /** Drop unused wire items older than 14 days so the pull stays current. */
 function pp_prune_news(PDO $db): int
 {
