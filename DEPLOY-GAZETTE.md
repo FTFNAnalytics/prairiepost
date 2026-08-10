@@ -46,6 +46,16 @@ dig +short grandeprairiegazette.ca A
 dig +short www.grandeprairiegazette.ca A
 ```
 
+If the server reports `dig: command not found`, do **not** stop — use
+`getent`, which is part of glibc and needs no install (note it consults
+`/etc/hosts` before DNS, so cross-check that file if the answer looks
+wrong):
+
+```bash
+getent ahostsv4 grandeprairiegazette.ca      | awk '{print $1}' | sort -u
+getent ahostsv4 www.grandeprairiegazette.ca  | awk '{print $1}' | sort -u
+```
+
 **Verify:** both return the VPS address. If the apex is missing, add an
 A record for `@` (or an ALIAS/ANAME) before continuing — certbot needs it
 in step 3.
