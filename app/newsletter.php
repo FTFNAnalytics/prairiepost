@@ -28,8 +28,9 @@ function pp_compile_edition(): array
     $subject = setting('newsletter_heading', 'The 6 a.m.') . ' — ' . date('l, M j')
         . ($posts ? ': ' . $posts[0]['title'] : '');
 
-    $ink = '#17301C'; $paper = '#F1F2F0'; $board = '#C4C0B4'; $sky = '#77B2D6';
-    $muted = '#5A6A5C'; $red = '#9C3B22';
+    $pal = pp_brand_palette();
+    $ink = $pal['ink']; $paper = $pal['paper']; $board = $pal['board']; $sky = $pal['sky'];
+    $muted = $pal['muted']; $red = $pal['red'];
     $head = "font-family:'Arial Narrow',Arial,Helvetica,sans-serif;font-weight:bold;color:$ink";
     $bodyF = "font-family:Georgia,'Times New Roman',serif;color:$ink";
     $mono = "font-family:'Courier New',Courier,monospace;letter-spacing:2px;text-transform:uppercase";
@@ -95,7 +96,7 @@ function pp_compile_edition(): array
               . '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-top:6px;">';
         foreach ($markets as $row) {
             [$name, $price, $change] = array_pad($row, 3, '');
-            $cc = str_starts_with($change, '-') ? $red : '#3F5A22';
+            $cc = str_starts_with($change, '-') ? $red : $pal['hill'];
             $out .= "<tr><td style=\"font-family:'Courier New',Courier,monospace;font-size:12px;color:$ink;border-bottom:1px dotted $board;padding:4px 0;\">" . $h($name) . '</td>'
                   . "<td align=\"right\" style=\"font-family:'Courier New',Courier,monospace;font-size:12px;color:$ink;border-bottom:1px dotted $board;padding:4px 0;\">" . $h($price) . '</td>'
                   . "<td align=\"right\" width=\"64\" style=\"font-family:'Courier New',Courier,monospace;font-size:12px;color:$cc;border-bottom:1px dotted $board;padding:4px 0;\">" . $h(str_replace('-', '−', $change)) . '</td></tr>';

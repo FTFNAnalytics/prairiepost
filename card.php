@@ -21,12 +21,14 @@ if (!$post || !is_file($fontHead) || !is_file($fontMono)) {
     // No story (or no fonts on this host): serve the static default card.
     header('Content-Type: image/png');
     header('Cache-Control: public, max-age=3600');
-    readfile(PP_ROOT . '/assets/img/og-default.png');
+    readfile(site_asset_path('og-default.png'));
     exit;
 }
 
 /* --- Cache ---------------------------------------------------------------- */
-$stamp = sha1($post['title'] . '|' . ($post['category_name'] ?? '') . '|' . $post['updated_at'] . '|v1');
+$pal = pp_brand_palette();
+$stamp = sha1($post['title'] . '|' . ($post['category_name'] ?? '') . '|' . $post['updated_at']
+    . '|' . setting('site_title') . '|' . json_encode($pal) . '|v2');
 $cacheDir = PP_ROOT . '/data/cards';
 $cacheFile = $cacheDir . '/' . $post['slug'] . '-' . substr($stamp, 0, 10) . '.png';
 
@@ -45,13 +47,13 @@ if (!is_file($cacheFile)) {
         (int) hexdec(substr($hex, 3, 2)),
         (int) hexdec(substr($hex, 5, 2))
     );
-    $cloudbank   = $col('#F1F2F0');
-    $shelterbelt = $col('#17301C');
-    $board       = $col('#C4C0B4');
-    $noonsky     = $col('#77B2D6');
-    $quarter     = $col('#3F5A22');
-    $field       = $col('#58651C');
-    $stubble     = $col('#7A661F');
+    $cloudbank   = $col($pal['paper']);
+    $shelterbelt = $col($pal['ink']);
+    $board       = $col($pal['board']);
+    $noonsky     = $col($pal['sky']);
+    $quarter     = $col($pal['hill']);
+    $field       = $col($pal['field']);
+    $stubble     = $col($pal['stubble']);
 
     imagefilledrectangle($im, 0, 0, CARD_W, CARD_H, $cloudbank);
 
@@ -72,7 +74,7 @@ if (!is_file($cacheFile)) {
     $kickerY = $pad + 20;
     $deskName = (string) ($post['category_name'] ?? '');
     $deskHex = (!empty($post['category_color']) && empty($post['category_color_is_fill']))
-        ? $post['category_color'] : '#17301C';
+        ? $post['category_color'] : $pal['ink'];
     $x = $pad;
     if ($deskName !== '') {
         $x = $track(19, $x, $kickerY, $col($deskHex), $deskName, 4.5);

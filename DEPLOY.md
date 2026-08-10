@@ -244,12 +244,49 @@ Signups on the site are double-opt-in automatically once mail is configured.
   IPv6-only and will fail from the host. Pooler only.
 - Don't grant the admin URL to anyone before the founding account exists.
 
-## 10 · Adding the next paper to the network (for later)
+## 10 · Adding the next paper to the network
 
-Each additional site is the same procedure on its own domain with the same
-`pgsql` block and a **different `site_slug`**. First boot self-provisions the
-new site's settings; newsroom accounts already work across the network, and
-editors choose which papers each story runs on from the story editor.
+Each additional site is the **same codebase and the same release** — never a
+fork. On the docket: Edmonton Echo (`edmonton-echo`), Grande Prairie Gazette
+(`grande-prairie-gazette`), Pacific Post (`pacific-post`), Burrard Bulletin
+(`burrard-bulletin`), Kermode Chronicle (`kermode-chronicle`). Brand lockups
+for the first two are already committed under `assets/sites/`.
+
+Per new paper:
+
+1. **Brand** (if not already in the repo):
+   `python3 tools/make-brand.py <slug> "The Paper Name"` generates the three
+   lockups into `assets/sites/<slug>/`; anything not generated (favicon,
+   mark, og-default, brand.css palette overrides) falls back to the network
+   default. Commit, release.
+2. **Deploy**: new nginx server block (§3a pattern) + TLS for the new
+   domain. The document root can be the **same release directory** — put the
+   per-site choice in `config.php` by mapping the host, e.g.:
+   ```php
+   'site_slug' => match (true) {
+       str_contains($_SERVER['HTTP_HOST'] ?? '', 'edmontonecho')  => 'edmonton-echo',
+       str_contains($_SERVER['HTTP_HOST'] ?? '', 'gpgazette')     => 'grande-prairie-gazette',
+       default => 'prairiedispatch',
+   },
+   ```
+   (Separate per-site directories with their own `config.php` also work —
+   but then **share one `uploads/` directory via symlink**, or images on
+   syndicated stories 404 on the other papers.)
+3. **First boot joins, not installs**: the site row and its default settings
+   self-provision; no sample stories are seeded; nothing else in the database
+   is touched. There is **no founding-account step** — newsroom accounts are
+   network-wide, so existing admins sign in to the new `/admin` immediately.
+4. **In the new site's admin**: title/tagline, wire **region tabs** (Settings
+   → regions JSON — e.g. Edmonton wants an `edmonton` region key; add feeds
+   under Sources with that key, and only that site needs to show the tab),
+   newsletter identity + SMTP, **SPF/DKIM on the new domain** (per-domain,
+   never inherited), CASL postal address, markets/weather, ads.
+5. **Cron**: one job per site. With the domain-mapped single directory, the
+   CLI has no host to map, so set the site explicitly per job:
+   `PP_SITE=edmonton-echo php cron/fetch-news.php`. Feed fetching is shared
+   and de-duplicated, so overlap between sites' crons is harmless — each
+   site's job matters for its own newsletter and scheduled stories.
+6. Syndication: editors tick "Runs on" per story.
 
 ## Troubleshooting quick table
 

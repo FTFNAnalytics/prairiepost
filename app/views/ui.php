@@ -72,7 +72,7 @@ function page_header(array $meta = [], string $activeDesk = ''): void
     if (!empty($meta['keep_query'])) {
         $canonical = $meta['canonical'] ?? (site_url() . ($_SERVER['REQUEST_URI'] ?? '/'));
     }
-    $ogImage = $meta['og_image'] ?? (site_url() . '/assets/img/og-default.png');
+    $ogImage = $meta['og_image'] ?? (site_url() . site_asset('og-default.png'));
     $ogType  = $meta['og_type'] ?? 'website';
     ?>
 <!DOCTYPE html>
@@ -83,11 +83,13 @@ function page_header(array $meta = [], string $activeDesk = ''): void
 <title><?= e($title) ?></title>
 <?php if ($description !== ''): ?><meta name="description" content="<?= e($description) ?>">
 <?php endif; ?><link rel="canonical" href="<?= e($canonical) ?>">
-<link rel="icon" type="image/svg+xml" href="/assets/img/favicon.svg">
+<link rel="icon" type="image/svg+xml" href="<?= e(site_asset('favicon.svg')) ?>">
 <link rel="alternate" type="application/rss+xml" title="<?= e($siteTitle) ?>" href="<?= e(site_url()) ?>/feed/">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="/assets/css/prairie.css">
+<?php if (site_asset('brand.css') !== '/assets/img/brand.css'): ?><link rel="stylesheet" href="<?= e(site_asset('brand.css')) ?>">
+<?php endif; ?>
 <meta property="og:site_name" content="<?= e($siteTitle) ?>">
 <meta property="og:title" content="<?= e($meta['title'] ?? $siteTitle) ?>">
 <?php if ($description !== ''): ?><meta property="og:description" content="<?= e($description) ?>">
@@ -113,7 +115,7 @@ function page_header(array $meta = [], string $activeDesk = ''): void
 <header class="masthead">
   <div class="wrap">
     <a class="logo" href="/" aria-label="<?= e($siteTitle) ?> — front page">
-      <img src="/assets/img/logo-primary.svg" alt="<?= e($siteTitle) ?>" width="820" height="138">
+      <img src="<?= e(site_asset('logo-primary.svg')) ?>" alt="<?= e($siteTitle) ?>" width="820" height="138">
     </a>
     <div class="pp-horizon pp-horizon--full" style="margin-top:8px"></div>
     <div class="tagline">
@@ -147,7 +149,7 @@ function page_footer(): void
     <div class="wrap">
       <div class="cols">
         <div class="brandcol">
-          <img src="/assets/img/logo-reversed.svg" alt="<?= e($siteTitle) ?>" width="280" height="47">
+          <img src="<?= e(site_asset('logo-reversed.svg')) ?>" alt="<?= e($siteTitle) ?>" width="280" height="47">
           <p><?= e(setting('footer_line', 'A regional daily for people who live between the towns: farm and market news alongside council, courts, weather and community.')) ?></p>
         </div>
         <div>

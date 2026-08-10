@@ -35,7 +35,7 @@ $jsonld = [
     'publisher' => [
         '@type' => 'NewsMediaOrganization',
         'name'  => setting('site_title', 'The Prairie Dispatch'),
-        'logo'  => ['@type' => 'ImageObject', 'url' => site_url() . '/assets/img/mark.svg'],
+        'logo'  => ['@type' => 'ImageObject', 'url' => site_url() . site_asset('mark.svg')],
     ],
 ];
 $cardUrl = site_url() . '/card/' . $post['slug'] . '.png';

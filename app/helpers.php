@@ -180,6 +180,53 @@ function dateline(array $post): string
     return implode(' · ', array_map('e', $parts));
 }
 
+/* --- Per-site branding ---------------------------------------------------- */
+
+/**
+ * URL for a brand asset, preferring the current site's own version.
+ * A site drops overrides into assets/sites/<slug>/ (logo-primary.svg,
+ * logo-reversed.svg, logo-stacked.svg, favicon.svg, og-default.png,
+ * brand.css); anything missing falls back to the network default.
+ */
+function site_asset(string $file): string
+{
+    $slug = current_site()['slug'] ?? '';
+    if ($slug !== '' && is_file(PP_ROOT . '/assets/sites/' . $slug . '/' . $file)) {
+        return '/assets/sites/' . $slug . '/' . $file;
+    }
+    return '/assets/img/' . $file;
+}
+
+/** Filesystem path variant of site_asset(). */
+function site_asset_path(string $file): string
+{
+    return PP_ROOT . site_asset($file);
+}
+
+/**
+ * The site's palette for generated media (social cards, the newsletter).
+ * Defaults are the prairie system; a site overrides any subset with the
+ * brand_palette setting (JSON object of the keys below).
+ */
+function pp_brand_palette(): array
+{
+    static $palette = null;
+    if ($palette === null) {
+        $palette = array_merge([
+            'ink'     => '#17301C',   // primary ink, the rule
+            'paper'   => '#F1F2F0',   // page ground
+            'board'   => '#C4C0B4',   // hairlines
+            'sky'     => '#77B2D6',   // fills
+            'hill'    => '#3F5A22',   // band 2 / positive numbers
+            'field'   => '#58651C',   // band 4
+            'stubble' => '#7A661F',   // band 5
+            'red'     => '#9C3B22',   // signal
+            'muted'   => '#5A6A5C',   // secondary text
+        ], array_filter(setting_json('brand_palette'), fn ($v) => is_string($v) && preg_match('/^#[0-9A-Fa-f]{6}$/', $v)));
+    }
+    return $palette;
+}
+
 /* --- Uploads ------------------------------------------------------------- */
 
 /**

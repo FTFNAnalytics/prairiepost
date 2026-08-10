@@ -77,8 +77,11 @@ function pp_seed(PDO $pdo): void
 {
     /* --- The founding site ----------------------------------------------- */
     $slug = slugify((string) pp_config('site_slug', 'prairiedispatch'));
+    $siteName = $slug === 'prairiedispatch'
+        ? 'The Prairie Dispatch'
+        : 'The ' . ucwords(str_replace('-', ' ', $slug));
     $pdo->prepare('INSERT INTO sites (name, slug, created_at) VALUES (?, ?, ?)')
-        ->execute(['The Prairie Dispatch', $slug, date('Y-m-d H:i:s')]);
+        ->execute([$siteName, $slug, date('Y-m-d H:i:s')]);
     $siteId = pp_seed_last_id($pdo, 'sites');
 
     /* --- Desks: each one owns a colour ---------------------------------- */
@@ -100,7 +103,7 @@ function pp_seed(PDO $pdo): void
     }
 
     /* --- Settings -------------------------------------------------------- */
-    $settings = array_merge(pp_site_default_settings('The Prairie Dispatch'), [
+    $settings = array_merge(pp_site_default_settings($siteName), [
         'weather_line'  => '21° and clearing · Wind NW 30 km/h',
         'markets'       => json_encode([
             ['Canola Nov',  '687.40', '+4.10'],

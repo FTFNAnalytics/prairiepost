@@ -43,13 +43,13 @@ function admin_header(string $title, string $active = ''): void
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title><?= e($title) ?> — Newsroom — <?= e(setting('site_title', 'The Prairie Dispatch')) ?></title>
 <meta name="robots" content="noindex,nofollow">
-<link rel="icon" type="image/svg+xml" href="/assets/img/favicon.svg">
+<link rel="icon" type="image/svg+xml" href="<?= e(site_asset('favicon.svg')) ?>">
 <link rel="stylesheet" href="/assets/css/admin.css">
 </head>
 <body>
 <div class="adminbar">
   <div class="wrap">
-    <a href="/" title="View the site"><img src="/assets/img/logo-reversed.svg" alt="<?= e(setting('site_title')) ?>"></a>
+    <a href="/" title="View the site"><img src="<?= e(site_asset('logo-reversed.svg')) ?>" alt="<?= e(setting('site_title')) ?>"></a>
     <span class="who">Newsroom</span>
     <?php if ($user): ?>
     <nav aria-label="Admin">

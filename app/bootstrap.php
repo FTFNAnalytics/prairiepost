@@ -165,7 +165,9 @@ function current_site(): array
     if ($site !== null) {
         return $site;
     }
-    $slug = slugify((string) pp_config('site_slug', 'prairiedispatch'));
+    // PP_SITE overrides the config for CLI runs (cron on a multi-site host,
+    // where HTTP_HOST-based config mapping has no host to look at).
+    $slug = slugify((string) (getenv('PP_SITE') ?: pp_config('site_slug', 'prairiedispatch')));
     $stmt = db()->prepare('SELECT * FROM sites WHERE slug = ?');
     $stmt->execute([$slug]);
     $site = $stmt->fetch();

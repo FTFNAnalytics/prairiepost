@@ -21,7 +21,7 @@ page_header([
         'name'     => setting('site_title', 'The Prairie Dispatch'),
         'url'      => site_url(),
         'slogan'   => setting('tagline', 'News to the horizon'),
-        'logo'     => site_url() . '/assets/img/mark.svg',
+        'logo'     => site_url() . site_asset('mark.svg'),
     ],
 ]);
 ?>
