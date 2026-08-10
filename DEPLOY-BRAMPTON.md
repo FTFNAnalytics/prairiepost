@@ -156,11 +156,17 @@ $host = strtolower($_SERVER['HTTP_HOST'] ?? '');
 Everything else in config.php stays exactly as it is.
 
 **Verify:** `php -l config.php` passes, then:
-- `https://bramptonbulletin.com/` renders **the Bulletin's design**:
+- `https://bramptonbulletin.com/` renders **the Bulletin's chrome**:
   the newsprint page with the flower mark, the "Brampton Bulletin"
   nameplate with the yellow offset-print shadow, the thick-thin rules,
-  the LIVE ticker at the right of the nav, and The Brief numbered
-  01–05 down the right rail.
+  and the `/assets/css/bulletin.css` stylesheet.
+- Do **not** expect the LIVE ticker or The Brief numbered rail yet,
+  and do not stop over their absence. The ticker renders only when
+  the `breaking_label`/`breaking_url` settings exist, and the Brief
+  rail only when there are stories — step 5's seeder writes both.
+  Before seeding, the nav shows a Search link where the ticker will
+  be, and the front page is otherwise nearly empty; that is correct.
+  Their checks are in step 5.
 - Every other live paper still renders its own chrome. If two domains
   show the same paper, the mapping isn't matching.
 
@@ -185,6 +191,9 @@ newsroom has already changed. Expect the output to end
 `Done — 18 stories added.`
 
 **Verify, all on https://bramptonbulletin.com:**
+- `/` — the brick **LIVE** ticker now shows at the right of the nav
+  (the seeder wrote `breaking_label` and `breaking_url`) and The Brief
+  rail is numbered 01–05 — these are the checks deferred from step 4
 - `/` — the "Council votes 7–4…" hero with the night-council
   illustration, The Brief rail numbered 01–05, the three-up row (410 /
   fourplexes / warehouses, all illustrated), Sports + the italic
@@ -245,6 +254,7 @@ Per-domain, never inherited:
 | Symptom | Cause → fix |
 |---|---|
 | "Unexpected character" in any JSON | Server copy drifted from the repo → step 0's `git reset --hard`, then re-run the palette validation loop |
+| LIVE ticker / Brief rail absent right after step 4 | Expected, not a failure — the ticker needs the `breaking_label`/`breaking_url` settings and the rail needs stories, both written by step 5's seeder → proceed to step 5, then confirm both there |
 | Front shows another paper's design | Host mapping not matching → check the `str_contains` strings in config.php against the actual Host header |
 | Seeder reports `0 stories added` on first run | It already ran (matched by slug) — not an error; verify the front instead |
 | Palette validates but the site 500s | `php -l config.php`; if clean, set `debug => true` temporarily and read the error |
