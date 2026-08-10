@@ -77,6 +77,12 @@ function db(): PDO
             // on both the session (5432) and transaction (6543) pooler.
             PDO::ATTR_EMULATE_PREPARES => true,
         ]);
+        // The app lives in its own Postgres schema so it can share a database
+        // with other applications without table-name collisions. Created on
+        // first connect; every unqualified table name resolves here.
+        $schema = pp_pg_schema();
+        $pdo->exec('CREATE SCHEMA IF NOT EXISTS "' . $schema . '"');
+        $pdo->exec('SET search_path TO "' . $schema . '"');
     } else {
         $driver = 'sqlite';
         $path = $cfg['sqlite_path'] ?? PP_ROOT . '/data/prairiedispatch.sqlite';
@@ -100,6 +106,19 @@ function db(): PDO
     }
 
     return $pdo;
+}
+
+/**
+ * The Postgres schema (namespace) this app owns inside a shared database.
+ * Validated to a bare identifier so it can be safely quoted into DDL.
+ */
+function pp_pg_schema(): string
+{
+    $schema = (string) ($GLOBALS['pp_config']['db']['pgsql']['schema'] ?? 'prairiedispatch');
+    if (!preg_match('/^[a-z_][a-z0-9_]{0,62}$/', $schema)) {
+        exit("Config error: db.pgsql.schema must be a plain lowercase identifier (letters, digits, underscores).\n");
+    }
+    return $schema;
 }
 
 /** Insert id of the last row, across drivers. */

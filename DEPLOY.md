@@ -19,10 +19,14 @@ secrets into logs, issues, or commit messages.
   `mod_rewrite` (standard shared hosting) or the PHP built-in server for
   smoke tests.
 - Database: a shared Supabase Postgres instance (the content network).
-  The app **installs its own schema and seed content on first connection**
-  to an empty database — you do not need to run any SQL by hand.
-  (`supabase/schema.sql` exists for reference/manual setup only; never run
-  it against a database the app has already initialized.)
+  The app **installs its own tables and seed content on first connection** —
+  you do not need to run any SQL by hand. (`supabase/schema.sql` exists for
+  reference/manual setup only; never run it against a database the app has
+  already initialized.)
+- **Namespace isolation:** the app creates and lives entirely inside its own
+  Postgres schema (default `prairiedispatch`), never `public`. Other
+  applications already in the same Supabase project — their `settings`,
+  `sites`, `users`, or anything else — are untouched and invisible to it.
 - Required PHP extensions: `pdo_pgsql`, `simplexml`, `curl`, `fileinfo`, `gd`.
   Check with: `php -m | grep -E 'pdo_pgsql|simplexml|curl|fileinfo|gd'`
 
@@ -78,6 +82,10 @@ return [
             'user'    => 'postgres.uggnjfladcgzqolfherx',
             'pass'    => 'THE-ROTATED-PASSWORD',
             'sslmode' => 'require',
+            'schema'  => 'prairiedispatch',   // the app's own namespace in the
+                                              // shared database; created
+                                              // automatically, must match on
+                                              // every network site
         ],
         'mysql' => [ /* leave as-is, unused */ ],
     ],
@@ -207,3 +215,4 @@ editors choose which papers each story runs on from the story editor.
 | Newsletter test lands in spam | SPF/DKIM not set for prairiedispatch.ca |
 | A feed shows `error` on every fetch | Publisher blocks bots (CTV, Postmedia) — expected; pause the source |
 | `/app/` files download as source | PHP not executing / handler misconfigured → hosting support |
+| Installer "sees" another app's tables / crashes on missing `posts` | Running a pre-schema build, or `schema` missing from config → pull latest code, set `db.pgsql.schema`, retry — the app never touches `public` |

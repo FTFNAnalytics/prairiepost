@@ -35,7 +35,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $title    = trim((string) ($_POST['title'] ?? ''));
     $lede     = trim((string) ($_POST['lede'] ?? ''));
     $body     = sanitize_html((string) ($_POST['body'] ?? ''));
-    $status   = in_array($_POST['status'] ?? '', $allowedStatuses, true) ? $_POST['status'] : 'draft';
+    $status   = (string) ($_POST['status'] ?? '');
+    if (!in_array($status, $allowedStatuses, true)) {
+        $status = 'draft';
+    }
     $publishedAt = trim((string) ($_POST['published_at'] ?? ''));
 
     if ($title === '') {
@@ -72,8 +75,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         ];
 
         if ($editor) {
-            $placement = in_array($_POST['placement'] ?? '', ['', 'hero', 'featured', 'desk_lead'], true)
-                ? $_POST['placement'] : '';
+            $placement = (string) ($_POST['placement'] ?? '');
+            if (!in_array($placement, ['', 'hero', 'featured', 'desk_lead'], true)) {
+                $placement = '';
+            }
             $fields['placement'] = $placement;
             $fields['review_note'] = trim((string) ($_POST['review_note'] ?? ''));
             if ($placement === 'hero') {

@@ -8,11 +8,17 @@
 function pp_schema_installed(PDO $pdo, string $driver): bool
 {
     try {
-        $sql = match ($driver) {
-            'mysql' => "SHOW TABLES LIKE 'settings'",
-            'pgsql' => "SELECT tablename FROM pg_tables WHERE schemaname = 'public' AND tablename = 'settings'",
-            default => "SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'settings'",
-        };
+        if ($driver === 'pgsql') {
+            // Scope the check to OUR namespace, and to a table only this app
+            // creates. A shared database may carry another application's
+            // "settings" table in public — that must never read as ours.
+            $stmt = $pdo->prepare('SELECT 1 FROM pg_tables WHERE schemaname = ? AND tablename = ?');
+            $stmt->execute([pp_pg_schema(), 'post_sites']);
+            return $stmt->fetch() !== false;
+        }
+        $sql = $driver === 'mysql'
+            ? "SHOW TABLES LIKE 'settings'"
+            : "SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'settings'";
         $stmt = $pdo->query($sql);
         return $stmt !== false && $stmt->fetch() !== false;
     } catch (PDOException) {

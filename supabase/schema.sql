@@ -13,7 +13,14 @@
 -- The PHP layer talks to this over the SESSION POOLER
 -- (aws-0-<region>.pooler.supabase.com:5432) with sslmode=require and
 -- emulated prepares, so it also works on the transaction pooler (6543).
+--
+-- Everything lives in the app's own schema (default: prairiedispatch), so a
+-- Supabase project shared with other applications stays collision-free. The
+-- schema name here must match db.pgsql.schema in every site's config.php.
 -- ============================================================================
+
+CREATE SCHEMA IF NOT EXISTS prairiedispatch;
+SET search_path TO prairiedispatch;
 
 CREATE TABLE sites (
     id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,

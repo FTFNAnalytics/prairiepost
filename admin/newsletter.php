@@ -24,7 +24,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if (($_POST['smtp_pass'] ?? '') !== '') {
             set_setting('smtp_pass', (string) $_POST['smtp_pass']);
         }
-        set_setting('smtp_secure', in_array($_POST['smtp_secure'] ?? '', ['tls', 'ssl', 'none'], true) ? $_POST['smtp_secure'] : 'tls');
+        $secure = (string) ($_POST['smtp_secure'] ?? '');
+        set_setting('smtp_secure', in_array($secure, ['tls', 'ssl', 'none'], true) ? $secure : 'tls');
         set_setting('newsletter_enabled', isset($_POST['newsletter_enabled']) ? '1' : '0');
         $hour = max(0, min(23, (int) ($_POST['newsletter_send_hour'] ?? 6)));
         set_setting('newsletter_send_hour', (string) $hour);

@@ -26,6 +26,12 @@ return [
             'user'    => 'postgres.PROJECTREF',
             'pass'    => '',
             'sslmode' => 'require',
+            // The Postgres schema (namespace) this app owns. It is created
+            // automatically and keeps the network's tables fully isolated
+            // from any other application sharing the same database — never
+            // installs into 'public'. All network sites must use the same
+            // value. Lowercase letters, digits, underscores only.
+            'schema'  => 'prairiedispatch',
         ],
         'mysql' => [
             'host'    => 'localhost',
