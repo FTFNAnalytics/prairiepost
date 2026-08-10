@@ -27,8 +27,12 @@ secrets into logs, issues, or commit messages.
   Postgres schema (default `prairiedispatch`), never `public`. Other
   applications already in the same Supabase project — their `settings`,
   `sites`, `users`, or anything else — are untouched and invisible to it.
-- Required PHP extensions: `pdo_pgsql`, `simplexml`, `curl`, `fileinfo`, `gd`.
-  Check with: `php -m | grep -E 'pdo_pgsql|simplexml|curl|fileinfo|gd'`
+- Required PHP extensions: `pdo_pgsql`, `mbstring`, `simplexml`, `curl`,
+  `fileinfo`, `gd` (and `openssl`, normally built in, for SMTP TLS).
+  Debian/Ubuntu package names: `php8.3-pgsql php8.3-mbstring php8.3-xml
+  php8.3-curl php8.3-gd` (`fileinfo` ships in the core package).
+  Check with: `php -m | grep -E 'pdo_pgsql|mbstring|simplexml|curl|fileinfo|gd'`
+  — all six must print **before** first boot.
 
 ## 1 · Rotate the database password FIRST
 
@@ -65,6 +69,49 @@ Then make the runtime directories writable by PHP:
 ```bash
 chmod 775 data uploads     # or whatever your host's writable convention is
 ```
+
+### 3a · If the server is nginx (VPS), not Apache
+
+`.htaccess` files do nothing under nginx — the pretty URLs **and the
+protection rules** must be replicated in the server block, or `/app/` and
+`/data/` are exposed and uploaded files could execute. Use this as the
+baseline (adjust root and the php-fpm socket):
+
+```nginx
+server {
+    server_name prairiedispatch.ca;
+    root /var/www/current;          # the active release
+    index index.php;
+
+    # Protection — the .htaccess equivalents. Order matters: these regex
+    # locations must appear before the PHP handler.
+    location ~ ^/(app|data)/            { deny all; }
+    location ~ ^/uploads/.+\.(php|phtml|phar)$ { deny all; }
+    location ~ ^/(config\.php|config\.example\.php|router\.php)$ { deny all; }
+
+    # Pretty URLs — the .htaccess rewrites.
+    rewrite ^/story/([a-z0-9-]+)/?$   /article.php?slug=$1  last;
+    rewrite ^/desk/([a-z0-9-]+)/?$    /section.php?slug=$1  last;
+    rewrite ^/author/([a-z0-9-]+)/?$  /author.php?slug=$1   last;
+    rewrite ^/card/([a-z0-9-]+)\.png$ /card.php?slug=$1     last;
+    rewrite ^/newsletter(/.*)?$       /newsletter.php?path=$1 last;
+    rewrite ^/search/?$               /search.php            last;
+    rewrite ^/feed/?$                 /feed.php              last;
+    rewrite ^/sitemap\.xml$           /sitemap.php           last;
+    rewrite ^/subscribe/?$            /subscribe.php         last;
+    rewrite ^/ad/?$                   /ad.php                last;
+    rewrite ^/corrections/?$          /corrections.php       last;
+
+    location ~ \.php$ {
+        include snippets/fastcgi-php.conf;
+        fastcgi_pass unix:/run/php/php8.3-fpm.sock;
+    }
+    location / { try_files $uri $uri/ =404; }
+}
+```
+
+After enabling, re-run the step-5 verification — especially the check that
+`/app/bootstrap.php` is denied.
 
 ## 4 · Create config.php on the server
 

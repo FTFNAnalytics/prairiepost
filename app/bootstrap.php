@@ -99,8 +99,25 @@ function db(): PDO
 
     if (!pp_schema_installed($pdo, $driver)) {
         require_once PP_ROOT . '/app/seed.php';
-        pp_install($pdo, $driver);
-        pp_seed($pdo);
+        // First boot is all-or-nothing where the engine allows it (Postgres
+        // and SQLite run DDL transactionally; MySQL auto-commits DDL). A
+        // crash mid-install/seed leaves nothing behind to clean up.
+        $atomic = $driver !== 'mysql';
+        if ($atomic) {
+            $pdo->beginTransaction();
+        }
+        try {
+            pp_install($pdo, $driver);
+            pp_seed($pdo);
+            if ($atomic) {
+                $pdo->commit();
+            }
+        } catch (Throwable $e) {
+            if ($atomic && $pdo->inTransaction()) {
+                $pdo->rollBack();
+            }
+            throw $e;
+        }
     } else {
         pp_migrate($pdo, $driver);
     }

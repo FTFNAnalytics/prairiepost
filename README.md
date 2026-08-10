@@ -119,9 +119,10 @@ sign-in page becomes a one-time form that creates the founding administrator.
    job** with any uptime/cron pinger.
 
 Requirements: PHP 8.1+ with `pdo_sqlite` / `pdo_pgsql` / `pdo_mysql` to match
-your driver, plus `simplexml`, `curl`, `fileinfo`. Apache with `mod_rewrite`
-for pretty URLs (the standard shared-host setup); the PHP built-in server uses
-`router.php` instead.
+your driver, plus `mbstring`, `simplexml`, `curl`, `fileinfo`, `gd`. Apache
+with `mod_rewrite` for pretty URLs (the standard shared-host setup) — on
+nginx, replicate the rewrite and protection rules per DEPLOY.md §3a; the PHP
+built-in server uses `router.php` instead.
 
 ## Running a network on Supabase
 
