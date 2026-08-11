@@ -189,6 +189,36 @@ own jobs when later phases land (`cron/monitor.php`, `cron/agents.php`,
   belong to later phases, and to `config.php`/files outside the web root
   when they come.
 
+## 9 · Phase 3 — connecting the research & drafting desk
+
+The desk (Control room → **Research desk**) ships disabled and simply says
+"not connected" until the hub gets its key. To turn it on:
+
+1. **Deploy the Phase 3 release to the hub** (`deploy-civis.sh` as usual —
+   the new vhost carries `fastcgi_read_timeout 300`, because a draft call
+   can legitimately run a couple of minutes).
+2. **Add the key to the hub's `config.php`** — one line, on the box only:
+
+   ```php
+   'anthropic_api_key' => 'sk-ant-…',
+   ```
+
+   The key never enters the database or the repository, and the papers'
+   configs don't get it — the desk exists only on the hub.
+3. **Model** (optional): Settings → *The research desk* on the hub —
+   blank uses `claude-opus-5`.
+4. **Disclosure** (optional, per paper): Settings → *The research desk* on
+   each paper — blank (default) prints nothing; `1` prints "Prepared with
+   AI assistance and reviewed by an editor." under the byline of stories
+   the desk helped draft; any other text prints verbatim.
+
+Verify: the desk builds a research brief from a pasted URL; **Draft working
+copy** files a draft that opens in the editor with the AI-assisted banner,
+`origin = ai`, your byline, and a provenance note leading the body; the
+draft appears in the network desk's *AI-assisted* filter; nothing published
+changes anywhere. The authorship rule is enforced, not advisory: drafts land
+as drafts, and only a person moves them.
+
 ## Troubleshooting quick table
 
 | Symptom | Cause → fix |

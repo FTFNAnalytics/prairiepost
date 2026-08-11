@@ -89,6 +89,13 @@ page_header([
       }
       echo implode(' · ', $parts);
     ?></p>
+    <?php
+    // AI disclosure: per-site and off by default. '1' prints the standard
+    // line; any other text prints verbatim. Only origin='ai' stories carry it.
+    $aiLine = trim((string) setting('ai_disclosure', ''));
+    if (($post['origin'] ?? '') === 'ai' && $aiLine !== ''): ?>
+    <p class="byline"><?= e($aiLine === '1' ? 'Prepared with AI assistance and reviewed by an editor.' : $aiLine) ?></p>
+    <?php endif; ?>
   </div>
 
   <div class="pp-horizon" style="margin-top:18px"></div>

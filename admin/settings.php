@@ -10,6 +10,7 @@ $textKeys = [
     'breaking_label', 'breaking_url', 'contact_email',
     'field_notes_text', 'field_notes_url',
     'ad_top', 'ad_rail', 'ad_article',
+    'ai_model', 'ai_disclosure',
 ];
 $jsonKeys = ['regions', 'markets', 'weather_today', 'traffic_items', 'events_items'];
 
@@ -127,6 +128,19 @@ flash_show();
     <label for="regions">Region tabs · JSON of {"key": "Label"}</label>
     <textarea id="regions" name="regions" class="mono"><?= e(setting('regions')) ?></textarea>
     <p class="help">Region keys are stored on every fetched news item — changing a key later orphans that region's items. Add and label freely; rename with care.</p>
+  </div>
+
+  <div class="panel">
+    <h2>The research desk</h2>
+    <?php if (pp_is_hub()): ?>
+    <label for="ai_model">Model id · blank uses <span class="mono">claude-opus-5</span></label>
+    <input type="text" id="ai_model" name="ai_model" class="mono" value="<?= e(setting('ai_model')) ?>" placeholder="claude-opus-5">
+    <p class="help">The API key is not a setting — it lives in <code>config.php</code> on the server (<code>anthropic_api_key</code>), never in the database.</p>
+    <?php else: ?>
+    <label for="ai_disclosure">AI-assistance disclosure · blank = off (the default)</label>
+    <input type="text" id="ai_disclosure" name="ai_disclosure" value="<?= e(setting('ai_disclosure')) ?>" placeholder="1">
+    <p class="help">Printed under the byline on stories drafted with the desk's help (<span class="mono">origin = ai</span>). Set to <span class="mono">1</span> for the standard line — “Prepared with AI assistance and reviewed by an editor.” — or write your own wording. Every AI-assisted story is verified, rewritten and signed by its journalist either way; this only chooses whether readers see a note.</p>
+    <?php endif; ?>
   </div>
 
   <div class="panel">

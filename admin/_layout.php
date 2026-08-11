@@ -29,6 +29,10 @@ function admin_header(string $title, string $active = '', string $actions = ''):
         $items['network'] = ['network-posts.php', 'Network desk'];
         $items['netwire'] = ['network-wire.php', 'Newswire'];
     }
+    if ($hub) {
+        // Editors and authors alike — AI assists, a journalist authors.
+        $items['aidraft'] = ['ai-draft.php', 'Research desk'];
+    }
     if (is_editor($user)) {
         $items['linkpost']    = ['link-post.php', 'Post a link'];
         $items['categories']  = ['categories.php', 'Desks'];

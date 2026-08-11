@@ -107,6 +107,7 @@ flash_show();
     </div>
     <div class="acts">
       <?php if ($item['used']): ?><span class="chip chip--used">Used</span><?php endif; ?>
+      <a class="btn btn--ghost btn--small" href="ai-draft.php?news=<?= (int) $item['id'] ?>">Research</a>
       <a class="btn btn--ghost btn--small" href="link-post.php?item=<?= (int) $item['id'] ?>">Post link</a>
       <form method="post" class="inline">
         <?= csrf_field() ?>

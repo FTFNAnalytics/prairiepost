@@ -59,6 +59,12 @@ return [
     // Leave empty to auto-detect from the request.
     'site_url' => '',
 
+    // The research & drafting desk (hub only). The Anthropic API key lives
+    // HERE and nowhere else — never the database, never the repository.
+    // Leave empty on the papers; the desk simply reports "not connected".
+    // The model id is a hub setting (default claude-opus-5), not config.
+    'anthropic_api_key' => '',
+
     'timezone' => 'America/Edmonton',
 
     // Show full error output. Never enable in production.

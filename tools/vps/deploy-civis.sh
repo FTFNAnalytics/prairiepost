@@ -119,6 +119,9 @@ server {
     location ~ \.php\$ {
         include snippets/fastcgi-php.conf;
         fastcgi_pass unix:$FPM_SOCK;
+        # The research desk's AI calls can legitimately run a couple of
+        # minutes; without this nginx cuts them off at 60s.
+        fastcgi_read_timeout 300;
     }
     location / { try_files \$uri \$uri/ =404; }
 }

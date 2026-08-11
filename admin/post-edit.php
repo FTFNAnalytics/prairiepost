@@ -159,6 +159,11 @@ if ($error) {
 if (!$editor && !empty($post['review_note'])) {
     echo '<div class="flash flash--error"><strong>From the editor:</strong> ' . e($post['review_note']) . '</div>';
 }
+if (($post['origin'] ?? '') === 'ai') {
+    echo '<div class="flash"><strong>AI-assisted working copy.</strong> The desk gathered and drafted this; it is not journalism yet. '
+       . 'Verify every fact and every [VERIFY] mark against the sources, rework it in your own voice, and delete the provenance note — '
+       . 'your byline answers for what ships.</div>';
+}
 ?>
 
 <div class="headrow">
