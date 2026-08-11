@@ -16,12 +16,15 @@ hub does differently.
 for the existing box in `tools/vps/` — `discover.sh` (read-only server map),
 `deploy-civis.sh` (release dir, config copied from the Dispatch's, vhost,
 first boot, launch package, certbot, verification), and
-`upgrade-papers.sh` (every paper to the branch's current release: new
-release dir per paper, config carried with `hub_slug` added, vhosts
-repointed, crons updated, per-paper verification with automatic revert —
-and the network's **shared uploads** directory, symlinked into every
-release so campaign creatives and syndicated images resolve on every
-domain). One paste each into the VPS terminal; the manual steps below
+`upgrade-papers.sh` (every paper to the branch's current release: one new
+release dir per release *group* — a directory serving several vhosts
+upgrades once — with the existing config carried **verbatim** as
+`app/config.site.php` behind a wrapper that adds `hub_slug` at request
+time, vhosts repointed, crons updated, and tenant-aware verification:
+every domain must serve 200 with the same front-page title it had before
+the change, or its whole group's vhosts and cron files revert — and the
+network's **shared uploads** directory, symlinked into every release so
+campaign creatives and syndicated images resolve on every domain). One paste each into the VPS terminal; the manual steps below
 remain the reference and the path for any other server.
 
 **The one rule stands:** credentials never enter this repository.
