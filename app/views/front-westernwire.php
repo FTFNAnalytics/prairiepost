@@ -48,17 +48,49 @@ $wwKick = function (array $p) use ($regions): string {
 };
 
 $shown = $hero ? [(int) $hero['id']] : [];
-$wire = latest_posts(8, $shown);
+$wire = latest_posts(10, $shown);
 $shown = array_merge($shown, array_map('intval', array_column($wire, 'id')));
 
 $latest = $hero['published_at'] ?? ($wire[0]['published_at'] ?? null);
-$also = latest_posts(10, $shown);
+$also = latest_posts(12, $shown);
 ?>
 
 <div class="ww-main">
   <?= ad_slot('top') ?>
 
   <div class="ww-front">
+    <aside class="ww-index" aria-label="Index">
+      <?php $topics = top_tags(12); if ($topics): ?>
+      <div class="ww-topics">
+        <h2 class="ww-railhead">Topics</h2>
+        <div class="cloud">
+          <?php foreach ($topics as $t): ?>
+          <a href="<?= e(url('search') . '?q=' . urlencode($t['name'])) ?>"><?= e($t['name']) ?></a>
+          <?php endforeach; ?>
+        </div>
+      </div>
+      <?php endif; ?>
+
+      <?php if ($regions): ?>
+      <div class="ww-bylist" aria-label="By province">
+        <h2 class="ww-railhead">By province</h2>
+        <?php foreach ($regions as $rk => $rl): ?>
+        <a href="<?= e(url('region/' . $rk)) ?>"><?= e($rl) ?><span class="n"><?= (int) count_posts_in_region($rk) ?></span></a>
+        <?php endforeach; ?>
+      </div>
+      <?php endif; ?>
+
+      <?php $rooms = wire_newsrooms(8); if ($rooms): ?>
+      <div class="ww-bylist" aria-label="Newsrooms on the wire">
+        <h2 class="ww-railhead">On the wire</h2>
+        <?php foreach ($rooms as $r): ?>
+        <a href="<?= e(url('search') . '?q=' . urlencode($r['name'])) ?>"><?= e($r['name']) ?><span class="n"><?= (int) $r['n'] ?></span></a>
+        <?php endforeach; ?>
+        <p class="note">Every headline links to the outlet that reported it.</p>
+      </div>
+      <?php endif; ?>
+    </aside>
+
     <section class="ww-onwire" aria-label="On the wire now">
       <div class="oh">
         <h2>On the wire now</h2>
@@ -80,11 +112,16 @@ $also = latest_posts(10, $shown);
       <?php endif; ?>
 
       <?php foreach ($wire as $p): ?>
-      <article class="ww-item">
-        <?= $wwKick($p) ?>
-        <h3><a href="<?= e(post_href($p)) ?>"<?= post_link_attr($p) ?>><?= e($p['title']) ?></a></h3>
-        <?php if ($p['lede']): ?><p><?= e(excerpt($p['lede'], 170)) ?></p><?php endif; ?>
-        <p class="att"><?= $wwAtt($p) ?></p>
+      <article class="ww-item<?= $p['image'] ? ' has-ph' : '' ?>">
+        <div class="tx">
+          <?= $wwKick($p) ?>
+          <h3><a href="<?= e(post_href($p)) ?>"<?= post_link_attr($p) ?>><?= e($p['title']) ?></a></h3>
+          <?php if ($p['lede']): ?><p><?= e(excerpt($p['lede'], 170)) ?></p><?php endif; ?>
+          <p class="att"><?= $wwAtt($p) ?></p>
+        </div>
+        <?php if ($p['image']): ?>
+        <a class="thumb" href="<?= e(post_href($p)) ?>"<?= post_link_attr($p) ?> tabindex="-1" aria-hidden="true"><img src="<?= e($p['image']) ?>" alt="" loading="lazy"></a>
+        <?php endif; ?>
       </article>
       <?php endforeach; ?>
     </section>
@@ -117,17 +154,6 @@ $also = latest_posts(10, $shown);
         </ol>
       </div>
       <?php endif; endif; ?>
-
-      <?php $topics = top_tags(10); if ($topics): ?>
-      <div class="ww-topics" aria-label="Topics">
-        <h2 class="ww-railhead">Topics</h2>
-        <div class="cloud">
-          <?php foreach ($topics as $t): ?>
-          <a href="<?= e(url('search') . '?q=' . urlencode($t['name'])) ?>"><?= e($t['name']) ?></a>
-          <?php endforeach; ?>
-        </div>
-      </div>
-      <?php endif; ?>
 
       <?= ad_slot('rail') ?>
     </aside>

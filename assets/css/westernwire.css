@@ -90,33 +90,48 @@ body.t-westernwire :focus-visible{ outline: 2px solid var(--ww-spruce); outline-
 
 /* --- Front page ----------------------------------------------------------- */
 .ww-main{ max-width: 1180px; margin: 0 auto; padding: 26px 20px 60px; }
-.ww-front{ display: grid; grid-template-columns: minmax(0,1fr) 320px; gap: 44px; }
-@media (max-width: 940px){ .ww-front{ grid-template-columns: 1fr; } }
+.ww-front{ display: grid; grid-template-columns: 190px minmax(0,1fr) 300px; gap: 40px; }
+@media (max-width: 1080px){
+  .ww-front{ grid-template-columns: minmax(0,1fr) 300px; }
+  .ww-index{ display: none; }
+}
+@media (max-width: 800px){ .ww-front{ grid-template-columns: 1fr; } }
 
 .ww-onwire > .oh{ display: flex; justify-content: space-between; align-items: baseline; border-bottom: 3px solid var(--ww-ink); padding-bottom: 6px; }
 .ww-onwire > .oh h2{ font-family: var(--ww-sans); font-size: 15px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; margin: 0; }
 .ww-onwire > .oh .upd{ font-family: var(--ww-sans); font-size: 12px; color: var(--ww-muted); }
 .ww-onwire > .oh .upd::before{ content: ''; display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: var(--ww-glacier); margin-right: 6px; }
 
-.ww-item{ padding: 20px 0; border-bottom: 1px solid var(--ww-line); }
-.ww-item .kick{ font-family: var(--ww-sans); font-size: 12px; font-weight: 600; letter-spacing: .07em; text-transform: uppercase; display: flex; gap: 10px; }
+.ww-item{ padding: 14px 0; border-bottom: 1px solid var(--ww-line); }
+.ww-item.has-ph{ display: grid; grid-template-columns: minmax(0,1fr) 148px; gap: 18px; align-items: start; }
+.ww-item .thumb{ display: block; margin-top: 4px; }
+.ww-item .thumb img{ width: 100%; aspect-ratio: 3/2; object-fit: cover; display: block; }
+.ww-item .kick{ font-family: var(--ww-sans); font-size: 12px; font-weight: 600; letter-spacing: .07em; text-transform: uppercase; display: flex; gap: 10px; margin: 0; }
 .ww-item .kick a{ color: var(--ww-spruce); text-decoration: none; }
 .ww-item .kick .rg{ color: var(--ww-muted); font-weight: 500; }
-.ww-item h3{ font-size: 24px; line-height: 1.22; margin: 6px 0 6px; font-weight: 600; }
+.ww-item h3{ font-size: 21px; line-height: 1.24; margin: 5px 0 5px; font-weight: 600; }
 .ww-item h3 a{ color: var(--ww-ink); text-decoration: none; }
 .ww-item h3 a:hover{ color: var(--ww-spruce); }
-.ww-item p{ margin: 0 0 8px; font-size: 16px; line-height: 1.55; color: #3A4048; max-width: 68ch; }
-.ww-item .att{ font-family: var(--ww-sans); font-size: 13px; color: var(--ww-muted); }
+.ww-item p{ margin: 0 0 6px; font-size: 15px; line-height: 1.5; color: #3A4048; max-width: 68ch; }
+.ww-item .att{ font-family: var(--ww-sans); font-size: 12.5px; color: var(--ww-muted); margin: 0; }
 .ww-item .att b{ font-weight: 600; color: var(--ww-spruce); }
 
-.ww-item--lead{ padding-top: 0; }
-.ww-item--lead .ph{ margin: 0 0 14px; }
+.ww-item--lead{ padding-top: 0; padding-bottom: 20px; }
+.ww-item--lead .ph{ margin: 0 0 14px; display: block; }
 .ww-item--lead .ph img{ width: 100%; display: block; }
-.ww-item--lead h3{ font-size: clamp(28px, 4vw, 38px); line-height: 1.14; }
-.ww-item--lead p{ font-size: 18px; }
+.ww-item--lead h3{ font-size: clamp(26px, 3.4vw, 34px); line-height: 1.16; }
+.ww-item--lead p{ font-size: 17px; line-height: 1.5; }
 
-.ww-item .ph{ margin: 10px 0 4px; max-width: 420px; }
-.ww-item .ph img{ width: 100%; display: block; }
+/* --- Index rail (left) ----------------------------------------------------- */
+.ww-index > *{ margin-bottom: 28px; }
+.ww-index .note{ font-family: var(--ww-sans); font-size: 12px; color: var(--ww-muted); line-height: 1.5; margin: 10px 0 0; }
+.ww-bylist a{
+  display: flex; justify-content: space-between; align-items: baseline; gap: 10px;
+  font-family: var(--ww-sans); font-size: 13.5px; font-weight: 500; text-decoration: none;
+  color: var(--ww-ink); padding: 8px 0; border-bottom: 1px solid var(--ww-line);
+}
+.ww-bylist a:hover{ color: var(--ww-spruce); }
+.ww-bylist .n{ font-size: 12px; color: var(--ww-muted); font-weight: 400; }
 
 /* --- Rail ------------------------------------------------------------------ */
 .ww-rail > *{ margin-bottom: 30px; }
@@ -129,10 +144,10 @@ body.t-westernwire :focus-visible{ outline: 2px solid var(--ww-spruce); outline-
 .ww-most a:hover{ color: var(--ww-spruce); }
 .ww-most .src{ font-family: var(--ww-sans); font-size: 12px; color: var(--ww-muted); margin-top: 3px; display: block; }
 
-.ww-topics .cloud{ display: flex; flex-wrap: wrap; gap: 8px; padding-top: 10px; }
+.ww-topics .cloud{ display: flex; flex-wrap: wrap; gap: 7px; padding-top: 10px; }
 .ww-topics .cloud a{
-  font-family: var(--ww-sans); font-size: 13px; font-weight: 500; text-decoration: none;
-  color: var(--ww-spruce); background: #E4EDEC; padding: 5px 12px; border-radius: 2px;
+  font-family: var(--ww-sans); font-size: 12.5px; font-weight: 500; text-decoration: none;
+  color: var(--ww-spruce); background: #E4EDEC; padding: 4px 10px; border-radius: 2px;
 }
 .ww-topics .cloud a:hover{ background: var(--ww-spruce); color: #fff; }
 

@@ -210,6 +210,17 @@ function top_tags(int $limit = 8): array
     return $stmt->fetchAll();
 }
 
+/** The outlets on this site's wire — distinct link-post credits with counts. */
+function wire_newsrooms(int $limit = 8): array
+{
+    $sql = 'SELECT p.source_name AS name, COUNT(*) AS n FROM posts p' . pp_site_join() . '
+            WHERE ' . pp_published_where() . " AND p.post_type = 'link' AND p.source_name != ''
+            GROUP BY p.source_name ORDER BY n DESC, p.source_name LIMIT " . (int) $limit;
+    $stmt = db()->prepare($sql);
+    $stmt->execute([now()]);
+    return $stmt->fetchAll();
+}
+
 /* --- Sites & syndication ------------------------------------------------- */
 
 function sites_all(): array
