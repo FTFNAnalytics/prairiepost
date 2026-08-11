@@ -63,6 +63,14 @@ foreach ($pack['settings'] ?? [] as $k => $v) {
     echo "  setting: {$k}\n";
 }
 
+/* --- Site row name: the auto-generated name yields to the launch identity -- */
+$auto = ucwords(str_replace('-', ' ', $slug));
+$packTitle = (string) ($pack['settings']['site_title'] ?? '');
+if ($site['name'] === $auto && $packTitle !== '' && $packTitle !== $site['name']) {
+    $pdo->prepare('UPDATE sites SET name = ? WHERE id = ?')->execute([$packTitle, $siteId]);
+    echo "  site name: {$packTitle}\n";
+}
+
 /* --- Wire sources (shared; matched by URL) -------------------------------- */
 $known = $pdo->query('SELECT url FROM sources')->fetchAll(PDO::FETCH_COLUMN);
 $insSrc = $pdo->prepare('INSERT INTO sources (name, url, region, enabled) VALUES (?, ?, ?, 1)');
@@ -88,7 +96,11 @@ $insPT  = $pdo->prepare('INSERT INTO post_tags (post_id, tag_id) VALUES (?, ?)')
 
 $added = 0;
 foreach ($pack['stories'] ?? [] as $s) {
-    $pslug = slugify($s['title']);
+    // A pack may set an explicit slug. Aggregator packs need this: posts.slug
+    // is unique across the whole network, and a wire item titled after the
+    // sister-paper story it links to would otherwise collide with that story's
+    // own slug on a shared database and be skipped as "already exists".
+    $pslug = $s['slug'] ?? slugify($s['title']);
     $selPost->execute([$pslug]);
     if ($selPost->fetch()) {
         echo "  story exists, skipped: {$pslug}\n";

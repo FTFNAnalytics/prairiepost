@@ -26,16 +26,17 @@ The Wire's domain is **westernwire.ca**. The bare domain is canonical;
 
 ## 0 · Pull and verify the release
 
-- Branch `claude/western-wire-aggregator-iw8pth` — **pull the latest
-  HEAD first.** This release carries schema version 7 (three new posts
+- Branch `claude/prairie-post-news-site-hiffgl` (the network's release
+  branch), at or after the Western Wire merge — **pull the latest HEAD
+  first.** This release carries schema version 7 (three new posts
   columns and an index for the aggregator), the Post-a-link newsroom
   tool, the `/region/` pages, the westernwire template, and the Wire's
   brand assets and launch package.
 
 ```bash
-cd /path/to/release && git fetch origin claude/western-wire-aggregator-iw8pth \
-  && git checkout claude/western-wire-aggregator-iw8pth \
-  && git pull origin claude/western-wire-aggregator-iw8pth
+cd /path/to/release && git fetch origin claude/prairie-post-news-site-hiffgl \
+  && git checkout claude/prairie-post-news-site-hiffgl \
+  && git pull origin claude/prairie-post-news-site-hiffgl
 ```
 
 **Verify:**
@@ -160,10 +161,15 @@ Everything else in config.php stays exactly as it is.
 **Verify:** `php -l config.php` passes, then:
 
 - `https://westernwire.ca/` renders **the Wire's chrome**: the dark
-  Slate utility strip ("Western Canada · today's date"), the tracked-out
-  WESTERN WIRE wordmark over the full-width rule with the gold live
-  segment, the dark Front Range section nav with the four province
-  links, and the `/assets/css/westernwire.css` stylesheet.
+  Slate utility strip ("Western Canada · today's date"), the wordmark
+  over the full-width rule with the gold live segment, the dark Front
+  Range section nav, and the `/assets/css/westernwire.css` stylesheet.
+- Do **not** expect the exact "WESTERN WIRE" identity yet, and do not
+  stop over its absence. The masthead reads the auto-provisioned
+  "Westernwire", the tagline is the network default, and the nav's
+  region links show the default wire regions — the site title, "The
+  West, on one wire", and the four province keys are all **settings
+  written by step 5's seeder**. Their checks are in step 5.
 - The front is nearly empty ("Nothing on the wire yet") — correct until
   step 5.
 - The first request self-provisioned the site row and ran the v7
@@ -184,20 +190,27 @@ This fills the Wire: identity (Western Wire, "The West, on one wire",
 The 6 a.m. Wire newsletter), the Energy & Resources and Culture desks
 (the other desks are the network's shared ones), twelve western wire
 feeds keyed by province (bc / alberta / saskatchewan / manitoba), and
-eleven launch items. Safe to re-run; it never overwrites a setting the
-newsroom has already changed.
+**25 launch items**. Safe to re-run; it never overwrites a setting the
+newsroom has already changed. Expect the output to end
+`Done — 25 stories added.`
 
-**The launch wire items are real links.** Eight of them point at launch
+**The launch wire items are real links.** Twenty of them point at launch
 stories on the network's own papers — the Pacific Post, Kelowna Current,
 Kermode Chronicle, Edmonton Echo, Grande Prairie Gazette and Prairie
 Dispatch — so every outbound headline resolves to a live page you
-control. The other three are original Western Wire stories (the potash
-piece, the flood-maps piece, and "How Western Wire works"). Feeds
-already registered by sister papers are matched by URL and skipped —
-that's expected output, not an error.
+control. On the Wire itself these items live under `wire-…` slugs, so
+they never collide with the sister story's own slug in the shared
+database. The other five are original Western Wire stories (potash,
+flood maps, durum harvest, Churchill, and "How Western Wire works").
+Feeds already registered by sister papers are matched by URL and
+skipped — that's expected output, not an error.
 
 **Verify, all on https://westernwire.ca:**
 
+- `/` — the masthead now reads the tracked-out **WESTERN WIRE** with
+  "The West, on one wire" beneath, and the nav carries the four
+  province links (British Columbia / Alberta / Saskatchewan / Manitoba)
+  — these are the identity checks deferred from step 4.
 - `/` — the Echo's curbside-parking story leads with the streetlight
   illustration; its headline goes **to edmontonecho.com in a new tab**.
 - Wire items carry the credit line — "The Pacific Post · 2 h" — and
@@ -206,8 +219,8 @@ that's expected output, not an error.
   `/region/manitoba` — each renders its province archive.
 - "Across the four provinces" shows all four columns.
 - `/story/potash-on-the-water-…` (original) renders **on** the Wire;
-  `/story/two-hours-on-curbside-parking-…` (wire link) **302-redirects**
-  to the Echo.
+  `/story/wire-two-hours-on-curbside-parking-…` (wire link)
+  **302-redirects** to the Echo's own story page.
 - `/feed/` — wire items' `<link>` elements point at the source outlets.
 - `/sitemap.xml` — contains the original stories, none of the wire links.
 
