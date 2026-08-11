@@ -84,6 +84,9 @@ function pp_schema_ddl(string $driver): array
             image_credit VARCHAR(120) NOT NULL DEFAULT '',
             meta_description VARCHAR(255) NOT NULL DEFAULT '',
             source_url VARCHAR(500) NOT NULL DEFAULT '',
+            source_name VARCHAR(160) NOT NULL DEFAULT '',
+            post_type VARCHAR(20) NOT NULL DEFAULT 'story',
+            region VARCHAR(40) NOT NULL DEFAULT '',
             status VARCHAR(20) NOT NULL DEFAULT 'draft',
             review_note TEXT,
             is_featured INTEGER NOT NULL DEFAULT 0,
@@ -193,6 +196,7 @@ function pp_schema_ddl(string $driver): array
         'CREATE INDEX idx_posts_status ON posts (status, published_at)',
         'CREATE INDEX idx_posts_category ON posts (category_id)',
         'CREATE INDEX idx_posts_author ON posts (author_id)',
+        'CREATE INDEX idx_posts_region ON posts (region)',
         'CREATE INDEX idx_news_region ON news_items (region, fetched_at)',
         'CREATE INDEX idx_post_sites_site ON post_sites (site_id)',
         'CREATE INDEX idx_ads_site_placement ON ads (site_id, placement)',
@@ -380,5 +384,20 @@ function pp_migrate(PDO $pdo, string $driver): void
         // Read counts, for the Trending panel and the newsroom's own numbers.
         $pdo->exec('ALTER TABLE posts ADD COLUMN views INTEGER NOT NULL DEFAULT 0');
         $pdo->exec("UPDATE settings SET svalue = '6' WHERE site_id = 0 AND skey = 'schema_version'");
+    }
+
+    if ($version < 7) {
+        // The aggregator: a post can be an outbound wire link — its headline
+        // links to the outlet that reported it — and carries the outlet's
+        // name and a region so aggregator fronts can group by province.
+        foreach ([
+            "ALTER TABLE posts ADD COLUMN source_name VARCHAR(160) NOT NULL DEFAULT ''",
+            "ALTER TABLE posts ADD COLUMN post_type VARCHAR(20) NOT NULL DEFAULT 'story'",
+            "ALTER TABLE posts ADD COLUMN region VARCHAR(40) NOT NULL DEFAULT ''",
+        ] as $sql) {
+            $pdo->exec($sql);
+        }
+        $pdo->exec('CREATE INDEX idx_posts_region ON posts (region)');
+        $pdo->exec("UPDATE settings SET svalue = '7' WHERE site_id = 0 AND skey = 'schema_version'");
     }
 }

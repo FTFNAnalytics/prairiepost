@@ -132,6 +132,9 @@ $fpLeads = db()->query("SELECT p.id, p.title, c.name AS desk FROM posts p
     </div>
     <div class="acts">
       <?php if ($item['used']): ?><span class="chip chip--used">Used</span><?php endif; ?>
+      <?php if ($editor): ?>
+      <a class="btn btn--ghost btn--small" href="link-post.php?item=<?= (int) $item['id'] ?>">Post link</a>
+      <?php endif; ?>
       <form method="post" class="inline">
         <?= csrf_field() ?>
         <input type="hidden" name="action" value="start_draft">

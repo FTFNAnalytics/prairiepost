@@ -24,6 +24,7 @@ function admin_header(string $title, string $active = ''): void
         'posts'     => ['posts.php', 'Stories'],
     ];
     if (is_editor($user)) {
+        $items['linkpost']    = ['link-post.php', 'Post a link'];
         $items['categories']  = ['categories.php', 'Desks'];
         $items['sources']     = ['sources.php', 'Sources'];
         $items['ads']         = ['ads.php', 'Ads'];

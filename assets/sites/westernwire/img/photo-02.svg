@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 450" role="img" aria-label="A tunnel portal under a coastal ridge, tracks running in">
+  <rect width="800" height="450" fill="#F5F4F2"/>
+  <path d="M0 240 L140 90 L260 190 L400 60 L560 200 L680 120 L800 220 L800 450 L0 450 Z" fill="#2B3442"/>
+  <path d="M0 300 L120 190 L280 280 L440 170 L620 290 L800 230 L800 450 L0 450 Z" fill="#3F8A86"/>
+  <path d="M0 360 L180 260 L360 340 L540 250 L720 350 L800 320 L800 450 L0 450 Z" fill="#245A63"/>
+  <path d="M330 450 L330 360 Q400 300 470 360 L470 450 Z" fill="#1B212B"/>
+  <g stroke="#F5F4F2" stroke-width="5" fill="none">
+    <line x1="380" y1="450" x2="396" y2="376"/>
+    <line x1="420" y1="450" x2="404" y2="376"/>
+  </g>
+  <rect y="420" width="800" height="8" fill="#1B212B"/>
+  <rect x="330" y="420" width="140" height="8" fill="#C08A2E"/>
+</svg>

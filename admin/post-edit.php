@@ -57,8 +57,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     if ($error === '') {
+        $regions = setting_json('regions');
+        $region = (string) ($_POST['region'] ?? '');
         $fields = [
             'title' => $title,
+            'post_type' => ($_POST['post_type'] ?? '') === 'link' ? 'link' : 'story',
+            'source_name' => trim((string) ($_POST['source_name'] ?? '')),
+            'region' => isset($regions[$region]) ? $region : '',
             'category_id' => (int) ($_POST['category_id'] ?? 0) ?: null,
             'byline' => trim((string) ($_POST['byline'] ?? '')),
             'dateline' => trim((string) ($_POST['dateline'] ?? '')),
@@ -260,8 +265,25 @@ if (!$editor && !empty($post['review_note'])) {
       <div>
         <label for="meta_description">Search description · 155 characters</label>
         <textarea id="meta_description" name="meta_description" maxlength="255" style="min-height:64px"><?= $v('meta_description') ?></textarea>
-        <label for="source_url">Source link · when started from the wire</label>
+        <label for="post_type">Kind</label>
+        <?php $kind = (string) ($post['post_type'] ?? 'story'); ?>
+        <select id="post_type" name="post_type">
+          <option value="story"<?= $kind !== 'link' ? ' selected' : '' ?>>Original story — the headline opens the story page here</option>
+          <option value="link"<?= $kind === 'link' ? ' selected' : '' ?>>Wire link — the headline links straight to the source outlet</option>
+        </select>
+        <label for="source_url">Source link · where a wire link points; kept as “source material” on a story</label>
         <input type="url" id="source_url" name="source_url" value="<?= $v('source_url') ?>">
+        <label for="source_name">Source credit · the outlet's name on a wire link</label>
+        <input type="text" id="source_name" name="source_name" value="<?= $v('source_name') ?>" maxlength="160" placeholder="The Edmonton Echo">
+        <?php $regionOpts = setting_json('regions'); if ($regionOpts): ?>
+        <label for="region">Region</label>
+        <select id="region" name="region">
+          <option value="">— No region —</option>
+          <?php foreach ($regionOpts as $rk => $rl): ?>
+          <option value="<?= e($rk) ?>"<?= (string) ($post['region'] ?? '') === $rk ? ' selected' : '' ?>><?= e($rl) ?></option>
+          <?php endforeach; ?>
+        </select>
+        <?php endif; ?>
         <?php if ($editor): ?>
         <label for="placement">Front page placement</label>
         <?php $pl = (string) ($post['placement'] ?? ''); ?>

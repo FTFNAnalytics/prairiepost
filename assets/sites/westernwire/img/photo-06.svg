@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 450" role="img" aria-label="Aurora bands over a dark northern ridge">
+  <rect width="800" height="450" fill="#1B212B"/>
+  <g opacity="0.85">
+    <path d="M80 40 Q120 200 60 340 L120 340 Q170 200 140 40 Z" fill="#3F8A86" opacity="0.55"/>
+    <path d="M240 20 Q290 190 230 330 L300 330 Q350 180 320 20 Z" fill="#3F8A86" opacity="0.75"/>
+    <path d="M430 50 Q470 200 420 330 L480 330 Q530 190 500 50 Z" fill="#245A63" opacity="0.8"/>
+    <path d="M600 30 Q650 190 590 320 L660 320 Q710 180 680 30 Z" fill="#3F8A86" opacity="0.6"/>
+  </g>
+  <g fill="#F5F4F2" opacity="0.8">
+    <circle cx="180" cy="90" r="3"/><circle cx="370" cy="60" r="2"/><circle cx="560" cy="110" r="3"/>
+    <circle cx="700" cy="70" r="2"/><circle cx="90" cy="200" r="2"/><circle cx="740" cy="210" r="2"/>
+  </g>
+  <path d="M0 400 L140 320 L260 380 L420 300 L580 370 L700 330 L800 380 L800 450 L0 450 Z" fill="#2B3442"/>
+  <rect y="420" width="800" height="8" fill="#0F131A"/>
+  <rect x="420" y="420" width="380" height="8" fill="#C08A2E"/>
+</svg>

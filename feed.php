@@ -17,13 +17,15 @@ echo '<?xml version="1.0" encoding="UTF-8"?>' . "\n";
   <lastBuildDate><?= e(date(DATE_RSS)) ?></lastBuildDate>
   <atom:link href="<?= e(site_url()) ?>/feed/" rel="self" type="application/rss+xml"/>
 <?php foreach ($posts as $post): ?>
+<?php // Wire links point at the source outlet; the local guid stays stable.
+      $isLink = ($post['post_type'] ?? '') === 'link' && !empty($post['source_url']); ?>
   <item>
     <title><?= e($post['title']) ?></title>
-    <link><?= e(site_url()) ?>/story/<?= e($post['slug']) ?></link>
+    <link><?= $isLink ? e($post['source_url']) : e(site_url()) . '/story/' . e($post['slug']) ?></link>
     <guid isPermaLink="true"><?= e(site_url()) ?>/story/<?= e($post['slug']) ?></guid>
     <pubDate><?= e(date(DATE_RSS, strtotime($post['published_at']))) ?></pubDate>
     <?php if ($post['category_name']): ?><category><?= e($post['category_name']) ?></category>
-    <?php endif; ?><description><?= e(excerpt((string) ($post['lede'] ?: $post['body']), 300)) ?></description>
+    <?php endif; ?><description><?= e(excerpt((string) ($post['lede'] ?: $post['body']), 300)) ?><?= $isLink && !empty($post['source_name']) ? e(' (via ' . $post['source_name'] . ')') : '' ?></description>
   </item>
 <?php endforeach; ?>
 </channel>

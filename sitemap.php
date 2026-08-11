@@ -11,9 +11,11 @@ $rows[] = [$base . '/', date('Y-m-d'), 'hourly', '1.0'];
 foreach (categories_all() as $cat) {
     $rows[] = [$base . '/desk/' . $cat['slug'], date('Y-m-d'), 'daily', '0.7'];
 }
+// Wire links redirect to their source outlet, so they stay out of the sitemap.
 $stmt = db()->prepare("SELECT p.slug, p.published_at, p.updated_at FROM posts p
     JOIN post_sites ps ON ps.post_id = p.id AND ps.site_id = " . current_site_id() . "
-    WHERE p.status = 'published' AND p.published_at <= ? ORDER BY p.published_at DESC LIMIT 5000");
+    WHERE p.status = 'published' AND p.published_at <= ? AND p.post_type != 'link'
+    ORDER BY p.published_at DESC LIMIT 5000");
 $stmt->execute([now()]);
 foreach ($stmt as $post) {
     $rows[] = [

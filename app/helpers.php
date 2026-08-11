@@ -168,6 +168,20 @@ function time_label(?string $dt): string
 function dateline(array $post): string
 {
     $parts = [];
+    // A wire link credits the outlet that reported it, never a house byline.
+    if (($post['post_type'] ?? '') === 'link' && !empty($post['source_url'])) {
+        $label = (string) ($post['source_name'] ?? '');
+        if ($label === '') {
+            $label = preg_replace('/^www\./', '', parse_url((string) $post['source_url'], PHP_URL_HOST) ?: '');
+        }
+        if ($label !== '') {
+            $parts[] = $label;
+        }
+        if (!empty($post['published_at'])) {
+            $parts[] = time_label($post['published_at']);
+        }
+        return implode(' · ', array_map('e', $parts));
+    }
     if (!empty($post['dateline'])) {
         $parts[] = mb_strtoupper($post['dateline']);
     }
