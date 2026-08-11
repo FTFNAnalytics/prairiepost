@@ -12,6 +12,13 @@ the mechanics (release, config, verification discipline) are the same, and
 §10 there covers how additional sites join. This file covers only what the
 hub does differently.
 
+**Scripted path (the network's VPS):** the whole runbook below is automated
+for the existing box in `tools/vps/` — `discover.sh` (read-only server map)
+and `deploy-civis.sh` (release dir, config copied from the Dispatch's,
+vhost, first boot, launch package, certbot, verification). One paste each
+into the VPS terminal; the manual steps below remain the reference and the
+path for any other server.
+
 **The one rule stands:** credentials never enter this repository.
 `config.php` is gitignored and lives only on the server.
 
