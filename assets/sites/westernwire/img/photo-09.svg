@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 450" role="img" aria-label="A northern port on Hudson Bay, a laker at the dock under a pale sky">
+  <rect width="800" height="450" fill="#DCE3E4"/>
+  <circle cx="180" cy="100" r="36" fill="#F5F4F2"/>
+  <path d="M0 240 L800 250 L800 450 L0 450 Z" fill="#245A63"/>
+  <path d="M0 240 L800 250 L800 274 L0 262 Z" fill="#3F8A86"/>
+  <g fill="#2B3442">
+    <rect x="470" y="120" width="180" height="120"/>
+    <rect x="500" y="84" width="24" height="40"/>
+    <rect x="600" y="96" width="16" height="28"/>
+  </g>
+  <g fill="#1B212B">
+    <path d="M120 300 L150 260 L430 260 L460 300 Z"/>
+    <rect x="220" y="216" width="110" height="46"/>
+    <rect x="250" y="192" width="16" height="26"/>
+  </g>
+  <rect x="150" y="268" width="280" height="10" fill="#C08A2E"/>
+  <g fill="#F5F4F2" opacity="0.7">
+    <path d="M60 340 q22 -10 44 0 q-22 10 -44 0 Z"/>
+    <path d="M560 360 q22 -10 44 0 q-22 10 -44 0 Z"/>
+    <path d="M680 320 q18 -8 36 0 q-18 8 -36 0 Z"/>
+  </g>
+  <rect y="420" width="800" height="8" fill="#1B212B"/>
+  <rect y="420" width="200" height="8" fill="#C08A2E"/>
+</svg>

@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 450" role="img" aria-label="A grain terminal loading a bulk vessel at the port">
+  <rect width="800" height="450" fill="#2B3442"/>
+  <path d="M0 300 L800 290 L800 450 L0 450 Z" fill="#1B212B"/>
+  <g fill="#3F8A86">
+    <rect x="60"  y="120" width="54" height="180" rx="8"/>
+    <rect x="124" y="120" width="54" height="180" rx="8"/>
+    <rect x="188" y="120" width="54" height="180" rx="8"/>
+    <rect x="252" y="120" width="54" height="180" rx="8"/>
+  </g>
+  <rect x="50" y="104" width="266" height="22" fill="#245A63"/>
+  <g stroke="#245A63" stroke-width="10" fill="none">
+    <line x1="316" y1="140" x2="470" y2="230"/>
+  </g>
+  <g fill="#245A63">
+    <path d="M420 330 L440 260 L700 260 L740 330 Z"/>
+    <rect x="530" y="212" width="90" height="48"/>
+    <rect x="556" y="188" width="14" height="26"/>
+  </g>
+  <g fill="#C08A2E">
+    <rect x="440" y="272" width="240" height="12"/>
+    <circle cx="563" cy="182" r="6"/>
+  </g>
+  <g fill="#F5F4F2" opacity="0.5">
+    <path d="M110 340 q20 -10 40 0 q-20 10 -40 0 Z"/>
+    <path d="M330 372 q20 -10 40 0 q-20 10 -40 0 Z"/>
+  </g>
+  <rect y="420" width="800" height="8" fill="#0F131A"/>
+  <rect x="440" y="420" width="240" height="8" fill="#C08A2E"/>
+</svg>

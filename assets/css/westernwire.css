@@ -90,15 +90,58 @@ body.t-westernwire :focus-visible{ outline: 2px solid var(--ww-spruce); outline-
 
 /* --- Front page ----------------------------------------------------------- */
 .ww-main{ max-width: 1180px; margin: 0 auto; padding: 26px 20px 60px; }
-.ww-front{ display: grid; grid-template-columns: 190px minmax(0,1fr) 300px; gap: 40px; }
+.ww-front{ display: grid; grid-template-columns: 212px minmax(0,1fr) 290px; gap: 36px; }
 @media (max-width: 1080px){
-  .ww-front{ grid-template-columns: minmax(0,1fr) 300px; }
+  .ww-front{ grid-template-columns: minmax(0,1fr) 290px; }
   .ww-index{ display: none; }
 }
 @media (max-width: 800px){ .ww-front{ grid-template-columns: 1fr; } }
 
+/* --- Dark image cards — the wire's showcase surface ------------------------ */
+.ww-card{
+  position: relative; display: block; background: var(--ww-range);
+  overflow: hidden; text-decoration: none; min-height: 190px;
+}
+.ww-card img{ position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.ww-card .shade{
+  position: absolute; inset: 0;
+  background: linear-gradient(180deg, rgba(27,33,43,0) 30%, rgba(27,33,43,.62) 62%, rgba(27,33,43,.92) 100%);
+}
+.ww-card .in{ position: absolute; left: 0; right: 0; bottom: 0; padding: 16px 18px; display: block; }
+.ww-card .flags{ display: flex; gap: 6px; margin: 0 0 8px; }
+.ww-card .flag{
+  font-family: var(--ww-sans); font-size: 11px; font-weight: 700; letter-spacing: .09em;
+  text-transform: uppercase; color: #F5F4F2; background: var(--ww-spruce); padding: 4px 9px;
+}
+.ww-card .flag--gold{ background: var(--ww-gold); color: var(--ww-ink); }
+.ww-card .hl{
+  display: block; font-family: var(--ww-serif); font-weight: 600; color: #F5F4F2;
+  font-size: 19px; line-height: 1.25;
+}
+.ww-card .att{
+  display: block; margin-top: 8px; font-family: var(--ww-sans); font-size: 11.5px;
+  letter-spacing: .08em; text-transform: uppercase; color: #D9B36A;
+}
+.ww-card .att b{ font-weight: 600; color: #D9B36A; }
+.ww-card:hover .hl{ text-decoration: underline; text-decoration-color: var(--ww-glacier); text-underline-offset: 3px; }
+
+.ww-leadgrid{ display: grid; grid-template-columns: minmax(0,1.55fr) minmax(0,1fr); gap: 14px; padding: 16px 0 6px; border-bottom: 1px solid var(--ww-line); }
+.ww-leadgrid .stack{ display: grid; grid-template-rows: 1fr 1fr; gap: 14px; }
+.ww-card--lead{ min-height: 430px; }
+.ww-card--lead .in{ padding: 22px 24px; }
+.ww-card--lead .hl{ font-size: clamp(24px, 2.6vw, 33px); line-height: 1.16; }
+@media (max-width: 800px){
+  .ww-leadgrid{ grid-template-columns: 1fr; }
+  .ww-card--lead{ min-height: 320px; }
+}
+
 .ww-onwire > .oh{ display: flex; justify-content: space-between; align-items: baseline; border-bottom: 3px solid var(--ww-ink); padding-bottom: 6px; }
 .ww-onwire > .oh h2{ font-family: var(--ww-sans); font-size: 15px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; margin: 0; }
+.ww-onwire > .oh h2::before, .ww-provinces > h2::before, .ww-also > h2::before{
+  content: ''; display: inline-block; width: 9px; height: 9px; background: var(--ww-gold);
+  margin-right: 9px; vertical-align: 1px;
+}
+.ww-provinces > h2::before, .ww-also > h2::before{ background: var(--ww-spruce); }
 .ww-onwire > .oh .upd{ font-family: var(--ww-sans); font-size: 12px; color: var(--ww-muted); }
 .ww-onwire > .oh .upd::before{ content: ''; display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: var(--ww-glacier); margin-right: 6px; }
 
@@ -122,9 +165,34 @@ body.t-westernwire :focus-visible{ outline: 2px solid var(--ww-spruce); outline-
 .ww-item--lead h3{ font-size: clamp(26px, 3.4vw, 34px); line-height: 1.16; }
 .ww-item--lead p{ font-size: 17px; line-height: 1.5; }
 
-/* --- Index rail (left) ----------------------------------------------------- */
-.ww-index > *{ margin-bottom: 28px; }
+/* --- Index rail (left): the gold and spruce panels ------------------------- */
+.ww-index > *{ margin-bottom: 26px; }
 .ww-index .note{ font-family: var(--ww-sans); font-size: 12px; color: var(--ww-muted); line-height: 1.5; margin: 10px 0 0; }
+
+.ww-secs{ background: var(--ww-gold); padding: 18px 20px 20px; }
+.ww-secs h2{
+  font-family: var(--ww-sans); font-size: 12px; font-weight: 700; letter-spacing: .1em;
+  text-transform: uppercase; color: var(--ww-ink); margin: 0 0 10px;
+}
+.ww-secs a{
+  display: block; font-family: var(--ww-serif); font-size: 17px; font-weight: 600;
+  color: var(--ww-ink); text-decoration: none; padding: 6px 0;
+}
+.ww-secs a:hover{ color: #F5F4F2; }
+
+.ww-topics{ background: var(--ww-spruce); padding: 18px 20px 20px; }
+.ww-topics h2{
+  font-family: var(--ww-sans); font-size: 12px; font-weight: 700; letter-spacing: .1em;
+  text-transform: uppercase; color: #F5F4F2; margin: 0 0 4px;
+}
+
+.ww-trend ol{ list-style: none; margin: 0; padding: 0; counter-reset: trend; }
+.ww-trend li{ counter-increment: trend; display: flex; gap: 12px; padding: 11px 0; border-bottom: 1px solid var(--ww-line); }
+.ww-trend li::before{ content: counter(trend); font-family: var(--ww-sans); font-weight: 700; font-size: 21px; color: var(--ww-gold); line-height: 1; min-width: 18px; }
+.ww-trend a{ color: var(--ww-ink); text-decoration: none; font-size: 14.5px; line-height: 1.35; font-weight: 600; display: block; }
+.ww-trend a:hover{ color: var(--ww-spruce); }
+.ww-trend .src{ font-family: var(--ww-sans); font-size: 11.5px; letter-spacing: .05em; text-transform: uppercase; color: var(--ww-muted); margin-top: 3px; display: block; }
+
 .ww-bylist a{
   display: flex; justify-content: space-between; align-items: baseline; gap: 10px;
   font-family: var(--ww-sans); font-size: 13.5px; font-weight: 500; text-decoration: none;
@@ -137,19 +205,13 @@ body.t-westernwire :focus-visible{ outline: 2px solid var(--ww-spruce); outline-
 .ww-rail > *{ margin-bottom: 30px; }
 .ww-railhead{ font-family: var(--ww-sans); font-size: 13px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; border-bottom: 3px solid var(--ww-ink); padding-bottom: 6px; margin: 0 0 4px; }
 
-.ww-most ol{ list-style: none; margin: 0; padding: 0; counter-reset: most; }
-.ww-most li{ counter-increment: most; display: flex; gap: 14px; padding: 12px 0; border-bottom: 1px solid var(--ww-line); }
-.ww-most li::before{ content: counter(most); font-family: var(--ww-sans); font-weight: 700; font-size: 22px; color: var(--ww-glacier); line-height: 1; min-width: 20px; }
-.ww-most a{ color: var(--ww-ink); text-decoration: none; font-size: 15px; line-height: 1.35; font-weight: 600; display: block; }
-.ww-most a:hover{ color: var(--ww-spruce); }
-.ww-most .src{ font-family: var(--ww-sans); font-size: 12px; color: var(--ww-muted); margin-top: 3px; display: block; }
-
 .ww-topics .cloud{ display: flex; flex-wrap: wrap; gap: 7px; padding-top: 10px; }
 .ww-topics .cloud a{
-  font-family: var(--ww-sans); font-size: 12.5px; font-weight: 500; text-decoration: none;
-  color: var(--ww-spruce); background: #E4EDEC; padding: 4px 10px; border-radius: 2px;
+  font-family: var(--ww-sans); font-size: 12px; font-weight: 600; letter-spacing: .06em;
+  text-transform: uppercase; text-decoration: none; color: #F5F4F2;
+  border: 1px solid rgba(245,244,242,.55); padding: 4px 10px; border-radius: 2px;
 }
-.ww-topics .cloud a:hover{ background: var(--ww-spruce); color: #fff; }
+.ww-topics .cloud a:hover{ background: #F5F4F2; border-color: #F5F4F2; color: var(--ww-spruce); }
 
 .ww-signup{ background: var(--ww-ink); color: #E7E9EC; padding: 20px 20px 22px; }
 .ww-signup .k{ font-family: var(--ww-sans); font-size: 13px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--ww-gold); display: block; margin-bottom: 8px; }
@@ -174,6 +236,9 @@ body.t-westernwire :focus-visible{ outline: 2px solid var(--ww-spruce); outline-
   font-family: var(--ww-sans); font-size: 13px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase;
   padding: 12px 0 8px; border-bottom: 2px solid var(--ww-spruce); margin-bottom: 4px;
 }
+.ww-card--prov{ min-height: 200px; margin: 10px 0 4px; }
+.ww-card--prov .hl{ font-size: 16.5px; }
+.ww-card--prov .in{ padding: 13px 14px; }
 .ww-provinces .col > .ph a{ color: var(--ww-spruce); text-decoration: none; }
 .ww-provinces .col > .ph a:hover{ color: var(--ww-glacier); }
 .ww-provinces .it{ display: block; padding: 10px 0; border-bottom: 1px solid var(--ww-line); text-decoration: none; }
