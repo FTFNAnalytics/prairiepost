@@ -13,6 +13,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $id = (int) ($_POST['id'] ?? 0);
     $existing = $id ? ad_by_id($id) : null;
 
+    // Network campaign rows are managed from the control room, wholesale —
+    // a local edit would silently fork one paper's copy off the campaign.
+    if ($existing && !empty($existing['campaign_id'])) {
+        flash_set('That ad is part of a network campaign — it\'s managed from the control room, not here.', true);
+        redirect('ads.php');
+    }
+
     if ($action === 'save') {
         $name = trim((string) ($_POST['name'] ?? ''));
         $placement = isset($placements[$_POST['placement'] ?? '']) ? $_POST['placement'] : 'rail';
@@ -84,6 +91,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 $editing = isset($_GET['edit']) ? ad_by_id((int) $_GET['edit']) : null;
+if ($editing && !empty($editing['campaign_id'])) {
+    flash_set('That ad is part of a network campaign — it\'s managed from the control room, not here.', true);
+    $editing = null;
+}
 $ads = ads_all();
 
 admin_header('Advertising', 'ads');
@@ -108,9 +119,13 @@ flash_show();
       <td class="mono"><?= (int) $ad['impressions'] ?> / <?= (int) $ad['clicks'] ?></td>
       <td><span class="chip <?= ad_is_live($ad) ? 'chip--ok' : 'chip--used' ?>"><?= ad_is_live($ad) ? 'live' : ($ad['enabled'] ? 'outside schedule' : 'paused') ?></span></td>
       <td style="white-space:nowrap">
+        <?php if (!empty($ad['campaign_id'])): ?>
+        <span class="chip chip--scheduled" title="Filed once on the hub, running network-wide — edits happen there">Network campaign</span>
+        <?php else: ?>
         <a class="btn btn--ghost btn--small" href="ads.php?edit=<?= (int) $ad['id'] ?>">Edit</a>
         <form method="post" class="inline"><?= csrf_field() ?><input type="hidden" name="action" value="toggle"><input type="hidden" name="id" value="<?= (int) $ad['id'] ?>"><button class="btn btn--ghost btn--small" type="submit"><?= $ad['enabled'] ? 'Pause' : 'Resume' ?></button></form>
         <form method="post" class="inline" onsubmit="return confirm('Delete this ad?')"><?= csrf_field() ?><input type="hidden" name="action" value="delete"><input type="hidden" name="id" value="<?= (int) $ad['id'] ?>"><button class="btn btn--danger btn--small" type="submit">Delete</button></form>
+        <?php endif; ?>
       </td>
     </tr>
     <?php endforeach; ?>

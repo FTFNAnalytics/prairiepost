@@ -33,8 +33,13 @@ function admin_header(string $title, string $active = '', string $actions = ''):
         $items['linkpost']    = ['link-post.php', 'Post a link'];
         $items['categories']  = ['categories.php', 'Desks'];
         $items['sources']     = ['sources.php', 'Sources'];
-        $items['ads']         = ['ads.php', 'Ads'];
-        if (!$hub) {
+        if ($hub) {
+            // Network campaigns are the hub's advertising desk, admin-only.
+            if ($user['role'] === 'admin') {
+                $items['ads'] = ['network-ads.php', 'Advertising'];
+            }
+        } else {
+            $items['ads'] = ['ads.php', 'Advertising'];
             // The hub is not a paper — no daily edition, no subscriber list.
             $items['newsletter']  = ['newsletter.php', 'The 6 a.m.'];
             $items['subscribers'] = ['subscribers.php', 'Subscribers'];

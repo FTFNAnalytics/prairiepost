@@ -471,6 +471,87 @@ function ad_for_placement(string $placement): ?array
     return $ad;
 }
 
+/* --- Network campaigns (the hub's advertising) ---------------------------- */
+
+/**
+ * Campaigns with their fleet aggregated: papers carried, served, clicks,
+ * and one exemplar ads row's slot/schedule/enabled state (the rows are
+ * identical by construction; only site_id and the counters differ).
+ */
+function campaigns_with_stats(): array
+{
+    $sql = 'SELECT c.*, COUNT(a.id) AS papers, COALESCE(SUM(a.impressions), 0) AS impressions,
+                   COALESCE(SUM(a.clicks), 0) AS clicks,
+                   MAX(a.placement) AS placement, MAX(a.kind) AS kind,
+                   MAX(a.start_at) AS start_at, MAX(a.end_at) AS end_at,
+                   COALESCE(MAX(a.enabled), 0) AS any_enabled
+            FROM campaigns c LEFT JOIN ads a ON a.campaign_id = c.id
+            GROUP BY c.id, c.name, c.advertiser, c.notes, c.created_at
+            ORDER BY c.created_at DESC';
+    return db()->query($sql)->fetchAll();
+}
+
+function campaign_by_id(int $id): ?array
+{
+    $stmt = db()->prepare('SELECT * FROM campaigns WHERE id = ?');
+    $stmt->execute([$id]);
+    return $stmt->fetch() ?: null;
+}
+
+/** A campaign's ads rows with their paper names, for the breakdown table. */
+function campaign_ads(int $campaignId): array
+{
+    $stmt = db()->prepare('SELECT a.*, s.name AS site_name, s.slug AS site_slug
+                           FROM ads a JOIN sites s ON s.id = a.site_id
+                           WHERE a.campaign_id = ? ORDER BY s.name');
+    $stmt->execute([$campaignId]);
+    return $stmt->fetchAll();
+}
+
+/**
+ * Fan a campaign out to its papers: one ads row per selected site, all
+ * carrying the same creative and schedule. Existing rows are updated in
+ * place (their counters survive), newly-ticked papers get a fresh row,
+ * and deselected papers' rows are removed — their served/click counts
+ * leave the campaign's totals with them. Serving never changes: each row
+ * is an ordinary per-site ad that happens to carry the campaign's stamp.
+ * Returns [added, updated, removed].
+ */
+function pp_sync_campaign_ads(int $campaignId, array $siteIds, array $fields): array
+{
+    $pdo = db();
+    $existing = [];
+    $stmt = $pdo->prepare('SELECT id, site_id FROM ads WHERE campaign_id = ?');
+    $stmt->execute([$campaignId]);
+    foreach ($stmt as $row) {
+        $existing[(int) $row['site_id']] = (int) $row['id'];
+    }
+    $siteIds = array_values(array_unique(array_map('intval', $siteIds)));
+    $added = $updated = $removed = 0;
+
+    foreach ($siteIds as $siteId) {
+        if (isset($existing[$siteId])) {
+            $set = implode(', ', array_map(fn ($k) => "$k = ?", array_keys($fields)));
+            $pdo->prepare("UPDATE ads SET $set WHERE id = ?")
+                ->execute([...array_values($fields), $existing[$siteId]]);
+            $updated++;
+        } else {
+            $ins = $fields + ['site_id' => $siteId, 'campaign_id' => $campaignId, 'created_at' => now()];
+            $cols = implode(', ', array_keys($ins));
+            $marks = implode(', ', array_fill(0, count($ins), '?'));
+            $pdo->prepare("INSERT INTO ads ($cols) VALUES ($marks)")->execute(array_values($ins));
+            $added++;
+        }
+    }
+    foreach ($existing as $siteId => $adId) {
+        if (!in_array($siteId, $siteIds, true)) {
+            $pdo->prepare('DELETE FROM ads WHERE id = ?')->execute([$adId]);
+            $removed++;
+        }
+    }
+    return [$added, $updated, $removed];
+}
+
 /* --- Stats for the dashboard ---------------------------------------------- */
 
 function pp_counts(): array

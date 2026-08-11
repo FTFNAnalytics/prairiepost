@@ -191,6 +191,15 @@ function pp_schema_ddl(string $driver): array
             enabled INTEGER NOT NULL DEFAULT 1,
             impressions INTEGER NOT NULL DEFAULT 0,
             clicks INTEGER NOT NULL DEFAULT 0,
+            campaign_id INTEGER,
+            created_at $dt NOT NULL
+        )$suffix",
+
+        "CREATE TABLE campaigns (
+            id $id,
+            name VARCHAR(160) NOT NULL,
+            advertiser VARCHAR(160) NOT NULL DEFAULT '',
+            notes TEXT,
             created_at $dt NOT NULL
         )$suffix",
 
@@ -225,6 +234,7 @@ function pp_schema_ddl(string $driver): array
         'CREATE INDEX idx_news_region ON news_items (region, fetched_at)',
         'CREATE INDEX idx_post_sites_site ON post_sites (site_id)',
         'CREATE INDEX idx_ads_site_placement ON ads (site_id, placement)',
+        'CREATE INDEX idx_ads_campaign ON ads (campaign_id)',
         'CREATE INDEX idx_inquiries_site ON inquiries (site_id, created_at)',
     ];
 }
@@ -468,5 +478,29 @@ function pp_migrate(PDO $pdo, string $driver): void
         pp_seed_roadmap($pdo);
 
         $pdo->exec("UPDATE settings SET svalue = '8' WHERE site_id = 0 AND skey = 'schema_version'");
+    }
+
+    if ($version < 9) {
+        // Network advertising: a campaign is filed once on the hub and fans
+        // out to one ads row per chosen paper — per-site serving, rotation
+        // and counters stay exactly as they are; the campaign_id stamp is
+        // what ties the rows together for reporting and protects them from
+        // local edits.
+        $dt = $driver === 'pgsql' ? 'TIMESTAMP' : 'DATETIME';
+        $id = $driver === 'mysql' ? 'INT UNSIGNED AUTO_INCREMENT PRIMARY KEY'
+            : ($driver === 'pgsql' ? 'INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY' : 'INTEGER PRIMARY KEY AUTOINCREMENT');
+
+        $pdo->exec('ALTER TABLE ads ADD COLUMN campaign_id INTEGER');
+        $pdo->exec('CREATE INDEX idx_ads_campaign ON ads (campaign_id)');
+
+        $pdo->exec("CREATE TABLE campaigns (
+            id $id,
+            name VARCHAR(160) NOT NULL,
+            advertiser VARCHAR(160) NOT NULL DEFAULT '',
+            notes TEXT,
+            created_at $dt NOT NULL
+        )");
+
+        $pdo->exec("UPDATE settings SET svalue = '9' WHERE site_id = 0 AND skey = 'schema_version'");
     }
 }

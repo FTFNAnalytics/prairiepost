@@ -71,6 +71,17 @@ chown -R www-data:www-data "$REL/data" "$REL/uploads"
 chmod 2775 "$REL/data" "$REL/uploads"
 chmod 640 "$REL/config.php"
 
+# Once the network has a shared uploads directory (created by
+# upgrade-papers.sh), every new hub release serves it too — creatives and
+# syndicated images resolve on every domain.
+if [ -d /var/www/prairiepost-shared-uploads ] && [ ! -L "$REL/uploads" ]; then
+  cp -an "$REL/uploads/." /var/www/prairiepost-shared-uploads/ 2>/dev/null
+  rm -rf "$REL/uploads"
+  ln -s /var/www/prairiepost-shared-uploads "$REL/uploads"
+  chown -h www-data:www-data "$REL/uploads"
+  echo "uploads -> shared"
+fi
+
 say "nginx vhost (HTTP first; certbot adds TLS after)"
 VH=/etc/nginx/sites-available/civismedia
 if [ -f "$VH" ]; then

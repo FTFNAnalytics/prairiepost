@@ -13,11 +13,16 @@ the mechanics (release, config, verification discipline) are the same, and
 hub does differently.
 
 **Scripted path (the network's VPS):** the whole runbook below is automated
-for the existing box in `tools/vps/` — `discover.sh` (read-only server map)
-and `deploy-civis.sh` (release dir, config copied from the Dispatch's,
-vhost, first boot, launch package, certbot, verification). One paste each
-into the VPS terminal; the manual steps below remain the reference and the
-path for any other server.
+for the existing box in `tools/vps/` — `discover.sh` (read-only server map),
+`deploy-civis.sh` (release dir, config copied from the Dispatch's, vhost,
+first boot, launch package, certbot, verification), and
+`upgrade-papers.sh` (every paper to the branch's current release: new
+release dir per paper, config carried with `hub_slug` added, vhosts
+repointed, crons updated, per-paper verification with automatic revert —
+and the network's **shared uploads** directory, symlinked into every
+release so campaign creatives and syndicated images resolve on every
+domain). One paste each into the VPS terminal; the manual steps below
+remain the reference and the path for any other server.
 
 **The one rule stands:** credentials never enter this repository.
 `config.php` is gitignored and lives only on the server.

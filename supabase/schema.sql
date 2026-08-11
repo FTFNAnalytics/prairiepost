@@ -182,6 +182,16 @@ CREATE TABLE ads (
     enabled INTEGER NOT NULL DEFAULT 1,
     impressions INTEGER NOT NULL DEFAULT 0,
     clicks INTEGER NOT NULL DEFAULT 0,
+    campaign_id INTEGER,                          -- set = a network campaign row, managed from the hub
+    created_at TIMESTAMP NOT NULL
+);
+
+-- Network campaigns: filed once on the hub, fanned out to an ads row per paper.
+CREATE TABLE campaigns (
+    id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    name VARCHAR(160) NOT NULL,
+    advertiser VARCHAR(160) NOT NULL DEFAULT '',
+    notes TEXT,
     created_at TIMESTAMP NOT NULL
 );
 
@@ -218,6 +228,7 @@ CREATE INDEX idx_posts_region ON posts (region);
 CREATE INDEX idx_news_region ON news_items (region, fetched_at);
 CREATE INDEX idx_post_sites_site ON post_sites (site_id);
 CREATE INDEX idx_ads_site_placement ON ads (site_id, placement);
+CREATE INDEX idx_ads_campaign ON ads (campaign_id);
 CREATE INDEX idx_inquiries_site ON inquiries (site_id, created_at);
 
-INSERT INTO settings (site_id, skey, svalue) VALUES (0, 'schema_version', '8');
+INSERT INTO settings (site_id, skey, svalue) VALUES (0, 'schema_version', '9');
