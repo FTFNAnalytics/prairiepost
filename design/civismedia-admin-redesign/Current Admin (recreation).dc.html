@@ -1,0 +1,721 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="design_doc_mode" content="canvas">
+<link rel="stylesheet" href="assets/css/admin.css">
+</helmet>
+<div style="display:flex;flex-direction:column;gap:56px;padding:48px;align-items:flex-start">
+
+<div data-screen-label="01 Dashboard" style="display:flex;flex-direction:column;gap:10px">
+<div style="font-family:var(--pp-mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:#5A6A5C">01 · Dashboard — admin/index.php</div>
+<div style="width:1280px;background:var(--pp-cloudbank);border:1px solid var(--pp-board);box-shadow:0 2px 8px rgba(23,48,28,.10)">
+<div class="adminbar"><div class="wrap">
+<a href="#"><img src="assets/img/logo-reversed.svg" alt="The Prairie Dispatch"></a>
+<span class="who">Newsroom</span>
+<nav aria-label="Admin">
+<a href="#" aria-current="page">Dashboard</a><a href="#">Stories</a><a href="#">Post a link</a><a href="#">Desks</a><a href="#">Sources</a><a href="#">Ads</a><a href="#">The 6 a.m.</a><a href="#">Subscribers</a><a href="#">Accounts</a><a href="#">Settings</a><a href="#">Your profile</a><a href="#">+ New story</a><a href="#">Margaret Olesen · Sign out</a>
+</nav>
+</div></div>
+<main class="adminmain"><div class="wrap">
+<div class="headrow">
+<h1 class="pagetitle">The morning pull</h1>
+<a class="btn btn--ghost" href="#">Fetch all feeds now</a>
+</div>
+<p class="pagesub">Wire last fetched Aug 11, 6:02 am. Start a draft from a headline, or tick it off once it's covered.</p>
+<div class="stats">
+<div class="stat"><div class="n">128</div><span class="k">Published</span></div>
+<div class="stat"><div class="n">7</div><span class="k">Drafts</span></div>
+<div class="stat"><div class="n">3</div><span class="k">In review</span></div>
+<div class="stat"><div class="n">2</div><span class="k">Scheduled</span></div>
+<div class="stat"><div class="n">412</div><span class="k">Subscribers</span></div>
+<div class="stat"><div class="n">14</div><span class="k">Feeds on</span></div>
+</div>
+<div class="panel">
+<h2>The front page, as set</h2>
+<table class="tbl">
+<tr><th>Slot</th><th>Story</th></tr>
+<tr><td>Hero</td><td><a class="rowtitle" href="#">County council approves gravel levy after three-hour debate</a></td></tr>
+<tr><td>Featured band</td><td><a class="rowtitle" href="#">Canola futures slip as harvest estimates firm up</a> · <a class="rowtitle" href="#">Province re-opens rural physician incentive program</a></td></tr>
+<tr><td>Desk leads</td><td><a class="rowtitle" href="#">Rink board votes to keep ice in through April</a> <span class="chip chip--used">Community</span> · <a class="rowtitle" href="#">Feeder cattle hold firm at Strathmore sale</a> <span class="chip chip--used">Agriculture</span></td></tr>
+</table>
+</div>
+<div class="panel" style="border-top:4px solid var(--pp-bigsky)">
+<h2>The review queue — waiting on an editor</h2>
+<table class="tbl">
+<tr><th>Story</th><th>Author</th><th>Desk</th><th>Submitted</th><th></th></tr>
+<tr><td><a class="rowtitle" href="#">Fall fair board names new president after 22 years</a></td><td>Priya Sandhu</td><td>Community</td><td class="mono">Aug 10, 4:41 pm</td><td><a class="btn btn--sky btn--small" href="#">Review</a></td></tr>
+<tr><td><a class="rowtitle" href="#">School division weighs four-day week for rural routes</a></td><td>Dale Hirsch</td><td>News</td><td class="mono">Aug 10, 2:17 pm</td><td><a class="btn btn--sky btn--small" href="#">Review</a></td></tr>
+<tr><td><a class="rowtitle" href="#">Letter: the levy is the wrong tool for the right problem</a></td><td>Priya Sandhu</td><td>Opinion</td><td class="mono">Aug 9, 8:03 pm</td><td><a class="btn btn--sky btn--small" href="#">Review</a></td></tr>
+</table>
+</div>
+<div class="tabs" role="tablist" aria-label="Regions">
+<a href="#" aria-current="page">Local</a><a href="#">Alberta</a><a href="#">Canada</a><a href="#">Agriculture wire</a>
+</div>
+<div class="panel">
+<h2>Local — latest from the wire</h2>
+<div class="newsitem">
+<div class="t"><a href="#">Drumheller council to revisit flood mitigation contract</a><span class="src">Drumheller Mail · Aug 11, 5:48 am</span></div>
+<div class="acts"><a class="btn btn--ghost btn--small" href="#">Post link</a><button class="btn btn--sky btn--small" type="button">Start draft</button><button class="btn btn--ghost btn--small" type="button">Mark used</button></div>
+</div>
+<div class="newsitem">
+<div class="t"><a href="#">Three-vehicle collision closes Highway 9 east of town</a><span class="src">ECA Review · Aug 11, 5:31 am</span></div>
+<div class="acts"><a class="btn btn--ghost btn--small" href="#">Post link</a><button class="btn btn--sky btn--small" type="button">Start draft</button><button class="btn btn--ghost btn--small" type="button">Mark used</button></div>
+</div>
+<div class="newsitem is-used">
+<div class="t"><a href="#">Strathmore approves rec-centre feasibility study</a><span class="src">Strathmore Times · Aug 11, 5:02 am</span></div>
+<div class="acts"><span class="chip chip--used">Used</span><a class="btn btn--ghost btn--small" href="#">Post link</a><button class="btn btn--sky btn--small" type="button">Start draft</button><button class="btn btn--ghost btn--small" type="button">Unmark</button></div>
+</div>
+<div class="newsitem">
+<div class="t"><a href="#">Calgary hail damage claims pass $200M, insurers say</a><span class="src">CBC Calgary · Aug 11, 4:55 am</span></div>
+<div class="acts"><a class="btn btn--ghost btn--small" href="#">Post link</a><button class="btn btn--sky btn--small" type="button">Start draft</button><button class="btn btn--ghost btn--small" type="button">Mark used</button></div>
+</div>
+<div class="newsitem">
+<div class="t"><a href="#">Rural crime watch expands to two more counties</a><span class="src">ECA Review · Aug 10, 9:12 pm</span></div>
+<div class="acts"><a class="btn btn--ghost btn--small" href="#">Post link</a><button class="btn btn--sky btn--small" type="button">Start draft</button><button class="btn btn--ghost btn--small" type="button">Mark used</button></div>
+</div>
+</div>
+<div class="panel">
+<h2>Open drafts</h2>
+<table class="tbl">
+<tr><th>Story</th><th>Last touched</th><th></th></tr>
+<tr><td><a class="rowtitle" href="#">Three Hills arena fundraiser clears $40,000</a></td><td class="mono">Aug 11, 7:20 am</td><td><a class="btn btn--ghost btn--small" href="#">Open</a></td></tr>
+<tr><td><a class="rowtitle" href="#">Harvest preview: a dry year meets a late spring</a></td><td class="mono">Aug 10, 5:46 pm</td><td><a class="btn btn--ghost btn--small" href="#">Open</a></td></tr>
+<tr><td><a class="rowtitle" href="#">Q&amp;A with the new fire chief</a></td><td class="mono">Aug 9, 11:08 am</td><td><a class="btn btn--ghost btn--small" href="#">Open</a></td></tr>
+</table>
+</div>
+</div></main>
+<footer class="adminfoot"><div class="wrap"><span>The Prairie Dispatch · Newsroom</span><span><a href="#" style="color:inherit">View the site →</a></span></div></footer>
+</div>
+</div>
+
+<div data-screen-label="02 Stories" style="display:flex;flex-direction:column;gap:10px">
+<div style="font-family:var(--pp-mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:#5A6A5C">02 · Stories — admin/posts.php</div>
+<div style="width:1280px;background:var(--pp-cloudbank);border:1px solid var(--pp-board);box-shadow:0 2px 8px rgba(23,48,28,.10)">
+<div class="adminbar"><div class="wrap">
+<a href="#"><img src="assets/img/logo-reversed.svg" alt="The Prairie Dispatch"></a>
+<span class="who">Newsroom</span>
+<nav aria-label="Admin">
+<a href="#">Dashboard</a><a href="#" aria-current="page">Stories</a><a href="#">Post a link</a><a href="#">Desks</a><a href="#">Sources</a><a href="#">Ads</a><a href="#">The 6 a.m.</a><a href="#">Subscribers</a><a href="#">Accounts</a><a href="#">Settings</a><a href="#">Your profile</a><a href="#">+ New story</a><a href="#">Margaret Olesen · Sign out</a>
+</nav>
+</div></div>
+<main class="adminmain"><div class="wrap">
+<div class="headrow">
+<h1 class="pagetitle">Stories</h1>
+<a class="btn" href="#">+ New story</a>
+</div>
+<p class="pagesub">140 stories in the system.</p>
+<form class="formrow">
+<select aria-label="Status"><option>Any status</option><option>Published</option><option>Draft</option><option>In review</option><option>Scheduled</option></select>
+<select aria-label="Desk"><option>Any desk</option><option>News</option><option>Politics</option><option>Agriculture</option><option>Business &amp; Markets</option><option>Community</option><option>Opinion</option><option>Weather</option></select>
+<input type="text" placeholder="Title, byline, dateline…" style="max-width:260px">
+<button class="btn btn--ghost" type="button">Filter</button>
+</form>
+<div class="panel">
+<table class="tbl">
+<tr><th>Story</th><th>Desk</th><th>Status</th><th>When</th><th></th></tr>
+<tr>
+<td><a class="rowtitle" href="#">County council approves gravel levy after three-hour debate</a> <span class="chip chip--scheduled">Hero</span><div class="mono" style="color:#5A6A5C">Margaret Olesen · THREE HILLS</div></td>
+<td><span class="deskdot" style="background:#17301C"></span>News</td>
+<td><span class="chip chip--published">published</span></td>
+<td class="mono">Aug 11, 2026 6:00 am</td>
+<td style="white-space:nowrap"><button class="btn btn--danger btn--small" type="button">Delete</button></td>
+</tr>
+<tr>
+<td><a class="rowtitle" href="#">Canola futures slip as harvest estimates firm up</a> <span class="chip chip--scheduled">Featured</span><div class="mono" style="color:#5A6A5C">Dale Hirsch · CALGARY</div></td>
+<td><span class="deskdot" style="background:#3F5A22"></span>Agriculture</td>
+<td><span class="chip chip--published">published</span></td>
+<td class="mono">Aug 10, 2026 4:30 pm</td>
+<td style="white-space:nowrap"><button class="btn btn--ghost btn--small" type="button">Make hero</button> <button class="btn btn--danger btn--small" type="button">Delete</button></td>
+</tr>
+<tr>
+<td><a class="rowtitle" href="#">Province re-opens rural physician incentive program</a><div class="mono" style="color:#5A6A5C">Dale Hirsch · EDMONTON</div></td>
+<td><span class="deskdot" style="background:#2F6C99"></span>Politics</td>
+<td><span class="chip chip--in_review">in review</span></td>
+<td class="mono">Aug 10, 2026 2:17 pm</td>
+<td style="white-space:nowrap"><button class="btn btn--danger btn--small" type="button">Delete</button></td>
+</tr>
+<tr>
+<td><a class="rowtitle" href="#">Main street reconstruction pushed to spring</a><div class="mono" style="color:#5A6A5C">Margaret Olesen · THREE HILLS</div></td>
+<td><span class="deskdot" style="background:#17301C"></span>News</td>
+<td><span class="chip chip--scheduled">scheduled</span></td>
+<td class="mono">Aug 12, 2026 6:00 am</td>
+<td style="white-space:nowrap"><button class="btn btn--danger btn--small" type="button">Delete</button></td>
+</tr>
+<tr>
+<td><a class="rowtitle" href="#">Three Hills arena fundraiser clears $40,000</a><div class="mono" style="color:#5A6A5C">Priya Sandhu · THREE HILLS</div></td>
+<td><span class="deskdot" style="background:#6F5535"></span>Community</td>
+<td><span class="chip chip--draft">draft</span></td>
+<td class="mono">Aug 11, 2026 7:20 am</td>
+<td style="white-space:nowrap"><button class="btn btn--danger btn--small" type="button">Delete</button></td>
+</tr>
+<tr>
+<td><a class="rowtitle" href="#">Feeder cattle hold firm at Strathmore sale</a> <span class="chip chip--used">Desk lead</span><div class="mono" style="color:#5A6A5C">Dale Hirsch · STRATHMORE</div></td>
+<td><span class="deskdot" style="background:#3F5A22"></span>Agriculture</td>
+<td><span class="chip chip--published">published</span></td>
+<td class="mono">Aug 9, 2026 5:12 pm</td>
+<td style="white-space:nowrap"><button class="btn btn--ghost btn--small" type="button">Make hero</button> <button class="btn btn--danger btn--small" type="button">Delete</button></td>
+</tr>
+</table>
+</div>
+<div class="formrow" style="margin-top:16px">
+<span class="chip chip--used">1</span>
+<a class="btn btn--ghost btn--small" href="#">2</a>
+<a class="btn btn--ghost btn--small" href="#">3</a>
+<a class="btn btn--ghost btn--small" href="#">4</a>
+<a class="btn btn--ghost btn--small" href="#">5</a>
+<a class="btn btn--ghost btn--small" href="#">6</a>
+</div>
+</div></main>
+<footer class="adminfoot"><div class="wrap"><span>The Prairie Dispatch · Newsroom</span><span><a href="#" style="color:inherit">View the site →</a></span></div></footer>
+</div>
+</div>
+
+<div data-screen-label="03 Story editor" style="display:flex;flex-direction:column;gap:10px">
+<div style="font-family:var(--pp-mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:#5A6A5C">03 · Story editor — admin/post-edit.php</div>
+<div style="width:1280px;background:var(--pp-cloudbank);border:1px solid var(--pp-board);box-shadow:0 2px 8px rgba(23,48,28,.10)">
+<div class="adminbar"><div class="wrap">
+<a href="#"><img src="assets/img/logo-reversed.svg" alt="The Prairie Dispatch"></a>
+<span class="who">Newsroom</span>
+<nav aria-label="Admin">
+<a href="#">Dashboard</a><a href="#" aria-current="page">Stories</a><a href="#">Post a link</a><a href="#">Desks</a><a href="#">Sources</a><a href="#">Ads</a><a href="#">The 6 a.m.</a><a href="#">Subscribers</a><a href="#">Accounts</a><a href="#">Settings</a><a href="#">Your profile</a><a href="#">+ New story</a><a href="#">Margaret Olesen · Sign out</a>
+</nav>
+</div></div>
+<main class="adminmain"><div class="wrap">
+<div class="headrow">
+<h1 class="pagetitle">Edit story</h1>
+<div>
+<a class="btn btn--ghost" href="#">View on the site →</a>
+<a class="btn btn--ghost" href="#">Social card</a>
+</div>
+</div>
+<label for="r-title">Headline · sentence case</label>
+<input type="text" id="r-title" value="County council approves gravel levy after three-hour debate">
+<label for="r-lede">Lede · one sentence, 30 words maximum</label>
+<textarea id="r-lede" class="prose" style="min-height:64px">Council voted 5–2 to add a per-tonne levy on gravel hauled from county pits, ending a debate that has run since spring.</textarea>
+<div class="formgrid">
+<div>
+<label for="r-dateline">Dateline · the place, name it always</label>
+<input type="text" id="r-dateline" value="Three Hills">
+</div>
+<div>
+<label for="r-byline">Byline</label>
+<input type="text" id="r-byline" value="Margaret Olesen">
+</div>
+<div>
+<label for="r-desk">Desk</label>
+<select id="r-desk"><option>News</option><option>Politics</option><option>Agriculture</option><option>Business &amp; Markets</option><option>Community</option><option>Opinion</option><option>Weather</option></select>
+</div>
+<div>
+<label for="r-tags">Tags · comma-separated</label>
+<input type="text" id="r-tags" value="county council, gravel, roads">
+</div>
+</div>
+<label>Story text</label>
+<div class="edtoolbar" role="toolbar" aria-label="Formatting">
+<button type="button"><strong>B</strong></button>
+<button type="button"><em>I</em></button>
+<button type="button">Crosshead</button>
+<button type="button">Quote</button>
+<button type="button">List</button>
+<button type="button">Link</button>
+<button type="button">Unlink</button>
+<button type="button">Image</button>
+<button type="button">Clear</button>
+</div>
+<div class="editor">
+<p>THREE HILLS — After a three-hour debate that filled the gallery, county council voted 5–2 Monday to approve a per-tonne levy on gravel hauled from pits on county land.</p>
+<p>The levy, set at 40 cents a tonne, takes effect Jan. 1. Reeve Carol Mackenzie said the money is earmarked for the roads the trucks actually run on.</p>
+<blockquote>“The people who wear the road out should help pay for it. That's the whole argument, and it won.”</blockquote>
+<p>Two councillors voted against, arguing the levy will be passed straight through to county ratepayers on every yard of concrete poured.</p>
+</div>
+<div class="edmeta"><span>412 words</span><span>Autosaves every 30 seconds while drafting.</span></div>
+<div class="panel">
+<h2>Photo</h2>
+<div class="formgrid">
+<div>
+<label for="r-image">Image path or URL</label>
+<input type="text" id="r-image" value="/uploads/2026/08/gravel-pit.jpg">
+<p class="help">Upload a JPEG, PNG or WebP and the path fills itself in. The five-band placeholders live in /assets/img/photo-01.svg … photo-06.svg.</p>
+<input type="file" id="r-imgupload">
+</div>
+<div>
+<label for="r-caption">Caption</label>
+<input type="text" id="r-caption" value="Loaded trucks leave the Ghost Pine pit east of Three Hills.">
+<label for="r-credit">Credit</label>
+<input type="text" id="r-credit" value="Staff photo">
+</div>
+</div>
+</div>
+<div class="panel">
+<h2>Publication</h2>
+<div class="formgrid">
+<div>
+<label for="r-status">Status</label>
+<select id="r-status"><option>Published — live on the site</option><option>Draft — visible to the newsroom only</option><option>Submit for review — an editor signs off</option><option>Scheduled — goes live at the set time</option></select>
+<label for="r-pubat">Publish time</label>
+<input type="datetime-local" id="r-pubat" value="2026-08-11T06:00">
+<p class="help">Leave blank on publish to use right now.</p>
+<label for="r-note">Note to the author · shown when you send a story back</label>
+<textarea id="r-note" class="prose" style="min-height:64px"></textarea>
+</div>
+<div>
+<label for="r-meta">Search description · 155 characters</label>
+<textarea id="r-meta" style="min-height:64px">Kneehill County council approved a 40-cent-per-tonne gravel levy after a three-hour debate. It takes effect Jan. 1.</textarea>
+<label for="r-kind">Kind</label>
+<select id="r-kind"><option>Original story — the headline opens the story page here</option><option>Wire link — the headline links straight to the source outlet</option></select>
+<label for="r-srcurl">Source link · where a wire link points; kept as “source material” on a story</label>
+<input type="url" id="r-srcurl" value="">
+<label for="r-srcname">Source credit · the outlet's name on a wire link</label>
+<input type="text" id="r-srcname" placeholder="The Edmonton Echo">
+<label for="r-region">Region</label>
+<select id="r-region"><option>Local</option><option>— No region —</option><option>Alberta</option><option>Canada</option><option>Agriculture wire</option></select>
+<label for="r-placement">Front page placement</label>
+<select id="r-placement"><option>Hero — the lead story (replaces the current hero)</option><option>None — runs in the normal flow</option><option>Front featured — the band under the hero (up to four)</option><option>Desk lead — tops its desk, front page and archive</option></select>
+<label for="r-correction">Correction · what was wrong, and what's right</label>
+<textarea id="r-correction" class="prose" style="min-height:64px" placeholder="An earlier version of this story said… In fact…"></textarea>
+<p class="help">A correction renders in Bin Red above the story and joins the public corrections file.</p>
+<label>Runs on</label>
+<label style="display:flex;align-items:center;gap:8px;text-transform:none;letter-spacing:.04em;margin:6px 0"><input type="checkbox" checked style="width:auto"> The Prairie Dispatch (this site)</label>
+<label style="display:flex;align-items:center;gap:8px;text-transform:none;letter-spacing:.04em;margin:6px 0"><input type="checkbox" style="width:auto"> The Edmonton Echo</label>
+<label style="display:flex;align-items:center;gap:8px;text-transform:none;letter-spacing:.04em;margin:6px 0"><input type="checkbox" style="width:auto"> Western Wire</label>
+<p class="help">A story runs on every site ticked here — one filing, the whole network.</p>
+</div>
+</div>
+</div>
+<p style="margin-top:20px">
+<button class="btn" type="button">Save the story</button>
+<a class="btn btn--ghost" href="#">Back to the list</a>
+</p>
+</div></main>
+<footer class="adminfoot"><div class="wrap"><span>The Prairie Dispatch · Newsroom</span><span><a href="#" style="color:inherit">View the site →</a></span></div></footer>
+</div>
+</div>
+
+<div data-screen-label="04 Ads" style="display:flex;flex-direction:column;gap:10px">
+<div style="font-family:var(--pp-mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:#5A6A5C">04 · Advertising — admin/ads.php</div>
+<div style="width:1280px;background:var(--pp-cloudbank);border:1px solid var(--pp-board);box-shadow:0 2px 8px rgba(23,48,28,.10)">
+<div class="adminbar"><div class="wrap">
+<a href="#"><img src="assets/img/logo-reversed.svg" alt="The Prairie Dispatch"></a>
+<span class="who">Newsroom</span>
+<nav aria-label="Admin">
+<a href="#">Dashboard</a><a href="#">Stories</a><a href="#">Post a link</a><a href="#">Desks</a><a href="#">Sources</a><a href="#" aria-current="page">Ads</a><a href="#">The 6 a.m.</a><a href="#">Subscribers</a><a href="#">Accounts</a><a href="#">Settings</a><a href="#">Your profile</a><a href="#">+ New story</a><a href="#">Margaret Olesen · Sign out</a>
+</nav>
+</div></div>
+<main class="adminmain"><div class="wrap">
+<h1 class="pagetitle">Advertising</h1>
+<p class="pagesub">Three slots: top of the front page, the rail, and after story text. Several ads in one slot rotate evenly. Every slot is labelled “Advertisement” — the design guide's honesty rule — and clicks route through a counter so the numbers below are real. House ads are set in the brand and need no artwork.</p>
+<div class="panel">
+<table class="tbl">
+<tr><th>Ad</th><th>Slot</th><th>Kind</th><th>Schedule</th><th>Served / clicks</th><th>Status</th><th></th></tr>
+<tr>
+<td><strong>Hanna Co-op — fall tire event</strong><div class="mono" style="color:#5A6A5C;word-break:break-all">https://hannacoop.example.com/tires</div></td>
+<td class="mono">Rail</td><td class="mono">image</td><td class="mono">Aug 1 — Sep 30</td><td class="mono">18,204 / 312</td>
+<td><span class="chip chip--ok">live</span></td>
+<td style="white-space:nowrap"><a class="btn btn--ghost btn--small" href="#">Edit</a> <button class="btn btn--ghost btn--small" type="button">Pause</button> <button class="btn btn--danger btn--small" type="button">Delete</button></td>
+</tr>
+<tr>
+<td><strong>House — The 6 a.m. signup</strong></td>
+<td class="mono">Front page — top</td><td class="mono">house</td><td class="mono">always</td><td class="mono">44,891 / 1,022</td>
+<td><span class="chip chip--ok">live</span></td>
+<td style="white-space:nowrap"><a class="btn btn--ghost btn--small" href="#">Edit</a> <button class="btn btn--ghost btn--small" type="button">Pause</button> <button class="btn btn--danger btn--small" type="button">Delete</button></td>
+</tr>
+<tr style="opacity:.55">
+<td><strong>Seed plot days — embed</strong></td>
+<td class="mono">After story text</td><td class="mono">html</td><td class="mono">Jul 2 — Jul 20</td><td class="mono">9,730 / 88</td>
+<td><span class="chip chip--used">paused</span></td>
+<td style="white-space:nowrap"><a class="btn btn--ghost btn--small" href="#">Edit</a> <button class="btn btn--ghost btn--small" type="button">Resume</button> <button class="btn btn--danger btn--small" type="button">Delete</button></td>
+</tr>
+</table>
+</div>
+<div class="panel">
+<h2>Add an ad</h2>
+<div class="formgrid">
+<div>
+<label for="a-name">Name · internal only</label>
+<input type="text" id="a-name">
+<label for="a-slot">Slot</label>
+<select id="a-slot"><option>Rail</option><option>Front page — top</option><option>After story text</option></select>
+<label for="a-kind">Kind</label>
+<select id="a-kind"><option>House ad — built from the brand</option><option>Image + link</option><option>Pasted embed code</option></select>
+<label for="a-link">Link · where a click lands</label>
+<input type="url" id="a-link" placeholder="https://advertiser.example.com">
+<label for="a-from">Runs from</label>
+<input type="datetime-local" id="a-from">
+<label for="a-until">Until</label>
+<input type="datetime-local" id="a-until">
+<p class="help">Leave both blank to run always.</p>
+</div>
+<div>
+<label>House ad · the brand does the design</label>
+<input type="text" placeholder="Kicker — e.g. “From our advertisers”">
+<input type="text" placeholder="Heading" style="margin-top:8px">
+<input type="text" placeholder="One sentence of body copy" style="margin-top:8px">
+<input type="text" placeholder="Button — name the outcome, e.g. “Book a table”" style="margin-top:8px">
+<label for="a-image">Image ad · creative</label>
+<input type="text" id="a-image" placeholder="/uploads/2026/08/creative.png">
+<input type="file" style="margin-top:8px">
+<label for="a-html">Embed ad · pasted code</label>
+<textarea id="a-html" class="mono"></textarea>
+<p class="help">Only the fields for the chosen kind are used; the others can stay empty.</p>
+</div>
+</div>
+<p style="margin-top:16px"><button class="btn" type="button">Add the ad</button></p>
+</div>
+</div></main>
+<footer class="adminfoot"><div class="wrap"><span>The Prairie Dispatch · Newsroom</span><span><a href="#" style="color:inherit">View the site →</a></span></div></footer>
+</div>
+</div>
+
+<div data-screen-label="05 Newsletter" style="display:flex;flex-direction:column;gap:10px">
+<div style="font-family:var(--pp-mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:#5A6A5C">05 · The 6 a.m. — admin/newsletter.php</div>
+<div style="width:1280px;background:var(--pp-cloudbank);border:1px solid var(--pp-board);box-shadow:0 2px 8px rgba(23,48,28,.10)">
+<div class="adminbar"><div class="wrap">
+<a href="#"><img src="assets/img/logo-reversed.svg" alt="The Prairie Dispatch"></a>
+<span class="who">Newsroom</span>
+<nav aria-label="Admin">
+<a href="#">Dashboard</a><a href="#">Stories</a><a href="#">Post a link</a><a href="#">Desks</a><a href="#">Sources</a><a href="#">Ads</a><a href="#" aria-current="page">The 6 a.m.</a><a href="#">Subscribers</a><a href="#">Accounts</a><a href="#">Settings</a><a href="#">Your profile</a><a href="#">+ New story</a><a href="#">Margaret Olesen · Sign out</a>
+</nav>
+</div></div>
+<main class="adminmain"><div class="wrap">
+<div class="headrow">
+<h1 class="pagetitle">The 6 a.m.</h1>
+<div>
+<a class="btn btn--ghost" href="#">Preview this morning's edition</a>
+<button class="btn btn--sky" type="button">Send me a test</button>
+</div>
+</div>
+<p class="pagesub">Compiled from the last 24 hours — hero first, then by desk, with the forecast and closing prices. The cron job sends it once a day after the set hour; nothing goes out twice.</p>
+<div class="stats">
+<div class="stat"><div class="n">412</div><span class="k">Active</span></div>
+<div class="stat"><div class="n">9</div><span class="k">Awaiting confirm</span></div>
+<div class="stat"><div class="n">37</div><span class="k">Unsubscribed</span></div>
+<div class="stat"><div class="n">On</div><span class="k">Daily send</span></div>
+<div class="stat"><div class="n">Set</div><span class="k">Mail config</span></div>
+</div>
+<div class="panel">
+<h2>Mail &amp; schedule</h2>
+<div class="formgrid">
+<div>
+<label for="n-host">SMTP host</label>
+<input type="text" id="n-host" value="smtp.hostinger.com">
+<label for="n-port">Port</label>
+<input type="text" id="n-port" value="587">
+<label for="n-sec">Encryption</label>
+<select id="n-sec"><option>STARTTLS (port 587)</option><option>SSL (port 465)</option><option>None (local relay only)</option></select>
+<label for="n-user">SMTP user</label>
+<input type="text" id="n-user" value="sixam@prairiedispatch.com">
+<label for="n-pass">SMTP password · leave blank to keep the current one</label>
+<input type="password" id="n-pass" value="">
+</div>
+<div>
+<label for="n-from">From address</label>
+<input type="email" id="n-from" value="sixam@prairiedispatch.com">
+<label for="n-fromname">From name</label>
+<input type="text" id="n-fromname" value="The Prairie Dispatch">
+<label for="n-addr">The paper's mailing address · required by anti-spam law (CASL)</label>
+<textarea id="n-addr" class="prose" style="min-height:64px">The Prairie Dispatch, Box 100, Three Hills, AB T0M 2A0</textarea>
+<label for="n-hour">Send after · o'clock, site time</label>
+<input type="text" id="n-hour" value="6">
+<label style="display:flex;align-items:center;gap:8px;margin-top:16px;text-transform:none;letter-spacing:.04em"><input type="checkbox" checked style="width:auto"> Send daily (the cron job does the sending — schedule it for the send hour)</label>
+</div>
+</div>
+<p style="margin-top:16px"><button class="btn" type="button">Save the settings</button></p>
+<p class="help">Deliverability lives and dies on the domain's SPF and DKIM records — set them in your DNS for the From address's domain, or the editions land in spam.</p>
+</div>
+<div class="panel">
+<h2>Send log</h2>
+<table class="tbl">
+<tr><th>Edition</th><th>Subject</th><th>Recipients</th><th>Status</th></tr>
+<tr><td class="mono"><a href="#">2026-08-11</a></td><td>The 6 a.m. — Gravel levy passes; canola slips; rink stays open</td><td class="mono">412</td><td><span class="chip chip--ok">sent</span></td></tr>
+<tr><td class="mono"><a href="#">2026-08-10</a></td><td>The 6 a.m. — Physician program returns; hail claims climb</td><td class="mono">409</td><td><span class="chip chip--ok">sent</span></td></tr>
+<tr><td class="mono"><a href="#">2026-08-09</a></td><td>The 6 a.m. — Fair board's new president; feeder cattle firm</td><td class="mono">408</td><td><span class="chip chip--ok">sent</span></td></tr>
+<tr><td class="mono"><a href="#">2026-08-08</a></td><td>The 6 a.m. — Saturday edition</td><td class="mono">407</td><td><span class="chip chip--error">failed</span></td></tr>
+</table>
+<form style="margin-top:16px">
+<div class="formrow">
+<button class="btn" type="button">Send this morning's edition now</button>
+<label style="display:flex;align-items:center;gap:8px;margin:0;text-transform:none;letter-spacing:.04em"><input type="checkbox" style="width:auto"> Send even if no stories ran in the last 24 hours</label>
+</div>
+</form>
+</div>
+</div></main>
+<footer class="adminfoot"><div class="wrap"><span>The Prairie Dispatch · Newsroom</span><span><a href="#" style="color:inherit">View the site →</a></span></div></footer>
+</div>
+</div>
+
+<div data-screen-label="06 Sources" style="display:flex;flex-direction:column;gap:10px">
+<div style="font-family:var(--pp-mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:#5A6A5C">06 · Wire sources — admin/sources.php</div>
+<div style="width:1280px;background:var(--pp-cloudbank);border:1px solid var(--pp-board);box-shadow:0 2px 8px rgba(23,48,28,.10)">
+<div class="adminbar"><div class="wrap">
+<a href="#"><img src="assets/img/logo-reversed.svg" alt="The Prairie Dispatch"></a>
+<span class="who">Newsroom</span>
+<nav aria-label="Admin">
+<a href="#">Dashboard</a><a href="#">Stories</a><a href="#">Post a link</a><a href="#">Desks</a><a href="#" aria-current="page">Sources</a><a href="#">Ads</a><a href="#">The 6 a.m.</a><a href="#">Subscribers</a><a href="#">Accounts</a><a href="#">Settings</a><a href="#">Your profile</a><a href="#">+ New story</a><a href="#">Margaret Olesen · Sign out</a>
+</nav>
+</div></div>
+<main class="adminmain"><div class="wrap">
+<div class="headrow">
+<h1 class="pagetitle">Wire sources</h1>
+<a class="btn" href="#">Fetch all feeds now</a>
+</div>
+<p class="pagesub">The feeds behind the morning pull. The cron job fetches them daily; the buttons here fetch on demand. Some publishers block automated readers — the test says so plainly when they do.</p>
+<div class="panel">
+<table class="tbl">
+<tr><th>Source</th><th>Region</th><th>Last fetch</th><th>Status</th><th></th></tr>
+<tr>
+<td><strong>Drumheller Mail</strong><div class="mono" style="color:#5A6A5C;word-break:break-all">https://www.drumhellermail.com/feed</div></td>
+<td class="mono">Local</td><td class="mono">Aug 11, 6:02 am</td>
+<td><span class="chip chip--ok">ok</span><div class="mono" style="color:#5A6A5C">ok — 6 new</div></td>
+<td style="white-space:nowrap"><a class="btn btn--sky btn--small" href="#">Test</a> <a class="btn btn--ghost btn--small" href="#">Edit</a> <button class="btn btn--ghost btn--small" type="button">Pause</button> <button class="btn btn--danger btn--small" type="button">Delete</button></td>
+</tr>
+<tr>
+<td><strong>ECA Review</strong><div class="mono" style="color:#5A6A5C;word-break:break-all">https://ecareview.com/feed/</div></td>
+<td class="mono">Local</td><td class="mono">Aug 11, 6:02 am</td>
+<td><span class="chip chip--ok">ok</span><div class="mono" style="color:#5A6A5C">ok — 4 new</div></td>
+<td style="white-space:nowrap"><a class="btn btn--sky btn--small" href="#">Test</a> <a class="btn btn--ghost btn--small" href="#">Edit</a> <button class="btn btn--ghost btn--small" type="button">Pause</button> <button class="btn btn--danger btn--small" type="button">Delete</button></td>
+</tr>
+<tr>
+<td><strong>CBC Calgary</strong><div class="mono" style="color:#5A6A5C;word-break:break-all">https://www.cbc.ca/webfeed/rss/rss-canada-calgary</div></td>
+<td class="mono">Local</td><td class="mono">Aug 11, 6:02 am</td>
+<td><span class="chip chip--ok">ok</span><div class="mono" style="color:#5A6A5C">ok — 11 new</div></td>
+<td style="white-space:nowrap"><a class="btn btn--sky btn--small" href="#">Test</a> <a class="btn btn--ghost btn--small" href="#">Edit</a> <button class="btn btn--ghost btn--small" type="button">Pause</button> <button class="btn btn--danger btn--small" type="button">Delete</button></td>
+</tr>
+<tr>
+<td><strong>Canadian Cattlemen</strong><div class="mono" style="color:#5A6A5C;word-break:break-all">https://www.canadiancattlemen.ca/feed/</div></td>
+<td class="mono">Agriculture wire</td><td class="mono">Aug 11, 6:03 am</td>
+<td><span class="chip chip--ok">ok</span><div class="mono" style="color:#5A6A5C">ok — 2 new</div></td>
+<td style="white-space:nowrap"><a class="btn btn--sky btn--small" href="#">Test</a> <a class="btn btn--ghost btn--small" href="#">Edit</a> <button class="btn btn--ghost btn--small" type="button">Pause</button> <button class="btn btn--danger btn--small" type="button">Delete</button></td>
+</tr>
+<tr style="opacity:.55">
+<td><strong>Western Producer</strong><div class="mono" style="color:#5A6A5C;word-break:break-all">https://www.producer.com/feed/</div></td>
+<td class="mono">Agriculture wire</td><td class="mono">Aug 4, 6:01 am</td>
+<td><span class="chip chip--error">error</span><div class="mono" style="color:#5A6A5C">http 403 — publisher blocks automated readers</div></td>
+<td style="white-space:nowrap"><a class="btn btn--sky btn--small" href="#">Test</a> <a class="btn btn--ghost btn--small" href="#">Edit</a> <button class="btn btn--ghost btn--small" type="button">Resume</button> <button class="btn btn--danger btn--small" type="button">Delete</button></td>
+</tr>
+</table>
+</div>
+<div class="panel">
+<h2>Add a source</h2>
+<div class="formgrid">
+<div>
+<label for="s-name">Name</label>
+<input type="text" id="s-name">
+<label for="s-url">Feed URL · RSS or Atom</label>
+<input type="url" id="s-url" placeholder="https://example.com/feed/">
+</div>
+<div>
+<label for="s-region">Region tab</label>
+<select id="s-region"><option>Local</option><option>Alberta</option><option>Canada</option><option>Agriculture wire</option></select>
+<p class="help">Region tabs are defined in Settings. Changing a region key later orphans that region's fetched items — name them carefully once.</p>
+</div>
+</div>
+<p style="margin-top:16px"><button class="btn" type="button">Add the source</button></p>
+</div>
+</div></main>
+<footer class="adminfoot"><div class="wrap"><span>The Prairie Dispatch · Newsroom</span><span><a href="#" style="color:inherit">View the site →</a></span></div></footer>
+</div>
+</div>
+
+<div data-screen-label="07 Subscribers" style="display:flex;flex-direction:column;gap:10px">
+<div style="font-family:var(--pp-mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:#5A6A5C">07 · Subscribers — admin/subscribers.php</div>
+<div style="width:1280px;background:var(--pp-cloudbank);border:1px solid var(--pp-board);box-shadow:0 2px 8px rgba(23,48,28,.10)">
+<div class="adminbar"><div class="wrap">
+<a href="#"><img src="assets/img/logo-reversed.svg" alt="The Prairie Dispatch"></a>
+<span class="who">Newsroom</span>
+<nav aria-label="Admin">
+<a href="#">Dashboard</a><a href="#">Stories</a><a href="#">Post a link</a><a href="#">Desks</a><a href="#">Sources</a><a href="#">Ads</a><a href="#">The 6 a.m.</a><a href="#" aria-current="page">Subscribers</a><a href="#">Accounts</a><a href="#">Settings</a><a href="#">Your profile</a><a href="#">+ New story</a><a href="#">Margaret Olesen · Sign out</a>
+</nav>
+</div></div>
+<main class="adminmain"><div class="wrap">
+<div class="headrow">
+<h1 class="pagetitle">The 6 a.m. list</h1>
+<a class="btn" href="#">Download the list as CSV</a>
+</div>
+<p class="pagesub">458 subscribers. The signup form feeds this list, and <a href="#">The 6 a.m.</a> sends to everyone marked active. The CSV export carries the consent trail.</p>
+<div class="panel">
+<table class="tbl">
+<tr><th>Email</th><th>Status</th><th>Consent</th><th>Signed up</th><th></th></tr>
+<tr><td class="mono">gwen.harder@example.com</td><td><span class="chip chip--ok">active</span></td><td class="mono" style="font-size:11px;color:#5A6A5C">double opt-in · confirmed 2026-08-10 · /subscribe</td><td class="mono">Aug 10, 2026 8:41 pm</td><td><button class="btn btn--danger btn--small" type="button">Remove</button></td></tr>
+<tr><td class="mono">rbraun@example.com</td><td><span class="chip chip--scheduled">pending</span></td><td class="mono" style="font-size:11px;color:#5A6A5C">double opt-in · awaiting confirm · front page rail</td><td class="mono">Aug 10, 2026 6:12 pm</td><td><button class="btn btn--danger btn--small" type="button">Remove</button></td></tr>
+<tr><td class="mono">l.tkachuk@example.com</td><td><span class="chip chip--ok">active</span></td><td class="mono" style="font-size:11px;color:#5A6A5C">double opt-in · confirmed 2026-08-09 · /subscribe</td><td class="mono">Aug 9, 2026 7:02 am</td><td><button class="btn btn--danger btn--small" type="button">Remove</button></td></tr>
+<tr><td class="mono">county.reader@example.com</td><td><span class="chip chip--used">unsubscribed</span></td><td class="mono" style="font-size:11px;color:#5A6A5C">unsubscribed 2026-08-08 · one-click link</td><td class="mono">Jul 2, 2026 9:15 am</td><td><button class="btn btn--danger btn--small" type="button">Remove</button></td></tr>
+</table>
+<p class="help">Showing the newest 200 — the CSV export has everyone.</p>
+</div>
+</div></main>
+<footer class="adminfoot"><div class="wrap"><span>The Prairie Dispatch · Newsroom</span><span><a href="#" style="color:inherit">View the site →</a></span></div></footer>
+</div>
+</div>
+
+<div data-screen-label="08 Accounts" style="display:flex;flex-direction:column;gap:10px">
+<div style="font-family:var(--pp-mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:#5A6A5C">08 · Accounts — admin/users.php</div>
+<div style="width:1280px;background:var(--pp-cloudbank);border:1px solid var(--pp-board);box-shadow:0 2px 8px rgba(23,48,28,.10)">
+<div class="adminbar"><div class="wrap">
+<a href="#"><img src="assets/img/logo-reversed.svg" alt="The Prairie Dispatch"></a>
+<span class="who">Newsroom</span>
+<nav aria-label="Admin">
+<a href="#">Dashboard</a><a href="#">Stories</a><a href="#">Post a link</a><a href="#">Desks</a><a href="#">Sources</a><a href="#">Ads</a><a href="#">The 6 a.m.</a><a href="#">Subscribers</a><a href="#" aria-current="page">Accounts</a><a href="#">Settings</a><a href="#">Your profile</a><a href="#">+ New story</a><a href="#">Margaret Olesen · Sign out</a>
+</nav>
+</div></div>
+<main class="adminmain"><div class="wrap">
+<h1 class="pagetitle">Accounts</h1>
+<p class="pagesub">Admins run the paper. Editors publish, review, and manage desks and the wire. Authors write and submit for review — an editor signs off before anything goes live. Accounts are shared across every site on the network database.</p>
+<div class="panel">
+<table class="tbl">
+<tr><th>Name</th><th>Email</th><th>Role</th><th>Since</th><th></th></tr>
+<tr><td><strong>Dale Hirsch</strong></td><td class="mono">dale@prairiedispatch.com</td><td><span class="chip chip--scheduled">editor</span></td><td class="mono">Mar 4, 2026</td><td style="white-space:nowrap"><a class="btn btn--ghost btn--small" href="#">Edit</a> <button class="btn btn--danger btn--small" type="button">Delete</button></td></tr>
+<tr><td><strong>Margaret Olesen</strong> <span class="chip chip--used">you</span></td><td class="mono">margaret@prairiedispatch.com</td><td><span class="chip chip--published">admin</span></td><td class="mono">Jan 12, 2026</td><td style="white-space:nowrap"><a class="btn btn--ghost btn--small" href="#">Edit</a></td></tr>
+<tr><td><strong>Priya Sandhu</strong></td><td class="mono">priya@prairiedispatch.com</td><td><span class="chip chip--draft">author</span></td><td class="mono">May 20, 2026</td><td style="white-space:nowrap"><a class="btn btn--ghost btn--small" href="#">Edit</a> <button class="btn btn--danger btn--small" type="button">Delete</button></td></tr>
+</table>
+</div>
+<div class="panel">
+<h2>Add an account</h2>
+<div class="formgrid">
+<div>
+<label for="u-name">Name · appears in bylines</label>
+<input type="text" id="u-name">
+<label for="u-email">Email</label>
+<input type="email" id="u-email">
+</div>
+<div>
+<label for="u-role">Role</label>
+<select id="u-role"><option>Author — writes and submits for review</option><option>Editor — reviews and publishes</option><option>Admin — everything, plus accounts and settings</option></select>
+<label for="u-pass">Passphrase · at least 10 characters</label>
+<input type="password" id="u-pass">
+<label for="u-title">Profile title · e.g. “Agriculture reporter”</label>
+<input type="text" id="u-title">
+<label for="u-bio">Profile bio</label>
+<textarea id="u-bio" class="prose" style="min-height:64px"></textarea>
+</div>
+</div>
+<p style="margin-top:16px"><button class="btn" type="button">Create the account</button></p>
+</div>
+</div></main>
+<footer class="adminfoot"><div class="wrap"><span>The Prairie Dispatch · Newsroom</span><span><a href="#" style="color:inherit">View the site →</a></span></div></footer>
+</div>
+</div>
+
+<div data-screen-label="09 Settings" style="display:flex;flex-direction:column;gap:10px">
+<div style="font-family:var(--pp-mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:#5A6A5C">09 · Settings — admin/settings.php</div>
+<div style="width:1280px;background:var(--pp-cloudbank);border:1px solid var(--pp-board);box-shadow:0 2px 8px rgba(23,48,28,.10)">
+<div class="adminbar"><div class="wrap">
+<a href="#"><img src="assets/img/logo-reversed.svg" alt="The Prairie Dispatch"></a>
+<span class="who">Newsroom</span>
+<nav aria-label="Admin">
+<a href="#">Dashboard</a><a href="#">Stories</a><a href="#">Post a link</a><a href="#">Desks</a><a href="#">Sources</a><a href="#">Ads</a><a href="#">The 6 a.m.</a><a href="#">Subscribers</a><a href="#">Accounts</a><a href="#" aria-current="page">Settings</a><a href="#">Your profile</a><a href="#">+ New story</a><a href="#">Margaret Olesen · Sign out</a>
+</nav>
+</div></div>
+<main class="adminmain"><div class="wrap">
+<h1 class="pagetitle">Settings</h1>
+<p class="pagesub">Everything here takes effect immediately. The design system itself — colours, type, the horizon rule — lives in the stylesheet and is deliberately not a setting.</p>
+<div class="panel">
+<h2>The paper</h2>
+<div class="formgrid">
+<div>
+<label for="st-title">Name</label>
+<input type="text" id="st-title" value="The Prairie Dispatch">
+<label for="st-tag">Tagline</label>
+<input type="text" id="st-tag" value="News to the horizon">
+<label for="st-weather">Sky-bar weather line</label>
+<input type="text" id="st-weather" value="Sunny, 24° · wind SW 20 km/h · hail risk after 4 p.m.">
+<label for="st-blabel">Breaking banner · label (blank = no banner)</label>
+<input type="text" id="st-blabel" placeholder="BREAKING">
+<label for="st-burl">Breaking banner · link</label>
+<input type="text" id="st-burl" placeholder="/story/…">
+</div>
+<div>
+<label for="st-meta">Search description</label>
+<textarea id="st-meta" style="min-height:64px">Independent news for Kneehill County and the towns along Highway 21 — council, courts, crops and community.</textarea>
+<label for="st-footer">Footer line</label>
+<textarea id="st-footer" style="min-height:64px">Published every morning from Three Hills, Alberta.</textarea>
+</div>
+</div>
+</div>
+<div class="panel">
+<h2>The rail — markets &amp; forecast</h2>
+<div class="formgrid">
+<div>
+<label for="st-markets">Closing prices · JSON rows of [name, price, change]</label>
+<textarea id="st-markets" class="mono">[["Canola (Nov)", "687.20", "-3.10"], ["Wheat (CWRS)", "312.45", "+1.80"], ["Feeder cattle", "412.00", "+0.75"]]</textarea>
+<label for="st-mnote">Prices note</label>
+<input type="text" id="st-mnote" value="ICE close, previous trading day">
+</div>
+<div>
+<label for="st-wx">Forecast block · JSON with temp, hi, lo, line</label>
+<textarea id="st-wx" class="mono">{"temp": 24, "hi": 27, "lo": 11, "line": "Hail risk after 4 p.m."}</textarea>
+<label for="st-traffic">Traffic box · JSON rows of [label, link]</label>
+<textarea id="st-traffic" class="mono">[["Hwy 9 closed east of town", "/story/highway-9"]]</textarea>
+<label for="st-events">Events box · JSON rows of [label, link, date, venue] — date &amp; venue optional</label>
+<textarea id="st-events" class="mono">[["Fall fair", "/story/fall-fair", "Aug 22", "Fairgrounds"]]</textarea>
+<label for="st-contact">Contact email · shown in the footer</label>
+<input type="text" id="st-contact" value="newsroom@prairiedispatch.com">
+<label for="st-fnotes">Field notes box · a standing note on the rail</label>
+<textarea id="st-fnotes" style="min-height:64px">The combine count starts next week — send yours in.</textarea>
+<label for="st-fnurl">Field notes · link</label>
+<input type="text" id="st-fnurl" value="/subscribe">
+<p class="help">Blank any field to hide its block.</p>
+</div>
+</div>
+</div>
+<div class="panel">
+<h2>The 6 a.m. newsletter</h2>
+<div class="formgrid">
+<div>
+<label for="st-nlhead">Heading</label>
+<input type="text" id="st-nlhead" value="The 6 a.m.">
+</div>
+<div>
+<label for="st-nlcopy">Pitch · one or two sentences</label>
+<textarea id="st-nlcopy" class="prose" style="min-height:64px">The morning's news to your inbox before the kettle boils. Free, daily, no filler.</textarea>
+</div>
+</div>
+</div>
+<div class="panel">
+<h2>The wire</h2>
+<label for="st-regions">Region tabs · JSON of {"key": "Label"}</label>
+<textarea id="st-regions" class="mono">{"local": "Local", "alberta": "Alberta", "canada": "Canada", "agwire": "Agriculture wire"}</textarea>
+<p class="help">Region keys are stored on every fetched news item — changing a key later orphans that region's items. Add and label freely; rename with care.</p>
+</div>
+<div class="panel">
+<h2>Advertising &amp; analytics</h2>
+<div class="formgrid">
+<div>
+<label for="st-adtop">Ad slot · top of front page</label>
+<textarea id="st-adtop" class="mono"></textarea>
+<label for="st-adrail">Ad slot · rail</label>
+<textarea id="st-adrail" class="mono"></textarea>
+</div>
+<div>
+<label for="st-adart">Ad slot · after story text</label>
+<textarea id="st-adart" class="mono"></textarea>
+<label for="st-analytics">Analytics snippet · pasted into &lt;head&gt;</label>
+<textarea id="st-analytics" class="mono"></textarea>
+</div>
+</div>
+<p class="help">Paste the embed code your ad or analytics provider gives you. Empty slots render nothing — no placeholder ever shows to readers.</p>
+</div>
+<p style="margin-top:20px"><button class="btn" type="button">Save the settings</button></p>
+<div class="panel">
+<h2>The cron job</h2>
+<p style="margin:0 0 8px">Fetches every enabled feed, prunes stale wire items, and publishes scheduled stories. Run it daily (or hourly) either way:</p>
+<p class="mono" style="font-size:12.5px;word-break:break-all;background:var(--pp-cloudbank);padding:10px 12px;border:1px solid var(--pp-board)">php /home/user/public_html/cron/fetch-news.php</p>
+<p class="mono" style="font-size:12.5px;word-break:break-all;background:var(--pp-cloudbank);padding:10px 12px;border:1px solid var(--pp-board)">https://prairiedispatch.com/cron/fetch-news.php?key=6f1c9e2ab04d73e58f21c6b90a4d1e77</p>
+<button class="btn btn--ghost btn--small" type="button">Generate a new secret</button>
+</div>
+</div></main>
+<footer class="adminfoot"><div class="wrap"><span>The Prairie Dispatch · Newsroom</span><span><a href="#" style="color:inherit">View the site →</a></span></div></footer>
+</div>
+</div>
+
+</div>
+
+</x-dc>
+</body>
+</html>

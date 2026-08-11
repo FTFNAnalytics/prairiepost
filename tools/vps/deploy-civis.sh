@@ -119,6 +119,7 @@ if ! nginx -t; then
   fail "nginx config test failed — vhost disabled again, papers untouched"
 fi
 systemctl reload nginx
+sleep 2   # let the new workers take over before the first checks hit them
 echo "vhost live (HTTP)"
 
 say "First boot — provisions the site row, migrates the shared database to v8"
