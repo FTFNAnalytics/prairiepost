@@ -12,6 +12,12 @@ decisions behind them. Nothing here forks the codebase — the hub is the same
 release, the same shared database, the same deployment pattern as every
 paper before it.
 
+Alongside the newsroom tools, the control room carries a **media monitoring
+desk**: government publications streamed in from an external scraping agent,
+press releases captured by feed or by hand, all of it triaged by region and
+jurisdiction, with story ideas generated on demand — so journalists see
+what's surfacing across the network's territory from one screen.
+
 ---
 
 ## 1 · What the network already gives us
@@ -25,11 +31,12 @@ which is why this is a series of focused phases rather than a rebuild:
 | One sign-in across all sites | **Built.** `users` are network-global; an admin already signs into any paper's `/admin`. |
 | Overarching newswire | **Built.** `sources` and `news_items` are shared; every site's morning pull reads the same pool. The hub shows all regions side by side. |
 | Ads with real numbers | **Built per-site.** The `ads` table is already keyed by `site_id` with slots, scheduling, impression/click counters. What's missing is creating and reporting on them *across* sites — Phase 2. |
-| RSS → article | **Built.** *Start draft* and *Post a link* turn wire items into drafts. AI drafting (Phase 3) is a third door into the same flow. |
+| RSS → article | **Built.** *Start draft* and *Post a link* turn wire items into drafts. The research & drafting desk (Phase 3) is a third door into the same flow. |
 
 New subsystems the network does **not** have yet: the brochure front,
-network ad campaigns, AI drafting, Google Analytics / Search Console
-ingestion and reporting, and the agent task queue. Those are Phases 1–5.
+network ad campaigns, the research & drafting desk, the media monitoring
+desk, Google Analytics / Search Console ingestion and reporting, and the
+agent task queue. Those are Phases 1–6.
 
 ## 2 · Architecture decisions
 
@@ -67,6 +74,12 @@ AI-created drafts enter the existing review queue and can never be born
 `published`. Agent tasks produce a diff that an editor approves or rejects
 in the control room. The same server-side rule that stops an author from
 publishing stops the machines.
+
+**AI assists; a journalist is always the author.** The AI tools gather,
+summarize, and draft — a person reworks the material, signs it, and answers
+for it. Bylines are always a human's: an AI-assisted story carries the
+journalist who finished it, with `posts.origin = 'ai'` kept as internal
+provenance and the public disclosure line an optional, per-site choice.
 
 ## 3 · The public face — civismedia.ca
 
@@ -148,13 +161,21 @@ one place — without touching the serving path that already works.
   room* and read-only locally, so a local editor can't half-edit a network
   buy.
 
-### Phase 3 — The AI drafting desk (≈ 1 session)
+### Phase 3 — The research & drafting desk (≈ 1 session)
 
-A third way to start a story, beside writing one and posting a link.
+AI as a research assistant and first-draft aide — never the final author.
+A journalist starts here, works the material, and signs the piece.
 
-- **`admin/ai-draft.php` (hub, editors).** Two entry points: a wire item
-  (one click from the newswire — headline, summary, and the fetched source
-  page as grounding) or a freeform brief (topic, angle, optional URLs).
+- **`admin/ai-draft.php` (hub, editors and authors).** Three modes:
+  - **Research brief** — from a topic or a set of URLs (wire items,
+    monitoring items once Phase 4 lands): a background summary, timeline,
+    key figures and quotes with source links, and open questions. No
+    article copy at all — raw material for a journalist.
+  - **Draft from the wire** — one click from the newswire: headline,
+    summary, and the fetched source page as grounding produce working
+    copy the journalist rewrites.
+  - **Draft from a brief** — a freeform assignment (topic, angle,
+    optional URLs).
 - **The call.** Claude API, `claude-opus-5` by default (a `settings`
   override exists for the model id), **structured output** via
   `output_config.format` returning `{title, dateline, lede, body_html,
@@ -169,15 +190,82 @@ A third way to start a story, beside writing one and posting a link.
   existing curl helper). If we ever accept Composer on the hub only, the
   official `anthropic-ai/sdk` is the drop-in upgrade; the call site is one
   function either way.
-- **Guardrails.** Drafts land as `status = 'draft'`, `origin = 'ai'`,
-  `source_url` set, author = the requesting editor — then the normal flow:
-  edit, submit, review, publish, *Runs on*. The AI path cannot publish.
-  An `ai_disclosure` setting (off / footer line) prints "Prepared with AI
-  assistance and reviewed by an editor" on `origin = 'ai'` stories that
-  choose it.
+- **Guardrails — the authorship policy, enforced.** Drafts land as
+  `status = 'draft'`, `origin = 'ai'`, `source_url` set, byline and
+  authorship belonging to the journalist who requested it — then the
+  normal flow: rework, submit, review, publish, *Runs on*. The AI path
+  cannot publish, and nothing ships that a person hasn't rewritten and
+  signed. An `ai_disclosure` setting (off by default) can print "Prepared
+  with AI assistance and reviewed by an editor" on `origin = 'ai'`
+  stories.
 - `anthropic_api_key` in the hub's `config.php` only.
 
-### Phase 4 — Analytics, Search Console, and the story-gap report (≈ 2 sessions)
+### Phase 4 — The media monitoring desk (≈ 1–2 sessions)
+
+One screen where journalists watch what's surfacing across regions and
+jurisdictions: government publications from your scraping agent, press
+releases captured by feed or by hand, and the story ideas they generate.
+
+- **Migration v10**:
+  - `monitor_items (id, feed_id, source_name, level, region, doc_type,
+    title, url, url_hash UNIQUE, summary, body_excerpt, published_at,
+    fetched_at, status, flagged_by, claimed_by)` — `level` is the
+    jurisdiction (`federal · provincial · municipal · agency`), `region`
+    reuses the network's existing region keys, `doc_type` is a small
+    vocabulary (`release · gazette · order-in-council · hansard · bill ·
+    tender · agenda · minutes · decision · report · other`), and `status`
+    runs `new → flagged | claimed | used | dismissed`.
+  - `monitor_feeds (id, name, url, level, region, doc_type, enabled,
+    last_fetched_at, last_status)` — the monitoring desk's own feed list,
+    kept separate from the newspaper wire so releases never pollute the
+    morning pull.
+  - `story_ideas (id, monitor_item_id, site_id, title, angle, rationale,
+    region, origin ('ai'|'newsroom'), status ('open'|'claimed'|
+    'dismissed'), claimed_by, created_by, created_at)`.
+- **The ingest API — the contract with your scraping agent.** Your
+  government-publications agent already exists and stays external; it
+  delivers through `POST /api/monitor` (a `monitor-ingest.php` endpoint,
+  rewritten) with a bearer token from the hub's settings. Body: a JSON
+  array of items `{source, level, region, doc_type, title, url, summary,
+  body_excerpt?, published_at?}`; the endpoint validates, de-duplicates on
+  `url_hash` (the same sha1 discipline as `news_items`), and answers with
+  added/duplicate counts. An HTTP contract keeps database credentials out
+  of the scraper and validation in one place — the agent never touches
+  Postgres.
+- **Press-release capture**, two doors:
+  - `monitor_feeds` RSS/Atom polling by a new `cron/monitor.php` (hub,
+    hourly) — government newsrooms and wire services mostly publish
+    feeds, and `http_get()` / `parse_feed()` already exist;
+  - **Capture a release** — paste a URL, and the Post-a-link scraper
+    (Open Graph title, summary, outlet) prefills a `monitor_items` row
+    with `doc_type = 'release'` for anything that arrives outside a feed.
+- **The board** (`admin/monitor.php`, hub, all newsroom roles): filter by
+  level, region, doc type, source, and status; triage with *Flag*,
+  *Dismiss*, *Claim*; act with *Start draft* (prefilled, exactly like the
+  wire), *Research brief* (Phase 3's mode, grounded on the item), and
+  *Story ideas*.
+- **The pulse.** A strip on the hub dashboard: new-item counts by region ×
+  jurisdiction for the last seven days plus the latest flagged items —
+  "what's popping up where" at a glance, before anyone opens the board.
+- **Story ideas.** From one item or a selected cluster, one Claude call
+  proposes three to five pitches — headline, angle, why now, suggested
+  paper and desk — written to `story_ideas` as `origin = 'ai'`.
+  Journalists file their own ideas into the same list by hand. Claiming
+  an idea links straight into *Start draft*; the ideas list filters by
+  site and region so each paper sees its own docket. Same rule as
+  everywhere: ideas are suggestions, never auto-filed stories.
+- **Watchlists.** A per-user keyword list (settings JSON); matching new
+  items are highlighted on the board and, optionally, delivered as a
+  morning email digest through the existing `app/mailer.php`.
+- **Retention.** Dismissed and untouched items prune after a configurable
+  window (default six months); flagged and used items keep — they're the
+  paper trail behind published stories.
+
+Your scraper can stay external forever — the API is the contract. If it
+ever moves in-house, it becomes one more task kind on Phase 6's agent
+rails without changing how items display.
+
+### Phase 5 — Analytics, Search Console, and the story-gap report (≈ 2 sessions)
 
 One Google Cloud service account, added as a viewer everywhere, pulled
 nightly into our own tables — no OAuth dance, no third-party dashboard.
@@ -196,7 +284,7 @@ nightly into our own tables — no OAuth dance, no third-party dashboard.
   GA4 `runReport` (sessions, users, pageviews, engagement; by date, by
   channel group, top pages) and GSC `searchAnalytics/query` (by query and
   by page — GSC lags ~2 days; the cron re-pulls a trailing window).
-- **Migration v10**: `site_metrics_daily (site_id, day, sessions, users,
+- **Migration v11**: `site_metrics_daily (site_id, day, sessions, users,
   pageviews, engaged_sessions, engagement_secs, channels_json,
   top_pages_json)` and `gsc_daily (site_id, day, dim ('query'|'page'),
   key, clicks, impressions, position)`, pruned to 16 months (GSC's own
@@ -212,7 +300,9 @@ nightly into our own tables — no OAuth dance, no third-party dashboard.
   - *Uncovered demand*: queries with no matching published story on that
     site (matched against titles and tags);
   - *Wire heat*: topics recurring across the shared wire pool that a given
-    paper hasn't touched.
+    paper hasn't touched;
+  - *Monitoring heat*: clusters of Phase 4 monitoring items in a region —
+    a jurisdiction generating paper that no paper has covered yet.
   - Optionally, one Claude call turns a site's top gaps + recent wire into
     five concrete pitches (headline, angle, suggested desk) — displayed
     beside the numbers, never auto-filed.
@@ -223,11 +313,11 @@ nightly into our own tables — no OAuth dance, no third-party dashboard.
   Exposed as a radio in the *Runs on* picker. Recommended for
   wide-syndication stories so one paper accrues the ranking.
 
-### Phase 5 — The agent control room (≈ 2 sessions)
+### Phase 6 — The agent control room (≈ 2 sessions)
 
 A task queue where agents do the tedious passes and editors keep the pen.
 
-- **Migration v11**: `agent_tasks (id, kind, status, post_id, site_id,
+- **Migration v12**: `agent_tasks (id, kind, status, post_id, site_id,
   payload, result, log, created_by, created_at, started_at, finished_at,
   reviewed_by, reviewed_at)` — statuses `queued → running →
   needs_review → approved | rejected | failed` — and `entities (id, name,
@@ -255,11 +345,12 @@ A task queue where agents do the tedious passes and editors keep the pen.
   3. **Tagger** — proposes 3–6 tags from the network's existing tag
      vocabulary so tag pages consolidate instead of fragmenting.
   - Next wave, same rails: internal related-link suggestions between
-    network stories, image alt-text writer, corrections-consistency scan.
+    network stories, image alt-text writer, corrections-consistency scan,
+    and additional monitors feeding the Phase 4 media desk.
 - Tasks are enqueued from story pages ("Run linkifier"), in bulk from the
   network desk, or automatically on publish (a per-kind setting).
 
-### Phase 6 — Hardening the keys to eight papers (≈ 1 session)
+### Phase 7 — Hardening the keys to eight papers (≈ 1 session)
 
 The hub concentrates power, so it gets locks the papers never needed.
 
@@ -279,18 +370,22 @@ The hub concentrates power, so it gets locks the papers never needed.
 ## 5 · Operational notes
 
 - **Crons.** The papers keep their one job each. The hub adds
+  `PP_SITE=civismedia php cron/monitor.php` (hourly),
   `PP_SITE=civismedia php cron/agents.php` (10–15 min) and
   `PP_SITE=civismedia php cron/analytics.php` (nightly). The analytics
-  cron iterates all sites regardless of which site invokes it.
+  cron iterates all sites regardless of which site invokes it; the
+  monitor cron polls `monitor_feeds` — your external scraper needs no
+  cron here at all, it just POSTs to the ingest API.
 - **Uploads.** AI drafts and campaign creatives are written from the hub;
   the shared-`uploads/` rule from DEPLOY.md §10 (one directory, symlinked
   or shared) is now load-bearing — images referenced by syndicated stories
   must resolve on every domain.
 - **Database.** All new tables live in the same `prairiedispatch` schema
   and install through `pp_migrate()` — first deploy of each phase upgrades
-  in place, same as every migration so far. `gsc_daily` is the only table
-  with real growth; it's pruned to 16 months and indexed
-  `(site_id, day, dim)`.
+  in place, same as every migration so far. Two tables have real growth,
+  both with prune policies: `gsc_daily` (16 months, indexed
+  `(site_id, day, dim)`) and `monitor_items` (dismissed/untouched items
+  after six months, indexed `(level, region, fetched_at)`).
 - **Backups.** Supabase PITR was a launch-day item in DEPLOY.md §8; the
   hub makes the single database more valuable — verify it's actually on.
 
@@ -298,21 +393,22 @@ The hub concentrates power, so it gets locks the papers never needed.
 
 - **Let the storefront sell the network.** The brochure needs credible
   services; the network *is* one. An "Advertise" page offering placements
-  across eight community papers — with a rate card and (post-Phase 4) real
+  across eight community papers — with a rate card and (post-Phase 5) real
   aggregated audience numbers — turns the front from camouflage into the
   sales channel for Phase 2's campaign inventory, and gives inquiries a
   reason to exist.
-- **A one-line imprint on the papers.** "A Civis Media publication" in each
-  paper's footer or about page. Independent of not linking the admin —
-  this is paper → parent, not parent → papers. It's what Google News
-  eligibility reviews and wary advertisers look for, it makes the ad-sales
-  story legitimate, and transparent ownership is cheap insurance for a
-  news network's credibility. A per-site setting, so it's a choice, not a
-  mandate.
+- **The imprint line — decided: optional.** "A Civis Media publication"
+  ships as a per-site setting, **off by default**; each paper turns it on
+  only when you choose. The case for eventually flipping it on stands —
+  it's what Google News eligibility reviews and wary advertisers look
+  for, and it makes the network ad-sales story legitimate — but nothing
+  in the build assumes it. (Independent of not linking the admin: this is
+  paper → parent, not parent → papers.)
 - **AI disclosure as policy, not garnish.** The `origin` column (Phase 1)
   plus the disclosure setting (Phase 3) means the network can state a
-  clear policy — AI-assisted drafts are always human-reviewed and labelled
-  where required. Cheap now, awkward to retrofit after publication.
+  clear policy — AI assists research and drafting, a journalist authors
+  and answers for every story, and labels appear where you choose. Cheap
+  now, awkward to retrofit after publication.
 - **Duplicate-coverage nudge.** When two papers are about to run
   near-identical stories on the same wire item (same `source_url`), show
   it in the network desk. The data already exists; it's a query and a
@@ -326,17 +422,28 @@ The hub concentrates power, so it gets locks the papers never needed.
   (service account is strictly simpler on shared hosting), or autonomous
   publishing (the review queue is the product's integrity).
 
-## 7 · Open questions
+## 7 · Decisions to date
+
+- **Imprint line**: built as an optional per-site setting, off by default.
+- **AI's role**: research and drafting aide only — a journalist reworks,
+  signs, and answers for every story; bylines are always a person's.
+
+## 8 · Open questions
 
 1. **Hosting** — does civismedia.ca land on the existing server (host-map
    entry in the shared release) or its own? Either works; the runbook will
    match.
-2. **Imprint** — do the papers disclose Civis Media ownership (§6)? Default
-   in the plan: setting exists, off until you say otherwise.
-3. **Canonical policy** — adopt home-paper canonicals for widely-syndicated
-   stories (Phase 4), or keep every paper self-canonical?
-4. **AI byline** — AI-assisted stories carry the commissioning editor's
-   byline (current plan), a house byline ("Civis Media Staff"), or
-   per-story choice?
-5. **Phase order** — advertising before AI drafting is the revenue-first
-   ordering; swap Phases 2 and 3 if content volume matters more right now.
+2. **Canonical policy** — adopt home-paper canonicals for widely-syndicated
+   stories (Phase 5), or keep every paper self-canonical?
+3. **The scraper's contract** — one sample payload from your
+   government-publications agent (its fields, and how it names
+   jurisdictions and regions) and `/api/monitor` will be built to match
+   it, rather than forcing the agent to change shape.
+4. **Email-in for releases** — press releases arrive by email constantly.
+   Want a monitored mailbox (IMAP poll into `monitor_items`) inside
+   Phase 4, or is feed + paste-a-URL capture enough to start?
+5. **Phase order** — advertising before the research desk is the
+   revenue-first ordering. The media desk's board and ingest API need only
+   Phase 1, so Phase 4 can jump the queue if newsroom value matters more
+   right now — its *Research brief* and *Story ideas* buttons simply light
+   up once Phase 3's Claude client lands.
