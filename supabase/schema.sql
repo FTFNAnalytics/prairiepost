@@ -7,8 +7,10 @@
 --
 -- Shared across the network:  sites, users (newsroom accounts), categories,
 --                             posts (+ post_sites syndication), tags, sources,
---                             news_items (the wire pool)
--- Per-site:                   settings (keyed by site_id), subscribers
+--                             news_items (the wire pool), roadmap_items (the
+--                             control room's living project document)
+-- Per-site:                   settings (keyed by site_id), subscribers,
+--                             newsletters, ads, inquiries
 --
 -- The PHP layer talks to this over the SESSION POOLER
 -- (aws-0-<region>.pooler.supabase.com:5432) with sslmode=require and
@@ -71,6 +73,7 @@ CREATE TABLE posts (
     source_name VARCHAR(160) NOT NULL DEFAULT '', -- the outlet a wire link credits
     post_type VARCHAR(20) NOT NULL DEFAULT 'story', -- story | link (headline links out)
     region VARCHAR(40) NOT NULL DEFAULT '',       -- aggregator region key (e.g. bc, alberta)
+    origin VARCHAR(20) NOT NULL DEFAULT '',       -- '' newsroom | wire | ai (always human-finished)
     status VARCHAR(20) NOT NULL DEFAULT 'draft',  -- draft | in_review | scheduled | published
     review_note TEXT,
     is_featured INTEGER NOT NULL DEFAULT 0,       -- superseded by placement; kept for compatibility
@@ -182,6 +185,32 @@ CREATE TABLE ads (
     created_at TIMESTAMP NOT NULL
 );
 
+-- The hub's contact-form inquiries (civismedia.ca), per-site like ads.
+CREATE TABLE inquiries (
+    id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    site_id INTEGER NOT NULL,
+    name VARCHAR(120) NOT NULL DEFAULT '',
+    email VARCHAR(191) NOT NULL DEFAULT '',
+    organization VARCHAR(160) NOT NULL DEFAULT '',
+    message TEXT,
+    status VARCHAR(20) NOT NULL DEFAULT 'new',    -- new | handled
+    ip VARCHAR(64) NOT NULL DEFAULT '',
+    created_at TIMESTAMP NOT NULL
+);
+
+-- The roadmap: the control room's living project document (network-global).
+CREATE TABLE roadmap_items (
+    id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    kind VARCHAR(20) NOT NULL DEFAULT 'note',     -- phase | question | note
+    title VARCHAR(255) NOT NULL,
+    body TEXT,
+    status VARCHAR(20) NOT NULL DEFAULT '',       -- phase: planned|in_progress|done · question: open|answered
+    sort INTEGER NOT NULL DEFAULT 0,
+    updated_by VARCHAR(120) NOT NULL DEFAULT '',
+    created_at TIMESTAMP NOT NULL,
+    updated_at TIMESTAMP NOT NULL
+);
+
 CREATE INDEX idx_posts_status ON posts (status, published_at);
 CREATE INDEX idx_posts_category ON posts (category_id);
 CREATE INDEX idx_posts_author ON posts (author_id);
@@ -189,5 +218,6 @@ CREATE INDEX idx_posts_region ON posts (region);
 CREATE INDEX idx_news_region ON news_items (region, fetched_at);
 CREATE INDEX idx_post_sites_site ON post_sites (site_id);
 CREATE INDEX idx_ads_site_placement ON ads (site_id, placement);
+CREATE INDEX idx_inquiries_site ON inquiries (site_id, created_at);
 
-INSERT INTO settings (site_id, skey, svalue) VALUES (0, 'schema_version', '6');
+INSERT INTO settings (site_id, skey, svalue) VALUES (0, 'schema_version', '8');

@@ -41,6 +41,7 @@ $map = [
     '/feed/'        => '/feed.php',
     '/sitemap.xml'  => '/sitemap.php',
     '/subscribe'    => '/subscribe.php',
+    '/contact'      => '/contact.php',
     '/ad'           => '/ad.php',
     '/corrections'  => '/corrections.php',
 ];

@@ -47,6 +47,14 @@ return [
     // articles, settings and subscribers belong to this front end.
     'site_slug' => 'prairiedispatch',
 
+    // Which site of the network is the master control room (the Civis Media
+    // hub). When the current site's slug matches, /admin grows the network
+    // pages — the network desk, the full newswire, the roadmap, inquiries.
+    // Keyed to a slug, not a boolean, so a shared release directory serving
+    // several domains stays correct: only the hub's host gets the control
+    // room. Leave as-is even on the papers; it only takes effect on the hub.
+    'hub_slug' => 'civismedia',
+
     // Canonical site URL, no trailing slash (e.g. 'https://prairiedispatch.com').
     // Leave empty to auto-detect from the request.
     'site_url' => '',

@@ -62,6 +62,69 @@ function pp_site_default_settings(string $title): array
     ];
 }
 
+/**
+ * Seed the roadmap — the network's living project document, shown in the
+ * control room (Newsroom → Roadmap on the hub). Inserted once; after that
+ * the newsroom owns every word of it. Safe to call twice: a non-empty
+ * table is left exactly as it stands.
+ */
+function pp_seed_roadmap(PDO $pdo): void
+{
+    if ((int) $pdo->query('SELECT COUNT(*) AS n FROM roadmap_items')->fetch()['n'] > 0) {
+        return;
+    }
+    $now = date('Y-m-d H:i:s');
+    $ins = $pdo->prepare('INSERT INTO roadmap_items (kind, title, body, status, sort, created_at, updated_at)
+                          VALUES (?, ?, ?, ?, ?, ?, ?)');
+    $phases = [
+        ['Phase 1 — Hub + control room shell',
+         'civismedia.ca joins the network: the brochure front with the contact form, the network desk (every story, site chips, bulk Runs on), the network newswire, the health panel, this roadmap, and provenance (origin) on every story.',
+         'in_progress'],
+        ['Phase 2 — Network advertising',
+         'Campaigns: one creative fans out to an ads row per chosen paper, so per-site serving and counters stay untouched. Aggregated served/click reporting by campaign; network rows read-only on local papers.',
+         'planned'],
+        ['Phase 3 — The research & drafting desk',
+         'Claude as research assistant and first-draft aide — research briefs, drafts from the wire, drafts from an assignment. A journalist always reworks, signs, and answers for the story; the AI path can never publish.',
+         'planned'],
+        ['Phase 4 — The media monitoring desk',
+         'Government publications arrive through a token-guarded ingest API (built so the external scraping agent plugs in whenever it is ready), press releases by feed or pasted URL, a region-by-jurisdiction pulse, and story ideas that are suggestions, never auto-filed stories.',
+         'planned'],
+        ['Phase 5 — Analytics & Search Console',
+         'One Google service account added as viewer on every property, pulled nightly into our own tables. Traffic and acquisition per paper and network-wide, the story-gap report, and the canonical policy decision.',
+         'planned'],
+        ['Phase 6 — The agent control room',
+         'A task queue where agents propose and editors approve: the linkifier backed by an entity directory of officials, the SEO meta writer, the tagger. Every machine write is a reviewed diff.',
+         'planned'],
+        ['Phase 7 — Hardening',
+         'Two-factor for admin accounts, login rate limits, an audit log for control-room writes. The hub holds the keys to every paper; it gets locks the papers never needed.',
+         'planned'],
+    ];
+    $sort = 0;
+    foreach ($phases as [$title, $body, $status]) {
+        $ins->execute(['phase', $title, $body, $status, ++$sort, $now, $now]);
+    }
+
+    $questions = [
+        ['Hosting — where does civismedia.ca live?',
+         'Same server as the papers (a host-map entry in the shared release) or its own box? Either works; DEPLOY-CIVIS.md covers both.'],
+        ['Canonical policy for syndicated stories',
+         'A story on several domains is duplicate content to Google. Adopt home-paper canonicals for widely-syndicated stories (Phase 5), or keep every paper self-canonical?'],
+        ['The scraping agent\'s contract',
+         'One sample payload from the government-publications agent — its fields, and how it names jurisdictions and regions — and the Phase 4 ingest API is built to match it.'],
+        ['Email-in capture for press releases',
+         'Releases arrive by email constantly. A monitored mailbox polled into the media desk inside Phase 4, or is feed + paste-a-URL capture enough to start?'],
+        ['Phase order — revenue first or newsroom first?',
+         'Advertising (Phase 2) before the research desk is the revenue-first ordering. The media desk needs only Phase 1, so it can jump the queue if newsroom value matters more right now.'],
+    ];
+    foreach ($questions as [$title, $body]) {
+        $ins->execute(['question', $title, $body, 'open', 0, $now, $now]);
+    }
+
+    $ins->execute(['note', 'How to use this page',
+        'This is the project\'s living document. Update a phase\'s status as work lands, answer questions in place and mark them answered, add notes freely. The full design behind it is PLAN-CIVIS.md in the repository.',
+        '', 0, $now, $now]);
+}
+
 /** Create a site row plus its default settings; returns the site row. */
 function pp_create_site(PDO $pdo, string $slug, ?string $name = null): array
 {
@@ -366,4 +429,7 @@ function pp_seed(PDO $pdo): void
             $insPT->execute([$postId, $tagId]);
         }
     }
+
+    /* --- The roadmap — the control room's living project document --------- */
+    pp_seed_roadmap($pdo);
 }

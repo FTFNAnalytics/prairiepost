@@ -5,7 +5,7 @@
  */
 
 define('PP_ROOT', dirname(__DIR__));
-define('PP_SCHEMA_VERSION', 7);
+define('PP_SCHEMA_VERSION', 8);
 
 $configFile = PP_ROOT . '/config.php';
 $GLOBALS['pp_config'] = is_file($configFile)
@@ -181,6 +181,18 @@ function current_site(): array
 function current_site_id(): int
 {
     return (int) current_site()['id'];
+}
+
+/**
+ * Whether this request is serving the network's master control room —
+ * the Civis Media hub. True when the current site's slug matches the
+ * config 'hub_slug'. The hub is an ordinary site row; hub-ness only
+ * decides which admin pages exist here.
+ */
+function pp_is_hub(): bool
+{
+    $hub = slugify((string) pp_config('hub_slug', ''));
+    return $hub !== '' && (current_site()['slug'] ?? '') === $hub;
 }
 
 /** Read a per-site runtime setting (cached per request). */

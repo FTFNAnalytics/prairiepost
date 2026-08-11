@@ -117,6 +117,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 'source_name'      => $sourceName,
                 'post_type'        => 'link',
                 'region'           => $form['region'],
+                'origin'           => 'wire',
                 'status'           => $status,
                 'published_at'     => $status === 'published' ? now() : null,
                 'created_at'       => now(),

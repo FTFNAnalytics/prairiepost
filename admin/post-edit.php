@@ -116,11 +116,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
         set_post_tags($id, (string) ($_POST['tags'] ?? ''));
 
-        // Syndication: editors pick sites; authors' stories default to this site.
+        // Syndication: editors pick sites; authors' stories default to this
+        // site. On the hub no paper is "this site" — an unassigned story
+        // stays unmapped and shows as running nowhere on the network desk.
         if ($editor && isset($_POST['sites'])) {
             $picked = array_map('intval', (array) $_POST['sites']);
-            set_post_sites($id, $picked ?: [current_site_id()]);
-        } elseif (!site_ids_for_post($id)) {
+            set_post_sites($id, $picked ?: (pp_is_hub() ? [] : [current_site_id()]));
+        } elseif (!pp_is_hub() && !site_ids_for_post($id)) {
             set_post_sites($id, [current_site_id()]);
         }
 
@@ -143,8 +145,8 @@ if ($id && empty($error)) {
 } elseif (isset($_POST['tags'])) {
     $tagsValue = (string) $_POST['tags'];
 }
-$postSites = $id ? site_ids_for_post($id) : [current_site_id()];
-$allSites = sites_all();
+$postSites = $id ? site_ids_for_post($id) : (pp_is_hub() ? [] : [current_site_id()]);
+$allSites = pp_paper_sites();   // the brochure hub never carries a story
 
 $v = fn (string $key, string $default = '') => e((string) ($post[$key] ?? $default));
 $st = (string) ($post['status'] ?? 'draft');

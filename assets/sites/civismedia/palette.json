@@ -1,0 +1,16 @@
+{
+  "palette": {
+    "ink": "#1B2A41",
+    "paper": "#F6F5F2",
+    "board": "#C8C9C7",
+    "sky": "#8FA8C2",
+    "hill": "#243B5C",
+    "field": "#A65B2A",
+    "stubble": "#8A4E24",
+    "red": "#A65B2A",
+    "muted": "#5C6672"
+  },
+  "chrome": {
+    "template": "civis"
+  }
+}

@@ -3,6 +3,13 @@
 require __DIR__ . '/app/bootstrap.php';
 require __DIR__ . '/app/views/ui.php';
 
+// The hub's public face is a brochure, not a paper — rendered whole,
+// before any of the newsroom chrome or front-page queries run.
+if (pp_chrome('template') === 'civis') {
+    require PP_ROOT . '/app/views/front-civis.php';
+    return;
+}
+
 $hero = featured_post();
 $heroId = $hero ? [(int) $hero['id']] : [];
 $featured = front_featured_posts($heroId);

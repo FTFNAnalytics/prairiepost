@@ -19,17 +19,33 @@ function flash_show(): void
 function admin_header(string $title, string $active = ''): void
 {
     $user = current_user();
+    $hub = pp_is_hub();
     $items = [
         'dashboard' => ['index.php', 'Dashboard'],
         'posts'     => ['posts.php', 'Stories'],
     ];
+    if ($hub && is_editor($user)) {
+        // The control room: the network-wide pages exist only on the hub.
+        $items['network'] = ['network-posts.php', 'Network desk'];
+        $items['netwire'] = ['network-wire.php', 'Newswire'];
+    }
     if (is_editor($user)) {
         $items['linkpost']    = ['link-post.php', 'Post a link'];
         $items['categories']  = ['categories.php', 'Desks'];
         $items['sources']     = ['sources.php', 'Sources'];
         $items['ads']         = ['ads.php', 'Ads'];
-        $items['newsletter']  = ['newsletter.php', 'The 6 a.m.'];
-        $items['subscribers'] = ['subscribers.php', 'Subscribers'];
+        if (!$hub) {
+            // The hub is not a paper — no daily edition, no subscriber list.
+            $items['newsletter']  = ['newsletter.php', 'The 6 a.m.'];
+            $items['subscribers'] = ['subscribers.php', 'Subscribers'];
+        }
+    }
+    if ($hub && is_editor($user)) {
+        $items['inquiries'] = ['inquiries.php', 'Inquiries'];
+    }
+    if ($hub) {
+        // The living project document — every newsroom role can read it.
+        $items['roadmap'] = ['roadmap.php', 'Roadmap'];
     }
     if ($user && $user['role'] === 'admin') {
         $items['users'] = ['users.php', 'Accounts'];
@@ -51,7 +67,7 @@ function admin_header(string $title, string $active = ''): void
 <div class="adminbar">
   <div class="wrap">
     <a href="/" title="View the site"><img src="<?= e(site_asset('logo-reversed.svg')) ?>" alt="<?= e(setting('site_title')) ?>"></a>
-    <span class="who">Newsroom</span>
+    <span class="who"><?= pp_is_hub() ? 'Control room' : 'Newsroom' ?></span>
     <?php if ($user): ?>
     <nav aria-label="Admin">
       <?php foreach ($items as $key => [$href, $label]): ?>
@@ -75,7 +91,7 @@ function admin_footer(): void
 </main>
 <footer class="adminfoot">
   <div class="wrap">
-    <span><?= e(setting('site_title', 'The Prairie Dispatch')) ?> · Newsroom</span>
+    <span><?= e(setting('site_title', 'The Prairie Dispatch')) ?> · <?= pp_is_hub() ? 'Control room' : 'Newsroom' ?></span>
     <span><a href="/" style="color:inherit">View the site →</a></span>
   </div>
 </footer>

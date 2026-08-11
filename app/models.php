@@ -228,6 +228,13 @@ function sites_all(): array
     return db()->query('SELECT * FROM sites ORDER BY name')->fetchAll();
 }
 
+/** The sites that are papers — everything except the control-room hub. */
+function pp_paper_sites(): array
+{
+    $hub = slugify((string) pp_config('hub_slug', ''));
+    return array_values(array_filter(sites_all(), fn ($s) => $s['slug'] !== $hub));
+}
+
 function site_ids_for_post(int $postId): array
 {
     $stmt = db()->prepare('SELECT site_id FROM post_sites WHERE post_id = ?');

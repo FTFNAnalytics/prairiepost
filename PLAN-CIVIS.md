@@ -116,6 +116,11 @@ same versioned-migration style as `pp_migrate()`. Sizes are relative to one
 of the site launches already in the history (Kelowna, Brampton ≈ one build
 session each).
 
+**Progress is tracked in the control room, not here.** Phase 1 ships a
+Roadmap page (`/admin → Roadmap` on the hub) seeded from this plan — the
+database copy is the living document: phase statuses, open questions and
+their answers all live there. This file stays the design record.
+
 ### Phase 1 — Join the network + control room shell (≈ 1–2 sessions)
 
 The hub goes live and immediately makes the existing network easier to run.
@@ -136,9 +141,15 @@ The hub goes live and immediately makes the existing network easier to run.
   and last-publish time, wire source failures (`sources.last_status`),
   newsletter send status per site, review-queue depth. All of it is a query
   away today; nobody can see it in one place.
+- **The roadmap** (`admin/roadmap.php`): this plan's phases and open
+  questions as a living, database-backed document — every newsroom role
+  reads it, editors update statuses and answer questions in place.
+- **Inquiries** (`admin/inquiries.php`): what the brochure's contact form
+  brought in — new first, mark handled, optional mail copy to
+  `contact_email`.
 - **Migration v8**: `posts.origin VARCHAR(20) DEFAULT ''` (`''` newsroom ·
-  `wire` · `ai` — provenance for filters, reporting, and disclosure) and
-  the `inquiries` table.
+  `wire` · `ai` — provenance for filters, reporting, and disclosure), the
+  `inquiries` table, and `roadmap_items`.
 
 ### Phase 2 — Network advertising (≈ 1 session)
 
@@ -270,8 +281,9 @@ rails without changing how items display.
 One Google Cloud service account, added as a viewer everywhere, pulled
 nightly into our own tables — no OAuth dance, no third-party dashboard.
 
-- **Tagging.** Per-site setting `ga4_measurement_id`; `page_header()` emits
-  the gtag snippet when set. (Papers currently carry no analytics at all.)
+- **Tagging.** Already wired: `page_header()` emits the per-site
+  `analytics_code` setting verbatim — this phase just standardizes what
+  goes in it (each paper's GA4 gtag snippet).
 - **Access, once per site**: create one GCP project, enable the Analytics
   Data API and Search Console API, create a service account; add its email
   as **Viewer** on each GA4 property and as a **Restricted** user on each
@@ -427,6 +439,12 @@ The hub concentrates power, so it gets locks the papers never needed.
 - **Imprint line**: built as an optional per-site setting, off by default.
 - **AI's role**: research and drafting aide only — a journalist reworks,
   signs, and answers for every story; bylines are always a person's.
+- **The scraping agent connects later.** The media desk ships with the
+  ingest API as its contract from day one; the external agent plugs in
+  whenever it's ready, with no schema or code change on our side.
+- **The roadmap lives in the control room.** Seeded from this plan into
+  `roadmap_items`; the database copy is the source of truth for progress
+  and open questions from Phase 1 on.
 
 ## 8 · Open questions
 

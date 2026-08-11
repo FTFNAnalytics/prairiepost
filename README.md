@@ -62,6 +62,19 @@ ads, markets) and subscribers stay per-site. Each deployment sets a
 `site_slug` in `config.php`; an editor's *Runs on* checkboxes decide which
 papers a story appears in. One filing, the whole network.
 
+**The control room** — one site of the network can be the master hub
+(first user: Civis Media, civismedia.ca). Its public face is a brochure
+(`template: civis` — a communications shop, none of the paper chrome, a
+contact form that lands in the admin); its `/admin` becomes the **control
+room**: the network desk (every story with the papers it runs on, bulk
+*Runs on* assignment), the full newswire across every region, a
+network-health dashboard, contact-form inquiries, and the roadmap — the
+project's living planning document, seeded from `PLAN-CIVIS.md`. Hub-ness
+is one config key (`hub_slug`) matched against the site's slug, so a shared
+release directory serving many domains gives only the hub host the control
+room. Every story carries an `origin` (`''` newsroom · `wire` · `ai`) for
+provenance. Deployment: `DEPLOY-CIVIS.md`.
+
 **The aggregator** — a site can run as a link aggregator (first user:
 Western Wire, westernwire.ca). A **wire link** is a post whose headline
 links straight to the outlet that reported it, credited by name — on
@@ -206,7 +219,7 @@ and keeps every request on your own domain.
 
 ```
 index.php  article.php  section.php  search.php  author.php   public pages
-feed.php   sitemap.php  subscribe.php robots.txt              syndication & signup
+feed.php   sitemap.php  subscribe.php contact.php robots.txt  syndication & signup
 router.php                                                    dev server routing
 app/        bootstrap, schema + migrations, models, helpers, feed engine, seed
 admin/      the newsroom (dashboard, editor, review queue, accounts, profiles)

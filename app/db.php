@@ -87,6 +87,7 @@ function pp_schema_ddl(string $driver): array
             source_name VARCHAR(160) NOT NULL DEFAULT '',
             post_type VARCHAR(20) NOT NULL DEFAULT 'story',
             region VARCHAR(40) NOT NULL DEFAULT '',
+            origin VARCHAR(20) NOT NULL DEFAULT '',
             status VARCHAR(20) NOT NULL DEFAULT 'draft',
             review_note TEXT,
             is_featured INTEGER NOT NULL DEFAULT 0,
@@ -193,6 +194,30 @@ function pp_schema_ddl(string $driver): array
             created_at $dt NOT NULL
         )$suffix",
 
+        "CREATE TABLE inquiries (
+            id $id,
+            site_id INTEGER NOT NULL,
+            name VARCHAR(120) NOT NULL DEFAULT '',
+            email VARCHAR(191) NOT NULL DEFAULT '',
+            organization VARCHAR(160) NOT NULL DEFAULT '',
+            message TEXT,
+            status VARCHAR(20) NOT NULL DEFAULT 'new',
+            ip VARCHAR(64) NOT NULL DEFAULT '',
+            created_at $dt NOT NULL
+        )$suffix",
+
+        "CREATE TABLE roadmap_items (
+            id $id,
+            kind VARCHAR(20) NOT NULL DEFAULT 'note',
+            title VARCHAR(255) NOT NULL,
+            body TEXT,
+            status VARCHAR(20) NOT NULL DEFAULT '',
+            sort INTEGER NOT NULL DEFAULT 0,
+            updated_by VARCHAR(120) NOT NULL DEFAULT '',
+            created_at $dt NOT NULL,
+            updated_at $dt NOT NULL
+        )$suffix",
+
         'CREATE INDEX idx_posts_status ON posts (status, published_at)',
         'CREATE INDEX idx_posts_category ON posts (category_id)',
         'CREATE INDEX idx_posts_author ON posts (author_id)',
@@ -200,6 +225,7 @@ function pp_schema_ddl(string $driver): array
         'CREATE INDEX idx_news_region ON news_items (region, fetched_at)',
         'CREATE INDEX idx_post_sites_site ON post_sites (site_id)',
         'CREATE INDEX idx_ads_site_placement ON ads (site_id, placement)',
+        'CREATE INDEX idx_inquiries_site ON inquiries (site_id, created_at)',
     ];
 }
 
@@ -399,5 +425,48 @@ function pp_migrate(PDO $pdo, string $driver): void
         }
         $pdo->exec('CREATE INDEX idx_posts_region ON posts (region)');
         $pdo->exec("UPDATE settings SET svalue = '7' WHERE site_id = 0 AND skey = 'schema_version'");
+    }
+
+    if ($version < 8) {
+        // The Civis Media control room: provenance on every story ('' newsroom,
+        // 'wire' started from the pull, 'ai' machine-assisted — always
+        // human-finished), the hub's contact-form inquiries, and the roadmap —
+        // the project's living document, kept in the database so the whole
+        // newsroom works from one copy.
+        $dt = $driver === 'pgsql' ? 'TIMESTAMP' : 'DATETIME';
+        $id = $driver === 'mysql' ? 'INT UNSIGNED AUTO_INCREMENT PRIMARY KEY'
+            : ($driver === 'pgsql' ? 'INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY' : 'INTEGER PRIMARY KEY AUTOINCREMENT');
+
+        $pdo->exec("ALTER TABLE posts ADD COLUMN origin VARCHAR(20) NOT NULL DEFAULT ''");
+
+        $pdo->exec("CREATE TABLE inquiries (
+            id $id,
+            site_id INTEGER NOT NULL,
+            name VARCHAR(120) NOT NULL DEFAULT '',
+            email VARCHAR(191) NOT NULL DEFAULT '',
+            organization VARCHAR(160) NOT NULL DEFAULT '',
+            message TEXT,
+            status VARCHAR(20) NOT NULL DEFAULT 'new',
+            ip VARCHAR(64) NOT NULL DEFAULT '',
+            created_at $dt NOT NULL
+        )");
+        $pdo->exec('CREATE INDEX idx_inquiries_site ON inquiries (site_id, created_at)');
+
+        $pdo->exec("CREATE TABLE roadmap_items (
+            id $id,
+            kind VARCHAR(20) NOT NULL DEFAULT 'note',
+            title VARCHAR(255) NOT NULL,
+            body TEXT,
+            status VARCHAR(20) NOT NULL DEFAULT '',
+            sort INTEGER NOT NULL DEFAULT 0,
+            updated_by VARCHAR(120) NOT NULL DEFAULT '',
+            created_at $dt NOT NULL,
+            updated_at $dt NOT NULL
+        )");
+
+        require_once PP_ROOT . '/app/seed.php';
+        pp_seed_roadmap($pdo);
+
+        $pdo->exec("UPDATE settings SET svalue = '8' WHERE site_id = 0 AND skey = 'schema_version'");
     }
 }
