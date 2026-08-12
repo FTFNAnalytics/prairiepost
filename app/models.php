@@ -580,3 +580,132 @@ function review_queue(int $limit = 20): array
             ORDER BY p.updated_at ASC LIMIT " . (int) $limit;
     return db()->query($sql)->fetchAll();
 }
+
+/* --- The media monitoring desk ------------------------------------------ */
+
+/** Jurisdiction vocabulary — the ingest contract validates against this. */
+function pp_monitor_levels(): array
+{
+    return [
+        'federal'    => 'Federal',
+        'provincial' => 'Provincial',
+        'municipal'  => 'Municipal',
+        'agency'     => 'Agency',
+    ];
+}
+
+/** Document-type vocabulary — small on purpose; 'other' catches the rest. */
+function pp_monitor_doctypes(): array
+{
+    return [
+        'release'          => 'Press release',
+        'gazette'          => 'Gazette',
+        'order-in-council' => 'Order in council',
+        'hansard'          => 'Hansard',
+        'bill'             => 'Bill',
+        'tender'           => 'Tender',
+        'agenda'           => 'Agenda',
+        'minutes'          => 'Minutes',
+        'decision'         => 'Decision',
+        'report'           => 'Report',
+        'other'            => 'Other',
+    ];
+}
+
+/** Region key → label, merged from every site's regions setting. */
+function pp_region_labels(): array
+{
+    $labels = [];
+    foreach (db()->query("SELECT svalue FROM settings WHERE skey = 'regions'") as $row) {
+        $decoded = json_decode((string) $row['svalue'], true);
+        if (is_array($decoded)) {
+            foreach ($decoded as $k => $v) {
+                $labels[$k] = $labels[$k] ?? (string) $v;
+            }
+        }
+    }
+    return $labels;
+}
+
+/**
+ * Insert one monitoring item, de-duplicated on url_hash — the one write path
+ * shared by the ingest API, the feed poller, and the capture form.
+ * Returns 'added' or 'duplicate'.
+ */
+function pp_monitor_add_item(array $item): string
+{
+    $db = db();
+    $hash = sha1((string) $item['url']);
+    $seen = $db->prepare('SELECT 1 FROM monitor_items WHERE url_hash = ?');
+    $seen->execute([$hash]);
+    if ($seen->fetch()) {
+        return 'duplicate';
+    }
+    try {
+        $db->prepare('INSERT INTO monitor_items
+                (feed_id, source_name, level, region, doc_type, title, url, url_hash,
+                 summary, body_excerpt, published_at, fetched_at, status)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)')
+           ->execute([
+               $item['feed_id'] ?? null,
+               mb_substr(trim((string) ($item['source'] ?? '')), 0, 160),
+               $item['level'],
+               mb_substr(slugify((string) ($item['region'] ?? '')), 0, 40),
+               $item['doc_type'],
+               mb_substr(trim((string) $item['title']), 0, 255),
+               mb_substr(trim((string) $item['url']), 0, 600),
+               $hash,
+               mb_substr(trim((string) ($item['summary'] ?? '')), 0, 2000),
+               mb_substr(trim((string) ($item['body_excerpt'] ?? '')), 0, 8000),
+               $item['published_at'] ?? null,
+               now(),
+               'new',
+           ]);
+    } catch (PDOException $e) {
+        // A concurrent insert of the same URL is a duplicate, not an error.
+        if (str_contains(strtolower($e->getMessage()), 'unique')) {
+            return 'duplicate';
+        }
+        throw $e;
+    }
+    return 'added';
+}
+
+/** Poll one monitoring feed into monitor_items. Returns [addedCount, errorOrNull]. */
+function pp_monitor_poll_feed(array $feed): array
+{
+    [$xml, $err] = http_get($feed['url'], 20);
+    $db = db();
+    $stamp = $db->prepare('UPDATE monitor_feeds SET last_fetched_at = ?, last_status = ? WHERE id = ?');
+    if ($xml === null) {
+        $stamp->execute([now(), 'error: ' . mb_substr($err, 0, 240), (int) $feed['id']]);
+        return [0, $err];
+    }
+    [$items, $perr] = parse_feed($xml);
+    if ($perr !== null) {
+        $stamp->execute([now(), 'error: ' . mb_substr($perr, 0, 240), (int) $feed['id']]);
+        return [0, $perr];
+    }
+    $new = 0;
+    foreach ($items as $item) {
+        if (trim((string) ($item['title'] ?? '')) === '' || !preg_match('#^https?://#i', (string) ($item['url'] ?? ''))) {
+            continue;
+        }
+        $result = pp_monitor_add_item([
+            'feed_id'      => (int) $feed['id'],
+            'source'       => $feed['name'],
+            'level'        => $feed['level'],
+            'region'       => $feed['region'],
+            'doc_type'     => $feed['doc_type'],
+            'title'        => $item['title'],
+            'url'          => $item['url'],
+            'summary'      => (string) ($item['summary'] ?? ''),
+            'published_at' => !empty($item['published_at']) ? $item['published_at'] : null,
+        ]);
+        if ($result === 'added') {
+            $new++;
+        }
+    }
+    $stamp->execute([now(), 'ok: ' . $new . ' new', (int) $feed['id']]);
+    return [$new, null];
+}

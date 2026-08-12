@@ -32,6 +32,8 @@ function admin_header(string $title, string $active = '', string $actions = ''):
     if ($hub) {
         // Editors and authors alike — AI assists, a journalist authors.
         $items['aidraft'] = ['ai-draft.php', 'Research desk'];
+        // Every newsroom role watches what's surfacing across the regions.
+        $items['monitor'] = ['monitor.php', 'Monitoring'];
     }
     if (is_editor($user)) {
         $items['linkpost']    = ['link-post.php', 'Post a link'];

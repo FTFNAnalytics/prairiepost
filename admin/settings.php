@@ -10,7 +10,7 @@ $textKeys = [
     'breaking_label', 'breaking_url', 'contact_email',
     'field_notes_text', 'field_notes_url',
     'ad_top', 'ad_rail', 'ad_article',
-    'ai_model', 'ai_disclosure',
+    'ai_model', 'ai_disclosure', 'monitor_retention_days',
 ];
 $jsonKeys = ['regions', 'markets', 'weather_today', 'traffic_items', 'events_items'];
 
@@ -19,6 +19,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (($_POST['action'] ?? '') === 'new_cron_secret') {
         set_setting('cron_secret', bin2hex(random_bytes(16)));
         flash_set('New cron secret generated. Update the cron job URL to match.');
+        redirect('settings.php');
+    }
+    if (($_POST['action'] ?? '') === 'new_monitor_token' && pp_is_hub()) {
+        set_setting('monitor_token', bin2hex(random_bytes(24)));
+        flash_set('New ingest token generated. Give it to the scraping agent — the old one stops working now.');
         redirect('settings.php');
     }
 
@@ -129,6 +134,19 @@ flash_show();
     <textarea id="regions" name="regions" class="mono"><?= e(setting('regions')) ?></textarea>
     <p class="help">Region keys are stored on every fetched news item — changing a key later orphans that region's items. Add and label freely; rename with care.</p>
   </div>
+
+  <?php if (pp_is_hub()): ?>
+  <div class="panel">
+    <h2>The monitoring desk</h2>
+    <label>Ingest endpoint · the contract with the scraping agent</label>
+    <p class="mono" style="font-size:12.5px;word-break:break-all;background:var(--pp-cloudbank);padding:10px 12px;border:1px solid var(--pp-board)">POST <?= e(site_url()) ?>/api/monitor<br>Authorization: Bearer <?= setting('monitor_token') ? e(setting('monitor_token')) : '&lt;generate a token below&gt;' ?></p>
+    <form method="post" class="inline"><?= csrf_field() ?><input type="hidden" name="action" value="new_monitor_token"><button class="btn btn--ghost btn--small" type="submit" onclick="return confirm('Generate a new token? The scraping agent must switch to it — the old one stops working immediately.')"><?= setting('monitor_token') ? 'Rotate the token' : 'Generate the token' ?></button></form>
+    <p class="help">The agent POSTs a JSON array of items — {source, level, region, doc_type, title, url, summary?, body_excerpt?, published_at?}. Until a token exists the endpoint answers 503 and nothing can deliver.</p>
+    <label for="monitor_retention_days" style="margin-top:12px">Retention · days before untouched and dismissed items prune (blank = 180)</label>
+    <input type="text" id="monitor_retention_days" name="monitor_retention_days" class="mono" value="<?= e(setting('monitor_retention_days')) ?>" placeholder="180" style="max-width:120px">
+    <p class="help">Flagged, claimed and used items never prune — they're the paper trail behind published stories.</p>
+  </div>
+  <?php endif; ?>
 
   <div class="panel">
     <h2>The research desk</h2>

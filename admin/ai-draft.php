@@ -16,7 +16,7 @@ if (!pp_is_hub()) {
     exit('Not found.');
 }
 
-/** The wire item this visit is grounded on, when there is one. */
+/** The wire or monitoring item this visit is grounded on, when there is one. */
 $newsItem = null;
 $newsId = (int) ($_GET['news'] ?? $_POST['news_id'] ?? 0);
 if ($newsId) {
@@ -24,9 +24,17 @@ if ($newsId) {
     $stmt->execute([$newsId]);
     $newsItem = $stmt->fetch() ?: null;
 }
+$monItem = null;
+$monId = (int) ($_GET['monitor'] ?? $_POST['monitor_id'] ?? 0);
+if ($monId) {
+    $stmt = db()->prepare('SELECT * FROM monitor_items WHERE id = ?');
+    $stmt->execute([$monId]);
+    $monItem = $stmt->fetch() ?: null;
+}
+$returnQs = $newsId ? '?news=' . $newsId : ($monId ? '?monitor=' . $monId : '');
 
 /** Assemble the grounding block shared by both modes. Fetches capped pages. */
-function pp_desk_grounding(?array $newsItem, array $urls, string $brief): array
+function pp_desk_grounding(?array $newsItem, ?array $monItem, array $urls, string $brief): array
 {
     $parts = [];
     $notes = [];
@@ -35,6 +43,14 @@ function pp_desk_grounding(?array $newsItem, array $urls, string $brief): array
                  . ($newsItem['published_at'] ? "\nPublished: {$newsItem['published_at']}" : '')
                  . ($newsItem['summary'] ? "\nSummary: {$newsItem['summary']}" : '');
         array_unshift($urls, $newsItem['url']);
+    }
+    if ($monItem) {
+        $parts[] = "MONITORING ITEM\nTitle: {$monItem['title']}\nSource: {$monItem['source_name']}\n"
+                 . "Jurisdiction: {$monItem['level']} · Region: {$monItem['region']} · Type: {$monItem['doc_type']}\nURL: {$monItem['url']}"
+                 . ($monItem['published_at'] ? "\nPublished: {$monItem['published_at']}" : '')
+                 . ($monItem['summary'] ? "\nSummary: {$monItem['summary']}" : '')
+                 . ($monItem['body_excerpt'] ? "\nExcerpt: {$monItem['body_excerpt']}" : '');
+        array_unshift($urls, $monItem['url']);
     }
     $urls = array_values(array_unique(array_filter(array_map('trim', $urls))));
     foreach (array_slice($urls, 0, 4) as $i => $url) {
@@ -96,20 +112,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $urls   = preg_split('/\R+/', trim((string) ($_POST['urls'] ?? ''))) ?: [];
     $carriedBrief = trim((string) ($_POST['brief'] ?? ''));
 
-    if ($topic === '' && !$newsItem) {
-        flash_set('Give the desk an assignment — a topic, an angle, or a wire item to work from.', true);
-        redirect('ai-draft.php' . ($newsId ? '?news=' . $newsId : ''));
+    if ($topic === '' && !$newsItem && !$monItem) {
+        flash_set('Give the desk an assignment — a topic, an angle, or an item to work from.', true);
+        redirect('ai-draft.php' . $returnQs);
     }
 
-    $grounding = pp_desk_grounding($newsItem, $urls, $action === 'draft' ? $carriedBrief : '');
-    $assignment = "ASSIGNMENT\n" . ($topic !== '' ? $topic : 'Work from the wire item below.');
+    $grounding = pp_desk_grounding($newsItem, $monItem, $urls, $action === 'draft' ? $carriedBrief : '');
+    $assignment = "ASSIGNMENT\n" . ($topic !== '' ? $topic : 'Work from the item below.');
     $userMessage = $assignment . "\n\n" . implode("\n\n", $grounding);
 
     if ($action === 'brief') {
         $res = pp_ai_message($briefSystem, [['role' => 'user', 'content' => $userMessage]], ['max_tokens' => 8000]);
         if (!$res['ok']) {
             flash_set($res['error'], true);
-            redirect('ai-draft.php' . ($newsId ? '?news=' . $newsId : ''));
+            redirect('ai-draft.php' . $returnQs);
         }
         // Render below with the inputs preserved, so drafting can follow.
         $brief = $res['text'];
@@ -122,17 +138,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                              ['schema' => pp_ai_draft_schema()]);
         if (!$res['ok']) {
             flash_set($res['error'], true);
-            redirect('ai-draft.php' . ($newsId ? '?news=' . $newsId : ''));
+            redirect('ai-draft.php' . $returnQs);
         }
         $draft = json_decode($res['text'], true);
         if (!is_array($draft) || trim((string) ($draft['title'] ?? '')) === '') {
             flash_set("The model's reply wasn't a usable draft. Try again.", true);
-            redirect('ai-draft.php' . ($newsId ? '?news=' . $newsId : ''));
+            redirect('ai-draft.php' . $returnQs);
         }
 
-        $sourceUrl = $newsItem['url'] ?? (array_values(array_filter(array_map('trim', $urls)))[0] ?? '');
-        $sourceLabel = $newsItem
-            ? e($newsItem['source_name']) . ' — <a href="' . e($newsItem['url']) . '">' . e($newsItem['url']) . '</a>'
+        $anchor = $newsItem ?: $monItem;
+        $sourceUrl = $anchor['url'] ?? (array_values(array_filter(array_map('trim', $urls)))[0] ?? '');
+        $sourceLabel = $anchor
+            ? e($anchor['source_name']) . ' — <a href="' . e($anchor['url']) . '">' . e($anchor['url']) . '</a>'
             : ($sourceUrl !== '' ? '<a href="' . e($sourceUrl) . '">' . e($sourceUrl) . '</a>' : 'the assignment text only');
 
         // The provenance note leads the working copy; the journalist deletes
@@ -170,6 +187,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($newsItem) {
             db()->prepare('UPDATE news_items SET used = 1 WHERE id = ?')->execute([(int) $newsItem['id']]);
         }
+        if ($monItem) {
+            db()->prepare("UPDATE monitor_items SET status = 'used', claimed_by = ? WHERE id = ?")
+                ->execute([$user['name'], (int) $monItem['id']]);
+        }
         flash_set('Working copy filed as a draft under your byline. Verify every fact, rework it in your voice — it moves only when you sign it.');
         redirect('post-edit.php?id=' . $postId);
     }
@@ -203,6 +224,20 @@ flash_show();
 </div>
 <?php endif; ?>
 
+<?php if ($monItem): ?>
+<div class="panel">
+  <h2>Grounded on this monitoring item</h2>
+  <div class="newsitem">
+    <div class="t">
+      <a href="<?= e($monItem['url']) ?>" target="_blank" rel="noopener"><?= e($monItem['title']) ?></a>
+      <span class="src"><?= e($monItem['source_name']) ?> · <?= e($monItem['level']) ?><?= $monItem['region'] !== '' ? ' · ' . e($monItem['region']) : '' ?> · <?= e($monItem['doc_type']) ?> · <?= e(fmt_date($monItem['published_at'] ?: $monItem['fetched_at'], 'M j, g:i a')) ?></span>
+    </div>
+    <div class="acts"><a class="btn btn--ghost btn--small" href="ai-draft.php">Clear</a></div>
+  </div>
+  <?php if ($monItem['summary']): ?><p><?= e($monItem['summary']) ?></p><?php endif; ?>
+</div>
+<?php endif; ?>
+
 <?php if ($brief !== ''): ?>
 <div class="panel">
   <h2>Research brief</h2>
@@ -211,6 +246,7 @@ flash_show();
     <?= csrf_field() ?>
     <input type="hidden" name="action" value="draft">
     <input type="hidden" name="news_id" value="<?= (int) $newsId ?>">
+    <input type="hidden" name="monitor_id" value="<?= (int) $monId ?>">
     <input type="hidden" name="topic" value="<?= e($briefTopic) ?>">
     <input type="hidden" name="urls" value="<?= e($briefUrls) ?>">
     <input type="hidden" name="brief" value="<?= e($brief) ?>">
@@ -221,17 +257,18 @@ flash_show();
 <?php endif; ?>
 
 <div class="panel">
-  <h2><?= $newsItem ? 'The assignment' : 'A fresh assignment' ?></h2>
+  <h2><?= ($newsItem || $monItem) ? 'The assignment' : 'A fresh assignment' ?></h2>
   <form method="post">
     <?= csrf_field() ?>
     <input type="hidden" name="news_id" value="<?= (int) $newsId ?>">
+    <input type="hidden" name="monitor_id" value="<?= (int) $monId ?>">
     <div class="formgrid">
       <div>
-        <label for="topic">Topic &amp; angle<?= $newsItem ? ' · optional, steers the wire item' : '' ?></label>
+        <label for="topic">Topic &amp; angle<?= ($newsItem || $monItem) ? ' · optional, steers the item' : '' ?></label>
         <textarea id="topic" name="topic" style="min-height:96px" placeholder="What's the story, and for whom? e.g. “Kelowna's transit expansion — what the new routes mean for commuters in Rutland.”"><?= e($briefTopic) ?></textarea>
       </div>
       <div>
-        <label for="urls">Source URLs · one per line, up to four<?= $newsItem ? ' (the wire link is included automatically)' : '' ?></label>
+        <label for="urls">Source URLs · one per line, up to four<?= ($newsItem || $monItem) ? " (the item's link is included automatically)" : '' ?></label>
         <textarea id="urls" name="urls" class="mono" style="min-height:96px" placeholder="https://…"><?= e($briefUrls) ?></textarea>
         <p class="help">Pages are fetched and given to the model as grounding — it may use nothing else, and must mark anything unconfirmed with [VERIFY].</p>
       </div>

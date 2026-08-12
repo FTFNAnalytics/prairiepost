@@ -136,6 +136,7 @@ server {
     rewrite ^/sitemap\.xml\$           /sitemap.php           last;
     rewrite ^/subscribe/?\$            /subscribe.php         last;
     rewrite ^/contact/?\$              /contact.php           last;
+    rewrite ^/api/monitor/?\$          /monitor-ingest.php    last;
     rewrite ^/ad/?\$                   /ad.php                last;
     rewrite ^/corrections/?\$          /corrections.php       last;
 
@@ -199,6 +200,14 @@ if certbot --nginx -d civismedia.ca -d www.civismedia.ca -n --redirect; then
 else
   echo "WARN: certbot failed — the site stays HTTP-only; re-run 'certbot --nginx -d civismedia.ca -d www.civismedia.ca -n --redirect' later"
 fi
+
+say "The hub's cron — the monitoring desk's hourly pull"
+cat > /etc/cron.d/civismedia <<CRON
+# Civis Media hub — written by deploy-civis.sh; repointed on every deploy.
+17 * * * * www-data cd $REL && PP_SITE=civismedia php cron/monitor.php >/dev/null 2>&1
+CRON
+chmod 644 /etc/cron.d/civismedia
+echo "cron installed: /etc/cron.d/civismedia -> $REL (hourly at :17)"
 
 echo
 echo "== done. Open https://civismedia.ca and https://civismedia.ca/admin =="

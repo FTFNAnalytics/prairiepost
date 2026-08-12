@@ -221,6 +221,58 @@ CREATE TABLE roadmap_items (
     updated_at TIMESTAMP NOT NULL
 );
 
+-- The media monitoring desk's own feed list — kept apart from the newspaper
+-- wire, so releases never pollute the morning pull.
+CREATE TABLE monitor_feeds (
+    id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    name VARCHAR(160) NOT NULL,
+    url VARCHAR(600) NOT NULL,
+    level VARCHAR(20) NOT NULL DEFAULT 'agency',  -- federal | provincial | municipal | agency
+    region VARCHAR(40) NOT NULL DEFAULT '',
+    doc_type VARCHAR(30) NOT NULL DEFAULT 'release',
+    enabled INTEGER NOT NULL DEFAULT 1,
+    last_fetched_at TIMESTAMP,
+    last_status VARCHAR(255) NOT NULL DEFAULT ''
+);
+
+-- Government publications and press releases: from the external scraping
+-- agent (/api/monitor), the feeds above, or captured by hand.
+CREATE TABLE monitor_items (
+    id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    feed_id INTEGER,
+    source_name VARCHAR(160) NOT NULL DEFAULT '',
+    level VARCHAR(20) NOT NULL DEFAULT 'agency',
+    region VARCHAR(40) NOT NULL DEFAULT '',
+    doc_type VARCHAR(30) NOT NULL DEFAULT 'other', -- release|gazette|order-in-council|hansard|bill|tender|agenda|minutes|decision|report|other
+    title VARCHAR(255) NOT NULL,
+    url VARCHAR(600) NOT NULL,
+    url_hash VARCHAR(40) NOT NULL UNIQUE,
+    summary TEXT,
+    body_excerpt TEXT,
+    published_at TIMESTAMP,
+    fetched_at TIMESTAMP NOT NULL,
+    status VARCHAR(20) NOT NULL DEFAULT 'new',    -- new | flagged | claimed | used | dismissed
+    flagged_by VARCHAR(120) NOT NULL DEFAULT '',
+    claimed_by VARCHAR(120) NOT NULL DEFAULT ''
+);
+
+-- Story ideas: pitches from the desk (origin ai) and the newsroom — a
+-- journalist claims one into a draft; never auto-filed stories.
+CREATE TABLE story_ideas (
+    id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    monitor_item_id INTEGER,
+    site_id INTEGER,
+    title VARCHAR(255) NOT NULL,
+    angle TEXT,
+    rationale TEXT,
+    region VARCHAR(40) NOT NULL DEFAULT '',
+    origin VARCHAR(20) NOT NULL DEFAULT 'newsroom', -- ai | newsroom
+    status VARCHAR(20) NOT NULL DEFAULT 'open',     -- open | claimed | dismissed
+    claimed_by VARCHAR(120) NOT NULL DEFAULT '',
+    created_by VARCHAR(120) NOT NULL DEFAULT '',
+    created_at TIMESTAMP NOT NULL
+);
+
 CREATE INDEX idx_posts_status ON posts (status, published_at);
 CREATE INDEX idx_posts_category ON posts (category_id);
 CREATE INDEX idx_posts_author ON posts (author_id);
@@ -230,5 +282,8 @@ CREATE INDEX idx_post_sites_site ON post_sites (site_id);
 CREATE INDEX idx_ads_site_placement ON ads (site_id, placement);
 CREATE INDEX idx_ads_campaign ON ads (campaign_id);
 CREATE INDEX idx_inquiries_site ON inquiries (site_id, created_at);
+CREATE INDEX idx_monitor_items ON monitor_items (level, region, fetched_at);
+CREATE INDEX idx_monitor_status ON monitor_items (status, fetched_at);
+CREATE INDEX idx_ideas_status ON story_ideas (status, created_at);
 
-INSERT INTO settings (site_id, skey, svalue) VALUES (0, 'schema_version', '9');
+INSERT INTO settings (site_id, skey, svalue) VALUES (0, 'schema_version', '10');

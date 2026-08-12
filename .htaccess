@@ -17,6 +17,9 @@ RewriteRule ^feed/?$ feed.php [L]
 RewriteRule ^sitemap\.xml$ sitemap.php [L]
 RewriteRule ^subscribe/?$ subscribe.php [L,QSA]
 RewriteRule ^contact/?$ contact.php [L,QSA]
+# The monitoring ingest API. Apache drops the Authorization header for
+# FastCGI unless it's re-exported — the E= flag carries the bearer through.
+RewriteRule ^api/monitor/?$ monitor-ingest.php [L,QSA,E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
 RewriteRule ^ad/?$ ad.php [L,QSA]
 RewriteRule ^card/([a-z0-9-]+)\.png$ card.php?slug=$1 [L]
 RewriteRule ^corrections/?$ corrections.php [L]

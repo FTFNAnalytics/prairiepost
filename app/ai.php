@@ -167,3 +167,30 @@ function pp_ai_readable(string $url, int $cap = 14000): array
     }
     return [mb_substr($text, 0, $cap), null];
 }
+
+/** Story ideas from a monitoring item — pitches, never auto-filed stories. */
+function pp_ai_ideas_schema(): array
+{
+    return [
+        'type' => 'object',
+        'properties' => [
+            'ideas' => [
+                'type' => 'array',
+                'items' => [
+                    'type' => 'object',
+                    'properties' => [
+                        'title'     => ['type' => 'string'],
+                        'angle'     => ['type' => 'string'],
+                        'rationale' => ['type' => 'string'],
+                        'region'    => ['type' => 'string'],
+                        'site_slug' => ['type' => 'string'],
+                    ],
+                    'required' => ['title', 'angle', 'rationale', 'region', 'site_slug'],
+                    'additionalProperties' => false,
+                ],
+            ],
+        ],
+        'required' => ['ideas'],
+        'additionalProperties' => false,
+    ];
+}

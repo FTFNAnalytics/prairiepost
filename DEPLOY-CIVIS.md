@@ -219,6 +219,48 @@ draft appears in the network desk's *AI-assisted* filter; nothing published
 changes anywhere. The authorship rule is enforced, not advisory: drafts land
 as drafts, and only a person moves them.
 
+## 10 · Phase 4 — the media monitoring desk goes live
+
+One deploy does it: `deploy-civis.sh` as usual. First request migrates the
+shared database to **v10** (three additive tables), the new vhost carries
+the `/api/monitor` rewrite, and the deploy now installs the hub's hourly
+cron (`/etc/cron.d/civismedia`, repointed on every deploy) for the desk's
+feed pull and retention pruning. Then:
+
+1. **Generate the ingest token** — hub `/admin → Settings → The monitoring
+   desk` → *Generate the token*. Until it exists, `/api/monitor` answers
+   503 and nothing can deliver.
+2. **Hand the scraping agent its contract.** It POSTs batches (≤200 items)
+   of JSON:
+
+   ```
+   POST https://civismedia.ca/api/monitor
+   Authorization: Bearer <token from Settings>
+   Content-Type: application/json
+
+   [{"source": "BC Gov News", "level": "provincial", "region": "okanagan",
+     "doc_type": "release", "title": "…", "url": "https://…",
+     "summary": "…", "body_excerpt": "…", "published_at": "2026-08-12T14:00:00Z"}]
+   ```
+
+   `level` ∈ `federal|provincial|municipal|agency`; `doc_type` ∈
+   `release|gazette|order-in-council|hansard|bill|tender|agenda|minutes|
+   decision|report|other`. The reply reports `added / duplicates /
+   rejected` with a per-item reason for every rejection — unknown
+   vocabulary is named, never silently coerced, so the agent's author sees
+   exactly what to fix. De-duplication is by URL: re-delivering the same
+   batch is always safe.
+3. **Add the desk's own feeds** (editors, on the board): government
+   newsrooms and wire services mostly publish RSS — polled hourly, *Fetch
+   now* for immediately.
+
+Verify: Control room → **Monitoring** shows the board; a captured URL
+lands as `new`; a test POST with the token answers `{"ok":true,…}` and the
+item appears; flag it and it shows in the dashboard's **monitoring pulse**;
+*Start draft* opens the editor with the item's provenance; *Ideas* files
+pitches once the research desk's key exists (everything else on the board
+works without it).
+
 ## Troubleshooting quick table
 
 | Symptom | Cause → fix |

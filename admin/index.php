@@ -109,6 +109,54 @@ $failing = db()->query("SELECT name, region, last_status, last_fetched_at FROM s
   </table>
 </div>
 
+<?php
+// The monitoring pulse: what's popping up where, before anyone opens the
+// board — new items by region × jurisdiction over the last seven days,
+// plus whatever the newsroom flagged most recently.
+$pulseSince = date('Y-m-d H:i:s', strtotime('-7 days'));
+$pulse = [];
+$pulseTotal = 0;
+$stmt = db()->prepare('SELECT region, level, COUNT(*) AS n FROM monitor_items WHERE fetched_at >= ? GROUP BY region, level');
+$stmt->execute([$pulseSince]);
+foreach ($stmt as $row) {
+    $pulse[(string) $row['region']][(string) $row['level']] = (int) $row['n'];
+    $pulseTotal += (int) $row['n'];
+}
+$flaggedItems = db()->query("SELECT id, title, url, source_name, region FROM monitor_items
+                             WHERE status = 'flagged' ORDER BY fetched_at DESC LIMIT 5")->fetchAll();
+$pulseLevels = pp_monitor_levels();
+$pulseRegions = pp_region_labels();
+?>
+<div class="panel">
+  <h2>The monitoring pulse · last seven days</h2>
+  <?php if (!$pulseTotal && !$flaggedItems): ?>
+  <p>Quiet — nothing new on the <a href="monitor.php">monitoring desk</a> this week. Items land there from the scraping agent, the desk's feeds, or the capture form.</p>
+  <?php else: ?>
+  <table class="tbl">
+    <tr><th>Region</th><?php foreach ($pulseLevels as $lv): ?><th><?= e($lv) ?></th><?php endforeach; ?><th>Total</th></tr>
+    <?php ksort($pulse); foreach ($pulse as $rk => $byLevel): ?>
+    <tr>
+      <td><strong><?= e($pulseRegions[$rk] ?? ($rk !== '' ? ucwords(str_replace('-', ' ', $rk)) : '(no region)')) ?></strong></td>
+      <?php foreach (array_keys($pulseLevels) as $lk): ?>
+      <td class="mono"><?= isset($byLevel[$lk]) ? (int) $byLevel[$lk] : '·' ?></td>
+      <?php endforeach; ?>
+      <td class="mono"><b><?= array_sum($byLevel) ?></b></td>
+    </tr>
+    <?php endforeach; ?>
+  </table>
+  <?php if ($flaggedItems): ?>
+  <p class="help" style="margin-top:12px">Flagged by the newsroom:
+    <?php foreach ($flaggedItems as $fi): ?>
+      <a href="<?= e($fi['url']) ?>" target="_blank" rel="noopener"><?= e(excerpt($fi['title'], 70)) ?></a> (<?= e($fi['source_name']) ?>) ·
+    <?php endforeach; ?>
+    <a href="monitor.php?status=flagged">the board →</a>
+  </p>
+  <?php else: ?>
+  <p class="help" style="margin-top:12px"><a href="monitor.php">Open the board →</a></p>
+  <?php endif; ?>
+  <?php endif; ?>
+</div>
+
 <?php if ($failing): ?>
 <div class="panel" style="border-top:3px solid var(--color-accent-2)">
   <h2>Wire feeds failing their last fetch</h2>

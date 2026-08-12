@@ -44,6 +44,8 @@ $map = [
     '/contact'      => '/contact.php',
     '/ad'           => '/ad.php',
     '/corrections'  => '/corrections.php',
+    '/api/monitor'  => '/monitor-ingest.php',
+    '/api/monitor/' => '/monitor-ingest.php',
 ];
 if (isset($map[$path])) {
     require __DIR__ . $map[$path];
