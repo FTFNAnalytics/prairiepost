@@ -56,6 +56,8 @@ function pp_schema_ddl(string $driver): array
             title VARCHAR(120) NOT NULL DEFAULT '',
             bio TEXT,
             photo VARCHAR(255) NOT NULL DEFAULT '',
+            totp_secret VARCHAR(64) NOT NULL DEFAULT '',
+            totp_enabled INTEGER NOT NULL DEFAULT 0,
             created_at $dt NOT NULL
         )$suffix",
 
@@ -326,6 +328,26 @@ function pp_schema_ddl(string $driver): array
             reviewed_at $dt
         )$suffix",
 
+        "CREATE TABLE login_attempts (
+            id $id,
+            email VARCHAR(191) NOT NULL DEFAULT '',
+            ip VARCHAR(64) NOT NULL DEFAULT '',
+            succeeded INTEGER NOT NULL DEFAULT 0,
+            created_at $dt NOT NULL
+        )$suffix",
+
+        "CREATE TABLE audit_log (
+            id $id,
+            site_id INTEGER NOT NULL DEFAULT 0,
+            user_id INTEGER NOT NULL DEFAULT 0,
+            user_name VARCHAR(120) NOT NULL DEFAULT '',
+            action VARCHAR(60) NOT NULL,
+            target VARCHAR(160) NOT NULL DEFAULT '',
+            detail TEXT,
+            ip VARCHAR(64) NOT NULL DEFAULT '',
+            created_at $dt NOT NULL
+        )$suffix",
+
         'CREATE INDEX idx_posts_status ON posts (status, published_at)',
         'CREATE INDEX idx_agent_tasks ON agent_tasks (status, created_at)',
         'CREATE INDEX idx_agent_tasks_post ON agent_tasks (post_id, kind)',
@@ -343,6 +365,9 @@ function pp_schema_ddl(string $driver): array
         'CREATE INDEX idx_ads_site_placement ON ads (site_id, placement)',
         'CREATE INDEX idx_ads_campaign ON ads (campaign_id)',
         'CREATE INDEX idx_inquiries_site ON inquiries (site_id, created_at)',
+        'CREATE INDEX idx_login_attempts_email ON login_attempts (email, created_at)',
+        'CREATE INDEX idx_login_attempts_ip ON login_attempts (ip, created_at)',
+        'CREATE INDEX idx_audit_created ON audit_log (created_at)',
     ];
 }
 
@@ -777,5 +802,42 @@ function pp_migrate(PDO $pdo, string $driver): void
         $pdo->exec('CREATE INDEX idx_agent_tasks_post ON agent_tasks (post_id, kind)');
 
         $pdo->exec("UPDATE settings SET svalue = '12' WHERE site_id = 0 AND skey = 'schema_version'");
+    }
+
+    if ($version < 13) {
+        // Hardening: TOTP two-factor on accounts, a sliding-window ledger of
+        // sign-in attempts (throttling reads it, cron prunes it), and an
+        // append-only audit trail of the actions that shape the network.
+        $dt = $driver === 'pgsql' ? 'TIMESTAMP' : 'DATETIME';
+        $id = $driver === 'mysql' ? 'INT UNSIGNED AUTO_INCREMENT PRIMARY KEY'
+            : ($driver === 'pgsql' ? 'INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY' : 'INTEGER PRIMARY KEY AUTOINCREMENT');
+
+        $pdo->exec("ALTER TABLE users ADD COLUMN totp_secret VARCHAR(64) NOT NULL DEFAULT ''");
+        $pdo->exec('ALTER TABLE users ADD COLUMN totp_enabled INTEGER NOT NULL DEFAULT 0');
+
+        $pdo->exec("CREATE TABLE login_attempts (
+            id $id,
+            email VARCHAR(191) NOT NULL DEFAULT '',
+            ip VARCHAR(64) NOT NULL DEFAULT '',
+            succeeded INTEGER NOT NULL DEFAULT 0,
+            created_at $dt NOT NULL
+        )");
+        $pdo->exec('CREATE INDEX idx_login_attempts_email ON login_attempts (email, created_at)');
+        $pdo->exec('CREATE INDEX idx_login_attempts_ip ON login_attempts (ip, created_at)');
+
+        $pdo->exec("CREATE TABLE audit_log (
+            id $id,
+            site_id INTEGER NOT NULL DEFAULT 0,
+            user_id INTEGER NOT NULL DEFAULT 0,
+            user_name VARCHAR(120) NOT NULL DEFAULT '',
+            action VARCHAR(60) NOT NULL,
+            target VARCHAR(160) NOT NULL DEFAULT '',
+            detail TEXT,
+            ip VARCHAR(64) NOT NULL DEFAULT '',
+            created_at $dt NOT NULL
+        )");
+        $pdo->exec('CREATE INDEX idx_audit_created ON audit_log (created_at)');
+
+        $pdo->exec("UPDATE settings SET svalue = '13' WHERE site_id = 0 AND skey = 'schema_version'");
     }
 }

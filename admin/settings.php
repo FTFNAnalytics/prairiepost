@@ -19,41 +19,91 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     csrf_check();
     if (($_POST['action'] ?? '') === 'new_cron_secret') {
         set_setting('cron_secret', bin2hex(random_bytes(16)));
+        pp_audit('cron_secret.rotated', 'settings');
         flash_set('New cron secret generated. Update the cron job URL to match.');
         redirect('settings.php');
     }
     if (($_POST['action'] ?? '') === 'new_monitor_token' && pp_is_hub()) {
         set_setting('monitor_token', bin2hex(random_bytes(24)));
+        pp_audit('monitor_token.rotated', 'settings');
         flash_set('New ingest token generated. Give it to the scraping agent — the old one stops working now.');
         redirect('settings.php');
     }
 
+    $changed = [];
     foreach ($textKeys as $key) {
         if (isset($_POST[$key])) {
-            set_setting($key, trim((string) $_POST[$key]));
+            $new = trim((string) $_POST[$key]);
+            if ($new !== setting($key)) {
+                $changed[] = $key;
+            }
+            set_setting($key, $new);
         }
     }
     // Agent auto-queue checkboxes (hub): unchecked boxes don't POST, so the
     // marker field tells us the panel was on the submitted form at all.
     if (pp_is_hub() && isset($_POST['agent_auto_marker'])) {
         foreach (['linkify', 'seo_meta', 'tagger'] as $k) {
-            set_setting("auto_agent_$k", isset($_POST["auto_agent_$k"]) ? '1' : '');
+            $new = isset($_POST["auto_agent_$k"]) ? '1' : '';
+            if ($new !== setting("auto_agent_$k")) {
+                $changed[] = "auto_agent_$k";
+            }
+            set_setting("auto_agent_$k", $new);
         }
     }
-    $jsonError = false;
+    $saveError = false;
+    // The hub's security panel. The allowlist is validated hard, and a
+    // non-empty list must cover the address making this request — the one
+    // rule that makes locking yourself out impossible from this form.
+    if (pp_is_hub() && isset($_POST['security_marker'])) {
+        $new = isset($_POST['require_totp']) ? '1' : '0';
+        if ($new !== setting('require_totp', '1')) {
+            $changed[] = 'require_totp';
+        }
+        set_setting('require_totp', $new);
+
+        $entries = preg_split('/[\s,]+/', trim((string) ($_POST['admin_ip_allowlist'] ?? '')), -1, PREG_SPLIT_NO_EMPTY) ?: [];
+        $bad = array_filter($entries, fn ($x) => !pp_cidr_valid($x));
+        $coversMe = $entries === [];
+        foreach ($entries as $entry) {
+            if (pp_ip_in_cidr(pp_client_ip(), $entry)) {
+                $coversMe = true;
+            }
+        }
+        if ($bad) {
+            flash_set('The allowlist didn\'t save — these entries aren\'t addresses or CIDR ranges: ' . implode(', ', array_slice($bad, 0, 5)), true);
+            $saveError = true;
+        } elseif (!$coversMe) {
+            flash_set('The allowlist didn\'t save — it would lock YOU out. Your current address is ' . pp_client_ip() . '; add it (or a range covering it) and save again.', true);
+            $saveError = true;
+        } else {
+            $newList = implode("\n", $entries);
+            if ($newList !== setting('admin_ip_allowlist')) {
+                $changed[] = 'admin_ip_allowlist';
+            }
+            set_setting('admin_ip_allowlist', $newList);
+        }
+    }
     foreach ($jsonKeys as $key) {
         if (isset($_POST[$key])) {
             $raw = trim((string) $_POST[$key]);
             $decoded = json_decode($raw, true);
             if ($raw !== '' && !is_array($decoded)) {
                 flash_set(strtoupper($key) . " didn't save — that isn't valid JSON. Check the quotes and brackets and try again.", true);
-                $jsonError = true;
+                $saveError = true;
                 continue;
             }
-            set_setting($key, $raw === '' ? '' : json_encode($decoded));
+            $new = $raw === '' ? '' : json_encode($decoded);
+            if ($new !== setting($key)) {
+                $changed[] = $key;
+            }
+            set_setting($key, $new);
         }
     }
-    if (!$jsonError) {
+    if ($changed) {
+        pp_audit('settings.saved', 'settings', implode(', ', $changed));
+    }
+    if (!$saveError) {
         flash_set('Settings saved. The site reflects them immediately.');
     }
     redirect('settings.php');
@@ -70,6 +120,9 @@ flash_show();
 
 <form method="post">
   <?= csrf_field() ?>
+  <!-- First submit in tree order = the Enter-key default. This silent one
+       keeps Enter meaning "save" — not the token-rotate button below. -->
+  <button type="submit" style="display:none" aria-hidden="true" tabindex="-1"></button>
 
   <div class="panel">
     <h2>The paper</h2>
@@ -148,7 +201,9 @@ flash_show();
     <h2>The monitoring desk</h2>
     <label>Ingest endpoint · the contract with the scraping agent</label>
     <p class="mono" style="font-size:12.5px;word-break:break-all;background:var(--pp-cloudbank);padding:10px 12px;border:1px solid var(--pp-board)">POST <?= e(site_url()) ?>/api/monitor<br>Authorization: Bearer <?= setting('monitor_token') ? e(setting('monitor_token')) : '&lt;generate a token below&gt;' ?></p>
-    <form method="post" class="inline"><?= csrf_field() ?><input type="hidden" name="action" value="new_monitor_token"><button class="btn btn--ghost btn--small" type="submit" onclick="return confirm('Generate a new token? The scraping agent must switch to it — the old one stops working immediately.')"><?= setting('monitor_token') ? 'Rotate the token' : 'Generate the token' ?></button></form>
+    <!-- A named submit of the surrounding form, not a nested <form> — browsers
+         drop a form-inside-a-form and everything after it stops submitting. -->
+    <button class="btn btn--ghost btn--small" type="submit" name="action" value="new_monitor_token" onclick="return confirm('Generate a new token? The scraping agent must switch to it — the old one stops working immediately.')"><?= setting('monitor_token') ? 'Rotate the token' : 'Generate the token' ?></button>
     <p class="help">The agent POSTs a JSON array of items — {source, level, region, doc_type, title, url, summary?, body_excerpt?, published_at?}. Until a token exists the endpoint answers 503 and nothing can deliver.</p>
     <label for="monitor_retention_days" style="margin-top:12px">Retention · days before untouched and dismissed items prune (blank = 180)</label>
     <input type="text" id="monitor_retention_days" name="monitor_retention_days" class="mono" value="<?= e(setting('monitor_retention_days')) ?>" placeholder="180" style="max-width:120px">
@@ -173,6 +228,21 @@ flash_show();
       Queue the <strong>tagger</strong> automatically when a story publishes
     </label>
     <p class="help">Auto-queue only files the task — every proposal still waits for an editor on the agent desk. Auto-<em>apply</em> deliberately doesn't exist.</p>
+  </div>
+  <?php endif; ?>
+
+  <?php if (pp_is_hub()): ?>
+  <div class="panel">
+    <h2>Security</h2>
+    <input type="hidden" name="security_marker" value="1">
+    <label style="display:flex;align-items:center;gap:8px;text-transform:none;letter-spacing:.04em;margin:6px 0">
+      <input type="checkbox" name="require_totp" value="1" style="width:auto"<?= setting('require_totp', '1') !== '0' ? ' checked' : '' ?>>
+      Require <strong>two-step sign-in</strong> for control-room administrators
+    </label>
+    <p class="help">On by default. An administrator without two-step is funnelled to their profile page to set it up — nothing else opens until it's on. Editors and authors can enable it voluntarily from their profiles.</p>
+    <label for="admin_ip_allowlist" style="margin-top:12px">Control-room address allowlist · blank = open from anywhere (the default)</label>
+    <textarea id="admin_ip_allowlist" name="admin_ip_allowlist" class="mono" style="min-height:64px" placeholder="203.0.113.7&#10;198.51.100.0/24"><?= e(setting('admin_ip_allowlist')) ?></textarea>
+    <p class="help">One IP or CIDR range per line. Applies to signed-in <em>hub</em> pages only — the papers' newsrooms never check it. The form refuses a list that doesn't cover your own current address (<span class="mono"><?= e(pp_client_ip()) ?></span>), so you can't lock yourself out from here. Careful with home connections — most change address without notice.</p>
   </div>
   <?php endif; ?>
 

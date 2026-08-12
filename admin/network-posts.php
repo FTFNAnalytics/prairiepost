@@ -50,6 +50,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         foreach ($ids as $postId) {
             pp_agent_enqueue($kind, $postId, $user['name']) === 'queued' ? $queued++ : $already++;
         }
+        if ($queued) {
+            pp_audit('agent.queued', $kind, "$queued task(s) from the network desk");
+        }
         flash_set($ids
             ? "$queued task(s) queued for the agent desk" . ($already ? " · $already already open" : '') . '.'
             : 'Tick at least one story first.', !$ids);
@@ -83,6 +86,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
     $paperNames = implode(', ', array_map(fn ($id) => $labels[$id], $targets));
+    if ($changed) {
+        pp_audit(
+            $action === 'add_sites' ? 'syndication.added' : 'syndication.removed',
+            count($ids) . ' story(ies)',
+            "$changed placement(s) — $paperNames"
+        );
+    }
     $note = $action === 'add_sites'
         ? "Added — $changed placement(s) across $paperNames."
         : "Removed — $changed placement(s) from $paperNames.";

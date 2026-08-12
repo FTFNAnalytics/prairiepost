@@ -42,6 +42,8 @@ CREATE TABLE users (
     title VARCHAR(120) NOT NULL DEFAULT '',
     bio TEXT,
     photo VARCHAR(255) NOT NULL DEFAULT '',
+    totp_secret VARCHAR(64) NOT NULL DEFAULT '',  -- base32; '' until enrolled
+    totp_enabled INTEGER NOT NULL DEFAULT 0,
     created_at TIMESTAMP NOT NULL
 );
 
@@ -351,4 +353,33 @@ CREATE TABLE agent_tasks (
 CREATE INDEX idx_agent_tasks ON agent_tasks (status, created_at);
 CREATE INDEX idx_agent_tasks_post ON agent_tasks (post_id, kind);
 
-INSERT INTO settings (site_id, skey, svalue) VALUES (0, 'schema_version', '12');
+-- Sign-in attempts, success and failure alike. The login form's throttle
+-- counts recent failures per email and per address; the hourly cron prunes
+-- rows older than 30 days.
+CREATE TABLE login_attempts (
+    id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    email VARCHAR(191) NOT NULL DEFAULT '',
+    ip VARCHAR(64) NOT NULL DEFAULT '',
+    succeeded INTEGER NOT NULL DEFAULT 0,
+    created_at TIMESTAMP NOT NULL
+);
+CREATE INDEX idx_login_attempts_email ON login_attempts (email, created_at);
+CREATE INDEX idx_login_attempts_ip ON login_attempts (ip, created_at);
+
+-- Append-only audit trail: sign-ins and the actions that shape the network
+-- (settings, campaigns, syndication, agent approvals, accounts). Read from
+-- the hub's Audit page; pruned after ~13 months.
+CREATE TABLE audit_log (
+    id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    site_id INTEGER NOT NULL DEFAULT 0,
+    user_id INTEGER NOT NULL DEFAULT 0,
+    user_name VARCHAR(120) NOT NULL DEFAULT '',
+    action VARCHAR(60) NOT NULL,
+    target VARCHAR(160) NOT NULL DEFAULT '',
+    detail TEXT,
+    ip VARCHAR(64) NOT NULL DEFAULT '',
+    created_at TIMESTAMP NOT NULL
+);
+CREATE INDEX idx_audit_created ON audit_log (created_at);
+
+INSERT INTO settings (site_id, skey, svalue) VALUES (0, 'schema_version', '13');

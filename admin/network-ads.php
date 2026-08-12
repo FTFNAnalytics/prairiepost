@@ -90,6 +90,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $id = pp_last_id('campaigns');
             }
             [$added, $updated, $removed] = pp_sync_campaign_ads($id, $sites, $fields);
+            pp_audit('campaign.saved', $name, "campaign #$id, on " . count($sites) . ' paper(s)');
             $note = "Campaign saved — running on " . count($sites) . " paper(s)";
             $parts = array_filter([$added ? "$added added" : '', $updated ? "$updated updated" : '', $removed ? "$removed removed" : '']);
             flash_set($note . ($parts ? ' (' . implode(', ', $parts) . ')' : '') . '.');
@@ -100,11 +101,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($action === 'toggle' && $campaign) {
         $any = (int) db()->query('SELECT COALESCE(MAX(enabled), 0) FROM ads WHERE campaign_id = ' . (int) $id)->fetchColumn();
         db()->prepare('UPDATE ads SET enabled = ? WHERE campaign_id = ?')->execute([$any ? 0 : 1, $id]);
+        pp_audit($any ? 'campaign.paused' : 'campaign.resumed', $campaign['name'], "campaign #$id");
         flash_set($any ? 'Campaign paused on every paper.' : 'Campaign running again on every paper.');
     }
     if ($action === 'delete' && $campaign) {
         db()->prepare('DELETE FROM ads WHERE campaign_id = ?')->execute([$id]);
         db()->prepare('DELETE FROM campaigns WHERE id = ?')->execute([$id]);
+        pp_audit('campaign.deleted', $campaign['name'], "campaign #$id, rows and history removed");
         flash_set('Campaign deleted — its rows and their served/click history are gone from every paper.');
     }
     redirect('network-ads.php');

@@ -41,6 +41,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($id) {
             db()->prepare('UPDATE entities SET name = ?, kind = ?, url = ?, aliases = ? WHERE id = ?')
                 ->execute([...array_values($fields), $id]);
+            pp_audit('entity.saved', $fields['name'], "entity #$id updated");
             flash_set('Entity saved.');
         } else {
             $slug = slugify($name);
@@ -51,14 +52,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
             db()->prepare('INSERT INTO entities (name, slug, kind, url, aliases, enabled, created_at) VALUES (?, ?, ?, ?, ?, 1, ?)')
                 ->execute([$fields['name'], $slug, $fields['kind'], $fields['url'], $fields['aliases'], now()]);
+            pp_audit('entity.saved', $fields['name'], "added as $slug");
             flash_set('Entity added — the linkifier sees it on its next pass.');
         }
     }
     if ($action === 'toggle' && $id) {
         db()->prepare('UPDATE entities SET enabled = 1 - enabled WHERE id = ?')->execute([$id]);
+        pp_audit('entity.toggled', "entity #$id");
     }
     if ($action === 'delete' && $id) {
+        $wasStmt = db()->prepare('SELECT name FROM entities WHERE id = ?');
+        $wasStmt->execute([$id]);
+        $was = (string) ($wasStmt->fetchColumn() ?: '');
         db()->prepare('DELETE FROM entities WHERE id = ?')->execute([$id]);
+        pp_audit('entity.deleted', $was !== '' ? $was : "entity #$id");
         flash_set('Entity removed. Links already approved into stories stay as written.');
     }
     redirect('entities.php');

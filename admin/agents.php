@@ -39,6 +39,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             flash_set('That story id doesn\'t exist.', true);
         } else {
             $r = pp_agent_enqueue($kind, $postId, $user['name']);
+            if ($r === 'queued') {
+                pp_audit('agent.queued', $kind, "story #$postId");
+            }
             flash_set($r === 'queued' ? 'Queued — the runner takes it within ten minutes, or Run now below.'
                                       : 'That story already has an open task of this kind.', $r !== 'queued');
         }
@@ -84,10 +87,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($fail === null) {
             db()->prepare("UPDATE agent_tasks SET status = 'approved', reviewed_by = ?, reviewed_at = ? WHERE id = ?")
                 ->execute([$user['name'], now(), $taskId]);
+            pp_audit('agent.approved', $task['kind'], "task #$taskId applied to story #{$task['post_id']}");
             flash_set('Approved and applied — stamped with your name.');
         } else {
             db()->prepare("UPDATE agent_tasks SET status = 'rejected', reviewed_by = ?, reviewed_at = ?, log = ? WHERE id = ?")
                 ->execute([$user['name'], now(), trim((string) $task['log'] . ' · not applied: ' . $fail), $taskId]);
+            pp_audit('agent.rejected', $task['kind'], "task #$taskId not applied: $fail");
             flash_set("Couldn't apply: $fail.", true);
         }
         redirect('agents.php');
@@ -98,12 +103,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         db()->prepare("UPDATE agent_tasks SET status = 'rejected', reviewed_by = ?, reviewed_at = ?, log = ? WHERE id = ?")
             ->execute([$user['name'], now(),
                        trim((string) $task['log'] . ($note !== '' ? ' · rejected: ' . $note : ' · rejected')), $taskId]);
+        pp_audit('agent.rejected', $task['kind'], "task #$taskId" . ($note !== '' ? ", note: $note" : ''));
         flash_set('Rejected — nothing changed on the story.');
         redirect('agents.php');
     }
 
     if ($action === 'requeue' && $task && in_array($task['status'], ['failed', 'rejected'], true)) {
-        pp_agent_enqueue($task['kind'], (int) $task['post_id'], $user['name']);
+        if (pp_agent_enqueue($task['kind'], (int) $task['post_id'], $user['name']) === 'queued') {
+            pp_audit('agent.queued', $task['kind'], "story #{$task['post_id']} requeued from task #$taskId");
+        }
         flash_set('Queued again with a fresh look at the story.');
         redirect('agents.php');
     }

@@ -728,3 +728,143 @@ function pp_site_domain(int $siteId): string
     $stmt->execute([$siteId]);
     return trim((string) ($stmt->fetchColumn() ?: ''));
 }
+
+/* --- Hardening: sign-in throttle, audit trail, IP allowlist -------------- */
+
+/** The address nginx saw. We sit directly behind nginx, so no header trust. */
+function pp_client_ip(): string
+{
+    return (string) ($_SERVER['REMOTE_ADDR'] ?? '');
+}
+
+/** Record a sign-in attempt; the throttle window reads these. */
+function pp_login_record(string $email, bool $succeeded): void
+{
+    try {
+        db()->prepare('INSERT INTO login_attempts (email, ip, succeeded, created_at) VALUES (?, ?, ?, ?)')
+            ->execute([mb_substr(mb_strtolower(trim($email)), 0, 191), mb_substr(pp_client_ip(), 0, 64), $succeeded ? 1 : 0, now()]);
+    } catch (PDOException) {
+        // A full disk or racing migration must never turn into a login fatal.
+    }
+}
+
+/**
+ * Too many recent failures for this email or this address? Sliding window:
+ * 6 failed tries per account or 20 per address inside 15 minutes locks the
+ * form (a "try later" message, no account state touched). Successes never
+ * count against anyone; the window simply expires.
+ */
+function pp_login_blocked(string $email): bool
+{
+    $since = date('Y-m-d H:i:s', time() - 900);
+    try {
+        $stmt = db()->prepare('SELECT COUNT(*) FROM login_attempts WHERE succeeded = 0 AND email = ? AND created_at > ?');
+        $stmt->execute([mb_substr(mb_strtolower(trim($email)), 0, 191), $since]);
+        if ((int) $stmt->fetchColumn() >= 6) {
+            return true;
+        }
+        $stmt = db()->prepare('SELECT COUNT(*) FROM login_attempts WHERE succeeded = 0 AND ip = ? AND created_at > ?');
+        $stmt->execute([mb_substr(pp_client_ip(), 0, 64), $since]);
+        return (int) $stmt->fetchColumn() >= 20;
+    } catch (PDOException) {
+        return false;
+    }
+}
+
+/**
+ * Append to the audit trail. Best-effort by design: the recorded action has
+ * already happened, so a logging hiccup must never roll it back or 500 the
+ * page. Pass $asUser when the session user isn't set yet (the sign-in itself).
+ */
+function pp_audit(string $action, string $target = '', string $detail = '', ?array $asUser = null): void
+{
+    try {
+        $user = $asUser ?? (function_exists('current_user') ? current_user() : null);
+        db()->prepare('INSERT INTO audit_log (site_id, user_id, user_name, action, target, detail, ip, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)')
+            ->execute([
+                current_site_id(),
+                (int) ($user['id'] ?? 0),
+                mb_substr((string) ($user['name'] ?? ''), 0, 120),
+                mb_substr($action, 0, 60),
+                mb_substr($target, 0, 160),
+                $detail,
+                mb_substr(pp_client_ip(), 0, 64),
+                now(),
+            ]);
+    } catch (Throwable) {
+        // Auditing observes; it never interferes.
+    }
+}
+
+/**
+ * Whether the hub demands TOTP from its administrators. On by default —
+ * the control room can edit every masthead — and the hub settings page
+ * can switch it off ('0') deliberately.
+ */
+function pp_totp_required(): bool
+{
+    return pp_is_hub() && setting('require_totp', '1') !== '0';
+}
+
+/** Is this a plausible allowlist entry — an IP, or an IP with /bits? */
+function pp_cidr_valid(string $entry): bool
+{
+    [$net, $bits] = array_pad(explode('/', trim($entry), 2), 2, null);
+    $bin = @inet_pton((string) $net);
+    if ($bin === false) {
+        return false;
+    }
+    if ($bits === null || $bits === '') {
+        return true;
+    }
+    return ctype_digit((string) $bits) && (int) $bits <= strlen($bin) * 8;
+}
+
+/** Does $ip fall inside $cidr ("203.0.113.7", "10.0.0.0/8", v6 alike)? */
+function pp_ip_in_cidr(string $ip, string $cidr): bool
+{
+    [$net, $bits] = array_pad(explode('/', trim($cidr), 2), 2, null);
+    $ipBin = @inet_pton($ip);
+    $netBin = @inet_pton((string) $net);
+    if ($ipBin === false || $netBin === false || strlen($ipBin) !== strlen($netBin)) {
+        return false;
+    }
+    $max = strlen($netBin) * 8;
+    $bits = $bits === null || $bits === '' ? $max : (int) $bits;
+    if ($bits < 0 || $bits > $max) {
+        return false;
+    }
+    $bytes = intdiv($bits, 8);
+    if ($bytes > 0 && substr($ipBin, 0, $bytes) !== substr($netBin, 0, $bytes)) {
+        return false;
+    }
+    $rem = $bits % 8;
+    if ($rem > 0) {
+        $mask = (0xFF << (8 - $rem)) & 0xFF;
+        if ((ord($ipBin[$bytes]) & $mask) !== (ord($netBin[$bytes]) & $mask)) {
+            return false;
+        }
+    }
+    return true;
+}
+
+/**
+ * Hub admin IP allowlist. Empty setting = open (the default). Entries are
+ * IPs or CIDR ranges separated by newlines, commas or spaces. Evaluated
+ * only on the hub; a mistake locks out /admin there, never the papers —
+ * and the papers' shared settings page can clear it again.
+ */
+function pp_ip_allowlisted(): bool
+{
+    $raw = trim(setting('admin_ip_allowlist', ''));
+    if ($raw === '') {
+        return true;
+    }
+    $ip = pp_client_ip();
+    foreach (preg_split('/[\s,]+/', $raw) ?: [] as $entry) {
+        if ($entry !== '' && pp_ip_in_cidr($ip, $entry)) {
+            return true;
+        }
+    }
+    return false;
+}

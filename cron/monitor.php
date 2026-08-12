@@ -42,5 +42,15 @@ $stmt = $db->prepare("DELETE FROM monitor_items WHERE status IN ('new', 'dismiss
 $stmt->execute([$cutoff]);
 $pruned = $stmt->rowCount();
 
-printf("----\n%d new item(s), %d pruned (untouched after %d days). %.1fs.\n",
-    $added, $pruned, $days, microtime(true) - $started);
+// The security ledgers ride along on the hourly pass. The sign-in throttle
+// only ever looks 15 minutes back, so a month is generous; the audit trail
+// keeps 400 days — a full year of who-did-what, plus slack.
+$stmt = $db->prepare('DELETE FROM login_attempts WHERE created_at < ?');
+$stmt->execute([date('Y-m-d H:i:s', strtotime('-30 days'))]);
+$attemptsPruned = $stmt->rowCount();
+$stmt = $db->prepare('DELETE FROM audit_log WHERE created_at < ?');
+$stmt->execute([date('Y-m-d H:i:s', strtotime('-400 days'))]);
+$auditPruned = $stmt->rowCount();
+
+printf("----\n%d new item(s), %d pruned (untouched after %d days), %d sign-in record(s) and %d audit row(s) expired. %.1fs.\n",
+    $added, $pruned, $days, $attemptsPruned, $auditPruned, microtime(true) - $started);

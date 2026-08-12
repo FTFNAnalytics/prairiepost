@@ -68,6 +68,9 @@ function admin_header(string $title, string $active = '', string $actions = ''):
     if ($user && $user['role'] === 'admin') {
         $items['users'] = ['users.php', 'Accounts'];
         $items['settings'] = ['settings.php', 'Settings'];
+        if ($hub) {
+            $items['audit'] = ['audit.php', 'Audit'];
+        }
     }
     $items['profile'] = ['profile.php', 'Your profile'];
     // The dateline rail's live status — one small indexed query.

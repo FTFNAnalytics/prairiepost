@@ -26,8 +26,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if ($existing && (int) $existing['id'] !== $id) {
                 flash_set('That email already has an account.', true);
             } elseif ($id) {
+                $before = user_by_id($id);
                 db()->prepare('UPDATE users SET name = ?, email = ?, role = ?, title = ?, bio = ? WHERE id = ?')
                     ->execute([$name, $email, $role, $title, $bio, $id]);
+                $notes = [];
+                if ($before && $before['role'] !== $role) {
+                    $notes[] = 'role ' . $before['role'] . ' → ' . $role;
+                }
                 if ($pass !== '') {
                     if (strlen($pass) < 10) {
                         flash_set('Passphrase unchanged — it needs at least 10 characters.', true);
@@ -35,11 +40,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     }
                     db()->prepare('UPDATE users SET pass_hash = ? WHERE id = ?')
                         ->execute([password_hash($pass, PASSWORD_DEFAULT), $id]);
+                    $notes[] = 'passphrase reset';
                 }
+                pp_audit('account.updated', $email, implode(', ', $notes));
                 flash_set('Account updated.');
             } else {
                 db()->prepare('INSERT INTO users (name, email, pass_hash, role, slug, title, bio, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)')
                     ->execute([$name, $email, password_hash($pass, PASSWORD_DEFAULT), $role, unique_user_slug($name), $title, $bio, now()]);
+                pp_audit('account.created', $email, "role $role");
                 flash_set('Account created. They can sign in at /admin/ now.');
             }
         }
@@ -49,7 +57,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($id === (int) $me['id']) {
             flash_set("You can't delete the account you're signed in with.", true);
         } else {
+            $gone = user_by_id($id);
             db()->prepare('DELETE FROM users WHERE id = ?')->execute([$id]);
+            pp_audit('account.deleted', (string) ($gone['email'] ?? "user #$id"), $gone ? 'role ' . $gone['role'] : '');
             flash_set('Account deleted. Their stories stay in the archive.');
         }
     }
