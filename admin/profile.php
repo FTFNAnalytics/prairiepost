@@ -4,6 +4,20 @@ require dirname(__DIR__) . '/app/bootstrap.php';
 require __DIR__ . '/_layout.php';
 $user = require_login();
 
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['session_action'])) {
+    csrf_check();
+    if ($_POST['session_action'] === 'revoke_all') {
+        db()->prepare('UPDATE users SET session_epoch = session_epoch + 1 WHERE id = ?')->execute([(int) $user['id']]);
+        $fresh = user_by_id((int) $user['id']);
+        // This browser keeps working: stamp it with the new epoch. Every
+        // other signed-in browser fails the epoch check on its next click.
+        $_SESSION['epoch'] = (int) ($fresh['session_epoch'] ?? 0);
+        pp_audit('session.revoked_all', $user['email']);
+        flash_set('Done — every other signed-in browser and device is out. This one stays.');
+    }
+    redirect('profile.php#sessions');
+}
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['totp_action'])) {
     csrf_check();
     $action = (string) $_POST['totp_action'];
@@ -70,8 +84,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             flash_set('Profile saved, but the passphrase was not changed — it needs at least 10 characters.', true);
             redirect('profile.php');
         }
-        db()->prepare('UPDATE users SET pass_hash = ? WHERE id = ?')
+        // A new passphrase orphans every other session — if it changed
+        // because the old one leaked, whoever holds it is out now too.
+        db()->prepare('UPDATE users SET pass_hash = ?, session_epoch = session_epoch + 1 WHERE id = ?')
             ->execute([password_hash($pass, PASSWORD_DEFAULT), (int) $user['id']]);
+        $fresh = user_by_id((int) $user['id']);
+        $_SESSION['epoch'] = (int) ($fresh['session_epoch'] ?? 0);
         pp_audit('password.changed', $user['email']);
     }
     flash_set('Profile saved. Your public page is up to date.');
@@ -167,5 +185,13 @@ $mustEnrol = $user['role'] === 'admin' && empty($user['totp_enabled']) && functi
   <button class="btn" type="submit">Set up two-step sign-in</button>
 </form>
 <?php endif; ?>
+
+<h2 id="sessions" style="margin-top:36px">Signed-in sessions</h2>
+<p class="pagesub">Left a newsroom machine signed in, or worried a session cookie walked off? This signs out every browser and device on your account — except the one you're using now. Changing your passphrase does the same automatically.</p>
+<form method="post">
+  <?= csrf_field() ?>
+  <input type="hidden" name="session_action" value="revoke_all">
+  <button class="btn btn--ghost" type="submit">Sign out everywhere else</button>
+</form>
 
 <?php admin_footer(); ?>

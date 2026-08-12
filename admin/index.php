@@ -35,6 +35,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 ->execute([$title, unique_post_slug($title), (int) $user['id'], $user['name'], '', $body,
                            $item['url'], 'wire', 'draft', now(), now()]);
             $postId = pp_last_id('posts');
+            pp_post_snapshot($postId, 'create', $user['name']);
             set_post_sites($postId, $hub ? [] : [current_site_id()]);
             db()->prepare('UPDATE news_items SET used = 1 WHERE id = ?')->execute([$itemId]);
             redirect('post-edit.php?id=' . $postId);
@@ -92,7 +93,40 @@ foreach (db()->query('SELECT site_id, MAX(edition_date) AS d FROM newsletters GR
 }
 $failing = db()->query("SELECT name, region, last_status, last_fetched_at FROM sources
     WHERE enabled = 1 AND last_status LIKE 'error:%' ORDER BY region, name")->fetchAll();
+$ops = json_decode(setting('ops_snapshot', ''), true) ?: null;
+$opsAge = $ops ? time() - strtotime((string) $ops['at']) : null;
+$opsUp = $ops ? count(array_filter($ops['domains'] ?? [], fn ($c) => $c === 200)) : 0;
+$opsTotal = $ops ? count($ops['domains'] ?? []) : 0;
+$opsJobsBad = [];
+foreach (($ops['jobs'] ?? []) as $j => $st) {
+    if (($st['ok'] ?? null) === false || ($st['ok'] ?? null) === null) {
+        $opsJobsBad[] = $j;
+    }
+}
+$opsBackup = $ops['backup'] ?? null;
 ?>
+<div class="panel" style="border-top:3px solid <?= ($ops && $opsUp === $opsTotal && !$opsJobsBad) ? 'var(--color-accent-2)' : '#9C3B22' ?>">
+  <h2>Operations</h2>
+  <?php if (!$ops): ?>
+  <p>The watch hasn't reported yet — it runs every five minutes once this release's cron is live. Domains, certificates, cron health and last night's backup will show here.</p>
+  <?php else: ?>
+  <p style="margin:0 0 8px">
+    <span class="chip <?= $opsUp === $opsTotal ? 'chip--ok' : 'chip--used' ?>"><?= $opsUp ?>/<?= $opsTotal ?> domains up</span>
+    <span class="chip <?= $opsJobsBad ? 'chip--used' : 'chip--ok' ?>"><?= $opsJobsBad ? 'crons: ' . e(implode(', ', $opsJobsBad)) : 'crons on time' ?></span>
+    <?php if ($opsBackup): ?>
+    <span class="chip <?= !empty($opsBackup['ok']) && ($opsBackup['age'] ?? PHP_INT_MAX) < 26 * 3600 ? 'chip--ok' : 'chip--used' ?>">backup <?= !empty($opsBackup['ok']) ? round(($opsBackup['age'] ?? 0) / 3600, 1) . 'h ago' : 'FAILED' ?></span>
+    <?php else: ?>
+    <span class="chip chip--draft">backups not set up</span>
+    <?php endif; ?>
+    <?php if (($ops['login_failures'] ?? 0) >= 30): ?>
+    <span class="chip chip--used"><?= (int) $ops['login_failures'] ?> failed sign-ins/h</span>
+    <?php endif; ?>
+    <a class="btn btn--ghost btn--small" href="ops.php" style="margin-left:8px">Details</a>
+  </p>
+  <p class="help">Watch last reported <?= $opsAge !== null ? round($opsAge / 60) . 'm ago' : '—' ?><?= $opsAge !== null && $opsAge > 900 ? ' — that itself is late; check the cron' : '' ?>.</p>
+  <?php endif; ?>
+</div>
+
 <div class="panel">
   <h2>The network, this morning</h2>
   <table class="tbl">

@@ -72,6 +72,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             } else {
                 db()->prepare('UPDATE posts SET body = ?, updated_at = ? WHERE id = ?')
                     ->execute([sanitize_html((string) ($result['proposed_body'] ?? '')), now(), (int) $post['id']]);
+                pp_post_snapshot((int) $post['id'], 'agent', $user['name']);
             }
         } elseif ($task['kind'] === 'seo_meta') {
             if (trim((string) $post['meta_description']) !== '') {
@@ -79,6 +80,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             } else {
                 db()->prepare('UPDATE posts SET meta_description = ?, updated_at = ? WHERE id = ?')
                     ->execute([mb_substr((string) ($result['proposed'] ?? ''), 0, 155), now(), (int) $post['id']]);
+                pp_post_snapshot((int) $post['id'], 'agent', $user['name']);
             }
         } elseif ($task['kind'] === 'tagger') {
             $merged = array_unique(array_merge((array) ($result['current_tags'] ?? []), (array) ($result['proposed_tags'] ?? [])));

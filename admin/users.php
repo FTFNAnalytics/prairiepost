@@ -38,9 +38,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         flash_set('Passphrase unchanged — it needs at least 10 characters.', true);
                         redirect('users.php');
                     }
-                    db()->prepare('UPDATE users SET pass_hash = ? WHERE id = ?')
+                    // The reset also signs the account out everywhere —
+                    // that's usually why an admin is resetting it.
+                    db()->prepare('UPDATE users SET pass_hash = ?, session_epoch = session_epoch + 1 WHERE id = ?')
                         ->execute([password_hash($pass, PASSWORD_DEFAULT), $id]);
-                    $notes[] = 'passphrase reset';
+                    if ($id === (int) $me['id']) {
+                        $mine = user_by_id($id);
+                        $_SESSION['epoch'] = (int) ($mine['session_epoch'] ?? 0);
+                    }
+                    $notes[] = 'passphrase reset, sessions revoked';
                 }
                 pp_audit('account.updated', $email, implode(', ', $notes));
                 flash_set('Account updated.');
@@ -50,6 +56,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 pp_audit('account.created', $email, "role $role");
                 flash_set('Account created. They can sign in at /admin/ now.');
             }
+        }
+    }
+
+    if ($action === 'revoke' && $id) {
+        $target = user_by_id($id);
+        if ($target) {
+            db()->prepare('UPDATE users SET session_epoch = session_epoch + 1 WHERE id = ?')->execute([$id]);
+            if ($id === (int) $me['id']) {
+                $mine = user_by_id($id);
+                $_SESSION['epoch'] = (int) ($mine['session_epoch'] ?? 0);
+                flash_set('Your other sessions are out; this one stays.');
+            } else {
+                flash_set('Done — ' . $target['name'] . ' is signed out everywhere. Their passphrase still works.');
+            }
+            pp_audit('account.revoked', $target['email'], 'all sessions signed out');
         }
     }
 
@@ -90,6 +111,7 @@ flash_show();
       <td class="mono"><?= e(fmt_date($u['created_at'])) ?></td>
       <td style="white-space:nowrap">
         <a class="btn btn--ghost btn--small" href="users.php?edit=<?= (int) $u['id'] ?>">Edit</a>
+        <form method="post" class="inline" onsubmit="return confirm('Sign this account out of every browser and device? The passphrase keeps working.')"><?= csrf_field() ?><input type="hidden" name="action" value="revoke"><input type="hidden" name="id" value="<?= (int) $u['id'] ?>"><button class="btn btn--ghost btn--small" type="submit">Sign out</button></form>
         <?php if ((int) $u['id'] !== (int) $me['id']): ?>
         <form method="post" class="inline" onsubmit="return confirm('Delete this account?')"><?= csrf_field() ?><input type="hidden" name="action" value="delete"><input type="hidden" name="id" value="<?= (int) $u['id'] ?>"><button class="btn btn--danger btn--small" type="submit">Delete</button></form>
         <?php endif; ?>

@@ -110,6 +110,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             db()->prepare("UPDATE posts SET $set WHERE id = ?")
                 ->execute([...array_values($fields), $post['id']]);
             $id = (int) $post['id'];
+            pp_post_snapshot($id, 'edit', $user['name']);
         } else {
             $fields['slug'] = unique_post_slug($title);
             $fields['author_id'] = (int) $user['id'];
@@ -118,6 +119,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $marks = implode(', ', array_fill(0, count($fields), '?'));
             db()->prepare("INSERT INTO posts ($cols) VALUES ($marks)")->execute(array_values($fields));
             $id = pp_last_id('posts');
+            pp_post_snapshot($id, 'create', $user['name']);
         }
         set_post_tags($id, (string) ($_POST['tags'] ?? ''));
 
@@ -359,6 +361,30 @@ if (($post['origin'] ?? '') === 'ai') {
     </form>
     <?php endforeach; ?>
   </p>
+</div>
+<?php endif; ?>
+
+<?php if ($id): $revisions = pp_post_revisions((int) $id); ?>
+<div class="panel">
+  <h2>History</h2>
+  <p class="pagesub" style="margin-bottom:12px">Every save keeps a copy of the story as it stood — the record of what was live, when. Open one to read it in full or put it back.</p>
+  <?php if (!$revisions): ?>
+  <p>No revisions yet — the first save writes one.</p>
+  <?php else: ?>
+  <table class="tbl">
+    <thead><tr><th>Saved</th><th>By</th><th>Why</th><th></th></tr></thead>
+    <tbody>
+    <?php foreach ($revisions as $rev): ?>
+      <tr>
+        <td class="mono" style="white-space:nowrap"><?= e(fmt_date($rev['created_at'], 'M j, g:i a')) ?></td>
+        <td><?= e($rev['saved_by'] ?: '—') ?></td>
+        <td class="mono"><?= e($rev['reason']) ?></td>
+        <td><a class="btn btn--ghost btn--small" href="revision.php?id=<?= (int) $rev['id'] ?>">Open</a></td>
+      </tr>
+    <?php endforeach; ?>
+    </tbody>
+  </table>
+  <?php endif; ?>
 </div>
 <?php endif; ?>
 

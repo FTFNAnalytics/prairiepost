@@ -105,6 +105,56 @@ if [ -d /var/www/prairiepost-shared-uploads ] && [ ! -L "$REL/uploads" ]; then
   echo "uploads -> shared"
 fi
 
+say "The edge kit — shared zones, headers and the anonymous microcache"
+# Definitions live in http{} scope (harmless to unrelated vhosts on the box);
+# they only take effect in server blocks that include the snippet.
+mkdir -p /var/cache/nginx/civis /var/log/civis /etc/nginx/snippets
+chown www-data:www-data /var/cache/nginx/civis /var/log/civis
+cat > /etc/nginx/conf.d/civis-edge-zones.conf <<'ZONES'
+# Civis Media edge kit (zones + maps) — written by deploy-civis.sh / harden-edge.sh.
+limit_req_zone $binary_remote_addr zone=ppgeneral:10m rate=30r/s;
+fastcgi_cache_path /var/cache/nginx/civis levels=1:2 keys_zone=ppcache:32m max_size=256m inactive=10m;
+# Never cache for a browser holding a session, nor any admin/cron/api/ad path.
+map $http_cookie $pp_skip_sess { default 0; ~*ppsession 1; }
+map $request_uri $pp_skip_path { default 0; "~^/(admin|cron|api)([/?.]|$)" 1; "~^/ad([/?.]|$)" 1; }
+ZONES
+cat > /etc/nginx/snippets/civis-edge.conf <<'EDGE'
+# Civis Media edge kit — security headers, per-IP request limiting, and a
+# short microcache for anonymous readers (sessions start lazily app-side,
+# so public GETs are cookie-free and cacheable). X-PP-Cache says HIT/MISS/
+# BYPASS on PHP responses. Written by deploy-civis.sh / harden-edge.sh.
+add_header X-Content-Type-Options "nosniff" always;
+add_header X-Frame-Options "SAMEORIGIN" always;
+add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+add_header Permissions-Policy "camera=(), microphone=(), geolocation=(), payment=()" always;
+add_header Strict-Transport-Security "max-age=15552000" always;
+add_header X-PP-Cache $upstream_cache_status always;
+
+limit_req zone=ppgeneral burst=120 nodelay;
+limit_req_status 429;
+
+fastcgi_cache ppcache;
+fastcgi_cache_key "$scheme$host$request_uri";
+fastcgi_cache_methods GET HEAD;
+fastcgi_cache_valid 200 301 60s;
+fastcgi_cache_valid 404 10s;
+fastcgi_cache_bypass $pp_skip_sess $pp_skip_path;
+fastcgi_no_cache $pp_skip_sess $pp_skip_path;
+fastcgi_cache_use_stale error timeout updating http_500 http_503;
+fastcgi_cache_background_update on;
+fastcgi_cache_lock on;
+EDGE
+cat > /etc/logrotate.d/civis <<'ROT'
+/var/log/civis/*.log {
+    weekly
+    rotate 8
+    compress
+    missingok
+    notifempty
+}
+ROT
+echo "edge kit written (zones, snippet, logrotate)"
+
 say "nginx vhost (HTTP first; certbot adds TLS after)"
 VH=/etc/nginx/sites-available/civismedia
 if [ -f "$VH" ]; then
@@ -118,6 +168,7 @@ server {
     server_name civismedia.ca www.civismedia.ca;
     root $REL;
     index index.php;
+    include snippets/civis-edge.conf;
 
     # Protection — the .htaccess equivalents. Order matters.
     location ~ ^/(app|data)/            { deny all; }
@@ -202,14 +253,18 @@ else
 fi
 
 say "The hub's cron — monitoring hourly, agents every ten minutes, analytics nightly"
+# Every job runs through the wrapper: outcome + output tail land in the ops
+# ledger (hub dashboard + Ops page), full output in /var/log/civis/. The
+# watch patrols every five minutes and files the network snapshot.
 cat > /etc/cron.d/civismedia <<CRON
 # Civis Media hub — written by deploy-civis.sh; repointed on every deploy.
-17 * * * * www-data cd $REL && PP_SITE=civismedia php cron/monitor.php >/dev/null 2>&1
-*/10 * * * * www-data cd $REL && PP_SITE=civismedia php cron/agents.php >/dev/null 2>&1
-43 2 * * * www-data cd $REL && PP_SITE=civismedia php cron/analytics.php >/dev/null 2>&1
+17 * * * * www-data cd $REL && PP_SITE=civismedia php cron/run.php monitor >> /var/log/civis/monitor.log 2>&1
+*/10 * * * * www-data cd $REL && PP_SITE=civismedia php cron/run.php agents >> /var/log/civis/agents.log 2>&1
+43 2 * * * www-data cd $REL && PP_SITE=civismedia php cron/run.php analytics >> /var/log/civis/analytics.log 2>&1
+*/5 * * * * www-data cd $REL && PP_SITE=civismedia php cron/run.php watch >> /var/log/civis/watch.log 2>&1
 CRON
 chmod 644 /etc/cron.d/civismedia
-echo "cron installed: /etc/cron.d/civismedia -> $REL (monitor :17, agents */10, analytics 02:43)"
+echo "cron installed: /etc/cron.d/civismedia -> $REL (monitor :17, agents */10, analytics 02:43, watch */5 — all via run.php)"
 
 echo
 echo "== done. Open https://civismedia.ca and https://civismedia.ca/admin =="

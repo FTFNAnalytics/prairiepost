@@ -402,6 +402,84 @@ app → sign out → email + passphrase + code gets you in; wrong passphrase
 six times on a dummy email shows the wait message; `/admin → Audit`
 carries the whole story.
 
+## 14 · Phase 8 — resilience: backups, the watch, revisions, the edge
+
+Four independent pieces. The hub deploy carries the app side (migration
+v14: revision history, session lifecycle, the ops ledger); two new
+scripts set up backups and the edge kit; the papers upgrade closes the
+version gap. Everyone gets signed out once when v14 lands (sessions gain
+an epoch) — one re-login, no data touched.
+
+1. **Deploy the hub** as always. The cron file now routes every job
+   through `cron/run.php` (outcomes land on the dashboard's Operations
+   panel and `/admin → Ops`) and adds the five-minute **watch**: nine
+   domains, certificate expiry, cron staleness, wire freshness, backup
+   age, sign-in pressure. Set the alert email under Settings → Security
+   (uses the Newsletter page's SMTP details; without SMTP the dashboard
+   still shows everything).
+2. **Backups** (once):
+
+   ```bash
+   curl -fsSL https://raw.githubusercontent.com/FTFNAnalytics/prairiepost/claude/master-dashboard-control-room-nr3mp4/tools/vps/setup-backups.sh -o /root/setup-backups.sh
+   less /root/setup-backups.sh && bash /root/setup-backups.sh
+   ```
+
+   Nightly at 03:17: `pg_dump` of the shared database, the shared
+   uploads, and box state (vhosts/crons/configs) into
+   `/var/backups/civis/` — 7 daily + 4 weekly, first run immediate.
+   Off-site: drop an executable at `/etc/civis-backup-offsite` (e.g. two
+   lines of rclone) and it receives each night's files. **Still on this
+   box until you do** — an off-site target is the remaining step.
+3. **Rehearse the restore** (after setup, then ~monthly):
+
+   ```bash
+   curl -fsSL https://raw.githubusercontent.com/FTFNAnalytics/prairiepost/claude/master-dashboard-control-room-nr3mp4/tools/vps/restore-drill.sh -o /root/restore-drill.sh
+   less /root/restore-drill.sh && bash /root/restore-drill.sh
+   ```
+
+   Restores the newest dump into a scratch database on a **local**
+   Postgres (installed on first run, localhost-only), asserts sites/
+   users/posts/entities survive, prints the newest story, drops the
+   scratch. The live database is never involved.
+4. **The edge kit** (once; hub deploys re-apply it to the hub
+   automatically afterwards):
+
+   ```bash
+   curl -fsSL https://raw.githubusercontent.com/FTFNAnalytics/prairiepost/claude/master-dashboard-control-room-nr3mp4/tools/vps/harden-edge.sh -o /root/harden-edge.sh
+   less /root/harden-edge.sh && bash /root/harden-edge.sh
+   ```
+
+   Every prairiepost vhost gains security headers (HSTS, nosniff,
+   frame, referrer, permissions), a per-IP request limit (30 r/s,
+   burst 120 → 429), and a 60-second microcache for anonymous readers —
+   a traffic spike is served from memory instead of PHP + the database.
+   Signed-in sessions and admin/cron/api/ad paths always bypass it.
+   Check it: `curl -sI https://prairiedispatch.ca/ | grep -i x-pp-cache`
+   twice — MISS then HIT. Ad impressions now count via a footer beacon
+   (`/ad?imp=…`, never cached), so cached views still count; clicks were
+   always beacon-style.
+5. **Upgrade the papers** (the same approved script) so all nine sites
+   share this release — that also brings the papers the Phase 7
+   sign-in protections and the lazy sessions the microcache relies on.
+   Until then paper pages mostly say `X-PP-Cache: BYPASS` (their older
+   release still opens a session on every request) — expected, not a
+   fault.
+6. **What changed for the newsroom:** every story now keeps a capped
+   history — the editor shows it under **History**, any revision can be
+   read in full and restored (the restore is itself a revision).
+   Corrections work as before (they've been there since Phase 1);
+   history is the new part. Profiles gain **Sign out everywhere else**;
+   a passphrase change now signs out every other session automatically;
+   Accounts gains a per-person **Sign out** (revoke) button. Sessions
+   idle out after 12 h and expire 14 days after sign-in (Settings →
+   Security to tune; 0 disables).
+
+Verify after deploy: dashboard shows the Operations panel (the watch
+reports within five minutes); `/admin → Ops` lists runs; edit a story
+twice → History shows both, open one → Restore puts it back;
+`php tests/run.php` passes on the release; two curls to a paper front
+page read MISS then HIT.
+
 ## Troubleshooting quick table
 
 | Symptom | Cause → fix |
@@ -414,3 +492,8 @@ carries the whole story.
 | Hub admin stuck on the profile page after deploy | That's Phase 7's enrolment funnel — set up two-step there and everything unlocks (§13) |
 | "Too many attempts. Wait fifteen minutes" | The sign-in throttle — 6 failures per account / 20 per address in 15 min. It expires on its own; check `/admin → Audit` and the `login_attempts` table if it wasn't you |
 | Control room answers 403 "limited to approved addresses" | The IP allowlist no longer covers you (address changed?) — clear it from the box (§13.5) |
+| Everyone got signed out after the Phase 8 deploy | Expected, once — sessions gained an epoch in v14; sign in again |
+| Dashboard says "backup FAILED" or "backups not set up" | Read `/var/log/civis/backup.log`, re-run `/usr/local/bin/civis-backup.sh`; "not set up" means run setup-backups.sh (§14.2) |
+| Front pages always say X-PP-Cache: BYPASS | The browser holds a `ppsession` cookie (sign out or use a private window), or that paper hasn't been upgraded to the lazy-session release yet (§14.5) |
+| A reader reports a page 429 | The per-IP limit (30 r/s, burst 120) — real readers never hit it; a proxy collapsing many readers to one IP might. Raise the rate in `/etc/nginx/conf.d/civis-edge-zones.conf` |
+| An edit went wrong and Save made it worse | Story editor → History → open the last good revision → Restore. Nothing is ever lost — the bad save stays in history too |

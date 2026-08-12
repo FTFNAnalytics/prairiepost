@@ -33,5 +33,7 @@ db()->prepare('UPDATE posts SET title = ?, lede = ?, body = ?, updated_at = ? WH
         now(),
         $id,
     ]);
+// One history snapshot per half hour of typing — not one per keystroke burst.
+pp_post_snapshot($id, 'autosave', $user['name'], 1800);
 
 echo json_encode(['saved' => strtolower(str_replace(['AM', 'PM'], ['a.m.', 'p.m.'], date('g:i A')))]);

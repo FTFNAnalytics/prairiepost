@@ -56,6 +56,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 ->execute([$title, unique_post_slug($title), (int) $user['id'], $user['name'], '', $body,
                            $item['url'], 'wire', 'draft', now(), now()]);
             $postId = pp_last_id('posts');
+            pp_post_snapshot($postId, 'create', $user['name']);
             // No mapping yet: the editor picks papers in Runs on, or in bulk
             // from the network desk — until then it runs nowhere.
             db()->prepare('UPDATE news_items SET used = 1 WHERE id = ?')->execute([$itemId]);

@@ -509,6 +509,12 @@ function page_footer(): void
     $siteTitle = setting('site_title', 'The Prairie Dispatch');
     ?>
 </main>
+<?php if ($ppAdsShown = pp_ads_shown()): ?>
+<?php /* Impression beacon: pages may be served from the nginx microcache
+         where PHP never runs, so the page itself reports which ads it
+         carried. The /ad endpoint is never cached; every view counts. */ ?>
+<img src="<?= e(url('ad')) ?>?imp=<?= implode('-', $ppAdsShown) ?>" alt="" width="1" height="1" style="position:absolute;left:-9999px" aria-hidden="true">
+<?php endif; ?>
 
 <?php if (pp_chrome('template') === 'westernwire'): ?>
 <footer class="ww-foot">

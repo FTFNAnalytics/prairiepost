@@ -62,6 +62,30 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
         set_setting('require_totp', $new);
 
+        // Session limits: whole numbers, blank = the default, 0 = off.
+        foreach (['session_idle_hours' => 720, 'session_max_days' => 365] as $key => $cap) {
+            if (isset($_POST[$key])) {
+                $raw = trim((string) $_POST[$key]);
+                $new = $raw === '' ? '' : (string) min($cap, max(0, (int) $raw));
+                if ($new !== setting($key)) {
+                    $changed[] = $key;
+                }
+                set_setting($key, $new);
+            }
+        }
+        if (isset($_POST['ops_alert_email'])) {
+            $new = trim((string) $_POST['ops_alert_email']);
+            if ($new !== '' && !filter_var($new, FILTER_VALIDATE_EMAIL)) {
+                flash_set('The alert address didn\'t save — that isn\'t a working email address.', true);
+                $saveError = true;
+            } else {
+                if ($new !== setting('ops_alert_email')) {
+                    $changed[] = 'ops_alert_email';
+                }
+                set_setting('ops_alert_email', $new);
+            }
+        }
+
         $entries = preg_split('/[\s,]+/', trim((string) ($_POST['admin_ip_allowlist'] ?? '')), -1, PREG_SPLIT_NO_EMPTY) ?: [];
         $bad = array_filter($entries, fn ($x) => !pp_cidr_valid($x));
         $coversMe = $entries === [];
@@ -243,6 +267,20 @@ flash_show();
     <label for="admin_ip_allowlist" style="margin-top:12px">Control-room address allowlist · blank = open from anywhere (the default)</label>
     <textarea id="admin_ip_allowlist" name="admin_ip_allowlist" class="mono" style="min-height:64px" placeholder="203.0.113.7&#10;198.51.100.0/24"><?= e(setting('admin_ip_allowlist')) ?></textarea>
     <p class="help">One IP or CIDR range per line. Applies to signed-in <em>hub</em> pages only — the papers' newsrooms never check it. The form refuses a list that doesn't cover your own current address (<span class="mono"><?= e(pp_client_ip()) ?></span>), so you can't lock yourself out from here. Careful with home connections — most change address without notice.</p>
+    <div class="formgrid" style="margin-top:12px">
+      <div>
+        <label for="session_idle_hours">Sign out after · hours idle (blank = 12, 0 = never)</label>
+        <input type="text" id="session_idle_hours" name="session_idle_hours" class="mono" value="<?= e(setting('session_idle_hours')) ?>" placeholder="12" style="max-width:120px">
+        <label for="session_max_days">Sign out after · days since sign-in (blank = 14, 0 = never)</label>
+        <input type="text" id="session_max_days" name="session_max_days" class="mono" value="<?= e(setting('session_max_days')) ?>" placeholder="14" style="max-width:120px">
+        <p class="help">Limits for this site's sessions. Everyone can also end their own sessions everywhere from their profile; a passphrase change does it automatically.</p>
+      </div>
+      <div>
+        <label for="ops_alert_email">Watch alerts · email address (blank = dashboard only)</label>
+        <input type="text" id="ops_alert_email" name="ops_alert_email" value="<?= e(setting('ops_alert_email')) ?>" placeholder="you@example.com">
+        <p class="help">When the five-minute watch finds trouble — a masthead down, a certificate near expiry, a cron gone quiet, a failed backup — it emails this address, at most once every six hours. Needs the SMTP details on the Newsletter page. The <a href="ops.php">Ops page</a> always shows the full picture.</p>
+      </div>
+    </div>
   </div>
   <?php endif; ?>
 

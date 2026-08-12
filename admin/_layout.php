@@ -70,6 +70,7 @@ function admin_header(string $title, string $active = '', string $actions = ''):
         $items['settings'] = ['settings.php', 'Settings'];
         if ($hub) {
             $items['audit'] = ['audit.php', 'Audit'];
+            $items['ops'] = ['ops.php', 'Ops'];
         }
     }
     $items['profile'] = ['profile.php', 'Your profile'];

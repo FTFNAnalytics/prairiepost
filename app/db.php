@@ -58,6 +58,7 @@ function pp_schema_ddl(string $driver): array
             photo VARCHAR(255) NOT NULL DEFAULT '',
             totp_secret VARCHAR(64) NOT NULL DEFAULT '',
             totp_enabled INTEGER NOT NULL DEFAULT 0,
+            session_epoch INTEGER NOT NULL DEFAULT 0,
             created_at $dt NOT NULL
         )$suffix",
 
@@ -348,6 +349,31 @@ function pp_schema_ddl(string $driver): array
             created_at $dt NOT NULL
         )$suffix",
 
+        "CREATE TABLE post_revisions (
+            id $id,
+            post_id INTEGER NOT NULL,
+            title VARCHAR(255) NOT NULL DEFAULT '',
+            lede TEXT,
+            body TEXT,
+            meta_description VARCHAR(255) NOT NULL DEFAULT '',
+            correction TEXT,
+            image VARCHAR(255) NOT NULL DEFAULT '',
+            image_caption VARCHAR(255) NOT NULL DEFAULT '',
+            saved_by VARCHAR(120) NOT NULL DEFAULT '',
+            reason VARCHAR(40) NOT NULL DEFAULT 'edit',
+            created_at $dt NOT NULL
+        )$suffix",
+
+        "CREATE TABLE ops_runs (
+            id $id,
+            job VARCHAR(40) NOT NULL,
+            site_id INTEGER NOT NULL DEFAULT 0,
+            ok INTEGER NOT NULL DEFAULT 1,
+            note VARCHAR(500) NOT NULL DEFAULT '',
+            started_at $dt NOT NULL,
+            finished_at $dt
+        )$suffix",
+
         'CREATE INDEX idx_posts_status ON posts (status, published_at)',
         'CREATE INDEX idx_agent_tasks ON agent_tasks (status, created_at)',
         'CREATE INDEX idx_agent_tasks_post ON agent_tasks (post_id, kind)',
@@ -368,6 +394,8 @@ function pp_schema_ddl(string $driver): array
         'CREATE INDEX idx_login_attempts_email ON login_attempts (email, created_at)',
         'CREATE INDEX idx_login_attempts_ip ON login_attempts (ip, created_at)',
         'CREATE INDEX idx_audit_created ON audit_log (created_at)',
+        'CREATE INDEX idx_revisions_post ON post_revisions (post_id, id)',
+        'CREATE INDEX idx_ops_runs_job ON ops_runs (job, id)',
     ];
 }
 
@@ -839,5 +867,46 @@ function pp_migrate(PDO $pdo, string $driver): void
         $pdo->exec('CREATE INDEX idx_audit_created ON audit_log (created_at)');
 
         $pdo->exec("UPDATE settings SET svalue = '13' WHERE site_id = 0 AND skey = 'schema_version'");
+    }
+
+    if ($version < 14) {
+        // Resilience: a capped revision history per story (what was live,
+        // when — corrections and libel defence both need it), a session
+        // epoch on accounts so sign-out-everywhere is one integer bump,
+        // and a ledger of cron runs so silent failures stop being silent.
+        $dt = $driver === 'pgsql' ? 'TIMESTAMP' : 'DATETIME';
+        $id = $driver === 'mysql' ? 'INT UNSIGNED AUTO_INCREMENT PRIMARY KEY'
+            : ($driver === 'pgsql' ? 'INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY' : 'INTEGER PRIMARY KEY AUTOINCREMENT');
+
+        $pdo->exec('ALTER TABLE users ADD COLUMN session_epoch INTEGER NOT NULL DEFAULT 0');
+
+        $pdo->exec("CREATE TABLE post_revisions (
+            id $id,
+            post_id INTEGER NOT NULL,
+            title VARCHAR(255) NOT NULL DEFAULT '',
+            lede TEXT,
+            body TEXT,
+            meta_description VARCHAR(255) NOT NULL DEFAULT '',
+            correction TEXT,
+            image VARCHAR(255) NOT NULL DEFAULT '',
+            image_caption VARCHAR(255) NOT NULL DEFAULT '',
+            saved_by VARCHAR(120) NOT NULL DEFAULT '',
+            reason VARCHAR(40) NOT NULL DEFAULT 'edit',
+            created_at $dt NOT NULL
+        )");
+        $pdo->exec('CREATE INDEX idx_revisions_post ON post_revisions (post_id, id)');
+
+        $pdo->exec("CREATE TABLE ops_runs (
+            id $id,
+            job VARCHAR(40) NOT NULL,
+            site_id INTEGER NOT NULL DEFAULT 0,
+            ok INTEGER NOT NULL DEFAULT 1,
+            note VARCHAR(500) NOT NULL DEFAULT '',
+            started_at $dt NOT NULL,
+            finished_at $dt
+        )");
+        $pdo->exec('CREATE INDEX idx_ops_runs_job ON ops_runs (job, id)');
+
+        $pdo->exec("UPDATE settings SET svalue = '14' WHERE site_id = 0 AND skey = 'schema_version'");
     }
 }

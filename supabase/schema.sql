@@ -44,6 +44,7 @@ CREATE TABLE users (
     photo VARCHAR(255) NOT NULL DEFAULT '',
     totp_secret VARCHAR(64) NOT NULL DEFAULT '',  -- base32; '' until enrolled
     totp_enabled INTEGER NOT NULL DEFAULT 0,
+    session_epoch INTEGER NOT NULL DEFAULT 0,     -- bump = sign out everywhere
     created_at TIMESTAMP NOT NULL
 );
 
@@ -382,4 +383,36 @@ CREATE TABLE audit_log (
 );
 CREATE INDEX idx_audit_created ON audit_log (created_at);
 
-INSERT INTO settings (site_id, skey, svalue) VALUES (0, 'schema_version', '13');
+-- What a story said, when — capped history per story (40 revisions), written
+-- on every create/save/agent-approval/restore. Corrections and libel defence
+-- both read from here; the editor's History panel restores from it.
+CREATE TABLE post_revisions (
+    id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    post_id INTEGER NOT NULL,
+    title VARCHAR(255) NOT NULL DEFAULT '',
+    lede TEXT,
+    body TEXT,
+    meta_description VARCHAR(255) NOT NULL DEFAULT '',
+    correction TEXT,
+    image VARCHAR(255) NOT NULL DEFAULT '',
+    image_caption VARCHAR(255) NOT NULL DEFAULT '',
+    saved_by VARCHAR(120) NOT NULL DEFAULT '',
+    reason VARCHAR(40) NOT NULL DEFAULT 'edit',   -- create|edit|autosave|agent|restore
+    created_at TIMESTAMP NOT NULL
+);
+CREATE INDEX idx_revisions_post ON post_revisions (post_id, id);
+
+-- The cron ledger: every scheduled job files its outcome through
+-- cron/run.php, and the five-minute watch reads staleness from here.
+CREATE TABLE ops_runs (
+    id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    job VARCHAR(40) NOT NULL,
+    site_id INTEGER NOT NULL DEFAULT 0,
+    ok INTEGER NOT NULL DEFAULT 1,
+    note VARCHAR(500) NOT NULL DEFAULT '',
+    started_at TIMESTAMP NOT NULL,
+    finished_at TIMESTAMP
+);
+CREATE INDEX idx_ops_runs_job ON ops_runs (job, id);
+
+INSERT INTO settings (site_id, skey, svalue) VALUES (0, 'schema_version', '14');

@@ -66,12 +66,48 @@ function current_user(): ?array
     return $user;
 }
 
+/** Mark a fresh sign-in: when it happened, and under which epoch. */
+function pp_session_stamp(int $epoch): void
+{
+    $_SESSION['auth_at'] = time();
+    $_SESSION['last_seen'] = time();
+    $_SESSION['epoch'] = $epoch;
+}
+
+/** Destroy the session and return to sign-in with a gentle note. */
+function pp_session_end(): never
+{
+    $_SESSION = [];
+    if (session_status() === PHP_SESSION_ACTIVE) {
+        session_destroy();
+    }
+    redirect('/admin/login.php?expired=1');
+}
+
 function require_login(): array
 {
     $user = current_user();
     if (!$user) {
         redirect('/admin/login.php');
     }
+
+    // Session lifecycle — a stolen cookie must not outlive its welcome.
+    // Epoch: bumping users.session_epoch (sign out everywhere, passphrase
+    // change, admin revocation) orphans every session stamped with the old
+    // number. Idle and absolute limits are settings; 0 disables either.
+    $now = time();
+    if ((int) ($_SESSION['epoch'] ?? -1) !== (int) ($user['session_epoch'] ?? 0)) {
+        pp_session_end();
+    }
+    $idleHours = (int) (setting('session_idle_hours', '12') ?: 0);
+    if ($idleHours > 0 && (int) ($_SESSION['last_seen'] ?? $now) < $now - $idleHours * 3600) {
+        pp_session_end();
+    }
+    $maxDays = (int) (setting('session_max_days', '14') ?: 0);
+    if ($maxDays > 0 && (int) ($_SESSION['auth_at'] ?? 0) < $now - $maxDays * 86400) {
+        pp_session_end();
+    }
+    $_SESSION['last_seen'] = $now;
 
     // The hub's optional address fence. Papers never evaluate it, so a
     // mistyped range can always be repaired from a paper's shared settings.

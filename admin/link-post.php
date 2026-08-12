@@ -127,6 +127,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $marks = implode(', ', array_fill(0, count($fields), '?'));
             db()->prepare("INSERT INTO posts ($cols) VALUES ($marks)")->execute(array_values($fields));
             $postId = pp_last_id('posts');
+            pp_post_snapshot($postId, 'create', $user['name']);
             set_post_tags($postId, $form['tags']);
             set_post_sites($postId, [current_site_id()]);
             if ($form['item_id']) {

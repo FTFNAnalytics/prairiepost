@@ -44,6 +44,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             db()->prepare('INSERT INTO users (name, email, pass_hash, role, slug, created_at) VALUES (?, ?, ?, ?, ?, ?)')
                 ->execute([$name, $email, password_hash($pass, PASSWORD_DEFAULT), 'admin', unique_user_slug($name), now()]);
             $_SESSION['uid'] = pp_last_id('users');
+            pp_session_stamp(0);
             session_regenerate_id(true);
             pp_audit('account.founded', $email, 'founding administrator created at first run', ['id' => $_SESSION['uid'], 'name' => $name]);
             redirect('index.php');
@@ -57,6 +58,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         } elseif (pp_totp_verify((string) $pending['totp_secret'], (string) $_POST['totp_code'])) {
             unset($_SESSION['totp_uid'], $_SESSION['totp_exp']);
             $_SESSION['uid'] = (int) $pending['id'];
+            pp_session_stamp((int) ($pending['session_epoch'] ?? 0));
             session_regenerate_id(true);
             pp_login_record($pending['email'], true);
             pp_audit('login', $pending['email'], 'two-step', $pending);
@@ -79,6 +81,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 redirect('login.php');
             } elseif ($user && $verified) {
                 $_SESSION['uid'] = (int) $user['id'];
+                pp_session_stamp((int) ($user['session_epoch'] ?? 0));
                 session_regenerate_id(true);
                 pp_login_record($user['email'], true);
                 pp_audit('login', $user['email'], '', $user);
@@ -127,7 +130,8 @@ $totpStep = pp_totp_pending() !== null;
     <?php if ($firstRun): ?>
     <p style="font-size:15px;margin:0 0 4px">No accounts exist yet. This form creates the founding administrator.</p>
     <?php endif; ?>
-    <?php if ($error): ?><div class="flash flash--error"><?= e($error) ?></div><?php endif; ?>
+    <?php if ($error): ?><div class="flash flash--error"><?= e($error) ?></div>
+    <?php elseif (isset($_GET['expired'])): ?><div class="flash">That session ended — sign in again to continue.</div><?php endif; ?>
     <form method="post">
       <?= csrf_field() ?>
       <?php if ($firstRun): ?>

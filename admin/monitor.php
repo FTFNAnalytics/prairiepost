@@ -75,6 +75,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             ->execute([$title, unique_post_slug($title), (int) $user['id'], $user['name'], '', $body,
                        $item['url'], 'wire', 'draft', now(), now()]);
         $postId = pp_last_id('posts');
+        pp_post_snapshot($postId, 'create', $user['name']);
         db()->prepare("UPDATE monitor_items SET status = 'used', claimed_by = ? WHERE id = ?")
             ->execute([$user['name'], $itemId]);
         redirect('post-edit.php?id=' . $postId);
@@ -193,6 +194,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 ->execute([$idea['title'], unique_post_slug($idea['title']), (int) $user['id'], $user['name'], '', $body,
                            (string) ($idea['monitor_url'] ?? ''), '', 'draft', now(), now()]);
             $postId = pp_last_id('posts');
+            pp_post_snapshot($postId, 'create', $user['name']);
             db()->prepare("UPDATE story_ideas SET status = 'claimed', claimed_by = ? WHERE id = ?")
                 ->execute([$user['name'], $ideaId]);
             redirect('post-edit.php?id=' . $postId);

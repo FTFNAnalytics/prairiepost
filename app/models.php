@@ -456,7 +456,13 @@ function ad_is_live(array $ad): bool
     return true;
 }
 
-/** Pick one live ad for a placement — round-robin by fewest impressions. */
+/**
+ * Pick one live ad for a placement — round-robin by fewest impressions.
+ * The impression itself is NOT counted here: rendered pages may be served
+ * from the nginx microcache, where PHP never runs. The page footer prints
+ * a beacon (`/ad?imp=…`, never cached) listing the ads it showed, and that
+ * endpoint does the counting — every cached view still counts.
+ */
 function ad_for_placement(string $placement): ?array
 {
     $stmt = db()->prepare('SELECT * FROM ads WHERE site_id = ? AND placement = ? AND enabled = 1');
@@ -467,8 +473,26 @@ function ad_for_placement(string $placement): ?array
     }
     usort($live, fn ($a, $b) => $a['impressions'] <=> $b['impressions']);
     $ad = $live[0];
-    db()->prepare('UPDATE ads SET impressions = impressions + 1 WHERE id = ?')->execute([$ad['id']]);
+    $GLOBALS['pp_ads_shown'][] = (int) $ad['id'];
     return $ad;
+}
+
+/** The ads this request rendered — the footer beacon reports them. */
+function pp_ads_shown(): array
+{
+    return array_values(array_unique($GLOBALS['pp_ads_shown'] ?? []));
+}
+
+/** Count impressions reported by the footer beacon (site-scoped ids). */
+function pp_ads_count_impressions(array $ids): void
+{
+    $ids = array_slice(array_values(array_unique(array_map('intval', $ids))), 0, 10);
+    if (!$ids) {
+        return;
+    }
+    $marks = implode(',', array_fill(0, count($ids), '?'));
+    $stmt = db()->prepare("UPDATE ads SET impressions = impressions + 1 WHERE site_id = ? AND id IN ($marks)");
+    $stmt->execute([current_site_id(), ...$ids]);
 }
 
 /* --- Network campaigns (the hub's advertising) ---------------------------- */
@@ -867,4 +891,94 @@ function pp_ip_allowlisted(): bool
         }
     }
     return false;
+}
+
+/* --- Revision history: what was live, when --------------------------------- */
+
+/**
+ * Snapshot a story's current text into its revision history. Called after
+ * every content-changing write (create, save, agent approval, restore), so
+ * each row answers "what did the story say from this moment on". History is
+ * capped per story; autosaves pass $minIntervalSec so a typing session
+ * collapses to one snapshot per half hour instead of hundreds.
+ */
+function pp_post_snapshot(int $postId, string $reason, string $by = '', int $minIntervalSec = 0): void
+{
+    try {
+        $stmt = db()->prepare('SELECT title, lede, body, meta_description, correction, image, image_caption FROM posts WHERE id = ?');
+        $stmt->execute([$postId]);
+        $post = $stmt->fetch();
+        if (!$post) {
+            return;
+        }
+        if ($minIntervalSec > 0) {
+            $stmt = db()->prepare('SELECT created_at FROM post_revisions WHERE post_id = ? ORDER BY id DESC LIMIT 1');
+            $stmt->execute([$postId]);
+            $last = (string) ($stmt->fetchColumn() ?: '');
+            if ($last !== '' && strtotime($last) > time() - $minIntervalSec) {
+                return;
+            }
+        }
+        db()->prepare('INSERT INTO post_revisions (post_id, title, lede, body, meta_description, correction, image, image_caption, saved_by, reason, created_at)
+                       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)')
+            ->execute([
+                $postId,
+                (string) $post['title'],
+                (string) ($post['lede'] ?? ''),
+                (string) ($post['body'] ?? ''),
+                (string) $post['meta_description'],
+                (string) ($post['correction'] ?? ''),
+                (string) $post['image'],
+                (string) $post['image_caption'],
+                mb_substr($by, 0, 120),
+                mb_substr($reason, 0, 40),
+                now(),
+            ]);
+        // Cap the history: find the oldest id still worth keeping, drop the rest.
+        $stmt = db()->prepare('SELECT id FROM post_revisions WHERE post_id = ? ORDER BY id DESC LIMIT 1 OFFSET 39');
+        $stmt->execute([$postId]);
+        $cutoff = (int) ($stmt->fetchColumn() ?: 0);
+        if ($cutoff > 0) {
+            db()->prepare('DELETE FROM post_revisions WHERE post_id = ? AND id < ?')->execute([$postId, $cutoff]);
+        }
+    } catch (PDOException) {
+        // History observes the save; it must never break it.
+    }
+}
+
+function pp_post_revisions(int $postId, int $limit = 12): array
+{
+    $stmt = db()->prepare('SELECT id, saved_by, reason, created_at FROM post_revisions WHERE post_id = ? ORDER BY id DESC LIMIT ' . max(1, $limit));
+    $stmt->execute([$postId]);
+    return $stmt->fetchAll();
+}
+
+function pp_revision_by_id(int $id): ?array
+{
+    $stmt = db()->prepare('SELECT * FROM post_revisions WHERE id = ?');
+    $stmt->execute([$id]);
+    return $stmt->fetch() ?: null;
+}
+
+/* --- Ops: the cron ledger and the watch snapshot ---------------------------- */
+
+/** Record one cron run; the dashboard and the watch read these. */
+function pp_ops_record(string $job, bool $ok, string $note, string $startedAt): void
+{
+    try {
+        db()->prepare('INSERT INTO ops_runs (job, site_id, ok, note, started_at, finished_at) VALUES (?, ?, ?, ?, ?, ?)')
+            ->execute([mb_substr($job, 0, 40), current_site_id(), $ok ? 1 : 0, mb_substr($note, 0, 500), $startedAt, now()]);
+    } catch (PDOException) {
+        // The ledger must never take the job down with it.
+    }
+}
+
+/** The latest run per job, newest first. */
+function pp_ops_latest(): array
+{
+    $latest = [];
+    foreach (db()->query('SELECT * FROM ops_runs ORDER BY id DESC LIMIT 400') as $run) {
+        $latest[$run['job']] = $latest[$run['job']] ?? $run;
+    }
+    return $latest;
 }

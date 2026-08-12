@@ -5,7 +5,7 @@
  */
 
 define('PP_ROOT', dirname(__DIR__));
-define('PP_SCHEMA_VERSION', 13);
+define('PP_SCHEMA_VERSION', 14);
 
 $configFile = PP_ROOT . '/config.php';
 $GLOBALS['pp_config'] = is_file($configFile)
@@ -21,16 +21,28 @@ if (!empty($GLOBALS['pp_config']['debug'])) {
     ini_set('display_errors', '0');
 }
 
+/*
+ * Sessions start lazily: on admin pages, on POSTs, or when a session cookie
+ * already exists. Anonymous public GETs never open one — no public form or
+ * page reads $_SESSION (contact and subscribe use honeypots and IP rate
+ * limits) — which keeps those responses cookie-free and lets the nginx
+ * microcache absorb traffic spikes.
+ */
 if (PHP_SAPI !== 'cli' && session_status() === PHP_SESSION_NONE) {
-    session_set_cookie_params([
-        'lifetime' => 0,
-        'path'     => '/',
-        'secure'   => !empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off',
-        'httponly' => true,
-        'samesite' => 'Lax',
-    ]);
-    session_name('ppsession');
-    session_start();
+    $ppNeedsSession = isset($_COOKIE['ppsession'])
+        || ($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST'
+        || str_starts_with((string) ($_SERVER['SCRIPT_NAME'] ?? ''), '/admin/');
+    if ($ppNeedsSession) {
+        session_set_cookie_params([
+            'lifetime' => 0,
+            'path'     => '/',
+            'secure'   => !empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off',
+            'httponly' => true,
+            'samesite' => 'Lax',
+        ]);
+        session_name('ppsession');
+        session_start();
+    }
 }
 
 require PP_ROOT . '/app/helpers.php';

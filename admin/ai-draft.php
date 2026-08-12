@@ -179,6 +179,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                        mb_substr(trim((string) ($draft['meta_description'] ?? '')), 0, 255),
                        $deskId, $sourceUrl, 'ai', 'draft', now(), now()]);
         $postId = pp_last_id('posts');
+        pp_post_snapshot($postId, 'create', $user['name']);
         // No site mapping yet — the journalist picks papers in Runs on.
         $tags = array_slice(array_filter(array_map('trim', (array) ($draft['suggested_tags'] ?? []))), 0, 6);
         if ($tags) {
