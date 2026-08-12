@@ -21,7 +21,7 @@ if (!pp_is_hub()) {
 }
 
 $base = rtrim(getenv('PP_REPRESENT_BASE') ?: 'https://represent.opennorth.ca', '/');
-$sets = array_slice($argv, 1) ?: ['house-of-commons', 'alberta-legislature', 'bc-legislature', 'legislative-assembly-of-ontario'];
+$sets = array_slice($argv, 1) ?: ['house-of-commons', 'alberta-legislature', 'bc-legislature', 'ontario-legislature'];
 
 $db = db();
 $probe = $db->prepare('SELECT 1 FROM entities WHERE slug = ?');
