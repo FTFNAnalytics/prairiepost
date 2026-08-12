@@ -5,7 +5,7 @@
  */
 
 define('PP_ROOT', dirname(__DIR__));
-define('PP_SCHEMA_VERSION', 11);
+define('PP_SCHEMA_VERSION', 12);
 
 $configFile = PP_ROOT . '/config.php';
 $GLOBALS['pp_config'] = is_file($configFile)

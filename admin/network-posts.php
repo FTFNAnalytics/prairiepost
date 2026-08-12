@@ -41,6 +41,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $targets = array_values(array_filter(array_map('intval', (array) ($_POST['sites'] ?? [])),
         fn ($id) => in_array($id, $paperIds, true)));
 
+    // Bulk agent pass: tick stories, pick an agent, queue for the desk.
+    if ($action === 'queue_agent') {
+        require dirname(__DIR__) . '/app/agents.php';
+        $kind = (string) ($_POST['agent_kind'] ?? '');
+        $queued = 0;
+        $already = 0;
+        foreach ($ids as $postId) {
+            pp_agent_enqueue($kind, $postId, $user['name']) === 'queued' ? $queued++ : $already++;
+        }
+        flash_set($ids
+            ? "$queued task(s) queued for the agent desk" . ($already ? " · $already already open" : '') . '.'
+            : 'Tick at least one story first.', !$ids);
+        redirect('network-posts.php?' . http_build_query($filters));
+    }
+
     if (!in_array($action, ['add_sites', 'remove_sites'], true) || !$ids || !$targets) {
         flash_set('Tick at least one story and one paper, then choose add or remove.', true);
         redirect('network-posts.php?' . http_build_query($filters));
@@ -222,6 +237,15 @@ The editor's own <em>Runs on</em> picker still rules a single story.</p>
         onclick="return confirm('Remove the ticked stories from the ticked papers? A published story disappears from those front pages immediately.')">Remove from the ticked papers</button>
     </p>
     <p class="help">Adding never duplicates a placement; removing only touches the ticked papers. A story removed from every paper stays in the system but appears nowhere.</p>
+    <p style="margin-top:14px">
+      <select name="agent_kind" aria-label="Agent" style="width:auto;min-width:180px">
+        <option value="linkify">Linkifier</option>
+        <option value="seo_meta">SEO meta writer</option>
+        <option value="tagger">Tagger</option>
+      </select>
+      <button class="btn btn--outline" type="submit" name="action" value="queue_agent">Queue for the ticked stories</button>
+      <span class="help">Proposals wait on the <a href="agents.php">agent desk</a> — nothing applies without a review.</span>
+    </p>
   </div>
 </form>
 

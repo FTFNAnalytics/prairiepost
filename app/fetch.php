@@ -173,7 +173,19 @@ function pp_prune_news(PDO $db): int
 /** Flip scheduled posts live once their time arrives. */
 function pp_publish_due(PDO $db): int
 {
-    $stmt = $db->prepare("UPDATE posts SET status = 'published' WHERE status = 'scheduled' AND published_at <= ?");
+    $stmt = $db->prepare("SELECT id FROM posts WHERE status = 'scheduled' AND published_at <= ?");
     $stmt->execute([now()]);
-    return $stmt->rowCount();
+    $due = $stmt->fetchAll(PDO::FETCH_COLUMN);
+    if (!$due) {
+        return 0;
+    }
+    $marks = implode(',', array_fill(0, count($due), '?'));
+    $db->prepare("UPDATE posts SET status = 'published' WHERE id IN ($marks)")->execute($due);
+    // The agent desk's auto-queue fires on the publish transition, however
+    // it happens — the hub's per-kind settings decide, off by default.
+    require_once PP_ROOT . '/app/agents.php';
+    foreach ($due as $postId) {
+        pp_agent_auto_enqueue((int) $postId);
+    }
+    return count($due);
 }

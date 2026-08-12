@@ -317,4 +317,38 @@ CREATE TABLE gsc_daily (
 CREATE UNIQUE INDEX uq_gsc_row ON gsc_daily (site_id, day, dim, dkey);
 CREATE INDEX idx_gsc_site_dim ON gsc_daily (site_id, dim, day);
 
-INSERT INTO settings (site_id, skey, svalue) VALUES (0, 'schema_version', '11');
+-- The entity directory the linkifier reads — admin-curated, seedable from
+-- the Represent API (tools/import-represent.php).
+CREATE TABLE entities (
+    id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    name VARCHAR(160) NOT NULL,
+    slug VARCHAR(191) NOT NULL UNIQUE,
+    kind VARCHAR(40) NOT NULL DEFAULT 'politician', -- politician | organization | place | other
+    url VARCHAR(600) NOT NULL DEFAULT '',
+    aliases TEXT,                                   -- JSON array of alternate spellings
+    enabled INTEGER NOT NULL DEFAULT 1,
+    created_at TIMESTAMP NOT NULL
+);
+
+-- The agent control room's task queue. Every result is a proposal
+-- (needs_review) until an editor approves; nothing applies itself.
+CREATE TABLE agent_tasks (
+    id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    kind VARCHAR(40) NOT NULL,                      -- linkify | seo_meta | tagger
+    status VARCHAR(20) NOT NULL DEFAULT 'queued',   -- queued → running → needs_review → approved | rejected | failed
+    post_id INTEGER,
+    site_id INTEGER,
+    payload TEXT,
+    result TEXT,
+    log TEXT,
+    created_by VARCHAR(120) NOT NULL DEFAULT '',
+    created_at TIMESTAMP NOT NULL,
+    started_at TIMESTAMP,
+    finished_at TIMESTAMP,
+    reviewed_by VARCHAR(120) NOT NULL DEFAULT '',
+    reviewed_at TIMESTAMP
+);
+CREATE INDEX idx_agent_tasks ON agent_tasks (status, created_at);
+CREATE INDEX idx_agent_tasks_post ON agent_tasks (post_id, kind);
+
+INSERT INTO settings (site_id, skey, svalue) VALUES (0, 'schema_version', '12');

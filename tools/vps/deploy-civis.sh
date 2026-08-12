@@ -201,14 +201,15 @@ else
   echo "WARN: certbot failed — the site stays HTTP-only; re-run 'certbot --nginx -d civismedia.ca -d www.civismedia.ca -n --redirect' later"
 fi
 
-say "The hub's cron — monitoring hourly, analytics nightly"
+say "The hub's cron — monitoring hourly, agents every ten minutes, analytics nightly"
 cat > /etc/cron.d/civismedia <<CRON
 # Civis Media hub — written by deploy-civis.sh; repointed on every deploy.
 17 * * * * www-data cd $REL && PP_SITE=civismedia php cron/monitor.php >/dev/null 2>&1
+*/10 * * * * www-data cd $REL && PP_SITE=civismedia php cron/agents.php >/dev/null 2>&1
 43 2 * * * www-data cd $REL && PP_SITE=civismedia php cron/analytics.php >/dev/null 2>&1
 CRON
 chmod 644 /etc/cron.d/civismedia
-echo "cron installed: /etc/cron.d/civismedia -> $REL (monitor hourly at :17, analytics 02:43)"
+echo "cron installed: /etc/cron.d/civismedia -> $REL (monitor :17, agents */10, analytics 02:43)"
 
 echo
 echo "== done. Open https://civismedia.ca and https://civismedia.ca/admin =="

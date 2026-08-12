@@ -298,7 +298,37 @@ function pp_schema_ddl(string $driver): array
             position REAL NOT NULL DEFAULT 0
         )$suffix",
 
+        "CREATE TABLE entities (
+            id $id,
+            name VARCHAR(160) NOT NULL,
+            slug VARCHAR(191) NOT NULL UNIQUE,
+            kind VARCHAR(40) NOT NULL DEFAULT 'politician',
+            url VARCHAR(600) NOT NULL DEFAULT '',
+            aliases TEXT,
+            enabled INTEGER NOT NULL DEFAULT 1,
+            created_at $dt NOT NULL
+        )$suffix",
+
+        "CREATE TABLE agent_tasks (
+            id $id,
+            kind VARCHAR(40) NOT NULL,
+            status VARCHAR(20) NOT NULL DEFAULT 'queued',
+            post_id INTEGER,
+            site_id INTEGER,
+            payload TEXT,
+            result TEXT,
+            log TEXT,
+            created_by VARCHAR(120) NOT NULL DEFAULT '',
+            created_at $dt NOT NULL,
+            started_at $dt,
+            finished_at $dt,
+            reviewed_by VARCHAR(120) NOT NULL DEFAULT '',
+            reviewed_at $dt
+        )$suffix",
+
         'CREATE INDEX idx_posts_status ON posts (status, published_at)',
+        'CREATE INDEX idx_agent_tasks ON agent_tasks (status, created_at)',
+        'CREATE INDEX idx_agent_tasks_post ON agent_tasks (post_id, kind)',
         'CREATE UNIQUE INDEX uq_metrics_site_day ON site_metrics_daily (site_id, day)',
         'CREATE UNIQUE INDEX uq_gsc_row ON gsc_daily (site_id, day, dim, dkey)',
         'CREATE INDEX idx_gsc_site_dim ON gsc_daily (site_id, dim, day)',
@@ -703,5 +733,49 @@ function pp_migrate(PDO $pdo, string $driver): void
         }
 
         $pdo->exec("UPDATE settings SET svalue = '11' WHERE site_id = 0 AND skey = 'schema_version'");
+    }
+
+    if ($version < 12) {
+        // The agent control room: a task queue where agents do the tedious
+        // passes — linkifier, SEO meta writer, tagger — and editors keep the
+        // pen. Every result is a proposal (needs_review) until a person
+        // approves it; nothing applies itself. Plus the entity directory the
+        // linkifier reads: politicians and organizations with bio URLs,
+        // admin-curated, seedable from the Represent API.
+        $dt = $driver === 'pgsql' ? 'TIMESTAMP' : 'DATETIME';
+        $id = $driver === 'mysql' ? 'INT UNSIGNED AUTO_INCREMENT PRIMARY KEY'
+            : ($driver === 'pgsql' ? 'INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY' : 'INTEGER PRIMARY KEY AUTOINCREMENT');
+
+        $pdo->exec("CREATE TABLE entities (
+            id $id,
+            name VARCHAR(160) NOT NULL,
+            slug VARCHAR(191) NOT NULL UNIQUE,
+            kind VARCHAR(40) NOT NULL DEFAULT 'politician',
+            url VARCHAR(600) NOT NULL DEFAULT '',
+            aliases TEXT,
+            enabled INTEGER NOT NULL DEFAULT 1,
+            created_at $dt NOT NULL
+        )");
+
+        $pdo->exec("CREATE TABLE agent_tasks (
+            id $id,
+            kind VARCHAR(40) NOT NULL,
+            status VARCHAR(20) NOT NULL DEFAULT 'queued',
+            post_id INTEGER,
+            site_id INTEGER,
+            payload TEXT,
+            result TEXT,
+            log TEXT,
+            created_by VARCHAR(120) NOT NULL DEFAULT '',
+            created_at $dt NOT NULL,
+            started_at $dt,
+            finished_at $dt,
+            reviewed_by VARCHAR(120) NOT NULL DEFAULT '',
+            reviewed_at $dt
+        )");
+        $pdo->exec('CREATE INDEX idx_agent_tasks ON agent_tasks (status, created_at)');
+        $pdo->exec('CREATE INDEX idx_agent_tasks_post ON agent_tasks (post_id, kind)');
+
+        $pdo->exec("UPDATE settings SET svalue = '12' WHERE site_id = 0 AND skey = 'schema_version'");
     }
 }

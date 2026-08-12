@@ -33,6 +33,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             set_setting($key, trim((string) $_POST[$key]));
         }
     }
+    // Agent auto-queue checkboxes (hub): unchecked boxes don't POST, so the
+    // marker field tells us the panel was on the submitted form at all.
+    if (pp_is_hub() && isset($_POST['agent_auto_marker'])) {
+        foreach (['linkify', 'seo_meta', 'tagger'] as $k) {
+            set_setting("auto_agent_$k", isset($_POST["auto_agent_$k"]) ? '1' : '');
+        }
+    }
     $jsonError = false;
     foreach ($jsonKeys as $key) {
         if (isset($_POST[$key])) {
@@ -146,6 +153,26 @@ flash_show();
     <label for="monitor_retention_days" style="margin-top:12px">Retention · days before untouched and dismissed items prune (blank = 180)</label>
     <input type="text" id="monitor_retention_days" name="monitor_retention_days" class="mono" value="<?= e(setting('monitor_retention_days')) ?>" placeholder="180" style="max-width:120px">
     <p class="help">Flagged, claimed and used items never prune — they're the paper trail behind published stories.</p>
+  </div>
+  <?php endif; ?>
+
+  <?php if (pp_is_hub()): ?>
+  <div class="panel">
+    <h2>The agent desk</h2>
+    <input type="hidden" name="agent_auto_marker" value="1">
+    <label style="display:flex;align-items:center;gap:8px;text-transform:none;letter-spacing:.04em;margin:6px 0">
+      <input type="checkbox" name="auto_agent_linkify" value="1" style="width:auto"<?= setting('auto_agent_linkify') === '1' ? ' checked' : '' ?>>
+      Queue the <strong>linkifier</strong> automatically when a story publishes
+    </label>
+    <label style="display:flex;align-items:center;gap:8px;text-transform:none;letter-spacing:.04em;margin:6px 0">
+      <input type="checkbox" name="auto_agent_seo_meta" value="1" style="width:auto"<?= setting('auto_agent_seo_meta') === '1' ? ' checked' : '' ?>>
+      Queue the <strong>SEO meta writer</strong> automatically when a story publishes
+    </label>
+    <label style="display:flex;align-items:center;gap:8px;text-transform:none;letter-spacing:.04em;margin:6px 0">
+      <input type="checkbox" name="auto_agent_tagger" value="1" style="width:auto"<?= setting('auto_agent_tagger') === '1' ? ' checked' : '' ?>>
+      Queue the <strong>tagger</strong> automatically when a story publishes
+    </label>
+    <p class="help">Auto-queue only files the task — every proposal still waits for an editor on the agent desk. Auto-<em>apply</em> deliberately doesn't exist.</p>
   </div>
   <?php endif; ?>
 

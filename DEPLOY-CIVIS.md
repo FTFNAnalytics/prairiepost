@@ -308,6 +308,42 @@ Phase 5 also settles the **canonical policy**: in the story editor's
 so one paper accrues the search ranking. Default unchanged: no home
 paper, every copy self-canonical.
 
+## 12 · Phase 6 — the agent control room
+
+One deploy: migration v12 runs on first request, and the hub's cron file
+gains the runner (`cron/agents.php`, every ten minutes). Then:
+
+1. **Seed the entity directory** (once, on the box) — Canada's elected
+   officials from Open North's free Represent API:
+
+   ```bash
+   cd /var/www/prairiepost-<current-release> && PP_SITE=civismedia php tools/import-represent.php
+   ```
+
+   Default sets: House of Commons plus the Alberta, B.C. and Ontario
+   legislatures; name any other [Represent set](https://represent.opennorth.ca/)
+   as arguments. Re-running never overwrites — curation always wins.
+   Then curate under `/admin → Entities`: fix bio URLs, add aliases,
+   pause anything that shouldn't link.
+2. **How work flows.** Editors queue passes from a story's editor
+   (*Agents* panel), in bulk from the network desk, or by story id on the
+   agent desk; the runner claims tasks with a guarded update (overlapping
+   runs can't double-execute) and parks every result in **needs review**.
+   On the desk an editor sees exactly what would change — the linkifier
+   shows the story with proposed anchors outlined — and approves (applied
+   through the standard sanitizer, stamped with their name) or rejects
+   with a note. Stale protection: a linkify proposal built before an edit
+   refuses to apply.
+3. **Auto-queue at publish** (optional): hub Settings → *The agent desk* —
+   per-kind checkboxes, all off by default. Auto-queue only files the
+   task; auto-<em>apply</em> deliberately doesn't exist.
+4. The linkifier needs no AI. The SEO meta writer and tagger call Claude,
+   so they report "not connected" until the research desk's key is in.
+
+Verify: queue the linkifier on a story naming a seeded politician → *Run
+queued now* → the proposal shows the outlined anchor → approve → the
+story body carries the link; the dashboard rail counts open proposals.
+
 ## Troubleshooting quick table
 
 | Symptom | Cause → fix |

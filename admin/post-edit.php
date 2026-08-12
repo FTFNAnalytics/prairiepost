@@ -131,6 +131,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             set_post_sites($id, [current_site_id()]);
         }
 
+        // The agent desk's auto-queue fires on the transition to published —
+        // per-kind checkboxes in the hub's Settings, all off by default.
+        if ($status === 'published' && (($post['status'] ?? '') !== 'published')) {
+            require_once dirname(__DIR__) . '/app/agents.php';
+            pp_agent_auto_enqueue($id);
+        }
+
         flash_set(match ($status) {
             'published' => 'Published. The story is live.',
             'scheduled' => 'Scheduled. It goes live at the set time (the cron job flips it).',
@@ -336,6 +343,24 @@ if (($post['origin'] ?? '') === 'ai') {
     <a class="btn btn--ghost" href="posts.php">Back to the list</a>
   </p>
 </form>
+
+<?php if ($id && $editor && pp_is_hub()): ?>
+<div class="panel">
+  <h2>Agents</h2>
+  <p class="pagesub" style="margin-bottom:12px">Queue a machine pass over this story. Every result waits on the <a href="agents.php">agent desk</a> as a proposal — nothing changes until an editor approves it.</p>
+  <p>
+    <?php foreach (['linkify' => 'Run linkifier', 'seo_meta' => 'Write search description', 'tagger' => 'Suggest tags'] as $k => $label): ?>
+    <form method="post" action="agents.php" class="inline">
+      <?= csrf_field() ?>
+      <input type="hidden" name="action" value="queue">
+      <input type="hidden" name="kind" value="<?= $k ?>">
+      <input type="hidden" name="post_id" value="<?= (int) $id ?>">
+      <button class="btn btn--outline btn--small" type="submit"><?= $label ?></button>
+    </form>
+    <?php endforeach; ?>
+  </p>
+</div>
+<?php endif; ?>
 
 <script src="/assets/js/editor.js"></script>
 <?php admin_footer(); ?>

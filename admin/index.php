@@ -233,6 +233,8 @@ $pulseRegions = pp_region_labels();
       <div class="crow"><span>Scheduled</span><b><?= $counts['scheduled'] ?></b></div>
       <?php if ($hub): ?>
       <div class="crow"><span>Papers</span><b><?= count(pp_paper_sites()) ?></b></div>
+      <?php $proposals = (int) db()->query("SELECT COUNT(*) AS n FROM agent_tasks WHERE status = 'needs_review'")->fetch()['n']; ?>
+      <div class="crow"><span><a href="agents.php">Agent proposals</a></span><b<?= $proposals ? ' class="hot"' : '' ?>><?= $proposals ?></b></div>
       <?php else: ?>
       <div class="crow"><span>Subscribers</span><b><?= $counts['subscribers'] ?></b></div>
       <?php endif; ?>
