@@ -73,7 +73,10 @@ foreach ($expect as $job => $maxAge) {
         'age' => $age,
     ];
     if (!$run) {
-        $problems[] = "cron '$job' has never run through the wrapper";
+        // Not a problem yet: right after a deploy, a nightly job simply
+        // hasn't had its first turn. If the cron file itself is broken,
+        // monitor/agents go stale within the hour and raise the alarm.
+        echo "note: cron '$job' has no wrapper record yet (first run pending)\n";
     } elseif ($age > $maxAge) {
         $problems[] = "cron '$job' last ran " . round($age / 3600, 1) . "h ago";
     } elseif (!$run['ok']) {

@@ -99,7 +99,8 @@ $opsUp = $ops ? count(array_filter($ops['domains'] ?? [], fn ($c) => $c === 200)
 $opsTotal = $ops ? count($ops['domains'] ?? []) : 0;
 $opsJobsBad = [];
 foreach (($ops['jobs'] ?? []) as $j => $st) {
-    if (($st['ok'] ?? null) === false || ($st['ok'] ?? null) === null) {
+    // null = no record yet (first run pending after a deploy) — not trouble.
+    if (($st['ok'] ?? null) === false) {
         $opsJobsBad[] = $j;
     }
 }
