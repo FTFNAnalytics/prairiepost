@@ -35,6 +35,9 @@ function admin_header(string $title, string $active = '', string $actions = ''):
         // Every newsroom role watches what's surfacing across the regions.
         $items['monitor'] = ['monitor.php', 'Monitoring'];
     }
+    if ($hub && is_editor($user)) {
+        $items['analytics'] = ['analytics.php', 'Analytics'];
+    }
     if (is_editor($user)) {
         $items['linkpost']    = ['link-post.php', 'Post a link'];
         $items['categories']  = ['categories.php', 'Desks'];

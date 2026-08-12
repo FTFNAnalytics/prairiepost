@@ -85,6 +85,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $placement = '';
             }
             $fields['placement'] = $placement;
+            // The home paper must actually run the story; anything else
+            // (deselected, or never chosen) stays self-canonical everywhere.
+            $canonPick = (int) ($_POST['canonical_site_id'] ?? 0);
+            $sitesPick = array_map('intval', (array) ($_POST['sites'] ?? []));
+            $fields['canonical_site_id'] = ($canonPick && in_array($canonPick, $sitesPick, true)) ? $canonPick : null;
             $fields['review_note'] = trim((string) ($_POST['review_note'] ?? ''));
             if ($placement === 'hero') {
                 db()->exec("UPDATE posts SET placement = '' WHERE placement = 'hero'");
@@ -304,14 +309,20 @@ if (($post['origin'] ?? '') === 'ai') {
         <textarea id="correction" name="correction" class="prose" style="min-height:64px" placeholder="An earlier version of this story said… In fact…"><?= $v('correction') ?></textarea>
         <p class="help">A correction renders in Bin Red above the story and joins the public corrections file.</p>
         <?php if (count($allSites) > 1): ?>
-        <label>Runs on</label>
+        <label>Runs on <span style="float:right;letter-spacing:.08em">home</span></label>
+        <?php $canonCur = (int) ($post['canonical_site_id'] ?? 0); ?>
         <?php foreach ($allSites as $site): ?>
         <label style="display:flex;align-items:center;gap:8px;text-transform:none;letter-spacing:.04em;margin:6px 0">
           <input type="checkbox" name="sites[]" value="<?= (int) $site['id'] ?>" style="width:auto"<?= in_array((int) $site['id'], $postSites, true) ? ' checked' : '' ?>>
           <?= e($site['name']) ?><?= (int) $site['id'] === current_site_id() ? ' (this site)' : '' ?>
+          <input type="radio" name="canonical_site_id" value="<?= (int) $site['id'] ?>" style="width:auto;margin-left:auto" title="Home paper — the other copies point their search canonical here"<?= $canonCur === (int) $site['id'] ? ' checked' : '' ?>>
         </label>
         <?php endforeach; ?>
-        <p class="help">A story runs on every site ticked here — one filing, the whole network.</p>
+        <label style="display:flex;align-items:center;gap:8px;text-transform:none;letter-spacing:.04em;margin:6px 0">
+          <input type="radio" name="canonical_site_id" value="0" style="width:auto"<?= $canonCur === 0 ? ' checked' : '' ?>>
+          No home paper — each copy is its own canonical
+        </label>
+        <p class="help">A story runs on every site ticked here — one filing, the whole network. For widely-syndicated stories, mark one ticked paper <em>home</em> and the other copies point their search canonical there, so a single paper accrues the ranking.</p>
         <?php else: ?>
         <input type="hidden" name="sites[]" value="<?= current_site_id() ?>">
         <?php endif; ?>

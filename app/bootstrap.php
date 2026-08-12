@@ -5,7 +5,7 @@
  */
 
 define('PP_ROOT', dirname(__DIR__));
-define('PP_SCHEMA_VERSION', 10);
+define('PP_SCHEMA_VERSION', 11);
 
 $configFile = PP_ROOT . '/config.php';
 $GLOBALS['pp_config'] = is_file($configFile)
@@ -37,6 +37,7 @@ require PP_ROOT . '/app/helpers.php';
 require PP_ROOT . '/app/db.php';
 require PP_ROOT . '/app/models.php';
 require PP_ROOT . '/app/ai.php';
+require PP_ROOT . '/app/google.php';
 
 function pp_config(string $key, $default = null)
 {

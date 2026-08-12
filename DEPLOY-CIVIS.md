@@ -261,6 +261,53 @@ item appears; flag it and it shows in the dashboard's **monitoring pulse**;
 pitches once the research desk's key exists (everything else on the board
 works without it).
 
+## 11 · Phase 5 — analytics, Search Console, and the story-gap report
+
+One service account, added as a viewer everywhere, pulled nightly — no
+OAuth dance, no third-party dashboard. Setup is once for the network plus
+two fields per paper:
+
+1. **Google Cloud, once**: create a project → enable the **Analytics Data
+   API** and the **Search Console API** → create a **service account** (no
+   roles needed) → create a **JSON key** for it and download it.
+2. **Put the key on the hub box, outside every web root** — e.g.:
+
+   ```bash
+   mkdir -p /etc/prairiepost && nano /etc/prairiepost/google-sa.json   # paste the JSON
+   chown root:www-data /etc/prairiepost/google-sa.json && chmod 640 /etc/prairiepost/google-sa.json
+   ```
+
+   then add to the hub's `config.php`:
+
+   ```php
+   'google_sa_json' => '/etc/prairiepost/google-sa.json',
+   ```
+
+   (Carried forward automatically on future deploys, like the Anthropic key.)
+3. **Grant the account access, once per property.** Its email (shown on
+   the hub's Analytics page once the key is in) goes in as **Viewer** on
+   each paper's GA4 property and **Restricted** user on each Search
+   Console property.
+4. **Two fields per paper**, in that paper's Settings: `ga4_property_id`
+   (the numeric id) and `gsc_site_url` (e.g. `sc-domain:kelownacurrent.ca`).
+5. Deploy (`deploy-civis.sh`) — migration v11 runs on first request, and
+   the hub cron file now carries the nightly analytics pull (02:43).
+   First pull backfills a month; nights re-pull a trailing window, so the
+   two-day Search Console lag fills itself in.
+
+Control room → **Analytics**: the network rollup, each paper's traffic,
+acquisition mix, top stories (GA views beside our own read counter), top
+queries — and the **story-gap report**: almost-ranking queries, rising
+queries, uncovered demand, unused wire heat, and monitoring clusters,
+with an optional button that turns the gaps into pitches on the ideas
+docket once the research desk's key exists.
+
+Phase 5 also settles the **canonical policy**: in the story editor's
+*Runs on* picker, a widely-syndicated story can mark one ticked paper
+**home** — the other copies then emit `rel=canonical` to the home paper,
+so one paper accrues the search ranking. Default unchanged: no home
+paper, every copy self-canonical.
+
 ## Troubleshooting quick table
 
 | Symptom | Cause → fix |

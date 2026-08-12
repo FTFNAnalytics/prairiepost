@@ -74,6 +74,7 @@ CREATE TABLE posts (
     post_type VARCHAR(20) NOT NULL DEFAULT 'story', -- story | link (headline links out)
     region VARCHAR(40) NOT NULL DEFAULT '',       -- aggregator region key (e.g. bc, alberta)
     origin VARCHAR(20) NOT NULL DEFAULT '',       -- '' newsroom | wire | ai (always human-finished)
+    canonical_site_id INTEGER,                    -- set = the story's home paper; other copies point rel=canonical there
     status VARCHAR(20) NOT NULL DEFAULT 'draft',  -- draft | in_review | scheduled | published
     review_note TEXT,
     is_featured INTEGER NOT NULL DEFAULT 0,       -- superseded by placement; kept for compatibility
@@ -286,4 +287,34 @@ CREATE INDEX idx_monitor_items ON monitor_items (level, region, fetched_at);
 CREATE INDEX idx_monitor_status ON monitor_items (status, fetched_at);
 CREATE INDEX idx_ideas_status ON story_ideas (status, created_at);
 
-INSERT INTO settings (site_id, skey, svalue) VALUES (0, 'schema_version', '10');
+-- GA4 traffic, one row per site per day, pulled nightly by cron/analytics.php.
+CREATE TABLE site_metrics_daily (
+    id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    site_id INTEGER NOT NULL,
+    day DATE NOT NULL,
+    sessions INTEGER NOT NULL DEFAULT 0,
+    users INTEGER NOT NULL DEFAULT 0,
+    pageviews INTEGER NOT NULL DEFAULT 0,
+    engaged_sessions INTEGER NOT NULL DEFAULT 0,
+    engagement_secs INTEGER NOT NULL DEFAULT 0,
+    channels_json TEXT,
+    top_pages_json TEXT
+);
+CREATE UNIQUE INDEX uq_metrics_site_day ON site_metrics_daily (site_id, day);
+
+-- Search Console rows by query and by page; pruned to 16 months (GSC's own
+-- retention).
+CREATE TABLE gsc_daily (
+    id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    site_id INTEGER NOT NULL,
+    day DATE NOT NULL,
+    dim VARCHAR(10) NOT NULL,                     -- query | page
+    dkey VARCHAR(255) NOT NULL,
+    clicks INTEGER NOT NULL DEFAULT 0,
+    impressions INTEGER NOT NULL DEFAULT 0,
+    position REAL NOT NULL DEFAULT 0
+);
+CREATE UNIQUE INDEX uq_gsc_row ON gsc_daily (site_id, day, dim, dkey);
+CREATE INDEX idx_gsc_site_dim ON gsc_daily (site_id, dim, day);
+
+INSERT INTO settings (site_id, skey, svalue) VALUES (0, 'schema_version', '11');

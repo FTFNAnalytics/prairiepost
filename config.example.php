@@ -65,6 +65,11 @@ return [
     // The model id is a hub setting (default claude-opus-5), not config.
     'anthropic_api_key' => '',
 
+    // Analytics & Search Console (hub only): the absolute path to the Google
+    // service-account JSON key, kept OUTSIDE the web root — never the
+    // repository, never the database. Per-site property ids are settings.
+    'google_sa_json' => '',
+
     'timezone' => 'America/Edmonton',
 
     // Show full error output. Never enable in production.

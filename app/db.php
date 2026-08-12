@@ -88,6 +88,7 @@ function pp_schema_ddl(string $driver): array
             post_type VARCHAR(20) NOT NULL DEFAULT 'story',
             region VARCHAR(40) NOT NULL DEFAULT '',
             origin VARCHAR(20) NOT NULL DEFAULT '',
+            canonical_site_id INTEGER,
             status VARCHAR(20) NOT NULL DEFAULT 'draft',
             review_note TEXT,
             is_featured INTEGER NOT NULL DEFAULT 0,
@@ -273,7 +274,34 @@ function pp_schema_ddl(string $driver): array
             created_at $dt NOT NULL
         )$suffix",
 
+        "CREATE TABLE site_metrics_daily (
+            id $id,
+            site_id INTEGER NOT NULL,
+            day DATE NOT NULL,
+            sessions INTEGER NOT NULL DEFAULT 0,
+            users INTEGER NOT NULL DEFAULT 0,
+            pageviews INTEGER NOT NULL DEFAULT 0,
+            engaged_sessions INTEGER NOT NULL DEFAULT 0,
+            engagement_secs INTEGER NOT NULL DEFAULT 0,
+            channels_json TEXT,
+            top_pages_json TEXT
+        )$suffix",
+
+        "CREATE TABLE gsc_daily (
+            id $id,
+            site_id INTEGER NOT NULL,
+            day DATE NOT NULL,
+            dim VARCHAR(10) NOT NULL,
+            dkey VARCHAR(255) NOT NULL,
+            clicks INTEGER NOT NULL DEFAULT 0,
+            impressions INTEGER NOT NULL DEFAULT 0,
+            position REAL NOT NULL DEFAULT 0
+        )$suffix",
+
         'CREATE INDEX idx_posts_status ON posts (status, published_at)',
+        'CREATE UNIQUE INDEX uq_metrics_site_day ON site_metrics_daily (site_id, day)',
+        'CREATE UNIQUE INDEX uq_gsc_row ON gsc_daily (site_id, day, dim, dkey)',
+        'CREATE INDEX idx_gsc_site_dim ON gsc_daily (site_id, dim, day)',
         'CREATE INDEX idx_posts_category ON posts (category_id)',
         'CREATE INDEX idx_posts_author ON posts (author_id)',
         'CREATE INDEX idx_posts_region ON posts (region)',
@@ -614,5 +642,66 @@ function pp_migrate(PDO $pdo, string $driver): void
         $pdo->exec('CREATE INDEX idx_ideas_status ON story_ideas (status, created_at)');
 
         $pdo->exec("UPDATE settings SET svalue = '10' WHERE site_id = 0 AND skey = 'schema_version'");
+    }
+
+    if ($version < 11) {
+        // Analytics & Search Console: one nightly pull into our own tables —
+        // GA4 daily traffic per site and Search Console rows by query and
+        // page — plus the canonical decision: a widely-syndicated story can
+        // name one paper its home, and the others point rel=canonical there
+        // so a single paper accrues the ranking.
+        $dt = $driver === 'pgsql' ? 'TIMESTAMP' : 'DATETIME';
+        $id = $driver === 'mysql' ? 'INT UNSIGNED AUTO_INCREMENT PRIMARY KEY'
+            : ($driver === 'pgsql' ? 'INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY' : 'INTEGER PRIMARY KEY AUTOINCREMENT');
+
+        $pdo->exec("CREATE TABLE site_metrics_daily (
+            id $id,
+            site_id INTEGER NOT NULL,
+            day DATE NOT NULL,
+            sessions INTEGER NOT NULL DEFAULT 0,
+            users INTEGER NOT NULL DEFAULT 0,
+            pageviews INTEGER NOT NULL DEFAULT 0,
+            engaged_sessions INTEGER NOT NULL DEFAULT 0,
+            engagement_secs INTEGER NOT NULL DEFAULT 0,
+            channels_json TEXT,
+            top_pages_json TEXT
+        )");
+        $pdo->exec('CREATE UNIQUE INDEX uq_metrics_site_day ON site_metrics_daily (site_id, day)');
+
+        $pdo->exec("CREATE TABLE gsc_daily (
+            id $id,
+            site_id INTEGER NOT NULL,
+            day DATE NOT NULL,
+            dim VARCHAR(10) NOT NULL,
+            dkey VARCHAR(255) NOT NULL,
+            clicks INTEGER NOT NULL DEFAULT 0,
+            impressions INTEGER NOT NULL DEFAULT 0,
+            position REAL NOT NULL DEFAULT 0
+        )");
+        $pdo->exec('CREATE UNIQUE INDEX uq_gsc_row ON gsc_daily (site_id, day, dim, dkey)');
+        $pdo->exec('CREATE INDEX idx_gsc_site_dim ON gsc_daily (site_id, dim, day)');
+
+        $pdo->exec('ALTER TABLE posts ADD COLUMN canonical_site_id INTEGER');
+
+        // The papers' public domains, for cross-site canonicals. Fills the
+        // long-empty sites.domain only where it is still blank — a value an
+        // admin set by hand always wins.
+        $domains = [
+            'prairiedispatch'        => 'prairiedispatch.ca',
+            'edmonton-echo'          => 'edmontonecho.com',
+            'grande-prairie-gazette' => 'www.grandeprairiegazette.ca',
+            'kelowna-current'        => 'kelownacurrent.ca',
+            'kermode-chronicle'      => 'kermodechronicle.ca',
+            'pacific-post'           => 'thepacificpost.com',
+            'westernwire'            => 'westernwire.ca',
+            'brampton-bulletin'      => 'bramptonbulletin.com',
+            'civismedia'             => 'civismedia.ca',
+        ];
+        $upd = $pdo->prepare("UPDATE sites SET domain = ? WHERE slug = ? AND (domain = '' OR domain IS NULL)");
+        foreach ($domains as $slug => $domain) {
+            $upd->execute([$domain, $slug]);
+        }
+
+        $pdo->exec("UPDATE settings SET svalue = '11' WHERE site_id = 0 AND skey = 'schema_version'");
     }
 }

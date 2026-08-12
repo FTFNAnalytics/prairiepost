@@ -11,6 +11,7 @@ $textKeys = [
     'field_notes_text', 'field_notes_url',
     'ad_top', 'ad_rail', 'ad_article',
     'ai_model', 'ai_disclosure', 'monitor_retention_days',
+    'ga4_property_id', 'gsc_site_url',
 ];
 $jsonKeys = ['regions', 'markets', 'weather_today', 'traffic_items', 'events_items'];
 
@@ -175,6 +176,11 @@ flash_show();
         <textarea id="ad_article" name="ad_article" class="mono"><?= e(setting('ad_article')) ?></textarea>
         <label for="analytics_code">Analytics snippet · pasted into &lt;head&gt;</label>
         <textarea id="analytics_code" name="analytics_code" class="mono"><?= e(setting('analytics_code')) ?></textarea>
+        <label for="ga4_property_id">GA4 property id · numbers only, for the nightly pull</label>
+        <input type="text" id="ga4_property_id" name="ga4_property_id" class="mono" value="<?= e(setting('ga4_property_id')) ?>" placeholder="123456789">
+        <label for="gsc_site_url">Search Console property · e.g. sc-domain:example.ca</label>
+        <input type="text" id="gsc_site_url" name="gsc_site_url" class="mono" value="<?= e(setting('gsc_site_url')) ?>" placeholder="sc-domain:example.ca">
+        <p class="help">Both feed the control room's Analytics page. The network's service account must be Viewer on the GA4 property and Restricted on the Search Console property — its email shows on the hub's Analytics page.</p>
       </div>
     </div>
     <p class="help">Paste the embed code your ad or analytics provider gives you. Empty slots render nothing — no placeholder ever shows to readers.</p>

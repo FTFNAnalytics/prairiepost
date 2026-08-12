@@ -709,3 +709,22 @@ function pp_monitor_poll_feed(array $feed): array
     $stamp->execute([now(), 'ok: ' . $new . ' new', (int) $feed['id']]);
     return [$new, null];
 }
+
+/* --- Analytics & Search Console ------------------------------------------ */
+
+/** Read another site's setting straight from the shared table. */
+function pp_setting_for_site(int $siteId, string $key, string $default = ''): string
+{
+    $stmt = db()->prepare('SELECT svalue FROM settings WHERE site_id = ? AND skey = ?');
+    $stmt->execute([$siteId, $key]);
+    $row = $stmt->fetch();
+    return $row !== false ? (string) $row['svalue'] : $default;
+}
+
+/** A site's public domain (sites.domain), '' when unknown. */
+function pp_site_domain(int $siteId): string
+{
+    $stmt = db()->prepare('SELECT domain FROM sites WHERE id = ?');
+    $stmt->execute([$siteId]);
+    return trim((string) ($stmt->fetchColumn() ?: ''));
+}

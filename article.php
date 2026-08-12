@@ -17,6 +17,16 @@ if (!$post) {
 }
 
 $canonical = site_url() . '/story/' . $post['slug'];
+// The home-paper canonical: a widely-syndicated story can name one paper
+// home, and the other copies point their rel=canonical there so a single
+// paper accrues the ranking. Needs the home site's public domain
+// (sites.domain); without one this stays safely self-canonical.
+if (!empty($post['canonical_site_id']) && (int) $post['canonical_site_id'] !== current_site_id()) {
+    $homeDomain = pp_site_domain((int) $post['canonical_site_id']);
+    if ($homeDomain !== '') {
+        $canonical = 'https://' . $homeDomain . '/story/' . $post['slug'];
+    }
+}
 $tags = tags_for_post((int) $post['id']);
 
 // Count the read (crawlers that identify themselves don't count).
