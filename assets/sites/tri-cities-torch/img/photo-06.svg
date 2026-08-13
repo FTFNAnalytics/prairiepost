@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 1067" role="img" aria-label="Buntzen Lake from the Diez Vistas ridge, cloud below the summits">
+  <defs>
+    <linearGradient id="p6sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#3E63A0"/>
+      <stop offset="1" stop-color="#C4D6E4"/>
+    </linearGradient>
+  </defs>
+  <rect width="1600" height="1067" fill="url(#p6sky)"/>
+  <path d="M0 360 L260 150 L520 340 L780 120 L1080 330 L1360 190 L1600 344 L1600 520 L0 520 Z" fill="#3D5064"/>
+  <path d="M780 120 L840 168 L760 220 L700 172 Z" fill="#E4EDF3" opacity="0.85"/>
+  <path d="M260 150 L316 200 L246 244 L196 196 Z" fill="#E4EDF3" opacity="0.7"/>
+
+  <!-- cloud lying in the valley -->
+  <g fill="#EEF3F7" opacity="0.75">
+    <ellipse cx="420" cy="470" rx="280" ry="40"/>
+    <ellipse cx="900" cy="490" rx="320" ry="34"/>
+    <ellipse cx="1340" cy="466" rx="220" ry="30"/>
+  </g>
+
+  <path d="M0 520 L340 440 L700 524 L1060 448 L1400 528 L1600 486 L1600 640 L0 640 Z" fill="#2C4A38"/>
+  <!-- the lake, left of centre -->
+  <path d="M180 640 C 420 606, 720 620, 900 664 C 1010 692, 1010 760, 880 786 C 660 828, 380 812, 220 764 C 120 734, 110 664, 180 640 Z" fill="#2E6E86"/>
+  <path d="M240 664 C 440 638, 700 650, 856 686 C 930 704, 928 742, 840 760 C 660 792, 420 780, 288 742 C 210 720, 200 678, 240 664 Z" fill="#3E88A0" opacity="0.75"/>
+  <g fill="#DCEAF0" opacity="0.55">
+    <ellipse cx="520" cy="700" rx="90" ry="8"/>
+    <ellipse cx="700" cy="740" rx="70" ry="7"/>
+  </g>
+
+  <!-- foreground firs -->
+  <path d="M0 800 L1600 760 L1600 1067 L0 1067 Z" fill="#1F3A28"/>
+  <g fill="#173021">
+    <path d="M80 1067 L160 700 L240 1067 Z"/>
+    <path d="M220 1067 L300 748 L380 1067 Z"/>
+    <path d="M1300 1067 L1380 716 L1460 1067 Z"/>
+    <path d="M1440 1067 L1520 764 L1600 1067 Z"/>
+  </g>
+</svg>

@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 1067" role="img" aria-label="Rowing eights on the water at dawn, the crew silhouetted">
+  <defs>
+    <linearGradient id="p9sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#2F2A5A"/>
+      <stop offset="0.6" stop-color="#7B6F92"/>
+      <stop offset="1" stop-color="#E0B98E"/>
+    </linearGradient>
+  </defs>
+  <rect width="1600" height="1067" fill="url(#p9sky)"/>
+  <circle cx="1220" cy="512" r="62" fill="#F2D2A2" opacity="0.9"/>
+  <path d="M0 470 L300 402 L620 466 L940 396 L1260 462 L1600 414 L1600 560 L0 560 Z" fill="#2E3A50" opacity="0.85"/>
+  <rect y="560" width="1600" height="507" fill="#243F55"/>
+  <rect y="560" width="1600" height="120" fill="#33556E" opacity="0.7"/>
+  <g fill="#F2D2A2" opacity="0.3">
+    <rect x="1140" y="592" width="160" height="8"/>
+    <rect x="1160" y="640" width="120" height="7"/>
+    <rect x="1180" y="690" width="80" height="6"/>
+  </g>
+
+  <!-- the eight, left of centre, wake trailing right -->
+  <g>
+    <path d="M120 786 L800 786 L770 812 L150 812 Z" fill="#14202E"/>
+    <rect x="128" y="778" width="660" height="10" fill="#1D2E40"/>
+    <g fill="#14202E">
+      <rect x="200" y="740" width="18" height="46" rx="8"/><circle cx="209" cy="730" r="12"/>
+      <rect x="272" y="740" width="18" height="46" rx="8"/><circle cx="281" cy="730" r="12"/>
+      <rect x="344" y="740" width="18" height="46" rx="8"/><circle cx="353" cy="730" r="12"/>
+      <rect x="416" y="740" width="18" height="46" rx="8"/><circle cx="425" cy="730" r="12"/>
+      <rect x="488" y="740" width="18" height="46" rx="8"/><circle cx="497" cy="730" r="12"/>
+      <rect x="560" y="740" width="18" height="46" rx="8"/><circle cx="569" cy="730" r="12"/>
+      <rect x="632" y="740" width="18" height="46" rx="8"/><circle cx="641" cy="730" r="12"/>
+      <rect x="704" y="740" width="18" height="46" rx="8"/><circle cx="713" cy="730" r="12"/>
+    </g>
+    <g stroke="#14202E" stroke-width="7" stroke-linecap="round">
+      <line x1="212" y1="762" x2="150" y2="840"/><line x1="284" y1="762" x2="222" y2="840"/>
+      <line x1="356" y1="762" x2="294" y2="840"/><line x1="428" y1="762" x2="366" y2="840"/>
+      <line x1="500" y1="762" x2="438" y2="840"/><line x1="572" y1="762" x2="510" y2="840"/>
+      <line x1="644" y1="762" x2="582" y2="840"/><line x1="716" y1="762" x2="654" y2="840"/>
+    </g>
+  </g>
+  <g fill="#8FA9BE" opacity="0.4">
+    <rect x="820" y="800" width="360" height="7" rx="3"/>
+    <rect x="880" y="838" width="280" height="6" rx="3"/>
+    <rect x="960" y="876" width="200" height="6" rx="3"/>
+  </g>
+</svg>
