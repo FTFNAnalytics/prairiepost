@@ -84,6 +84,26 @@ against this list before shipping them.
    (the seeder and migrations do all writes); seeders idempotent and
    safe to re-run; demo/launch outbound links only to pages we control.
 
+## The deployment model on this line (read before writing any runbook)
+
+Production is served from **immutable release directories**
+`/var/www/prairiepost-<sha>-<label>`, built from a branch tarball by
+`tools/vps/upgrade-papers.sh`. The live root is NOT a Git checkout and
+must never be `git pull`ed or rsynced into.
+
+- The live tenant mapping is **`app/config.site.php`**. The release's
+  `config.php` is a generated wrapper that adds `hub_slug`; editing it
+  is silently discarded by the next upgrade.
+- `uploads/` is a symlink to `/var/www/prairiepost-shared-uploads`.
+- `upgrade-papers.sh` captures every domain's front-page title before it
+  changes anything and rolls a whole release group back if any domain
+  fails to serve its own masthead afterwards. Prefer it over any
+  hand-written deployment sequence, and pass `PP_BRANCH` to pin a deploy
+  to a line other than the branch head.
+- **The default branch is not what production runs.** Confirm which
+  branch and commit a release directory was built from — the directory
+  name carries the short SHA — before writing or following a runbook.
+
 ## Current operational state (as of the Western Wire launch)
 
 - westernwire.ca is live (site_id 8, slug `westernwire`), served from
