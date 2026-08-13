@@ -1,0 +1,472 @@
+/* ============================================================
+   The torch template — Tri Cities Torch visual system v1.0.
+   Built in the design package's own order: tokens, type scale,
+   container and grid, the two chrome bars, the five card
+   variants, then the page templates.
+
+   Torch Indigo carries the identity; the coast gradient runs
+   indigo → forest → Pacific blue and appears in exactly three
+   places (the nav, the banner card, the section band). Cards
+   take flat colour or a single-hue tonal fade. Footer Blue is
+   used once, site-wide, in the closing bar.
+
+   Loaded only when chrome.template = "torch".
+   ============================================================ */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Source+Sans+3:ital,wght@0,400;0,600;1,400&display=swap');
+
+/* --- 1 · Tokens ----------------------------------------------------------- */
+body.t-torch{
+  --torch-indigo: #2B1A52;
+  --deep-indigo:  #160C2B;
+  --forest:       #2F7D46;
+  --inlet-blue:   #1A5FB4;
+  --footer-blue:  #2B4F8E;
+  --torch-gold:   #C9A227;
+  --page:         #F2F2F4;
+  --card:         #FFFFFF;
+  --text:         #1C1B22;
+  --text-muted:   #55535F;
+  --text-faint:   #8B8996;
+  --rule:         #DEDEDF;
+
+  --grad-coast: linear-gradient(90deg, #241246 0%, #2B1A52 14%, #4A6A34 34%, #2F7D46 52%, #1E6F8C 72%, #1A5FB4 88%, #1565D8 100%);
+  --grad-feature: linear-gradient(135deg,#3A2168,#160C2B);
+  --grad-community: linear-gradient(135deg,#4A9C4F,#2B6D3C);
+  --grad-inlet: linear-gradient(135deg,#1A5FB4,#144B8E);
+  --scrim-bottom: linear-gradient(180deg, rgba(22,12,43,0) 38%, rgba(22,12,43,.85) 100%);
+  --scrim-flat: rgba(22,12,43,.55);
+
+  --r-feature: 16px;
+  --r-card: 14px;
+  --r-thumb: 10px;
+  --r-control: 8px;
+  --sh-rest: 0 2px 8px rgba(28,27,34,.07);
+  --sh-hover: 0 8px 22px rgba(28,27,34,.13);
+  --sh-lift: 0 6px 20px rgba(28,27,34,.16);
+
+  --font-display: "Poppins", system-ui, sans-serif;
+  --font-text: "Source Sans 3", Georgia, serif;
+  --container: 1240px;
+  --gutter: 20px;
+  --row-gap: 20px;
+  --section-gap: 56px;
+
+  /* The shared chrome reads the brand through the network's own names. */
+  --pp-shelterbelt: var(--torch-indigo);
+  --pp-cloudbank:   var(--page);
+  --pp-board:       var(--rule);
+  --pp-bigsky:      var(--inlet-blue);
+  --pp-noonsky:     var(--forest);
+  --pp-highsky:     #E4EAF4;
+  --pp-straw:       #F5EBCD;
+  --pp-binred:      #B4453C;
+  --pp-quarter:     var(--deep-indigo);
+  --pp-fencepost:   var(--inlet-blue);
+  --pp-stubble:     var(--text-muted);
+
+  background: var(--page);
+  color: var(--text);
+  font-family: var(--font-text);
+}
+
+/* --- 2 · Type scale ------------------------------------------------------- */
+.t-torch .t-wordmark,
+.t-torch h1, .t-torch h2, .t-torch h3, .t-torch h4{ font-family: var(--font-display); }
+
+.t-torch .t-feature{ font-family: var(--font-display); font-weight: 600; font-size: 44px; line-height: 1.08; letter-spacing: -.02em; }
+.t-torch .t-section{ font-family: var(--font-display); font-weight: 600; font-size: 30px; line-height: 1.15; letter-spacing: -.015em; }
+.t-torch .t-card{ font-family: var(--font-display); font-weight: 600; font-size: 21px; line-height: 1.22; }
+.t-torch .t-brief{ font-family: var(--font-display); font-weight: 600; font-size: 16px; line-height: 1.3; }
+.t-torch .t-kicker{
+  font-family: var(--font-display); font-weight: 600; font-size: 11px;
+  letter-spacing: .12em; text-transform: uppercase;
+}
+.t-torch .t-standfirst{ font-family: var(--font-text); font-style: italic; font-size: 18px; line-height: 1.5; max-width: 60ch; }
+.t-torch .t-body{ font-family: var(--font-text); font-size: 18px; line-height: 1.7; max-width: 68ch; }
+.t-torch .t-deck{ font-family: var(--font-text); font-size: 14.5px; line-height: 1.55; max-width: 44ch; }
+.t-torch .t-meta{
+  font-family: var(--font-text); font-size: 12.5px; line-height: 1.45;
+  color: var(--text-muted); font-variant-numeric: tabular-nums;
+}
+
+/* --- 3 · Container and grid ----------------------------------------------- */
+.tt-container{ max-width: var(--container); margin: 0 auto; padding: 0 40px; }
+@media (max-width: 1279px){ .tt-container{ padding: 0 28px; } }
+@media (max-width: 899px){ .tt-container{ padding: 0 18px; } }
+
+.tt-grid{ display: grid; grid-template-columns: repeat(12, minmax(0,1fr)); gap: var(--gutter); }
+.tt-row{ margin-bottom: var(--row-gap); }
+.sp-3{ grid-column: span 3; } .sp-4{ grid-column: span 4; }
+.sp-7{ grid-column: span 7; } .sp-8{ grid-column: span 8; }
+.sp-10{ grid-column: span 10; } .sp-12{ grid-column: span 12; }
+
+/* --- 4 · Nav and footer --------------------------------------------------- */
+.tt-nav{
+  background: var(--grad-coast); height: 52px; position: sticky; top: 0; z-index: 50;
+}
+.tt-nav .in{
+  height: 52px; display: flex; align-items: center; justify-content: center;
+  gap: 44px; position: relative; padding: 0 40px; overflow-x: auto;
+  scrollbar-width: none;
+}
+.tt-nav .in::-webkit-scrollbar{ display: none; }
+.tt-nav a{
+  font-family: var(--font-display); font-weight: 600; font-size: 13px;
+  letter-spacing: .14em; text-transform: uppercase; text-decoration: none;
+  color: rgba(255,255,255,.86); white-space: nowrap; transition: color 140ms;
+  padding: 3px 0;
+}
+.tt-nav a:hover{ color: #fff; }
+.tt-nav a[aria-current="page"]{ color: #fff; box-shadow: 0 2px 0 var(--torch-gold); }
+/* Header lockup (B) fades in at the left once the masthead is gone. */
+.tt-nav .lockup{
+  position: absolute; left: 40px; top: 50%; transform: translateY(-50%);
+  display: flex; align-items: center; gap: 9px; text-decoration: none;
+  opacity: 0; visibility: hidden; transition: opacity 200ms;
+}
+.tt-nav .lockup img{ height: 32px; width: auto; display: block; }
+.tt-nav .lockup .wm{ display: block; line-height: 1; }
+.tt-nav .lockup .wm b{ display: block; font-family: var(--font-display); font-weight: 700; font-size: 15px; color: #fff; letter-spacing: -.01em; }
+.tt-nav .lockup .wm span{ display: block; font-family: var(--font-display); font-weight: 600; font-size: 11px; color: #fff; letter-spacing: .1em; }
+.tt-nav.is-stuck .lockup, .tt-nav.always-lockup .lockup{ opacity: 1; visibility: visible; }
+/* With the lockup showing, the items clear it. */
+.tt-nav.always-lockup .in{ justify-content: flex-end; gap: 34px; }
+.tt-nav.always-lockup a{ font-size: 12px; }
+@media (max-width: 899px){
+  .tt-nav, .tt-nav .in{ height: 48px; }
+  .tt-nav .in{ justify-content: flex-start; gap: 28px; padding: 0 18px; }
+  .tt-nav .lockup{ display: none; }
+  .tt-nav.always-lockup .in{ justify-content: flex-start; }
+}
+
+.tt-foot{ background: var(--footer-blue); color: #fff; margin-top: var(--section-gap); }
+.tt-foot .in{
+  max-width: var(--container); margin: 0 auto; padding: 22px 40px;
+  display: flex; align-items: center; justify-content: space-between; gap: 20px; flex-wrap: wrap;
+}
+.tt-foot .in p{ font-family: var(--font-text); font-size: 13.5px; margin: 0; color: rgba(255,255,255,.9); }
+.tt-foot .soc{ display: flex; gap: 18px; }
+.tt-foot .soc a{ font-family: var(--font-display); font-weight: 500; font-size: 13px; color: rgba(255,255,255,.9); text-decoration: none; }
+.tt-foot .soc a:hover{ color: #fff; text-decoration: underline; }
+/* The index row above the closing bar. */
+.tt-footindex{ background: var(--deep-indigo); color: #fff; }
+.tt-footindex .in{
+  max-width: var(--container); margin: 0 auto; padding: 34px 40px 30px;
+  display: grid; grid-template-columns: 1.4fr 1fr 1fr; gap: 30px;
+}
+.tt-footindex .lock{ display: flex; align-items: center; gap: 12px; text-decoration: none; }
+.tt-footindex .lock img{ height: 40px; width: auto; }
+.tt-footindex .lock b{ display: block; font-family: var(--font-display); font-weight: 700; font-size: 18px; color: #fff; }
+.tt-footindex .lock span{ display: block; font-family: var(--font-display); font-weight: 600; font-size: 13px; letter-spacing: .1em; color: #fff; }
+.tt-footindex .blurb{ font-family: var(--font-text); font-size: 13.5px; line-height: 1.55; color: rgba(255,255,255,.72); margin: 12px 0 0; max-width: 40ch; }
+.tt-footindex .fh{ font-family: var(--font-display); font-weight: 600; font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--torch-gold); margin: 0 0 10px; }
+.tt-footindex .lnks{ display: flex; flex-direction: column; gap: 7px; }
+.tt-footindex .lnks a{ font-family: var(--font-text); font-size: 14px; color: rgba(255,255,255,.82); text-decoration: none; }
+.tt-footindex .lnks a:hover{ color: #fff; }
+@media (max-width: 899px){
+  .tt-footindex .in{ grid-template-columns: 1fr 1fr; padding: 28px 18px; }
+  .tt-foot .in{ padding: 20px 18px; }
+}
+
+/* --- 5 · The card --------------------------------------------------------- */
+.tt-card{
+  position: relative; display: flex; flex-direction: column;
+  background: var(--card); border-radius: var(--r-card); box-shadow: var(--sh-rest);
+  overflow: hidden; text-decoration: none; color: inherit;
+  transition: transform 160ms, box-shadow 160ms;
+}
+.tt-card:hover{ transform: translateY(-3px); box-shadow: var(--sh-hover); }
+.tt-card .pad{ padding: 20px; display: flex; flex-direction: column; gap: 10px; }
+.tt-card .kicker{
+  font-family: var(--font-display); font-weight: 600; font-size: 10.5px;
+  letter-spacing: .12em; text-transform: uppercase; color: var(--inlet-blue); margin: 0;
+}
+.tt-card h3, .tt-card h2{ margin: 0; font-family: var(--font-display); font-weight: 600; color: var(--text); }
+.tt-card .deck{ font-family: var(--font-text); font-size: 14.5px; line-height: 1.55; max-width: 44ch; color: var(--text-muted); margin: 0; }
+.tt-card .meta{ font-family: var(--font-text); font-size: 12.5px; line-height: 1.45; color: var(--text-muted); margin: 0; font-variant-numeric: tabular-nums; }
+/* Photograph inside any card. */
+.tt-card .ph{ overflow: hidden; }
+.tt-card .ph img{ width: 100%; height: 100%; object-fit: cover; display: block; transition: transform 300ms; }
+.tt-card:hover .ph img{ transform: scale(1.03); }
+
+/* Feature — the indigo card. */
+.tt-card--feature{
+  background: var(--grad-feature); border-radius: var(--r-feature); justify-content: center;
+}
+.tt-card--feature .pad{ padding: 32px; gap: 12px; }
+.tt-card--feature .kicker{ color: var(--torch-gold); }
+.tt-card--feature h2{ color: #fff; font-size: 36px; line-height: 1.1; letter-spacing: -.02em; max-width: 19ch; }
+.tt-card--feature .deck{ color: rgba(255,255,255,.82); max-width: 56ch; font-size: 15.5px; }
+.tt-card--feature .meta{ color: rgba(255,255,255,.66); }
+
+/* Community — the green card. */
+.tt-card--community{ background: var(--grad-community); border-radius: var(--r-feature); justify-content: center; }
+.tt-card--community .pad{ padding: 32px; gap: 10px; }
+.tt-card--community .kicker{ color: var(--torch-gold); }
+.tt-card--community h3{ color: #fff; font-size: 21px; line-height: 1.22; }
+.tt-card--community .deck{ color: rgba(255,255,255,.88); }
+.tt-card--community .meta{ color: rgba(255,255,255,.7); }
+
+/* Photo — headline over the bottom scrim. */
+.tt-card--photo{ background: var(--deep-indigo); min-height: 170px; }
+.tt-card--photo img{ position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; transition: transform 300ms; }
+.tt-card--photo:hover img{ transform: scale(1.03); }
+.tt-card--photo .scrim{ position: absolute; inset: 0; background: var(--scrim-bottom); }
+.tt-card--photo .pad{ position: relative; margin-top: auto; gap: 6px; }
+.tt-card--photo .kicker{ color: var(--torch-gold); }
+.tt-card--photo h3{ color: #fff; font-size: 21px; line-height: 1.22; }
+.tt-card--photo h3.sm{ font-size: 18px; }
+.tt-card--photo .meta{ color: rgba(255,255,255,.78); }
+
+/* Standard — white card, optional thumbnail. */
+.tt-card--standard h3{ font-size: 21px; line-height: 1.22; }
+.tt-card--standard .ph{ aspect-ratio: 3/2; }
+
+/* Brief — thumbnail over a compact stack. */
+.tt-card--brief .ph{ aspect-ratio: 3/2; }
+.tt-card--brief .pad{ padding: 18px; gap: 8px; }
+.tt-card--brief h3{ font-size: 16px; line-height: 1.3; }
+
+/* A plain photograph that belongs to the card beside it. */
+.tt-photo{
+  display: block; border-radius: var(--r-card); overflow: hidden; box-shadow: var(--sh-rest);
+  transition: transform 160ms, box-shadow 160ms;
+}
+.tt-photo:hover{ transform: translateY(-3px); box-shadow: var(--sh-hover); }
+.tt-photo img{ width: 100%; height: 100%; object-fit: cover; display: block; transition: transform 300ms; }
+.tt-photo:hover img{ transform: scale(1.03); }
+
+/* --- Buttons, tags and flags ---------------------------------------------- */
+.tt-btn{
+  display: inline-block; font-family: var(--font-display); font-weight: 600; font-size: 14px;
+  padding: 11px 22px; border-radius: var(--r-control); border: 0; cursor: pointer;
+  background: var(--inlet-blue); color: #fff; text-decoration: none; transition: background 140ms;
+}
+.tt-btn:hover{ background: #14509b; }
+.tt-btn:active{ background: #114285; }
+.tt-btn--ghost{ background: transparent; color: var(--inlet-blue); box-shadow: inset 0 0 0 1.5px var(--inlet-blue); }
+.tt-btn--ghost:hover{ background: rgba(26,95,180,.08); }
+.tt-link{
+  font-family: var(--font-display); font-weight: 600; font-size: 13.5px;
+  color: var(--inlet-blue); text-decoration: none;
+}
+.tt-link:hover{ text-decoration: underline; }
+.tt-link .ar{ display: inline-block; transition: transform 140ms; }
+.tt-link:hover .ar{ transform: translateX(3px); }
+.tt-flag{
+  display: inline-block; font-family: var(--font-display); font-weight: 600; font-size: 10.5px;
+  letter-spacing: .12em; text-transform: uppercase; padding: 4px 9px; border-radius: 4px;
+  background: #B4453C; color: #fff;
+}
+.t-torch :focus-visible{ outline: 2px solid var(--inlet-blue); outline-offset: 2px; }
+
+/* --- 6 · Home page zones -------------------------------------------------- */
+.tt-main{ padding-bottom: 10px; }
+
+/* Zone 2 · hero masthead */
+.tt-hero{ position: relative; height: 380px; overflow: hidden; background: var(--deep-indigo); }
+.tt-hero > img{ position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.tt-hero .veil{
+  position: absolute; inset: 0;
+  background: linear-gradient(180deg, rgba(255,255,255,.42) 0%, rgba(255,255,255,.24) 44%, rgba(242,242,244,.90) 100%);
+}
+.tt-hero .lock{
+  position: absolute; left: 50%; top: 50%; transform: translate(-50%,-50%) translateY(-52px);
+  display: flex; align-items: center; gap: 26px; text-decoration: none;
+}
+.tt-hero .lock img{ height: 150px; width: auto; display: block; }
+.tt-hero .lock .wm{ line-height: .92; }
+.tt-hero .lock .wm b{
+  display: block; font-family: var(--font-display); font-weight: 700; font-size: 62px;
+  letter-spacing: -.02em; color: var(--torch-indigo);
+}
+.tt-hero .lock .wm span{
+  display: block; font-family: var(--font-display); font-weight: 700; font-size: 62px;
+  letter-spacing: .02em; color: var(--torch-indigo);
+}
+@media (max-width: 1099px){
+  .tt-hero{ height: 240px; }
+  .tt-hero .lock{ gap: 18px; transform: translate(-50%,-50%) translateY(-30px) scale(.6); }
+}
+@media (max-width: 699px){
+  .tt-hero{ height: 180px; }
+  .tt-hero .lock{ flex-direction: column; gap: 8px; transform: translate(-50%,-50%) scale(.52); text-align: center; }
+}
+
+/* Zone 3 · banner card, the one overlap */
+.tt-banner{
+  position: relative; height: 150px; margin-top: -46px; border-radius: var(--r-feature);
+  overflow: hidden; box-shadow: var(--sh-lift); display: flex; align-items: center;
+  text-decoration: none;
+}
+.tt-banner > img{ position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.tt-banner .wash{
+  position: absolute; inset: 0;
+  background: var(--grad-coast); opacity: 1;
+  -webkit-mask-image: linear-gradient(90deg, #000 50%, transparent 74%);
+          mask-image: linear-gradient(90deg, #000 50%, transparent 74%);
+}
+.tt-banner .lock{ position: relative; display: flex; align-items: center; gap: 18px; margin-left: 36px; text-decoration: none; }
+.tt-banner .lock img{ height: 84px; width: auto; display: block; }
+.tt-banner .lock .wm{ line-height: .95; }
+.tt-banner .lock .wm b{ display: block; font-family: var(--font-display); font-weight: 700; font-size: 30px; color: #fff; letter-spacing: -.01em; }
+.tt-banner .lock .wm span{ display: block; font-family: var(--font-display); font-weight: 700; font-size: 30px; color: #fff; letter-spacing: .02em; }
+@media (max-width: 699px){ .tt-banner{ display: none; } }
+
+/* Rows */
+.tt-lead{ display: grid; grid-template-columns: 8fr 4fr; gap: var(--gutter); margin-top: 20px; }
+.tt-lead > *{ min-height: 210px; }
+.tt-strip{ display: grid; grid-template-columns: repeat(3,1fr); gap: var(--gutter); margin-top: var(--row-gap); }
+.tt-strip > *{ min-height: 170px; }
+.tt-twoup{ display: grid; grid-template-columns: repeat(3,1fr); gap: var(--gutter); margin-top: var(--row-gap); }
+.tt-twoup > *{ min-height: 180px; }
+.tt-briefs{ display: grid; grid-template-columns: repeat(4,1fr); gap: var(--gutter); }
+
+.tt-sechead{
+  display: flex; align-items: baseline; justify-content: space-between; gap: 20px;
+  margin: var(--section-gap) 0 20px;
+}
+.tt-sechead h2{ margin: 0; font-family: var(--font-display); font-weight: 600; font-size: 30px; line-height: 1.15; letter-spacing: -.015em; color: var(--text); }
+
+/* Zone 8 · newsletter */
+.tt-news{
+  background: var(--grad-feature); border-radius: var(--r-feature); padding: 30px 36px;
+  margin-top: 36px; margin-bottom: 32px;
+  display: flex; align-items: center; justify-content: space-between; gap: 30px;
+}
+.tt-news h2{ margin: 0 0 6px; font-family: var(--font-display); font-weight: 600; font-size: 26px; color: #fff; letter-spacing: -.015em; }
+.tt-news p{ margin: 0; font-family: var(--font-text); font-size: 15px; line-height: 1.5; color: rgba(255,255,255,.82); max-width: 52ch; }
+.tt-news form{ display: flex; gap: 10px; flex: 0 0 auto; }
+.tt-news input[type="email"]{
+  width: 260px; padding: 11px 14px; border-radius: var(--r-control); border: 0;
+  font-family: var(--font-text); font-size: 15px; color: var(--text); background: #fff;
+}
+.tt-news .done{ font-family: var(--font-text); font-size: 15px; color: #fff; margin: 0; }
+@media (max-width: 899px){
+  .tt-news{ flex-direction: column; align-items: flex-start; gap: 18px; }
+  .tt-news form{ width: 100%; }
+  .tt-news input[type="email"]{ flex: 1; width: auto; }
+}
+
+/* --- 8 · Article ---------------------------------------------------------- */
+.tt-article{ padding-top: 34px; }
+.tt-article .flagrow{ display: flex; align-items: center; gap: 10px; margin-bottom: 16px; }
+.tt-article .kicker{ font-family: var(--font-display); font-weight: 600; font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--inlet-blue); }
+.tt-article h1{
+  margin: 0; font-family: var(--font-display); font-weight: 600; font-size: 44px;
+  line-height: 1.08; letter-spacing: -.02em; color: var(--text);
+}
+.tt-article .standfirst{
+  font-family: var(--font-text); font-style: italic; font-size: 19px; line-height: 1.5;
+  max-width: 58ch; color: var(--text-muted); margin: 16px 0 0;
+}
+.tt-article .byline{
+  display: flex; align-items: center; gap: 12px; margin: 22px 0 0;
+  padding-bottom: 18px; border-bottom: 1px solid var(--rule);
+}
+.tt-article .byline .por{ width: 40px; height: 40px; border-radius: 50%; background: var(--grad-feature); display: grid; place-items: center; flex: 0 0 auto; }
+.tt-article .byline .por span{ font-family: var(--font-display); font-weight: 600; font-size: 15px; color: #fff; }
+.tt-article .byline .who b{ display: block; font-family: var(--font-display); font-weight: 600; font-size: 15px; color: var(--text); }
+.tt-article .byline .who span{ display: block; font-family: var(--font-text); font-size: 12.5px; color: var(--text-muted); font-variant-numeric: tabular-nums; }
+.tt-article figure.hero{ margin: 26px 0 0; }
+.tt-article figure.hero img{ width: 100%; aspect-ratio: 16/9; object-fit: cover; border-radius: var(--r-feature); display: block; }
+.tt-article figure.hero figcaption{ font-family: var(--font-text); font-size: 12.5px; line-height: 1.5; color: var(--text-muted); margin-top: 10px; }
+.tt-article figure.hero figcaption i{ color: var(--text-faint); }
+.tt-article .bodycopy{ font-family: var(--font-text); font-size: 18px; line-height: 1.7; max-width: 68ch; color: var(--text); margin-top: 26px; }
+.tt-article .bodycopy p{ margin: 0 0 18px; }
+.tt-article .bodycopy h2{ font-family: var(--font-display); font-weight: 600; font-size: 24px; line-height: 1.2; letter-spacing: -.015em; margin: 30px 0 12px; }
+.tt-article .bodycopy a{ color: var(--inlet-blue); text-decoration: none; }
+.tt-article .bodycopy a:hover{ text-decoration: underline; }
+.tt-article .bodycopy blockquote{
+  margin: 26px 0; padding: 4px 0 4px 22px; border-left: 3px solid var(--torch-gold);
+  font-family: var(--font-text); font-style: italic; font-size: 23px; line-height: 1.4;
+  color: var(--torch-indigo); max-width: none;
+}
+.tt-article .bodycopy blockquote cite{ display: block; font-style: normal; font-size: 13px; color: var(--text-muted); margin-top: 10px; font-family: var(--font-display); font-weight: 500; }
+.tt-article .bodycopy img{ max-width: 100%; height: auto; border-radius: var(--r-card); }
+.tt-article .correction{
+  border-left: 3px solid #B4453C; background: #FBF1F0; padding: 14px 18px;
+  border-radius: var(--r-control); margin: 24px 0 0;
+}
+.tt-article .correction .k{ font-family: var(--font-display); font-weight: 600; font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: #B4453C; }
+.tt-article .correction p{ font-family: var(--font-text); font-size: 15px; margin: 6px 0 0; }
+.tt-article .tagsrow{ display: flex; flex-wrap: wrap; gap: 8px; margin-top: 28px; }
+.tt-article .tagsrow a{
+  font-family: var(--font-display); font-weight: 500; font-size: 12.5px; text-decoration: none;
+  color: var(--inlet-blue); background: #E7EDF7; padding: 5px 12px; border-radius: var(--r-control);
+}
+.tt-article .tagsrow a:hover{ background: var(--inlet-blue); color: #fff; }
+.tt-article .sharerow{ display: flex; flex-wrap: wrap; align-items: center; gap: 16px; margin-top: 26px; padding-top: 20px; border-top: 1px solid var(--rule); }
+.tt-article .sharerow .k{ font-family: var(--font-display); font-weight: 600; font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--text-faint); }
+.tt-article .sharerow a, .tt-article .sharerow button{
+  font-family: var(--font-text); font-size: 14px; color: var(--inlet-blue);
+  background: none; border: 0; padding: 0; cursor: pointer; text-decoration: none;
+}
+.tt-article .sharerow a:hover, .tt-article .sharerow button:hover{ text-decoration: underline; }
+
+.tt-rail{ position: sticky; top: 80px; }
+.tt-rail h2{ font-family: var(--font-display); font-weight: 600; font-size: 15px; letter-spacing: .04em; margin: 0 0 10px; padding-bottom: 10px; border-bottom: 2px solid var(--torch-indigo); color: var(--text); }
+.tt-rail a{ display: block; font-family: var(--font-display); font-weight: 500; font-size: 15px; line-height: 1.35; color: var(--text); text-decoration: none; padding: 12px 0; border-bottom: 1px solid var(--rule); }
+.tt-rail a:hover{ color: var(--inlet-blue); }
+.tt-rail a span{ display: block; font-family: var(--font-text); font-size: 12.5px; color: var(--text-muted); margin-top: 4px; }
+
+/* --- 9 · Section index ---------------------------------------------------- */
+.tt-band{ background: var(--grad-feature); padding: 38px 0; }
+.tt-band .in{ max-width: var(--container); margin: 0 auto; padding: 0 40px; }
+.tt-band h1{ margin: 0; font-family: var(--font-display); font-weight: 600; font-size: 44px; line-height: 1.08; letter-spacing: -.02em; color: #fff; }
+.tt-band p{ margin: 10px 0 0; font-family: var(--font-text); font-size: 16px; line-height: 1.5; color: rgba(255,255,255,.84); max-width: 56ch; }
+.tt-band--coast{ background: var(--grad-coast); }
+.tt-band--community{ background: var(--grad-community); }
+.tt-band--inlet{ background: var(--grad-inlet); }
+@media (max-width: 1279px){ .tt-band .in{ padding: 0 28px; } }
+@media (max-width: 899px){ .tt-band .in{ padding: 0 18px; } .tt-band h1{ font-size: 32px; } }
+
+.tt-sectionlead{ display: grid; grid-template-columns: 8fr 4fr; gap: var(--gutter); margin-top: 30px; }
+.tt-sectionlead .stack{ display: grid; grid-template-rows: 1fr 1fr; gap: var(--gutter); }
+.tt-river{ display: grid; grid-template-columns: repeat(3,1fr); gap: var(--gutter); margin-top: var(--row-gap); }
+.tt-pagination{ display: flex; justify-content: center; gap: 10px; margin: 36px 0 0; }
+.tt-pagination a, .tt-pagination span{
+  font-family: var(--font-display); font-weight: 600; font-size: 14px; text-decoration: none;
+  padding: 9px 16px; border-radius: var(--r-control); color: var(--inlet-blue);
+  box-shadow: inset 0 0 0 1.5px var(--inlet-blue);
+}
+.tt-pagination a:hover{ background: rgba(26,95,180,.08); }
+.tt-pagination span[aria-current]{ background: var(--inlet-blue); color: #fff; }
+
+.tt-empty{
+  background: var(--card); border-radius: var(--r-card); box-shadow: var(--sh-rest);
+  padding: 32px; font-family: var(--font-text); font-size: 16px; color: var(--text-muted);
+  margin-top: 20px;
+}
+.tt-empty a{ color: var(--inlet-blue); }
+
+/* --- 10 · Responsive ------------------------------------------------------ */
+@media (max-width: 1099px){
+  .tt-lead{ grid-template-columns: 1fr; }
+  .tt-strip{ grid-template-columns: repeat(2,1fr); }
+  .tt-twoup{ grid-template-columns: repeat(2,1fr); }
+  .tt-briefs{ grid-template-columns: repeat(2,1fr); }
+  .tt-sectionlead{ grid-template-columns: 1fr; }
+  .tt-river{ grid-template-columns: repeat(2,1fr); }
+  .tt-article h1{ font-size: 36px; }
+}
+@media (max-width: 699px){
+  .tt-strip, .tt-twoup, .tt-briefs, .tt-river{ grid-template-columns: 1fr; gap: 16px; }
+  .tt-lead{ gap: 16px; }
+  .tt-sechead{ margin-top: 40px; }
+  .tt-article{ padding-top: 24px; }
+  .tt-article h1{ font-size: 30px; }
+  .tt-article .bodycopy{ font-size: 17px; line-height: 1.65; }
+  .tt-card--feature .pad, .tt-card--community .pad{ padding: 24px; }
+  .tt-card--feature h2{ font-size: 28px; }
+  .tt-news{ padding: 24px; }
+  .tt-news form{ flex-direction: column; }
+  .tt-news .tt-btn{ width: 100%; }
+}
+
+/* --- Shared chrome that still renders on Torch pages ---------------------- */
+.t-torch .adslot{ margin: 20px 0; }
+.t-torch .adslot .k{ font-family: var(--font-display); font-weight: 600; font-size: 10px; letter-spacing: .12em; text-transform: uppercase; color: var(--text-faint); margin-bottom: 8px; }
+.t-torch .wrap{ max-width: var(--container); margin: 0 auto; padding: 0 40px; }
+.t-torch .pagehead h1{ font-family: var(--font-display); font-weight: 600; letter-spacing: -.02em; }
+.t-torch .searchform input[type="search"]{ font-family: var(--font-text); font-size: 16px; padding: 11px 14px; border-radius: var(--r-control); border: 1px solid var(--rule); }

@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 1067" role="img" aria-label="Como Lake on a still morning, reeds along the near shore">
+  <defs>
+    <linearGradient id="p8sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#7FA2C4"/>
+      <stop offset="1" stop-color="#DCE6EC"/>
+    </linearGradient>
+  </defs>
+  <rect width="1600" height="1067" fill="url(#p8sky)"/>
+  <path d="M0 340 L280 268 L560 336 L860 256 L1180 330 L1440 274 L1600 326 L1600 460 L0 460 Z" fill="#5B7386" opacity="0.45"/>
+
+  <!-- treeline -->
+  <path d="M0 470 L1600 440 L1600 560 L0 590 Z" fill="#2F5433"/>
+  <g fill="#26472B">
+    <path d="M60 500 L120 372 L180 500 Z"/><path d="M180 494 L246 356 L312 494 Z"/>
+    <path d="M330 502 L386 384 L442 502 Z"/><path d="M1080 490 L1140 366 L1200 490 Z"/>
+    <path d="M1220 496 L1284 360 L1348 496 Z"/><path d="M1380 490 L1440 378 L1500 490 Z"/>
+  </g>
+
+  <!-- the lake -->
+  <rect y="560" width="1600" height="330" fill="#3E7386"/>
+  <rect y="560" width="1600" height="90" fill="#4C8398" opacity="0.7"/>
+  <!-- reflection of the treeline -->
+  <g fill="#2A4A34" opacity="0.45">
+    <rect x="60" y="560" width="382" height="80"/>
+    <rect x="1080" y="560" width="420" height="86"/>
+  </g>
+  <g fill="#DCEAF0" opacity="0.5">
+    <ellipse cx="420" cy="690" rx="120" ry="7"/>
+    <ellipse cx="820" cy="742" rx="160" ry="8"/>
+    <ellipse cx="1180" cy="700" rx="100" ry="6"/>
+  </g>
+
+  <!-- near bank and reeds, foreground left -->
+  <path d="M0 890 L1600 862 L1600 1067 L0 1067 Z" fill="#3D5B3A"/>
+  <g stroke="#7E8F52" stroke-width="7" fill="none" stroke-linecap="round">
+    <path d="M90 1000 C 84 920, 100 866, 120 812"/>
+    <path d="M140 1006 C 138 930, 152 878, 176 828"/>
+    <path d="M196 1000 C 198 926, 212 872, 236 820"/>
+    <path d="M254 1010 C 258 936, 274 884, 300 836"/>
+    <path d="M322 1002 C 328 934, 344 880, 368 828"/>
+  </g>
+  <g fill="#6B6034">
+    <ellipse cx="120" cy="806" rx="9" ry="26"/><ellipse cx="176" cy="822" rx="9" ry="26"/>
+    <ellipse cx="236" cy="814" rx="9" ry="26"/><ellipse cx="300" cy="830" rx="9" ry="26"/>
+    <ellipse cx="368" cy="822" rx="9" ry="26"/>
+  </g>
+</svg>

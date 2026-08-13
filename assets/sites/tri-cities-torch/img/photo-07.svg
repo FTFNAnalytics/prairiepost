@@ -1,0 +1,66 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 1067" role="img" aria-label="Shaughnessy Street closed for a street festival in Port Coquitlam">
+  <defs>
+    <linearGradient id="p7sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#6E93BE"/>
+      <stop offset="1" stop-color="#D8E2E9"/>
+    </linearGradient>
+  </defs>
+  <rect width="1600" height="1067" fill="url(#p7sky)"/>
+
+  <!-- storefront row, left -->
+  <g>
+    <rect x="0" y="330" width="300" height="430" fill="#B4453C"/>
+    <rect x="300" y="290" width="280" height="470" fill="#C9B896"/>
+    <rect x="580" y="352" width="250" height="408" fill="#4E6E86"/>
+    <rect x="830" y="312" width="230" height="448" fill="#8E6E4E"/>
+    <rect x="1060" y="366" width="260" height="394" fill="#B9AE99"/>
+    <rect x="1320" y="330" width="280" height="430" fill="#6C7F5E"/>
+  </g>
+  <g fill="#2A2B3A" opacity="0.75">
+    <rect x="30" y="392" width="80" height="70"/><rect x="150" y="392" width="80" height="70"/>
+    <rect x="330" y="352" width="80" height="70"/><rect x="450" y="352" width="80" height="70"/>
+    <rect x="610" y="414" width="70" height="62"/><rect x="720" y="414" width="70" height="62"/>
+    <rect x="860" y="374" width="70" height="62"/><rect x="970" y="374" width="70" height="62"/>
+    <rect x="1090" y="428" width="80" height="62"/><rect x="1210" y="428" width="80" height="62"/>
+    <rect x="1350" y="392" width="80" height="66"/><rect x="1470" y="392" width="80" height="66"/>
+  </g>
+  <!-- awnings -->
+  <g>
+    <path d="M0 596 L300 596 L280 646 L20 646 Z" fill="#8E332C"/>
+    <path d="M300 596 L580 596 L560 646 L320 646 Z" fill="#A08F6E"/>
+    <path d="M580 620 L830 620 L812 664 L598 664 Z" fill="#3A5568"/>
+    <path d="M830 596 L1060 596 L1042 646 L848 646 Z" fill="#6E543A"/>
+    <path d="M1060 630 L1320 630 L1302 672 L1078 672 Z" fill="#948B78"/>
+    <path d="M1320 596 L1600 596 L1580 646 L1340 646 Z" fill="#526046"/>
+  </g>
+
+  <!-- bunting across the street -->
+  <path d="M0 250 Q400 330 800 250 T1600 268" stroke="#2B1A52" stroke-width="5" fill="none"/>
+  <g>
+    <path d="M180 292 L216 292 L198 330 Z" fill="#C9A227"/>
+    <path d="M320 312 L356 312 L338 350 Z" fill="#1A5FB4"/>
+    <path d="M470 322 L506 322 L488 360 Z" fill="#2F7D46"/>
+    <path d="M620 316 L656 316 L638 354 Z" fill="#C9A227"/>
+    <path d="M780 296 L816 296 L798 334 Z" fill="#B4453C"/>
+    <path d="M960 282 L996 282 L978 320 Z" fill="#1A5FB4"/>
+    <path d="M1140 276 L1176 276 L1158 314 Z" fill="#2F7D46"/>
+    <path d="M1320 274 L1356 274 L1338 312 Z" fill="#C9A227"/>
+  </g>
+
+  <rect y="760" width="1600" height="307" fill="#8A8B90"/>
+  <!-- market tents and figures -->
+  <g>
+    <path d="M120 760 L340 760 L330 700 L130 700 Z" fill="#F0F0F2"/>
+    <path d="M130 700 L230 664 L330 700 Z" fill="#DDDEE2"/>
+    <path d="M420 760 L640 760 L630 700 L430 700 Z" fill="#F0F0F2"/>
+    <path d="M430 700 L530 664 L630 700 Z" fill="#DDDEE2"/>
+  </g>
+  <g fill="#2B2C3A">
+    <rect x="740" y="716" width="22" height="60" rx="10"/><circle cx="751" cy="702" r="14"/>
+    <rect x="800" y="724" width="22" height="52" rx="10"/><circle cx="811" cy="712" r="13"/>
+    <rect x="900" y="712" width="24" height="64" rx="11"/><circle cx="912" cy="698" r="15"/>
+    <rect x="1010" y="726" width="22" height="50" rx="10"/><circle cx="1021" cy="714" r="13"/>
+    <rect x="1120" y="718" width="22" height="58" rx="10"/><circle cx="1131" cy="704" r="14"/>
+    <rect x="1260" y="724" width="22" height="52" rx="10"/><circle cx="1271" cy="712" r="13"/>
+  </g>
+</svg>

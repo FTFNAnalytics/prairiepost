@@ -69,6 +69,12 @@ page_header([
 ], (string) $post['category_slug']);
 ?>
 
+<?php if (pp_chrome('template') === 'torch') {
+    require PP_ROOT . '/app/views/article-torch.php';
+    page_footer();
+    return;
+} ?>
+
 <article class="article wrap">
   <div class="headwrap">
     <?= eyebrow($post) ?>

@@ -54,6 +54,23 @@ function post_source_label(array $post): string
     return preg_replace('/^www\./', '', $host);
 }
 
+/**
+ * The Torch's card kicker. The three cities are the paper's subject, so a
+ * story datelined to one of them leads with the place — "BELCARRA",
+ * "PORT MOODY". Everything else carries its desk instead — "COMMUNITY",
+ * "BUSINESS". Kicker colour is set by the card variant, never here.
+ */
+function torch_kicker(array $post): string
+{
+    if (!empty($post['dateline'])) {
+        return e($post['dateline']);
+    }
+    if (!empty($post['category_name'])) {
+        return e(pp_desk_label($post['category_slug'] ?? null, $post['category_name']));
+    }
+    return '';
+}
+
 function eyebrow(array $post): string
 {
     if (empty($post['category_name'])) {
@@ -141,6 +158,7 @@ function page_header(array $meta = [], string $activeDesk = ''): void
 <?php endif; ?><?php if (pp_chrome('template') === 'current'): ?><link rel="stylesheet" href="/assets/css/current.css">
 <?php endif; ?><?php if (pp_chrome('template') === 'bulletin'): ?><link rel="stylesheet" href="/assets/css/bulletin.css">
 <?php endif; ?><?php if (pp_chrome('template') === 'westernwire'): ?><link rel="stylesheet" href="/assets/css/westernwire.css">
+<?php endif; ?><?php if (pp_chrome('template') === 'torch'): ?><link rel="stylesheet" href="/assets/css/torch.css">
 <?php endif; ?><?php if (site_asset('brand.css') !== '/assets/img/brand.css'): ?><link rel="stylesheet" href="<?= e(site_asset('brand.css')) ?>">
 <?php endif; ?>
 <meta property="og:site_name" content="<?= e($siteTitle) ?>">
@@ -155,7 +173,7 @@ function page_header(array $meta = [], string $activeDesk = ''): void
 <?php endif; ?>
 <?php $analytics = setting('analytics_code'); if ($analytics !== '') { echo $analytics . "\n"; } ?>
 </head>
-<body class="<?= trim((pp_chrome('cards') === 'panel' ? 'cards-panel ' : '') . (pp_chrome('template') === 'echo-v3' ? 't-dark' : '') . (pp_chrome('template') === 'aurora' ? 't-aurora' : '') . (pp_chrome('template') === 'chronicle' ? 't-chronicle' : '') . (pp_chrome('template') === 'pacific' ? 't-pacific' : '') . (pp_chrome('template') === 'current' ? 't-current' : '') . (pp_chrome('template') === 'bulletin' ? 't-bulletin' : '') . (pp_chrome('template') === 'westernwire' ? 't-westernwire' : '')) ?>">
+<body class="<?= trim((pp_chrome('cards') === 'panel' ? 'cards-panel ' : '') . (pp_chrome('template') === 'echo-v3' ? 't-dark' : '') . (pp_chrome('template') === 'aurora' ? 't-aurora' : '') . (pp_chrome('template') === 'chronicle' ? 't-chronicle' : '') . (pp_chrome('template') === 'pacific' ? 't-pacific' : '') . (pp_chrome('template') === 'current' ? 't-current' : '') . (pp_chrome('template') === 'bulletin' ? 't-bulletin' : '') . (pp_chrome('template') === 'westernwire' ? 't-westernwire' : '') . (pp_chrome('template') === 'torch' ? 't-torch' : '')) ?>">
 <a class="pp-meta" href="#content" style="position:absolute;left:-9999px" onfocus="this.style.left='8px';this.style.top='8px'" onblur="this.style.left='-9999px'">Skip to the news</a>
 
 <?php if (pp_chrome('template') === 'echo-v3'): ?>
@@ -360,6 +378,42 @@ function page_header(array $meta = [], string $activeDesk = ''): void
   </div>
 </div>
 <?php endif; ?>
+<?php elseif (pp_chrome('template') === 'torch'): ?>
+<?php
+// The wordmark stacks "Tri Cities" over "TORCH"; split the title once here.
+$ttWords = preg_split('/\s+/', trim($siteTitle));
+$ttLast  = count($ttWords) > 1 ? array_pop($ttWords) : '';
+$ttFirst = $ttLast !== '' ? implode(' ', $ttWords) : $siteTitle;
+// Article and section pages carry the header lockup from the first pixel;
+// the home page fades it in once the masthead has scrolled away.
+$ttFront = (bool) ($GLOBALS['pp_front_page'] ?? false);
+?>
+<nav class="tt-nav<?= $ttFront ? '' : ' always-lockup' ?>" id="ttnav" aria-label="Sections">
+  <div class="in">
+    <a class="lockup" href="/" aria-label="<?= e($siteTitle) ?> — front page">
+      <img src="<?= e(site_asset('mark-reversed.svg')) ?>" alt="">
+      <span class="wm"><b><?= e($ttFirst) ?></b><span><?= e(mb_strtoupper($ttLast)) ?></span></span>
+    </a>
+    <?php foreach (pp_nav_categories() as $cat): ?>
+    <a href="<?= e(url('desk/' . $cat['slug'])) ?>"<?= $activeDesk === $cat['slug'] ? ' aria-current="page"' : '' ?>><?= e(pp_desk_label($cat['slug'], $cat['name'])) ?></a>
+    <?php endforeach; ?>
+  </div>
+</nav>
+<?php if ($ttFront): ?>
+<script>
+(function () {
+  var nav = document.getElementById('ttnav');
+  if (!nav) return;
+  var on = false;
+  var check = function () {
+    var should = window.scrollY > 220;
+    if (should !== on) { on = should; nav.classList.toggle('is-stuck', should); }
+  };
+  window.addEventListener('scroll', check, { passive: true });
+  check();
+})();
+</script>
+<?php endif; ?>
 <?php elseif (pp_chrome('template') === 'westernwire'): ?>
 <div class="ww-strip">
   <div class="wrap">
@@ -509,6 +563,58 @@ function page_footer(): void
     $siteTitle = setting('site_title', 'The Prairie Dispatch');
     ?>
 </main>
+
+<?php if (pp_chrome('template') === 'torch'): ?>
+<?php
+$ttWords = preg_split('/\s+/', trim($siteTitle));
+$ttLast  = count($ttWords) > 1 ? array_pop($ttWords) : '';
+$ttFirst = $ttLast !== '' ? implode(' ', $ttWords) : $siteTitle;
+?>
+<div class="tt-footindex">
+  <div class="in">
+    <div>
+      <a class="lock" href="/" aria-label="<?= e($siteTitle) ?> — front page">
+        <img src="<?= e(site_asset('mark-reversed.svg')) ?>" alt="">
+        <span><b><?= e($ttFirst) ?></b><span><?= e(mb_strtoupper($ttLast)) ?></span></span>
+      </a>
+      <p class="blurb"><?= e(setting('footer_line')) ?></p>
+    </div>
+    <div>
+      <p class="fh">Sections</p>
+      <div class="lnks">
+        <?php foreach (pp_nav_categories() as $cat): ?>
+        <a href="<?= e(url('desk/' . $cat['slug'])) ?>"><?= e(pp_desk_label($cat['slug'], $cat['name'])) ?></a>
+        <?php endforeach; ?>
+      </div>
+    </div>
+    <div>
+      <p class="fh">The Torch</p>
+      <div class="lnks">
+        <a href="<?= e(url('search')) ?>">Search the archive</a>
+        <a href="<?= e(url('newsletter/')) ?>">Newsletters</a>
+        <a href="<?= e(url('corrections')) ?>">Corrections</a>
+        <a href="<?= e(url('feed/')) ?>">RSS</a>
+        <?php if (setting('contact_email') !== ''): ?>
+        <a href="mailto:<?= e(setting('contact_email')) ?>">Send a tip</a>
+        <?php endif; ?>
+        <a href="/admin/">Newsroom sign-in</a>
+      </div>
+    </div>
+  </div>
+</div>
+<footer class="tt-foot">
+  <div class="in">
+    <p>© <?= e(date('Y')) ?> <?= e($siteTitle) ?> · Coquitlam, BC</p>
+    <div class="soc">
+      <a href="<?= e(url('feed/')) ?>">RSS</a>
+      <a href="<?= e(url('subscribe')) ?>">Newsletter</a>
+      <a href="<?= e(url('corrections')) ?>">Corrections</a>
+    </div>
+  </div>
+</footer>
+</body>
+</html>
+<?php return; endif; ?>
 
 <?php if (pp_chrome('template') === 'westernwire'): ?>
 <footer class="ww-foot">
