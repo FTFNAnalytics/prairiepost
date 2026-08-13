@@ -182,7 +182,7 @@ function excerpt(string $html, int $chars = 180): string
  */
 function sanitize_html(string $html): string
 {
-    $allowed = '<p><br><strong><em><b><i><u><s><a><h2><h3><blockquote><ul><ol><li>'
+    $allowed = '<p><br><strong><em><b><i><u><s><a><h2><h3><blockquote><cite><ul><ol><li>'
              . '<figure><figcaption><img><table><thead><tbody><tr><td><th><hr><div><span>';
     $html = strip_tags($html, $allowed);
     $html = preg_replace('/\son\w+\s*=\s*("[^"]*"|\'[^\']*\'|[^\s>]+)/i', '', $html);
@@ -330,6 +330,23 @@ function pp_desk_hex(?string $categorySlug, ?string $default): string
     }
     $override = pp_brand_file()['desks'][$categorySlug] ?? null;
     return (is_string($override) && preg_match('/^#[0-9A-Fa-f]{6}$/', $override)) ? $override : $default;
+}
+
+/**
+ * The name a desk carries on THIS site. Desks are shared network-wide, so a
+ * paper that calls the shared "Business & Markets" desk simply "Business"
+ * renames it for itself in palette.json under
+ * "desk_labels": {"business": "Business", …}. The stored category name is
+ * never touched — changing it would rename the desk for every other paper.
+ */
+function pp_desk_label(?string $categorySlug, ?string $default): string
+{
+    $default = (string) $default;
+    if (!$categorySlug) {
+        return $default;
+    }
+    $override = pp_brand_file()['desk_labels'][$categorySlug] ?? null;
+    return (is_string($override) && $override !== '') ? $override : $default;
 }
 
 /* --- Uploads ------------------------------------------------------------- */

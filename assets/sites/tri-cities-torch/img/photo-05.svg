@@ -1,0 +1,53 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 1067" role="img" aria-label="An Evergreen Line train on the elevated guideway above Barnet Highway">
+  <defs>
+    <linearGradient id="p5sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#5C79A6"/>
+      <stop offset="1" stop-color="#CBD8E4"/>
+    </linearGradient>
+  </defs>
+  <rect width="1600" height="1067" fill="url(#p5sky)"/>
+  <path d="M0 420 L300 330 L640 412 L980 322 L1320 404 L1600 356 L1600 520 L0 520 Z" fill="#4C5F76" opacity="0.55"/>
+  <rect y="700" width="1600" height="367" fill="#3B4250"/>
+  <rect y="700" width="1600" height="26" fill="#556072"/>
+
+  <!-- guideway piers -->
+  <g fill="#9BA3AE">
+    <rect x="180" y="520" width="54" height="200"/>
+    <rect x="700" y="520" width="54" height="200"/>
+    <rect x="1220" y="520" width="54" height="200"/>
+  </g>
+  <rect x="0" y="470" width="1600" height="56" fill="#B6BDC7"/>
+  <rect x="0" y="464" width="1600" height="10" fill="#D3D8DE"/>
+
+  <!-- train, left of centre -->
+  <g>
+    <rect x="120" y="356" width="620" height="112" rx="16" fill="#EDEFF2"/>
+    <rect x="120" y="356" width="620" height="20" rx="10" fill="#1A5FB4"/>
+    <rect x="120" y="452" width="620" height="16" fill="#8E97A4"/>
+    <g fill="#2B3550">
+      <rect x="150" y="386" width="80" height="46" rx="6"/>
+      <rect x="248" y="386" width="80" height="46" rx="6"/>
+      <rect x="346" y="386" width="80" height="46" rx="6"/>
+      <rect x="444" y="386" width="80" height="46" rx="6"/>
+      <rect x="542" y="386" width="80" height="46" rx="6"/>
+      <rect x="640" y="386" width="72" height="46" rx="6"/>
+    </g>
+    <rect x="120" y="356" width="26" height="112" rx="12" fill="#C9A227"/>
+  </g>
+
+  <!-- road below -->
+  <g fill="#E9C58C" opacity="0.5">
+    <rect x="200" y="820" width="220" height="8" rx="4"/>
+    <rect x="620" y="880" width="280" height="8" rx="4"/>
+  </g>
+  <g fill="#C7CEDA" opacity="0.5">
+    <rect x="0" y="960" width="120" height="9"/><rect x="220" y="960" width="120" height="9"/>
+    <rect x="440" y="960" width="120" height="9"/><rect x="660" y="960" width="120" height="9"/>
+    <rect x="880" y="960" width="120" height="9"/><rect x="1100" y="960" width="120" height="9"/>
+    <rect x="1320" y="960" width="120" height="9"/>
+  </g>
+  <g fill="#2C5230">
+    <ellipse cx="1420" cy="640" rx="70" ry="88"/>
+    <rect x="1412" y="700" width="16" height="70"/>
+  </g>
+</svg>

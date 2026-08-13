@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 1067" role="img" aria-label="The Coquitlam River running through second-growth forest">
+  <defs>
+    <linearGradient id="p4sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#8FB0C9"/>
+      <stop offset="1" stop-color="#D7E3E7"/>
+    </linearGradient>
+  </defs>
+  <rect width="1600" height="1067" fill="url(#p4sky)"/>
+  <path d="M0 300 L240 200 L520 296 L820 186 L1140 290 L1420 214 L1600 282 L1600 420 L0 420 Z" fill="#4A6272" opacity="0.5"/>
+
+  <!-- forest walls -->
+  <g fill="#2A4A2C">
+    <path d="M0 380 L90 200 L180 380 Z"/><path d="M120 400 L210 190 L300 400 Z"/>
+    <path d="M250 390 L336 216 L422 390 Z"/><path d="M0 420 L1600 400 L1600 470 L0 500 Z"/>
+  </g>
+  <g fill="#24402A">
+    <path d="M1180 400 L1266 208 L1352 400 Z"/><path d="M1300 396 L1392 184 L1484 396 Z"/>
+    <path d="M1430 404 L1520 220 L1600 404 Z"/>
+  </g>
+  <path d="M0 470 L1600 440 L1600 1067 L0 1067 Z" fill="#35603A"/>
+
+  <!-- the river, entering left, curving right -->
+  <path d="M300 470 C 380 640, 620 700, 720 800 C 800 880, 860 980, 900 1067 L1180 1067 C 1100 950, 1020 856, 940 780 C 820 664, 620 600, 520 470 Z" fill="#5E8FA8"/>
+  <path d="M340 490 C 420 646, 640 706, 738 806 C 812 880, 866 976, 902 1050 L1010 1050 C 950 950, 880 856, 800 786 C 690 690, 540 620, 470 490 Z" fill="#7FAAC0" opacity="0.65"/>
+  <g fill="#DCEAF0" opacity="0.6">
+    <ellipse cx="640" cy="700" rx="40" ry="9"/>
+    <ellipse cx="768" cy="836" rx="34" ry="8"/>
+    <ellipse cx="864" cy="960" rx="44" ry="9"/>
+  </g>
+  <!-- gravel bars -->
+  <g fill="#9CA898">
+    <ellipse cx="520" cy="760" rx="90" ry="26"/>
+    <ellipse cx="1120" cy="900" rx="120" ry="30"/>
+  </g>
+</svg>
