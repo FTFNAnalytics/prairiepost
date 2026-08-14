@@ -29,7 +29,7 @@
     "hero_photo": "/assets/sites/tri-cities-torch/img/hero.svg",
     "banner_photo": "/assets/sites/tri-cities-torch/img/banner.svg",
     "band_tone": {
-      "news": "coast",
+      "news": "feature",
       "politics": "feature",
       "community": "community",
       "business": "inlet",
