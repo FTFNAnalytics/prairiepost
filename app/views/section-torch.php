@@ -9,9 +9,13 @@
  * cards below run a fixed 8 + 4 lead followed by a three-column river.
  */
 
+// The band takes the section's own colour. The coast gradient is NOT one of
+// the options: the brand reserves it for the nav bar and the masthead banner
+// card, "nowhere else". Anything unmapped falls back to the indigo feature
+// gradient, which is what Local News, Politics and Opinion carry.
 $tones = pp_chrome('band_tone');
 $tone = is_array($tones) ? ($tones[$cat['slug']] ?? 'feature') : 'feature';
-$bandClass = in_array($tone, ['coast', 'community', 'inlet'], true) ? ' tt-band--' . $tone : '';
+$bandClass = in_array($tone, ['community', 'inlet'], true) ? ' tt-band--' . $tone : '';
 $deskName = pp_desk_label($cat['slug'], $cat['name']);
 
 // The lead: one photo card, then two stacked white cards of equal height.

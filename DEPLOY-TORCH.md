@@ -208,9 +208,12 @@ Expected output:
   headline, italic standfirst, the hero figure wider than the text, the
   gold-ruled pull quote with its attribution on its own line, and the
   sticky "More in Local News" rail.
-- `/desk/community` renders a **green** band; `/desk/news` and
-  `/desk/politics` the coast gradient; `/desk/business` and
-  `/desk/sports` Inlet Blue.
+- Section bands carry the section's own colour: `/desk/community` renders
+  **green**; `/desk/news` and `/desk/politics` the **indigo** feature
+  gradient (`.tt-band` with no modifier class); `/desk/business` and
+  `/desk/sports` **Inlet Blue** (`.tt-band--inlet`). The coast gradient
+  must appear **only** in the nav bar and the masthead banner card — if
+  you see it on a section band, that is a defect, not a pass.
 - `/feed/`, `/sitemap.xml`, `/search?q=council` all 200.
 - Past 220px of scroll the header lockup fades in at the left of the nav.
 - At 390px: one column, the nav a horizontally scrolling strip with the

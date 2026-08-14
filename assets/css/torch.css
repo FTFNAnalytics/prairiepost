@@ -415,7 +415,9 @@ body.t-torch{
 .tt-band .in{ max-width: var(--container); margin: 0 auto; padding: 0 40px; }
 .tt-band h1{ margin: 0; font-family: var(--font-display); font-weight: 600; font-size: 44px; line-height: 1.08; letter-spacing: -.02em; color: #fff; }
 .tt-band p{ margin: 10px 0 0; font-family: var(--font-text); font-size: 16px; line-height: 1.5; color: rgba(255,255,255,.84); max-width: 56ch; }
-.tt-band--coast{ background: var(--grad-coast); }
+/* The band's default is the indigo feature gradient (Local News, Politics,
+   Opinion). There is deliberately no coast variant — the coast gradient is
+   the nav bar and the banner card, nowhere else. */
 .tt-band--community{ background: var(--grad-community); }
 .tt-band--inlet{ background: var(--grad-inlet); }
 @media (max-width: 1279px){ .tt-band .in{ padding: 0 28px; } }
