@@ -102,6 +102,48 @@ function story_card(array $post, bool $withPhoto = true): string
 }
 
 /**
+ * One card for the standard template, used by the front page, the section
+ * index and the article page's related row.
+ *
+ * Where there is no photograph the headline runs large on navy in the
+ * photograph's place — it replaces the image, so it is not repeated in the
+ * body beneath. Anatomy stays kicker → headline → deck → meta either way.
+ */
+function standard_card(array $p, array $o = []): string
+{
+    $kicker  = $o['kicker'] ?? ('Opinion' . (!empty($p['category_name']) ? ' · ' . $p['category_name'] : ''));
+    $red     = !empty($o['red']);
+    $deckLen = (int) ($o['deck'] ?? 0);
+    $meta    = $o['meta'] ?? '';
+    $class   = trim('sd-card ' . ($o['class'] ?? ''));
+    $eager   = !empty($o['eager']);
+    $kclass  = 'sd-kicker' . ($red ? ' sd-kicker--red' : '');
+
+    $html  = '<a class="' . e($class) . '" href="' . e(url('story/' . $p['slug'])) . '">';
+    if (!empty($p['image'])) {
+        $html .= '<span class="ph"><img src="' . e($p['image']) . '" alt=""'
+               . ($eager ? '' : ' loading="lazy"') . '></span>';
+        $html .= '<span class="body">';
+        $html .= '<span class="' . $kclass . '">' . e($kicker) . '</span>';
+        $html .= '<h2>' . e($p['title']) . '</h2>';
+    } else {
+        $html .= '<span class="noph">';
+        $html .= '<span class="' . $kclass . ' on-navy">' . e($kicker) . '</span>';
+        $html .= '<span class="hl">' . e($p['title']) . '</span>';
+        $html .= '</span>';
+        $html .= '<span class="body">';
+    }
+    if ($deckLen > 0 && !empty($p['lede'])) {
+        $html .= '<p class="deck">' . e(excerpt($p['lede'], $deckLen)) . '</p>';
+    }
+    if ($meta !== '') {
+        $html .= '<span class="by">' . $meta . '</span>';
+    }
+    $html .= '</span></a>';
+    return $html;
+}
+
+/**
  * Page head + masthead + nav.
  * $meta keys: title, description, canonical, og_image, og_type, jsonld (array).
  */

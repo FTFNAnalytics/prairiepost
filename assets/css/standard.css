@@ -198,15 +198,29 @@ body.t-standard{
 .sd-river .sd-card .body{ padding: 16px; }
 .sd-river .sd-card p.deck{ font-size: 15px; margin-bottom: 10px; }
 
-/* Where there is no photograph, the headline runs large on navy rather
-   than reaching for stock. */
+/* Where there is no photograph, the headline runs large on navy rather than
+   reaching for stock. It stands in for the image, so it is not repeated in
+   the body beneath — the kicker comes with it to keep the anatomy in order. */
 .sd-card .noph{
-  display: grid; place-items: center; background: var(--navy); color: #fff;
-  aspect-ratio: 16/9; padding: 18px; text-align: center;
+  display: flex; flex-direction: column; justify-content: center; gap: 10px;
+  background: var(--navy); color: #fff; aspect-ratio: 16/9; padding: 24px;
 }
-.sd-river .sd-card .noph{ aspect-ratio: 4/3; }
-.sd-card .noph span{ font-family: var(--serif); font-size: 22px; font-weight: 700; line-height: 1.2; }
-.sd-river .sd-card .noph span{ font-size: 18px; }
+.sd-river .sd-card .noph{ aspect-ratio: 4/3; padding: 20px; }
+.sd-card .noph .hl{ font-family: var(--serif); font-size: 30px; font-weight: 700; line-height: 1.14; }
+.sd-river .sd-card .noph .hl{ font-size: 21px; line-height: 1.2; }
+.sd-card .noph .sd-kicker.on-navy{ color: #fff; opacity: .78; margin: 0; }
+.sd-card .noph .sd-kicker--red.on-navy{ color: #fff; opacity: .9; }
+.sd-card:hover .noph .hl{ text-decoration: underline; text-underline-offset: 3px; }
+/* A card that is all headline needs no empty body padding. */
+.sd-card .noph + .body:empty{ display: none; }
+
+/* The section lead runs full width, so its photograph is capped rather than
+   letting a 16:9 crop at 1160px swamp the page. */
+.sd-card--wide{ margin-bottom: 22px; }
+.sd-card--wide .ph img{ aspect-ratio: auto; height: 380px; }
+.sd-card--wide .noph{ aspect-ratio: auto; min-height: 240px; }
+.sd-card--wide h2{ font-size: 34px; }
+@media (max-width: 899px){ .sd-card--wide .ph img{ height: 220px; } }
 
 /* --- Footer --------------------------------------------------------------- */
 .sd-foot{ background: var(--navy); color: #fff; margin-top: 44px; }

@@ -40,37 +40,16 @@ $rest = array_slice($posts, 1);
     <?php else: ?>
 
     <?php if ($lead): ?>
-    <a class="sd-card" href="<?= e(url('story/' . $lead['slug'])) ?>" style="margin-bottom:22px">
-      <?php if ($lead['image']): ?>
-      <span class="ph"><img src="<?= e($lead['image']) ?>" alt="" loading="eager"></span>
-      <?php else: ?>
-      <span class="noph"><span><?= e($lead['title']) ?></span></span>
-      <?php endif; ?>
-      <span class="body">
-        <span class="sd-kicker sd-kicker--red">Opinion · <?= e($cat['name']) ?></span>
-        <h2><?= e($lead['title']) ?></h2>
-        <?php if ($lead['lede']): ?><p class="deck"><?= e($lead['lede']) ?></p><?php endif; ?>
-        <span class="by"><?= $byline($lead) ?></span>
-      </span>
-    </a>
+    <?= standard_card($lead, [
+        'kicker' => 'Opinion · ' . $cat['name'], 'red' => true, 'deck' => 200,
+        'meta' => $byline($lead), 'eager' => true, 'class' => 'sd-card--wide',
+    ]) ?>
     <?php endif; ?>
 
     <?php if ($rest): ?>
     <div class="sd-river">
       <?php foreach ($rest as $p): ?>
-      <a class="sd-card" href="<?= e(url('story/' . $p['slug'])) ?>">
-        <?php if ($p['image']): ?>
-        <span class="ph"><img src="<?= e($p['image']) ?>" alt="" loading="lazy"></span>
-        <?php else: ?>
-        <span class="noph"><span><?= e($p['title']) ?></span></span>
-        <?php endif; ?>
-        <span class="body">
-          <span class="sd-kicker">Opinion · <?= e($cat['name']) ?></span>
-          <h2><?= e($p['title']) ?></h2>
-          <?php if ($p['lede']): ?><p class="deck"><?= e(excerpt($p['lede'], 110)) ?></p><?php endif; ?>
-          <span class="by"><?= $byline($p) ?></span>
-        </span>
-      </a>
+      <?= standard_card($p, ['kicker' => 'Opinion · ' . $cat['name'], 'deck' => 110, 'meta' => $byline($p)]) ?>
       <?php endforeach; ?>
     </div>
     <?php endif; ?>

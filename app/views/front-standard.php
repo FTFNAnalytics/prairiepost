@@ -54,19 +54,10 @@ $river = latest_posts(6, $shown);
     <div class="sd-grid">
       <div>
         <?php if ($hero): ?>
-        <a class="sd-card" href="<?= e(url('story/' . $hero['slug'])) ?>">
-          <?php if ($hero['image']): ?>
-          <span class="ph"><img src="<?= e($hero['image']) ?>" alt="" loading="eager"></span>
-          <?php else: ?>
-          <span class="noph"><span><?= e($hero['title']) ?></span></span>
-          <?php endif; ?>
-          <span class="body">
-            <span class="sd-kicker sd-kicker--red"><?= e(pp_chrome('lead_kicker') ?: 'The Argument') ?></span>
-            <h2><?= e($hero['title']) ?></h2>
-            <?php if ($hero['lede']): ?><p class="deck"><?= e($hero['lede']) ?></p><?php endif; ?>
-            <span class="by"><?= $byline($hero) ?></span>
-          </span>
-        </a>
+        <?= standard_card($hero, [
+            'kicker' => pp_chrome('lead_kicker') ?: 'The Argument',
+            'red' => true, 'deck' => 200, 'meta' => $byline($hero), 'eager' => true,
+        ]) ?>
         <?php else: ?>
         <div class="sd-empty">Nothing filed yet. The desk signs in at <a href="/admin/">/admin/</a> and files the first argument.</div>
         <?php endif; ?>
@@ -113,19 +104,7 @@ $river = latest_posts(6, $shown);
       </div>
       <div class="sd-river">
         <?php foreach ($river as $p): ?>
-        <a class="sd-card" href="<?= e(url('story/' . $p['slug'])) ?>">
-          <?php if ($p['image']): ?>
-          <span class="ph"><img src="<?= e($p['image']) ?>" alt="" loading="lazy"></span>
-          <?php else: ?>
-          <span class="noph"><span><?= e($p['title']) ?></span></span>
-          <?php endif; ?>
-          <span class="body">
-            <span class="sd-kicker"><?= e($kicker($p)) ?></span>
-            <h2><?= e($p['title']) ?></h2>
-            <?php if ($p['lede']): ?><p class="deck"><?= e(excerpt($p['lede'], 120)) ?></p><?php endif; ?>
-            <span class="by"><?= $byline($p) ?></span>
-          </span>
-        </a>
+        <?= standard_card($p, ['kicker' => $kicker($p), 'deck' => 120, 'meta' => $byline($p)]) ?>
         <?php endforeach; ?>
       </div>
     </section>

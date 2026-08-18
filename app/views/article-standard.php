@@ -111,18 +111,7 @@ $more = related_posts($post['category_id'] ? (int) $post['category_id'] : null, 
     </div>
     <div class="sd-river">
       <?php foreach ($more as $p): ?>
-      <a class="sd-card" href="<?= e(url('story/' . $p['slug'])) ?>">
-        <?php if ($p['image']): ?>
-        <span class="ph"><img src="<?= e($p['image']) ?>" alt="" loading="lazy"></span>
-        <?php else: ?>
-        <span class="noph"><span><?= e($p['title']) ?></span></span>
-        <?php endif; ?>
-        <span class="body">
-          <span class="sd-kicker">Opinion<?= !empty($p['category_name']) ? ' · ' . e($p['category_name']) : '' ?></span>
-          <h2><?= e($p['title']) ?></h2>
-          <span class="by"><?= (int) read_minutes($p) ?> min read</span>
-        </span>
-      </a>
+      <?= standard_card($p, ['meta' => (int) read_minutes($p) . ' min read']) ?>
       <?php endforeach; ?>
     </div>
   </section>
