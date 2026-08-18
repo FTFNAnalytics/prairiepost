@@ -200,6 +200,17 @@ function fmt_date(?string $dt, string $format = 'M j, Y'): string
     return $ts ? date($format, $ts) : '';
 }
 
+/**
+ * Reading time in whole minutes, at 220 words a minute, floored at one.
+ * Counts the lede with the body so a short piece isn't reported as zero.
+ */
+function read_minutes(array $post): int
+{
+    $text = strip_tags((string) ($post['lede'] ?? '') . ' ' . (string) ($post['body'] ?? ''));
+    $words = str_word_count($text);
+    return max(1, (int) round($words / 220));
+}
+
 /** "6:40 a.m." / "Yesterday" / "Jul 3" — the register of a dateline, not a widget. */
 function time_label(?string $dt): string
 {

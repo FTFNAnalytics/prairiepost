@@ -1,0 +1,58 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" role="img" aria-label="A transit bus on a snowbound street at dusk">
+  <defs>
+    <linearGradient id="s5" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#3F4E6B"/>
+      <stop offset="1" stop-color="#9EA9BC"/>
+    </linearGradient>
+  </defs>
+  <rect width="1600" height="900" fill="url(#s5)"/>
+  <g fill="#E7EBF1" opacity=".55">
+    <circle cx="200" cy="120" r="3"/><circle cx="420" cy="200" r="2"/><circle cx="760" cy="90" r="3"/>
+    <circle cx="1100" cy="180" r="2"/><circle cx="1380" cy="120" r="3"/><circle cx="980" cy="250" r="2"/>
+  </g>
+
+  <!-- low buildings -->
+  <g fill="#2C3549">
+    <rect x="0" y="330" width="230" height="290"/>
+    <rect x="250" y="380" width="180" height="240"/>
+    <rect x="1180" y="350" width="200" height="270"/>
+    <rect x="1400" y="400" width="200" height="220"/>
+  </g>
+  <g fill="#E3B96A" opacity=".7">
+    <rect x="30" y="380" width="30" height="34"/><rect x="90" y="380" width="30" height="34"/>
+    <rect x="280" y="424" width="28" height="30"/><rect x="1216" y="396" width="28" height="32"/>
+    <rect x="1440" y="446" width="28" height="30"/>
+  </g>
+  <!-- street lamps -->
+  <g>
+    <rect x="640" y="300" width="8" height="330" fill="#232B3C"/>
+    <ellipse cx="644" cy="296" rx="26" ry="12" fill="#F2D79A" opacity=".85"/>
+    <rect x="1080" y="330" width="7" height="300" fill="#232B3C"/>
+    <ellipse cx="1084" cy="326" rx="22" ry="10" fill="#F2D79A" opacity=".8"/>
+  </g>
+
+  <!-- snowbanks and road -->
+  <rect y="620" width="1600" height="280" fill="#5D677C"/>
+  <path d="M0 620 Q220 578 460 618 T980 612 T1600 620 L1600 690 L0 690 Z" fill="#D9E2EC"/>
+  <g fill="#C7D2DF" opacity=".9">
+    <path d="M0 860 Q400 828 820 856 T1600 846 L1600 900 L0 900 Z"/>
+  </g>
+
+  <!-- the bus, left of centre -->
+  <g>
+    <rect x="300" y="470" width="620" height="180" rx="16" fill="#E9EDF2"/>
+    <rect x="300" y="470" width="620" height="26" rx="13" fill="#0F3B8C"/>
+    <g fill="#2A3448">
+      <rect x="330" y="510" width="110" height="72" rx="6"/>
+      <rect x="460" y="510" width="110" height="72" rx="6"/>
+      <rect x="590" y="510" width="110" height="72" rx="6"/>
+      <rect x="720" y="510" width="110" height="72" rx="6"/>
+    </g>
+    <rect x="300" y="470" width="26" height="180" rx="13" fill="#C2362B"/>
+    <circle cx="400" cy="662" r="34" fill="#1D2431"/><circle cx="400" cy="662" r="14" fill="#586274"/>
+    <circle cx="820" cy="662" r="34" fill="#1D2431"/><circle cx="820" cy="662" r="14" fill="#586274"/>
+    <rect x="332" y="484" width="150" height="12" fill="#DCE4EF" opacity=".8"/>
+  </g>
+  <!-- headlight wash on the snow -->
+  <path d="M300 640 L120 720 L120 760 L300 690 Z" fill="#F2D79A" opacity=".35"/>
+</svg>

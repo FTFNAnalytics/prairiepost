@@ -1,0 +1,30 @@
+{
+  "palette": {
+    "ink":     "#0F3B8C",
+    "paper":   "#EDEFF3",
+    "board":   "#DCDFE5",
+    "sky":     "#1D5BC0",
+    "hill":    "#33425C",
+    "field":   "#33425C",
+    "stubble": "#5A6272",
+    "red":     "#C2362B",
+    "muted":   "#5A6272"
+  },
+  "desks": {
+    "council": "#0F3B8C",
+    "mining":  "#0F3B8C",
+    "housing": "#0F3B8C",
+    "letters": "#33425C",
+    "opinion": "#0F3B8C"
+  },
+  "chrome": {
+    "template": "standard",
+    "trending": false,
+    "nav": ["council", "mining", "housing", "letters"],
+    "hero_photo": "/assets/sites/sudbury-standard/img/hero.svg",
+    "hero_eyebrow": "From the desk",
+    "hero_title": "Latest from Sudbury",
+    "lead_kicker": "The Argument",
+    "place": "Sudbury, Ontario"
+  }
+}

@@ -23,6 +23,7 @@ RewriteRule ^api/monitor/?$ monitor-ingest.php [L,QSA,E=HTTP_AUTHORIZATION:%{HTT
 RewriteRule ^ad/?$ ad.php [L,QSA]
 RewriteRule ^card/([a-z0-9-]+)\.png$ card.php?slug=$1 [L]
 RewriteRule ^corrections/?$ corrections.php [L]
+RewriteRule ^about/?$ about.php [L]
 RewriteRule ^newsletter(/.*)?$ newsletter.php?path=$1 [L,QSA]
 </IfModule>
 

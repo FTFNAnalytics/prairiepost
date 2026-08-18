@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" role="img" aria-label="The fenced excavation downtown where the arena was to be built">
+  <!-- Navy duotone: this piece is argument, not report. -->
+  <defs>
+    <linearGradient id="a1" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#1B4694"/>
+      <stop offset="1" stop-color="#9AB1D5"/>
+    </linearGradient>
+  </defs>
+  <rect width="1600" height="900" fill="url(#a1)"/>
+
+  <!-- downtown backdrop -->
+  <g fill="#153C85">
+    <rect x="60" y="250" width="150" height="270"/>
+    <rect x="230" y="300" width="120" height="220"/>
+    <rect x="370" y="210" width="170" height="310"/>
+    <rect x="1120" y="270" width="160" height="250"/>
+    <rect x="1300" y="230" width="140" height="290"/>
+    <rect x="1460" y="300" width="140" height="220"/>
+  </g>
+  <g fill="#BCCBE6" opacity=".45">
+    <rect x="86" y="286" width="22" height="28"/><rect x="140" y="286" width="22" height="28"/>
+    <rect x="396" y="248" width="24" height="30"/><rect x="456" y="248" width="24" height="30"/>
+    <rect x="1150" y="306" width="24" height="30"/><rect x="1330" y="266" width="24" height="30"/>
+  </g>
+
+  <!-- the ground, and the hole -->
+  <rect y="520" width="1600" height="380" fill="#42639F"/>
+  <path d="M300 640 L1180 640 L1080 860 L400 860 Z" fill="#12336F"/>
+  <path d="M340 660 L1140 660 L1052 840 L428 840 Z" fill="#0E2A5E"/>
+  <g stroke="#7E96C6" stroke-width="6" fill="none" opacity=".7">
+    <path d="M400 700 L1080 700"/><path d="M430 760 L1050 760"/>
+  </g>
+
+  <!-- hoarding fence across the front -->
+  <g fill="#25508F">
+    <rect y="596" width="1600" height="18"/>
+    <rect x="120" y="596" width="12" height="90"/><rect x="380" y="596" width="12" height="90"/>
+    <rect x="640" y="596" width="12" height="90"/><rect x="900" y="596" width="12" height="90"/>
+    <rect x="1160" y="596" width="12" height="90"/><rect x="1420" y="596" width="12" height="90"/>
+  </g>
+  <!-- a lone sign on the fence -->
+  <rect x="640" y="540" width="230" height="60" fill="#D7E0EF"/>
+  <g fill="#1B4694">
+    <rect x="664" y="558" width="140" height="8"/>
+    <rect x="664" y="576" width="96" height="7"/>
+  </g>
+</svg>

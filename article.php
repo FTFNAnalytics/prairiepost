@@ -79,6 +79,12 @@ page_header([
 ], (string) $post['category_slug']);
 ?>
 
+
+<?php if (pp_chrome('template') === 'standard') {
+    require PP_ROOT . '/app/views/article-standard.php';
+    page_footer();
+    return;
+} ?>
 <article class="article wrap">
   <div class="headwrap">
     <?= eyebrow($post) ?>

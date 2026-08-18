@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" role="img" aria-label="The Superstack over the smelter, flat light">
+  <defs>
+    <linearGradient id="s2" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#8FA2B4"/>
+      <stop offset="1" stop-color="#D7DDE2"/>
+    </linearGradient>
+  </defs>
+  <rect width="1600" height="900" fill="url(#s2)"/>
+  <path d="M0 560 L240 500 L520 556 L800 496 L1080 552 L1360 504 L1600 556 L1600 640 L0 640 Z" fill="#6E7A78"/>
+
+  <!-- the stack, left of centre, full height -->
+  <g>
+    <path d="M420 60 L468 60 L492 700 L396 700 Z" fill="#A7A29B"/>
+    <path d="M420 60 L444 60 L444 700 L432 700 Z" fill="#C0BAB2" opacity=".7"/>
+    <rect x="410" y="60" width="68" height="14" fill="#8C877F"/>
+    <rect x="404" y="300" width="80" height="10" fill="#8C877F" opacity=".7"/>
+    <rect x="400" y="480" width="88" height="10" fill="#8C877F" opacity=".7"/>
+  </g>
+
+  <!-- smelter sheds -->
+  <g fill="#5E6B6E">
+    <rect x="560" y="560" width="300" height="140"/>
+    <rect x="880" y="600" width="220" height="100"/>
+    <rect x="1120" y="580" width="260" height="120"/>
+  </g>
+  <g fill="#3F4A4E">
+    <rect x="600" y="500" width="30" height="62"/><rect x="680" y="512" width="30" height="50"/>
+    <rect x="1180" y="524" width="26" height="58"/>
+  </g>
+  <!-- rust stains, the colour the place actually is -->
+  <g fill="#8E5B3C" opacity=".55">
+    <rect x="560" y="676" width="300" height="14"/>
+    <rect x="1120" y="682" width="260" height="12"/>
+  </g>
+
+  <rect y="700" width="1600" height="200" fill="#6B5F55"/>
+  <g fill="#59504A">
+    <path d="M0 740 q180 -34 360 4 q-190 30 -360 -4 Z"/>
+    <path d="M700 780 q200 -38 400 6 q-210 34 -400 -6 Z"/>
+  </g>
+  <g fill="#3D5638">
+    <path d="M120 900 L170 792 L220 900 Z"/><path d="M240 900 L286 806 L332 900 Z"/>
+    <path d="M1320 900 L1370 796 L1420 900 Z"/><path d="M1440 900 L1486 812 L1532 900 Z"/>
+  </g>
+</svg>

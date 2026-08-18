@@ -141,6 +141,7 @@ function page_header(array $meta = [], string $activeDesk = ''): void
 <?php endif; ?><?php if (pp_chrome('template') === 'current'): ?><link rel="stylesheet" href="/assets/css/current.css">
 <?php endif; ?><?php if (pp_chrome('template') === 'bulletin'): ?><link rel="stylesheet" href="/assets/css/bulletin.css">
 <?php endif; ?><?php if (pp_chrome('template') === 'westernwire'): ?><link rel="stylesheet" href="/assets/css/westernwire.css">
+<?php endif; ?><?php if (pp_chrome('template') === 'standard'): ?><link rel="stylesheet" href="/assets/css/standard.css">
 <?php endif; ?><?php if (site_asset('brand.css') !== '/assets/img/brand.css'): ?><link rel="stylesheet" href="<?= e(site_asset('brand.css')) ?>">
 <?php endif; ?>
 <meta property="og:site_name" content="<?= e($siteTitle) ?>">
@@ -155,7 +156,7 @@ function page_header(array $meta = [], string $activeDesk = ''): void
 <?php endif; ?>
 <?php $analytics = setting('analytics_code'); if ($analytics !== '') { echo $analytics . "\n"; } ?>
 </head>
-<body class="<?= trim((pp_chrome('cards') === 'panel' ? 'cards-panel ' : '') . (pp_chrome('template') === 'echo-v3' ? 't-dark' : '') . (pp_chrome('template') === 'aurora' ? 't-aurora' : '') . (pp_chrome('template') === 'chronicle' ? 't-chronicle' : '') . (pp_chrome('template') === 'pacific' ? 't-pacific' : '') . (pp_chrome('template') === 'current' ? 't-current' : '') . (pp_chrome('template') === 'bulletin' ? 't-bulletin' : '') . (pp_chrome('template') === 'westernwire' ? 't-westernwire' : '')) ?>">
+<body class="<?= trim((pp_chrome('cards') === 'panel' ? 'cards-panel ' : '') . (pp_chrome('template') === 'echo-v3' ? 't-dark' : '') . (pp_chrome('template') === 'aurora' ? 't-aurora' : '') . (pp_chrome('template') === 'chronicle' ? 't-chronicle' : '') . (pp_chrome('template') === 'pacific' ? 't-pacific' : '') . (pp_chrome('template') === 'current' ? 't-current' : '') . (pp_chrome('template') === 'bulletin' ? 't-bulletin' : '') . (pp_chrome('template') === 'westernwire' ? 't-westernwire' : '') . (pp_chrome('template') === 'standard' ? 't-standard' : '')) ?>">
 <a class="pp-meta" href="#content" style="position:absolute;left:-9999px" onfocus="this.style.left='8px';this.style.top='8px'" onblur="this.style.left='-9999px'">Skip to the news</a>
 
 <?php if (pp_chrome('template') === 'echo-v3'): ?>
@@ -360,6 +361,43 @@ function page_header(array $meta = [], string $activeDesk = ''): void
   </div>
 </div>
 <?php endif; ?>
+<?php elseif (pp_chrome('template') === 'standard'): ?>
+<?php
+// The wordmark stacks: "The Sudbury" over "STANDARD". The blackletter S is
+// the monogram only — never a word — and it carries its own font.
+$sdWords = preg_split('/\s+/', trim($siteTitle));
+$sdLast  = count($sdWords) > 1 ? array_pop($sdWords) : '';
+$sdFirst = $sdLast !== '' ? implode(' ', $sdWords) : $siteTitle;
+$sdMono  = mb_substr(preg_replace('/^The\s+/i', '', $siteTitle), 0, 1);
+?>
+<div class="sd-util">
+  <div class="in">
+    <span><?= e(pp_chrome('place') ?: setting('tagline')) ?> &middot; <?= e(date('j F Y')) ?></span>
+    <span class="grp">
+      <a href="<?= e(url('newsletter/')) ?>">Newsletter</a>
+      <?php if (setting('contact_email') !== ''): ?><a href="mailto:<?= e(setting('contact_email')) ?>">Tips</a><?php endif; ?>
+      <a href="/admin/">Sign in</a>
+    </span>
+  </div>
+</div>
+<header class="sd-mast">
+  <div class="in">
+    <a class="lock" href="/" aria-label="<?= e($siteTitle) ?> — front page">
+      <span class="sx" aria-hidden="true"><?= e($sdMono) ?></span>
+      <span>
+        <span class="l1"><?= e($sdFirst) ?></span>
+        <span class="l2"><?= e(mb_strtoupper($sdLast)) ?></span>
+      </span>
+    </a>
+    <nav class="sd-nav" aria-label="Sections">
+      <a href="/"<?= ($GLOBALS['pp_front_page'] ?? false) ? ' aria-current="page"' : '' ?>>Home</a>
+      <?php foreach (pp_nav_categories() as $cat): ?>
+      <a href="<?= e(url('desk/' . $cat['slug'])) ?>"<?= $activeDesk === $cat['slug'] ? ' aria-current="page"' : '' ?>><?= e($cat['name']) ?></a>
+      <?php endforeach; ?>
+      <a href="<?= e(url('about')) ?>"<?= $activeDesk === 'about' ? ' aria-current="page"' : '' ?>>About</a>
+    </nav>
+  </div>
+</header>
 <?php elseif (pp_chrome('template') === 'westernwire'): ?>
 <div class="ww-strip">
   <div class="wrap">
@@ -515,6 +553,31 @@ function page_footer(): void
          carried. The /ad endpoint is never cached; every view counts. */ ?>
 <img src="<?= e(url('ad')) ?>?imp=<?= implode('-', $ppAdsShown) ?>" alt="" width="1" height="1" style="position:absolute;left:-9999px" aria-hidden="true">
 <?php endif; ?>
+
+<?php if (pp_chrome('template') === 'standard'): ?>
+<?php
+$sdWords = preg_split('/\s+/', trim($siteTitle));
+$sdLast  = count($sdWords) > 1 ? array_pop($sdWords) : '';
+$sdMono  = mb_substr(preg_replace('/^The\s+/i', '', $siteTitle), 0, 1);
+?>
+<footer class="sd-foot">
+  <div class="in">
+    <a class="lock" href="/">
+      <span class="sx" aria-hidden="true"><?= e($sdMono) ?></span>
+      <span class="nm"><?= e(mb_strtoupper($sdLast ?: $siteTitle)) ?></span>
+    </a>
+    <span class="meta">&copy; <?= e(date('Y')) ?> <?= e($siteTitle) ?> &middot; <?= e(setting('footer_line', 'Independent, reader-funded')) ?></span>
+    <span class="lnks">
+      <a href="<?= e(url('about')) ?>">About</a>
+      <a href="<?= e(url('corrections')) ?>">Corrections</a>
+      <a href="<?= e(url('search')) ?>">Search</a>
+      <a href="<?= e(url('feed/')) ?>">RSS</a>
+    </span>
+  </div>
+</footer>
+</body>
+</html>
+<?php return; endif; ?>
 
 <?php if (pp_chrome('template') === 'westernwire'): ?>
 <footer class="ww-foot">

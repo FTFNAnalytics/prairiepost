@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" role="img" aria-label="The council chamber, empty gallery seating and the horseshoe">
+  <rect width="1600" height="900" fill="#C8C3BA"/>
+  <rect y="0" width="1600" height="330" fill="#B7B1A6"/>
+  <!-- wood panelling -->
+  <g fill="#8C6E4E">
+    <rect y="330" width="1600" height="250"/>
+  </g>
+  <g fill="#7A5F42" opacity=".7">
+    <rect x="80" y="330" width="14" height="250"/><rect x="300" y="330" width="14" height="250"/>
+    <rect x="520" y="330" width="14" height="250"/><rect x="740" y="330" width="14" height="250"/>
+    <rect x="960" y="330" width="14" height="250"/><rect x="1180" y="330" width="14" height="250"/>
+    <rect x="1400" y="330" width="14" height="250"/>
+  </g>
+  <!-- the crest, plain -->
+  <circle cx="800" cy="424" r="58" fill="#0F3B8C"/>
+  <circle cx="800" cy="424" r="42" fill="#B7B1A6" opacity=".25"/>
+
+  <!-- the horseshoe -->
+  <path d="M240 700 Q800 588 1360 700 L1360 780 Q800 668 240 780 Z" fill="#6E5236"/>
+  <path d="M240 700 Q800 588 1360 700 L1360 716 Q800 604 240 716 Z" fill="#8A6A47"/>
+  <!-- name plates and microphones -->
+  <g fill="#EDE9E1">
+    <rect x="340" y="664" width="80" height="20" rx="3"/><rect x="520" y="640" width="80" height="20" rx="3"/>
+    <rect x="700" y="628" width="80" height="20" rx="3"/><rect x="880" y="630" width="80" height="20" rx="3"/>
+    <rect x="1060" y="644" width="80" height="20" rx="3"/><rect x="1230" y="668" width="80" height="20" rx="3"/>
+  </g>
+  <g stroke="#3B4350" stroke-width="5" fill="none">
+    <path d="M380 664 q10 -34 34 -44"/><path d="M560 640 q10 -34 34 -44"/>
+    <path d="M740 628 q10 -34 34 -44"/><path d="M920 630 q10 -34 34 -44"/>
+    <path d="M1100 644 q10 -34 34 -44"/><path d="M1270 668 q10 -34 34 -44"/>
+  </g>
+  <!-- empty chairs behind -->
+  <g fill="#3B4350">
+    <rect x="330" y="596" width="60" height="70" rx="8"/><rect x="510" y="574" width="60" height="70" rx="8"/>
+    <rect x="690" y="562" width="60" height="70" rx="8"/><rect x="870" y="564" width="60" height="70" rx="8"/>
+    <rect x="1050" y="578" width="60" height="70" rx="8"/><rect x="1220" y="600" width="60" height="70" rx="8"/>
+  </g>
+  <!-- the gallery, empty -->
+  <rect y="800" width="1600" height="100" fill="#A29A8E"/>
+  <g fill="#8A8175">
+    <rect x="60" y="824" width="180" height="54" rx="6"/><rect x="280" y="824" width="180" height="54" rx="6"/>
+    <rect x="500" y="824" width="180" height="54" rx="6"/><rect x="720" y="824" width="180" height="54" rx="6"/>
+    <rect x="940" y="824" width="180" height="54" rx="6"/><rect x="1160" y="824" width="180" height="54" rx="6"/>
+    <rect x="1380" y="824" width="180" height="54" rx="6"/>
+  </g>
+</svg>
