@@ -26,7 +26,11 @@
 set -uo pipefail
 
 REPO="FTFNAnalytics/prairiepost"
-BRANCH="claude/master-dashboard-control-room-nr3mp4"
+# The branch whose head becomes the new release. Override with PP_BRANCH to
+# pin a deploy to a specific line — e.g. to add one paper on top of exactly
+# what production already runs, without also shipping unreleased work from
+# the control-room branch's head. The default is unchanged.
+BRANCH="${PP_BRANCH:-claude/master-dashboard-control-room-nr3mp4}"
 SHARED_UP="/var/www/prairiepost-shared-uploads"
 STAMP=$(date +%s)
 

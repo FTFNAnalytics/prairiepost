@@ -1,0 +1,61 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 2800 1200" role="img" aria-label="Burrard Inlet at first light, the north shore ridges beyond Port Moody">
+  <!-- Hero masthead, 21:9. Horizon low, sky generous, subject left of centre
+       so the crop survives the mobile 4:3 fallback. -->
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#241246"/>
+      <stop offset="0.42" stop-color="#3D2A63"/>
+      <stop offset="0.72" stop-color="#7C6E93"/>
+      <stop offset="1" stop-color="#C9A88F"/>
+    </linearGradient>
+    <linearGradient id="water" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#2A4A6B"/>
+      <stop offset="1" stop-color="#16304A"/>
+    </linearGradient>
+  </defs>
+  <rect width="2800" height="1200" fill="url(#sky)"/>
+  <circle cx="1980" cy="742" r="54" fill="#E8C489" opacity="0.85"/>
+
+  <!-- far ridge -->
+  <path d="M0 700 L280 560 L520 660 L760 500 L1080 640 L1360 560 L1700 680 L2040 590 L2380 690 L2800 620 L2800 800 L0 800 Z" fill="#2E2A50" opacity="0.85"/>
+  <!-- near ridge -->
+  <path d="M0 760 L340 640 L620 730 L900 610 L1240 720 L1560 660 L1900 750 L2260 680 L2560 760 L2800 715 L2800 830 L0 830 Z" fill="#243A46"/>
+
+  <!-- the city, left of centre -->
+  <g fill="#1B2233">
+    <rect x="120" y="640" width="52" height="190"/>
+    <rect x="184" y="596" width="40" height="234"/>
+    <rect x="236" y="672" width="60" height="158"/>
+    <rect x="312" y="556" width="34" height="274"/>
+    <rect x="360" y="628" width="56" height="202"/>
+    <rect x="430" y="600" width="42" height="230"/>
+    <rect x="486" y="684" width="64" height="146"/>
+    <rect x="566" y="646" width="38" height="184"/>
+  </g>
+  <g fill="#E8C489" opacity="0.75">
+    <rect x="136" y="666" width="8" height="10"/><rect x="152" y="700" width="8" height="10"/>
+    <rect x="196" y="622" width="8" height="10"/><rect x="204" y="668" width="8" height="10"/>
+    <rect x="324" y="586" width="8" height="10"/><rect x="330" y="640" width="8" height="10"/>
+    <rect x="374" y="656" width="8" height="10"/><rect x="444" y="628" width="8" height="10"/>
+    <rect x="500" y="712" width="8" height="10"/><rect x="578" y="674" width="8" height="10"/>
+  </g>
+
+  <!-- inlet -->
+  <rect y="830" width="2800" height="370" fill="url(#water)"/>
+  <g fill="#E8C489" opacity="0.28">
+    <rect x="1900" y="846" width="160" height="7"/>
+    <rect x="1920" y="880" width="120" height="6"/>
+    <rect x="1940" y="918" width="80" height="5"/>
+  </g>
+  <g fill="#8FA6BE" opacity="0.34">
+    <rect x="180" y="900" width="360" height="6"/>
+    <rect x="700" y="962" width="280" height="6"/>
+    <rect x="1300" y="1030" width="420" height="6"/>
+    <rect x="420" y="1090" width="320" height="6"/>
+  </g>
+  <!-- a moored boat, small, left third -->
+  <g fill="#101826">
+    <path d="M660 878 L742 878 L730 900 L672 900 Z"/>
+    <rect x="696" y="850" width="5" height="28"/>
+  </g>
+</svg>

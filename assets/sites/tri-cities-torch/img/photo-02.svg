@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 1067" role="img" aria-label="The pier at Rocky Point Park reaching into Burrard Inlet">
+  <defs>
+    <linearGradient id="p2sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#4C6E9A"/>
+      <stop offset="1" stop-color="#BFD2DF"/>
+    </linearGradient>
+  </defs>
+  <rect width="1600" height="1067" fill="url(#p2sky)"/>
+  <path d="M0 452 L280 372 L560 440 L880 356 L1200 436 L1600 388 L1600 520 L0 520 Z" fill="#3E5A63"/>
+  <path d="M0 508 L360 458 L720 512 L1080 462 L1440 516 L1600 490 L1600 560 L0 560 Z" fill="#2F4C50" opacity="0.9"/>
+  <rect y="548" width="1600" height="519" fill="#2A5C73"/>
+  <rect y="548" width="1600" height="120" fill="#3A6F85" opacity="0.6"/>
+
+  <!-- the pier, entering from the left third -->
+  <g>
+    <rect x="60" y="640" width="740" height="26" fill="#8C6E4E"/>
+    <rect x="60" y="666" width="740" height="10" fill="#6B523A"/>
+    <g fill="#5A452F">
+      <rect x="110" y="676" width="16" height="150"/>
+      <rect x="250" y="676" width="16" height="160"/>
+      <rect x="390" y="676" width="16" height="170"/>
+      <rect x="530" y="676" width="16" height="180"/>
+      <rect x="670" y="676" width="16" height="190"/>
+      <rect x="772" y="676" width="16" height="196"/>
+    </g>
+    <!-- rail posts -->
+    <g fill="#6B523A">
+      <rect x="140" y="596" width="9" height="46"/><rect x="300" y="596" width="9" height="46"/>
+      <rect x="460" y="596" width="9" height="46"/><rect x="620" y="596" width="9" height="46"/>
+      <rect x="762" y="596" width="9" height="46"/>
+    </g>
+    <rect x="140" y="596" width="631" height="8" fill="#6B523A"/>
+  </g>
+
+  <g fill="#DCE8EE" opacity="0.32">
+    <rect x="900" y="700" width="300" height="8"/>
+    <rect x="1020" y="768" width="220" height="7"/>
+    <rect x="860" y="852" width="360" height="8"/>
+    <rect x="1120" y="940" width="260" height="7"/>
+  </g>
+  <!-- a paddler -->
+  <g fill="#1D3440">
+    <path d="M1180 706 L1268 706 L1256 726 L1192 726 Z"/>
+    <rect x="1218" y="686" width="6" height="22"/>
+  </g>
+</svg>

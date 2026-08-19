@@ -1,0 +1,40 @@
+{
+  "palette": {
+    "ink":     "#2B1A52",
+    "paper":   "#F2F2F4",
+    "board":   "#DEDEDF",
+    "sky":     "#1A5FB4",
+    "hill":    "#2F7D46",
+    "field":   "#4A6A34",
+    "stubble": "#C9A227",
+    "red":     "#B4453C",
+    "muted":   "#55535F"
+  },
+  "desks": {
+    "news":      "#2B1A52",
+    "politics":  "#2B1A52",
+    "community": "#2F7D46",
+    "business":  "#1A5FB4",
+    "sports":    "#1A5FB4",
+    "opinion":   "#2B1A52"
+  },
+  "desk_labels": {
+    "news": "Local News",
+    "business": "Business"
+  },
+  "chrome": {
+    "template": "torch",
+    "trending": false,
+    "nav": ["news", "community", "politics", "business", "sports"],
+    "hero_photo": "/assets/sites/tri-cities-torch/img/hero.svg",
+    "banner_photo": "/assets/sites/tri-cities-torch/img/banner.svg",
+    "band_tone": {
+      "news": "feature",
+      "politics": "feature",
+      "community": "community",
+      "business": "inlet",
+      "sports": "inlet",
+      "opinion": "feature"
+    }
+  }
+}

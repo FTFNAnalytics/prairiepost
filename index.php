@@ -69,6 +69,11 @@ if (pp_chrome('template') === 'westernwire') {
     require PP_ROOT . '/app/views/front-westernwire.php';
     page_footer();
     return;
+}
+if (pp_chrome('template') === 'torch') {
+    require PP_ROOT . '/app/views/front-torch.php';
+    page_footer();
+    return;
 } ?>
 
 <div class="front wrap">

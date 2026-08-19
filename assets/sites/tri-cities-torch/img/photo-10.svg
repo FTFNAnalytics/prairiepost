@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 1067" role="img" aria-label="A taproom on Murray Street with the tanks visible through the window">
+  <defs>
+    <linearGradient id="p10sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#3E3560"/>
+      <stop offset="1" stop-color="#8E7E92"/>
+    </linearGradient>
+  </defs>
+  <rect width="1600" height="1067" fill="url(#p10sky)"/>
+  <rect y="180" width="1600" height="700" fill="#5A4030"/>
+  <rect y="180" width="1600" height="40" fill="#3E2C21"/>
+
+  <!-- the window, left of centre -->
+  <rect x="120" y="300" width="760" height="440" rx="8" fill="#1C1B22"/>
+  <rect x="140" y="320" width="720" height="400" rx="4" fill="#E8B45C" opacity="0.22"/>
+  <!-- tanks -->
+  <g>
+    <rect x="200" y="386" width="110" height="300" rx="54" fill="#B9BEC6"/>
+    <rect x="200" y="386" width="40" height="300" rx="20" fill="#D3D8DE" opacity="0.7"/>
+    <rect x="340" y="410" width="110" height="276" rx="54" fill="#A9AEB6"/>
+    <rect x="340" y="410" width="38" height="276" rx="19" fill="#C6CBD2" opacity="0.7"/>
+    <rect x="480" y="392" width="110" height="294" rx="54" fill="#B9BEC6"/>
+    <rect x="480" y="392" width="40" height="294" rx="20" fill="#D3D8DE" opacity="0.7"/>
+  </g>
+  <!-- people at the bar -->
+  <g fill="#2B2434">
+    <rect x="660" y="560" width="24" height="126" rx="11"/><circle cx="672" cy="546" r="17"/>
+    <rect x="730" y="574" width="24" height="112" rx="11"/><circle cx="742" cy="560" r="16"/>
+    <rect x="800" y="566" width="24" height="120" rx="11"/><circle cx="812" cy="552" r="16"/>
+  </g>
+  <rect x="620" y="686" width="250" height="14" fill="#6B4E36"/>
+
+  <!-- signage and door -->
+  <rect x="960" y="300" width="500" height="120" rx="8" fill="#2B1A52"/>
+  <g fill="#C9A227">
+    <rect x="1000" y="342" width="180" height="14" rx="7"/>
+    <rect x="1000" y="372" width="120" height="10" rx="5"/>
+  </g>
+  <rect x="1080" y="470" width="260" height="270" rx="6" fill="#3A2A1E"/>
+  <rect x="1110" y="500" width="200" height="120" rx="4" fill="#E8B45C" opacity="0.3"/>
+  <circle cx="1310" cy="620" r="9" fill="#C9A227"/>
+
+  <rect y="880" width="1600" height="187" fill="#4A4A50"/>
+  <g fill="#E8B45C" opacity="0.35">
+    <ellipse cx="500" cy="900" rx="420" ry="26"/>
+    <ellipse cx="1210" cy="906" rx="220" ry="20"/>
+  </g>
+</svg>
