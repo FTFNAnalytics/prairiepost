@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" role="img" aria-label="Ramsey Lake from the shield rock, spruce along the far shore">
+  <defs>
+    <linearGradient id="s3" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#7FA3C4"/>
+      <stop offset="1" stop-color="#D3DFE6"/>
+    </linearGradient>
+  </defs>
+  <rect width="1600" height="900" fill="url(#s3)"/>
+  <g fill="#E9EEF1" opacity=".8">
+    <ellipse cx="380" cy="180" rx="200" ry="42"/>
+    <ellipse cx="1080" cy="140" rx="240" ry="36"/>
+  </g>
+  <path d="M0 430 L260 388 L560 428 L880 382 L1180 426 L1440 390 L1600 428 L1600 480 L0 480 Z" fill="#4E6B58"/>
+  <g fill="#2F4A38">
+    <path d="M120 480 L156 396 L192 480 Z"/><path d="M200 480 L240 386 L280 480 Z"/>
+    <path d="M300 480 L334 404 L368 480 Z"/><path d="M900 480 L938 392 L976 480 Z"/>
+    <path d="M990 480 L1030 380 L1070 480 Z"/><path d="M1090 480 L1124 400 L1158 480 Z"/>
+    <path d="M1400 480 L1440 392 L1480 480 Z"/>
+  </g>
+
+  <!-- the lake -->
+  <rect y="480" width="1600" height="270" fill="#3C6E90"/>
+  <rect y="480" width="1600" height="70" fill="#4B80A2" opacity=".7"/>
+  <g fill="#2C5470" opacity=".55">
+    <rect x="120" y="480" width="248" height="60"/>
+    <rect x="900" y="480" width="258" height="62"/>
+  </g>
+  <g fill="#DCE8EF" opacity=".5">
+    <ellipse cx="500" cy="596" rx="150" ry="7"/>
+    <ellipse cx="980" cy="652" rx="190" ry="8"/>
+    <ellipse cx="380" cy="700" rx="130" ry="6"/>
+  </g>
+
+  <!-- shield rock in the foreground, pink-grey and scoured -->
+  <path d="M0 750 L1600 712 L1600 900 L0 900 Z" fill="#A99C97"/>
+  <path d="M0 786 Q300 758 640 782 T1600 762 L1600 900 L0 900 Z" fill="#94867F"/>
+  <g stroke="#7C6F69" stroke-width="5" fill="none" opacity=".8">
+    <path d="M60 830 Q420 806 820 828"/>
+    <path d="M300 874 Q760 848 1200 870"/>
+  </g>
+  <g fill="#4E5B45" opacity=".7">
+    <ellipse cx="220" cy="820" rx="54" ry="16"/>
+    <ellipse cx="1240" cy="800" rx="66" ry="18"/>
+  </g>
+</svg>

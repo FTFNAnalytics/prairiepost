@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" role="img" aria-label="Regreened ridges above the city, young pine on blackened rock">
+  <defs>
+    <linearGradient id="s6" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#6F97BE"/>
+      <stop offset="1" stop-color="#CFDDE6"/>
+    </linearGradient>
+  </defs>
+  <rect width="1600" height="900" fill="url(#s6)"/>
+  <g fill="#EAF0F4" opacity=".75">
+    <ellipse cx="300" cy="150" rx="220" ry="38"/>
+    <ellipse cx="1200" cy="120" rx="260" ry="34"/>
+  </g>
+
+  <path d="M0 440 L240 396 L520 442 L820 388 L1120 438 L1400 398 L1600 442 L1600 520 L0 520 Z" fill="#5D6E76"/>
+  <!-- the ridges, blackened rock with new green in the seams -->
+  <path d="M0 520 L300 466 L620 524 L940 462 L1260 520 L1600 470 L1600 640 L0 640 Z" fill="#6B655F"/>
+  <path d="M0 640 L280 596 L600 648 L920 592 L1240 646 L1600 600 L1600 760 L0 760 Z" fill="#57514C"/>
+  <g fill="#3A3531">
+    <path d="M100 590 q120 -26 240 8 q-130 22 -240 -8 Z"/>
+    <path d="M780 656 q140 -30 280 10 q-150 26 -280 -10 Z"/>
+  </g>
+  <!-- young pine, planted in rows -->
+  <g fill="#3E6B3C">
+    <path d="M140 700 L166 636 L192 700 Z"/><path d="M230 712 L254 652 L278 712 Z"/>
+    <path d="M330 700 L356 640 L382 700 Z"/><path d="M440 716 L464 656 L488 716 Z"/>
+    <path d="M560 704 L586 642 L612 704 Z"/><path d="M690 718 L714 660 L738 718 Z"/>
+    <path d="M830 702 L856 640 L882 702 Z"/><path d="M960 716 L984 656 L1008 716 Z"/>
+    <path d="M1100 700 L1126 638 L1152 700 Z"/><path d="M1240 714 L1264 654 L1288 714 Z"/>
+    <path d="M1380 702 L1406 642 L1432 702 Z"/><path d="M1500 716 L1524 656 L1548 716 Z"/>
+  </g>
+  <rect y="760" width="1600" height="140" fill="#4C463F"/>
+  <g fill="#3E6B3C" opacity=".85">
+    <ellipse cx="240" cy="800" rx="110" ry="26"/><ellipse cx="820" cy="820" rx="140" ry="30"/>
+    <ellipse cx="1360" cy="796" rx="120" ry="26"/>
+  </g>
+  <g stroke="#6E665E" stroke-width="6" fill="none" opacity=".7">
+    <path d="M0 856 Q420 830 900 852 T1600 838"/>
+  </g>
+</svg>

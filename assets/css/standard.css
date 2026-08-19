@@ -1,0 +1,331 @@
+/* ============================================================
+   The standard template — The Sudbury Standard, brand package v1.
+   An opinion desk that looks like a paper of record: navy chrome,
+   Playfair headlines, Source Sans body, and a blackletter S.
+
+   Content sits on white; the page sits on paper grey; the chrome
+   is navy. Slate is the only alternative dark and never appears
+   in the same band as navy. Red is a signal, not a decoration —
+   one per screen.
+
+   Loaded only when chrome.template = "standard".
+   ============================================================ */
+/* The three faces are self-hosted from the brand package's own woff2 files.
+   The blackletter S is the wordmark, so it cannot be left to a third party
+   that a network may block — and the latin subset covers French, which
+   Northern Ontario needs. Playfair and Source Sans are variable, so one
+   file each serves every weight the brand uses. */
+@font-face{
+  font-family: 'Playfair Display'; font-style: normal; font-weight: 400 800;
+  font-display: swap; src: url('/assets/fonts/playfair-display-latin.woff2') format('woff2');
+}
+@font-face{
+  font-family: 'Playfair Display'; font-style: italic; font-weight: 400 700;
+  font-display: swap; src: url('/assets/fonts/playfair-display-italic-latin.woff2') format('woff2');
+}
+@font-face{
+  font-family: 'Source Sans 3'; font-style: normal; font-weight: 300 700;
+  font-display: swap; src: url('/assets/fonts/source-sans-3-latin.woff2') format('woff2');
+}
+@font-face{
+  font-family: 'Source Sans 3'; font-style: italic; font-weight: 400;
+  font-display: swap; src: url('/assets/fonts/source-sans-3-italic-latin.woff2') format('woff2');
+}
+@font-face{
+  font-family: 'UnifrakturCook'; font-style: normal; font-weight: 700;
+  font-display: swap; src: url('/assets/fonts/unifraktur-cook-700-latin.woff2') format('woff2');
+}
+
+body.t-standard{
+  --navy:   #0F3B8C;   /* masthead, top bar, footer, all links */
+  --slate:  #33425C;   /* second dark surface: utility, quote cards */
+  --bright: #1D5BC0;   /* hover, active nav, buttons */
+  --red:    #C2362B;   /* breaking, opinion kickers — rationed */
+  --paper:  #EDEFF3;   /* page background behind white cards */
+  --grey:   #5A6272;   /* standfirsts, bylines, captions, rules */
+  --ink:    #1B1F26;
+  --card:   #FFFFFF;
+  --rule:   #DCDFE5;
+  --rule-2: #E5E7EA;
+
+  --serif:  'Playfair Display', Georgia, 'Times New Roman', serif;
+  --sans:   'Source Sans 3', system-ui, -apple-system, sans-serif;
+  --black:  'UnifrakturCook', 'Playfair Display', serif;
+
+  --wrap: 1160px;
+
+  /* The shared chrome reads the brand through the network's names. */
+  --pp-shelterbelt: var(--navy);
+  --pp-cloudbank:   var(--paper);
+  --pp-board:       var(--rule);
+  --pp-bigsky:      var(--navy);
+  --pp-noonsky:     var(--bright);
+  --pp-highsky:     #DEE6F5;
+  --pp-straw:       #F3EEDC;
+  --pp-binred:      var(--red);
+  --pp-quarter:     var(--slate);
+  --pp-fencepost:   var(--navy);
+  --pp-stubble:     var(--grey);
+
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: 17px;
+}
+
+.t-standard h1, .t-standard h2, .t-standard h3, .t-standard h4{ font-family: var(--serif); font-weight: 700; }
+.t-standard a{ color: var(--navy); }
+.t-standard a:hover{ color: var(--bright); }
+.t-standard :focus-visible{ outline: 2px solid var(--bright); outline-offset: 2px; }
+
+/* The blackletter S. Never set a word in it; it loses its detail below
+   24px, so small sizes take the Playfair S instead (.sx--sm). */
+.t-standard .sx{ font-family: var(--black); font-weight: 700; line-height: .8; display: inline-block; }
+.t-standard .sx--sm{ font-family: var(--serif); font-weight: 700; line-height: 1; }
+
+.sd-wrap{ max-width: var(--wrap); margin: 0 auto; padding: 0 44px; }
+@media (max-width: 899px){ .sd-wrap{ padding: 0 20px; } }
+
+/* --- Utility bar ---------------------------------------------------------- */
+.sd-util{ background: var(--navy); color: #fff; font-size: 13px; }
+.sd-util .in{
+  max-width: var(--wrap); margin: 0 auto; padding: 9px 44px;
+  display: flex; justify-content: space-between; gap: 18px; flex-wrap: wrap;
+}
+.sd-util a{ color: #fff; text-decoration: none; opacity: .85; }
+.sd-util a:hover{ opacity: 1; color: #fff; text-decoration: underline; }
+.sd-util .grp{ display: flex; gap: 16px; opacity: .95; }
+@media (max-width: 899px){ .sd-util .in{ padding: 8px 20px; font-size: 12px; } }
+
+/* --- Masthead ------------------------------------------------------------- */
+.sd-mast{ background: var(--card); border-bottom: 1px solid var(--rule); }
+.sd-mast .in{
+  max-width: var(--wrap); margin: 0 auto; padding: 16px 44px;
+  display: flex; justify-content: space-between; align-items: center; gap: 24px;
+}
+.sd-mast .lock{ display: flex; align-items: center; gap: 12px; color: var(--navy); text-decoration: none; }
+.sd-mast .lock .sx{ font-size: 44px; }
+.sd-mast .lock .l1{ font-family: var(--serif); font-size: 17px; font-weight: 500; line-height: 1.05; display: block; }
+.sd-mast .lock .l2{ font-family: var(--serif); font-size: 22px; font-weight: 800; line-height: 1.05; letter-spacing: .06em; display: block; }
+.sd-nav{ display: flex; gap: 22px; font-size: 14px; font-weight: 600; }
+.sd-nav a{ color: var(--ink); text-decoration: none; padding-bottom: 2px; }
+.sd-nav a:hover{ color: var(--bright); }
+.sd-nav a[aria-current="page"]{ color: var(--navy); border-bottom: 2px solid currentColor; }
+@media (max-width: 899px){
+  .sd-mast .in{ padding: 14px 20px; flex-direction: column; align-items: flex-start; gap: 12px; }
+  .sd-nav{ width: 100%; overflow-x: auto; gap: 18px; scrollbar-width: none; }
+  .sd-nav::-webkit-scrollbar{ display: none; }
+  .sd-mast .lock .sx{ font-size: 36px; }
+}
+
+/* --- Hero band: photograph under a navy 55% overlay ----------------------- */
+.sd-hero{ position: relative; min-height: 260px; display: grid; place-items: center; background: var(--slate); overflow: hidden; }
+.sd-hero > img{ position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.sd-hero .ov{ position: absolute; inset: 0; background: rgba(15,59,140,.55); }
+.sd-hero .in{ position: relative; text-align: center; color: #fff; padding: 44px 24px; }
+.sd-hero .eyebrow{
+  font-size: 12px; letter-spacing: .2em; text-transform: uppercase; opacity: .75;
+  margin: 0 0 10px; font-weight: 600; color: #fff;
+}
+.sd-hero h1{ font-family: var(--serif); font-size: 44px; font-weight: 700; line-height: 1.05; margin: 0; color: #fff; }
+@media (max-width: 899px){ .sd-hero{ min-height: 190px; } .sd-hero h1{ font-size: 30px; } }
+
+/* --- The main grid -------------------------------------------------------- */
+.sd-main{ background: var(--paper); padding: 22px 0 40px; }
+.sd-grid{ display: grid; grid-template-columns: 1.55fr 1fr; gap: 22px; }
+@media (max-width: 979px){ .sd-grid{ grid-template-columns: 1fr; } }
+
+.sd-card{ background: var(--card); border: 1px solid var(--rule); display: block; text-decoration: none; color: inherit; }
+.sd-card .ph{ display: block; overflow: hidden; background: var(--slate); }
+.sd-card .ph img{ width: 100%; display: block; aspect-ratio: 16/9; object-fit: cover; }
+.sd-card .body{ padding: 18px; }
+.sd-kicker{
+  font-size: 12px; font-weight: 700; letter-spacing: .16em; text-transform: uppercase;
+  color: var(--navy); margin: 0 0 8px; display: block;
+}
+.sd-kicker--red{ color: var(--red); }
+.sd-card h2{ font-family: var(--serif); font-size: 32px; font-weight: 700; line-height: 1.12; margin: 0 0 10px; color: var(--ink); }
+.sd-card:hover h2{ color: var(--navy); }
+.sd-card p.deck{ font-size: 16px; line-height: 1.55; color: var(--grey); margin: 0 0 14px; }
+.sd-card .by{ font-size: 13px; color: var(--grey); letter-spacing: .04em; }
+@media (max-width: 899px){ .sd-card h2{ font-size: 25px; } }
+
+/* Right rail */
+.sd-rail{ display: flex; flex-direction: column; gap: 16px; }
+.sd-panel{ background: var(--card); border: 1px solid var(--rule); }
+.sd-panel > .hd{
+  background: var(--navy); color: #fff; padding: 9px 14px;
+  font-family: var(--serif); font-size: 18px; font-weight: 700;
+}
+.sd-panel .items{ padding: 6px 14px 12px; }
+.sd-panel .it{ display: block; padding: 11px 0; border-bottom: 1px solid var(--rule-2); text-decoration: none; }
+.sd-panel .it:last-child{ border-bottom: 0; }
+.sd-panel .it h3{ font-family: var(--serif); font-size: 16px; font-weight: 600; line-height: 1.3; margin: 0; color: var(--ink); }
+.sd-panel .it:hover h3{ color: var(--navy); }
+.sd-panel .it .when{ font-size: 12px; color: var(--grey); margin-top: 5px; display: block; }
+
+/* The Weekly Standard — slate, never beside navy in the same band */
+.sd-news{ background: var(--slate); color: #fff; padding: 18px; }
+.sd-news h2{ font-family: var(--serif); font-size: 19px; font-weight: 700; margin: 0 0 7px; color: #fff; }
+.sd-news p{ font-size: 14px; line-height: 1.5; color: #C9D2E2; margin: 0 0 12px; }
+.sd-news form{ display: flex; gap: 0; }
+.sd-news input[type="email"]{
+  flex: 1; min-width: 0; background: #fff; border: 0; color: var(--ink);
+  font-family: var(--sans); font-size: 13px; padding: 10px 11px;
+}
+.sd-news button{
+  background: var(--red); color: #fff; border: 0; cursor: pointer;
+  font-family: var(--sans); font-size: 13px; font-weight: 700; letter-spacing: .1em;
+  text-transform: uppercase; padding: 10px 16px;
+}
+.sd-news button:hover{ background: #A82C22; }
+.sd-news .done{ font-size: 14px; color: #C9D2E2; margin: 0; }
+
+/* --- The river below the fold -------------------------------------------- */
+.sd-sec{ margin-top: 34px; }
+.sd-sechead{
+  display: flex; align-items: baseline; justify-content: space-between; gap: 20px;
+  border-bottom: 2px solid var(--navy); padding-bottom: 8px; margin-bottom: 18px;
+}
+.sd-sechead h2{ font-family: var(--serif); font-size: 26px; font-weight: 700; margin: 0; }
+.sd-sechead a{ font-size: 13px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; text-decoration: none; }
+.sd-river{ display: grid; grid-template-columns: repeat(3, 1fr); gap: 22px; }
+@media (max-width: 979px){ .sd-river{ grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 659px){ .sd-river{ grid-template-columns: 1fr; } }
+/* Lists crop 4:3 */
+.sd-river .sd-card .ph img{ aspect-ratio: 4/3; }
+.sd-river .sd-card h2{ font-size: 21px; line-height: 1.22; }
+.sd-river .sd-card .body{ padding: 16px; }
+.sd-river .sd-card p.deck{ font-size: 15px; margin-bottom: 10px; }
+
+/* Where there is no photograph, the headline runs large on navy rather than
+   reaching for stock. It stands in for the image, so it is not repeated in
+   the body beneath — the kicker comes with it to keep the anatomy in order. */
+.sd-card .noph{
+  display: flex; flex-direction: column; justify-content: center; gap: 10px;
+  background: var(--navy); color: #fff; aspect-ratio: 16/9; padding: 24px;
+}
+.sd-river .sd-card .noph{ aspect-ratio: 4/3; padding: 20px; }
+.sd-card .noph .hl{ font-family: var(--serif); font-size: 30px; font-weight: 700; line-height: 1.14; }
+.sd-river .sd-card .noph .hl{ font-size: 21px; line-height: 1.2; }
+.sd-card .noph .sd-kicker.on-navy{ color: #fff; opacity: .78; margin: 0; }
+.sd-card .noph .sd-kicker--red.on-navy{ color: #fff; opacity: .9; }
+.sd-card:hover .noph .hl{ text-decoration: underline; text-underline-offset: 3px; }
+/* A card that is all headline needs no empty body padding. */
+.sd-card .noph + .body:empty{ display: none; }
+
+/* The section lead runs full width, so its photograph is capped rather than
+   letting a 16:9 crop at 1160px swamp the page. */
+.sd-card--wide{ margin-bottom: 22px; }
+.sd-card--wide .ph img{ aspect-ratio: auto; height: 380px; }
+.sd-card--wide .noph{ aspect-ratio: auto; min-height: 240px; }
+.sd-card--wide h2{ font-size: 34px; }
+@media (max-width: 899px){ .sd-card--wide .ph img{ height: 220px; } }
+
+/* --- Footer --------------------------------------------------------------- */
+.sd-foot{ background: var(--navy); color: #fff; margin-top: 44px; }
+.sd-foot .in{
+  max-width: var(--wrap); margin: 0 auto; padding: 26px 44px;
+  display: flex; align-items: center; justify-content: space-between; gap: 20px; flex-wrap: wrap;
+}
+.sd-foot .lock{ display: flex; align-items: center; gap: 9px; color: #fff; text-decoration: none; }
+.sd-foot .lock .sx{ font-size: 30px; }
+.sd-foot .lock .nm{ font-family: var(--serif); font-size: 16px; font-weight: 800; letter-spacing: .1em; }
+.sd-foot .meta{ font-size: 13px; opacity: .8; }
+.sd-foot .lnks{ display: flex; gap: 16px; font-size: 13px; }
+.sd-foot .lnks a{ color: #fff; opacity: .8; text-decoration: none; }
+.sd-foot .lnks a:hover{ opacity: 1; text-decoration: underline; }
+@media (max-width: 899px){ .sd-foot .in{ padding: 22px 20px; } }
+
+/* --- Article -------------------------------------------------------------- */
+.sd-article{ background: var(--card); border: 1px solid var(--rule); padding: 46px 0 0; margin: 22px 0 0; }
+.sd-measure{ max-width: 660px; margin: 0 auto; padding: 0 24px; }
+.sd-article h1{ font-family: var(--serif); font-size: 46px; font-weight: 700; line-height: 1.08; margin: 0; color: var(--ink); }
+.sd-article .standfirst{ font-size: 21px; font-weight: 300; line-height: 1.45; color: var(--grey); margin: 14px 0 0; }
+.sd-article .byrow{
+  display: flex; justify-content: space-between; align-items: center; gap: 16px;
+  padding: 18px 0; margin: 20px 0 0; border-top: 1px solid var(--rule-2); border-bottom: 1px solid var(--rule-2);
+  font-size: 14px; color: var(--grey);
+}
+.sd-article .byrow strong{ color: var(--ink); font-weight: 600; }
+.sd-article figure.hero{ margin: 26px 0 0; }
+.sd-article figure.hero img{ width: 100%; aspect-ratio: 16/9; object-fit: cover; display: block; }
+.sd-article figure.hero figcaption{ font-size: 13px; line-height: 1.5; color: var(--grey); margin-top: 9px; }
+.sd-article .bodycopy{ font-size: 19px; line-height: 1.7; margin-top: 26px; }
+.sd-article .bodycopy p{ margin: 0 0 26px; }
+.sd-article .bodycopy h2{ font-family: var(--serif); font-size: 27px; font-weight: 700; line-height: 1.2; margin: 34px 0 14px; }
+.sd-article .bodycopy a{ color: var(--navy); }
+.sd-article .bodycopy a:hover{ color: var(--bright); }
+.sd-article .bodycopy img{ max-width: 100%; height: auto; }
+.sd-article .bodycopy ul, .sd-article .bodycopy ol{ margin: 0 0 26px; padding-left: 22px; }
+.sd-article .bodycopy li{ margin-bottom: 8px; }
+
+/* The pull quote is a full-bleed slate band, italic serif. One per piece. */
+.sd-article .bodycopy blockquote{
+  background: var(--slate); color: #fff; padding: 34px 24px; margin: 0 0 26px;
+  border: 0; width: 100%;
+}
+.sd-article .bodycopy blockquote p{
+  font-family: var(--serif); font-style: italic; font-size: 28px; line-height: 1.4;
+  margin: 0 auto; max-width: 612px; color: #fff;
+}
+@media (max-width: 899px){
+  .sd-article{ padding-top: 30px; }
+  .sd-article h1{ font-size: 31px; }
+  .sd-article .standfirst{ font-size: 18px; }
+  .sd-article .bodycopy{ font-size: 18px; }
+  .sd-article .bodycopy blockquote p{ font-size: 22px; }
+}
+
+.sd-article .correction{
+  border-left: 3px solid var(--red); background: #FBF0EF; padding: 14px 18px; margin: 0 0 26px;
+}
+.sd-article .correction .k{ font-size: 12px; font-weight: 700; letter-spacing: .16em; text-transform: uppercase; color: var(--red); }
+.sd-article .correction p{ font-size: 16px; margin: 6px 0 0; }
+
+/* The ask, and the funding note */
+.sd-fundnote{
+  border-top: 2px solid var(--navy); padding-top: 16px; margin-top: 8px;
+  font-size: 15px; color: var(--grey); line-height: 1.6;
+}
+.sd-tags{ display: flex; flex-wrap: wrap; gap: 8px; margin-top: 24px; }
+.sd-tags a{
+  font-size: 12px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase;
+  text-decoration: none; color: var(--navy); border: 1px solid var(--rule); padding: 5px 10px;
+}
+.sd-tags a:hover{ background: var(--navy); color: #fff; border-color: var(--navy); }
+.sd-share{ display: flex; flex-wrap: wrap; gap: 16px; align-items: center; margin-top: 22px; font-size: 14px; }
+.sd-share .k{ font-size: 12px; font-weight: 700; letter-spacing: .16em; text-transform: uppercase; color: var(--grey); }
+.sd-share button{ background: none; border: 0; padding: 0; cursor: pointer; color: var(--navy); font: inherit; }
+.sd-share button:hover{ color: var(--bright); text-decoration: underline; }
+.sd-more{ padding: 34px 0 46px; }
+
+/* --- Section index and About --------------------------------------------- */
+.sd-band{ background: var(--navy); color: #fff; }
+.sd-band .in{ max-width: var(--wrap); margin: 0 auto; padding: 40px 44px; }
+.sd-band .eyebrow{ font-size: 12px; letter-spacing: .2em; text-transform: uppercase; opacity: .75; font-weight: 600; margin: 0 0 8px; }
+.sd-band h1{ font-family: var(--serif); font-size: 44px; font-weight: 700; line-height: 1.06; margin: 0; color: #fff; }
+.sd-band p{ font-size: 17px; line-height: 1.5; color: #C9D2E2; margin: 12px 0 0; max-width: 62ch; }
+@media (max-width: 899px){ .sd-band .in{ padding: 30px 20px; } .sd-band h1{ font-size: 30px; } }
+
+.sd-page{ background: var(--card); border: 1px solid var(--rule); padding: 46px 0; margin: 22px 0 0; }
+.sd-page .bodycopy{ font-size: 19px; line-height: 1.7; }
+.sd-page .bodycopy p{ margin: 0 0 26px; }
+.sd-page .bodycopy h2{ font-family: var(--serif); font-size: 27px; font-weight: 700; margin: 34px 0 14px; }
+
+.sd-pagination{ display: flex; justify-content: center; gap: 10px; margin: 30px 0 0; }
+.sd-pagination a, .sd-pagination span{
+  font-size: 14px; font-weight: 600; text-decoration: none; padding: 8px 14px;
+  border: 1px solid var(--rule); background: var(--card); color: var(--navy);
+}
+.sd-pagination a:hover{ border-color: var(--navy); }
+.sd-pagination span[aria-current]{ background: var(--navy); color: #fff; border-color: var(--navy); }
+
+.sd-empty{ background: var(--card); border: 1px solid var(--rule); padding: 30px; color: var(--grey); font-size: 17px; }
+.sd-empty a{ color: var(--navy); }
+
+/* Shared chrome that still renders on Standard pages */
+.t-standard .adslot{ margin: 22px 0; }
+.t-standard .adslot .k{ font-size: 11px; letter-spacing: .16em; text-transform: uppercase; color: var(--grey); margin-bottom: 8px; }
+.t-standard .wrap{ max-width: var(--wrap); margin: 0 auto; padding: 0 44px; }
+.t-standard .pagehead h1{ font-family: var(--serif); }

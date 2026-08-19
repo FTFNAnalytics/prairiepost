@@ -44,6 +44,7 @@ $map = [
     '/contact'      => '/contact.php',
     '/ad'           => '/ad.php',
     '/corrections'  => '/corrections.php',
+    '/about'        => '/about.php',
     '/api/monitor'  => '/monitor-ingest.php',
     '/api/monitor/' => '/monitor-ingest.php',
 ];

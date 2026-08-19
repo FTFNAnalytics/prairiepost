@@ -37,6 +37,15 @@ page_header([
     return;
 } ?>
 
+    page_footer();
+    return;
+}
+
+<?php if (pp_chrome('template') === 'standard') {
+    require PP_ROOT . '/app/views/section-standard.php';
+    page_footer();
+    return;
+} ?>
 <div class="pagehead wrap"<?= desk_style($deskColor) ?>>
   <span class="pp-meta" style="color:#5A6A5C">Desk</span>
   <h1><?= e($cat['name']) ?></h1>

@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="The Sudbury Standard">
+  <!-- The blackletter S loses its detail below 24px, so the favicon takes
+       the Playfair S instead — a serif stack, per the brand package. -->
+  <rect width="64" height="64" fill="#0F3B8C"/>
+  <text x="32" y="47" text-anchor="middle"
+        font-family="'Playfair Display', Georgia, 'Times New Roman', serif"
+        font-size="46" font-weight="700" fill="#FFFFFF">S</text>
+</svg>
