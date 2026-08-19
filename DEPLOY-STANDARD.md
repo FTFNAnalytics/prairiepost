@@ -257,23 +257,39 @@ php -l "$REL/config.php"          # the generated wrapper must still lint
 
 **Verify:**
 
+Everything checked here comes from the **release tree** — the stylesheet
+and templates, and `palette.json`'s `chrome` keys. Nothing here comes
+from the database, because the database holds only what
+auto-provisioning wrote.
+
 - `https://sudburystandard.ca/` renders **the Standard's chrome**: a
-  navy utility bar reading "Sudbury, Ontario · <today>" with Newsletter
-  / Tips / Sign in at the right, a white masthead with the blackletter
-  **S** monogram, a navy section nav, a paper-grey page body, and
-  `/assets/css/standard.css` in the source.
+  navy utility bar whose left side reads "Sudbury, Ontario · <today>"
+  (`chrome.place`, from the palette), a white masthead with the
+  blackletter **S** monogram, a navy section nav, a paper-grey page
+  body, and `/assets/css/standard.css` and the `t-standard` body class
+  in the source.
 - `https://www.sudburystandard.ca/` reaches the same paper.
-- The front page is nearly empty — correct until step 6.
-- **Do not expect the paper's identity yet, and do not stop over its
-  absence.** The masthead will read the auto-provisioned
-  "Sudbury-standard", there is no tagline, and the nav carries no desk
-  links. The site title, the tagline, and the Council / Mining /
-  Housing / Letters nav are **settings and desks written by step 6's
-  seeder**. Their checks are in step 6.
+- The hero band renders — "From the desk" over "Latest from Sudbury",
+  both `chrome` keys — above an empty front page.
 - The first request self-provisioned the site row. Existing network
   admins sign in at `/admin/` immediately — there is no founding-account
   form.
 - Re-run step 4's loop once. Every other paper is still itself.
+
+**The pre-seed state below is CORRECT. Do not stop over any of it.**
+
+| You will see | Because |
+| --- | --- |
+| Title "Sudbury Standard — News to the horizon" | auto-provisioned name; "News to the horizon" is the network default tagline in `pp_site_default_settings()` |
+| Utility bar shows **Newsletter and Sign in only — no Tips** | the Tips link is guarded on `contact_email`, which defaults to empty and is written by step 5's seeder |
+| Nav shows Home, **whichever of Council / Mining / Housing / Letters already exist network-wide**, then About | desks are shared across the whole network. `pp_nav_categories()` filters the global category list by the palette's `nav` array, so a desk a sister paper already seeded appears now and the rest appear after the seeder. At the time of writing that means **Housing only** — but verify against the live category list rather than against this sentence |
+| `/about` renders headings with no body copy | `about_body` is a setting, written by the seeder |
+| No stories | correct |
+
+If you want the desk list rather than a guess:
+`php -r 'require "app/bootstrap.php"; foreach (categories_all() as $c) echo $c["slug"], "\n";'`
+run from `$REL`. Any of the Standard's four desks in that output will
+appear in the nav before the seeder runs.
 
 ## 6 · Launch content — one command
 
@@ -289,6 +305,15 @@ depend on another paper having seeded one first), four Ontario wire
 sources, and **13 launch pieces**: one lead editorial, nine desk
 editorials and three letters. Expect the output to end
 `Done — 13 stories added.`
+
+The seeder prints `desk added:` only for desks the shared database was
+**missing**. A desk a sister paper already seeded is matched by slug and
+reused, so it will not appear in that output — its absence is the pack
+working as designed, not a failure. Check the nav after the run, not the
+`desk added:` lines.
+
+The Tips link in the utility bar appears **at this step**, not before:
+`contact_email` is one of the settings this command writes.
 
 Safe to re-run. It never overwrites a setting the newsroom has already
 changed, matches desks by slug and sources by URL, and **skips a story
