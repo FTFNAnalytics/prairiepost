@@ -1,13 +1,34 @@
 # Claude notes — the Prairie Dispatch network
 
-One codebase serves the whole network (eight papers as of Western Wire).
-Each paper is a `site_slug` mapping in the server-only `config.php`, a row
-in the shared Supabase database, a front template in `app/views/`, assets
-in `assets/sites/<slug>/`, a launch pack (`launch.php`) applied by
-`tools/seed-launch.php`, and a `DEPLOY-<NAME>.md` runbook. The default
-branch `claude/prairie-post-news-site-hiffgl` IS the production release
-branch — the VPS pulls its HEAD. Land changes there via PR; never assume
-a feature branch is what production runs.
+One codebase serves the whole network (ten papers as of the Sudbury
+Standard). Each paper is a tenant mapping in the server-only config, a
+row in the shared database, a front template in `app/views/`, assets in
+`assets/sites/<slug>/`, a launch pack (`launch.php`) applied by
+`tools/seed-launch.php`, and a `DEPLOY-<NAME>.md` runbook.
+
+**The release branch is `claude/master-dashboard-control-room-nr3mp4`.**
+It is *not* the repository's default branch — GitHub still defaults to
+`claude/prairie-post-news-site-hiffgl`, which is a dead line (no
+CivisMedia hub, no Sudbury). The release branch is the string hardcoded
+in `tools/vps/upgrade-papers.sh`; that script is the only thing that
+defines what production runs.
+
+**The VPS does not pull.** `upgrade-papers.sh` resolves the release
+branch's head, extracts it to an immutable release directory
+`/var/www/prairiepost-<sha12>-<label>`, carries each old release's
+configuration forward verbatim as `app/config.site.php`, writes a
+generated `config.php` wrapper over it, repoints the nginx blocks and
+cron files, and rolls the group back if a domain stops serving its own
+masthead. So: `config.php` in a live release is generated — the tenant
+configuration to edit is `app/config.site.php`, and new code reaches
+production only through that script.
+
+Never deploy from a branch that is not merged into the release branch.
+The Torch went live from `deploy/torch-on-3fd4f13` and stayed outside
+the trunk for weeks; the next upgrade would have repointed
+tricitiestorch.ca at a tree containing none of its templates or assets,
+and the script's masthead check could not have caught it because the
+title comes from the database, not the tree.
 
 ## Launching a site: lessons from the rollouts (Brampton, Western Wire)
 
@@ -127,13 +148,54 @@ must never be `git pull`ed or rsynced into.
   branch and commit a release directory was built from — the directory
   name carries the short SHA — before writing or following a runbook.
 
-## Current operational state (as of the Western Wire launch)
+## Current operational state (as of the Sudbury Standard launch)
 
-- westernwire.ca is live (site_id 8, slug `westernwire`), served from
-  the shared release; TLS via certbot, expiry Nov 2026.
-- Western Wire uses the network-wide fetch cron — no dedicated cron.
-- Its newsletter (`newsletter_enabled`) is OFF pending owner mail setup
-  (sixam@/tips@ mailboxes, SMTP identity, mailing address, SPF, DKIM,
-  test send).
-- A pre-Western-Wire backup of the live config exists at
-  `/root/prairiepost-config-pre-westernwire-20260811T041024Z.php`.
+- **Release in production: `b1352703c1dc`**, at
+  `/var/www/prairiepost-b1352703c1dc-shared`, serving all ten papers as
+  one release group. Schema version 14.
+- The **CivisMedia hub** runs from its own release,
+  `/var/www/prairiepost-d298039b1d40`, and was deliberately left behind
+  by the last upgrade. The Institute (`cies`, `/var/www/cies-v0.16`) is
+  an unrelated site on the same box — never touch it.
+- The ten papers: prairiedispatch.ca, edmontonecho.com,
+  thepacificpost.com, kelownacurrent.ca, kermodechronicle.ca,
+  grandeprairiegazette.ca, bramptonbulletin.com, westernwire.ca,
+  tricitiestorch.ca, sudburystandard.ca. Discover the live set from the
+  enabled nginx blocks rather than from this list.
+- **sudburystandard.ca** is live (slug `sudbury-standard`, template
+  `standard`): four desks, 13 launch pieces, no slug collisions. TLS
+  expires 16 Nov 2026. Pre-edit config backup at
+  `/root/prairiepost-config-pre-sudbury-20260819T001958Z.php`.
+- Every paper uses the network-wide fetch cron. No paper has a dedicated
+  one.
+- **No paper has its newsletter enabled.** All are pending owner mail
+  setup (mailboxes, SMTP identity, mailing address, SPF, DKIM, test
+  send).
+- `deploy/torch-on-3fd4f13` and the merged feature branches are stale
+  now that the network is on `b1352703c1dc`.
+
+## Known debt, in the order it should be paid
+
+1. **Every paper is indexable** — `robots.txt` is `Allow: /` with the
+   sitemap advertised — and every paper's content is invented editorial
+   about a real city, including figures and votes attributed to real
+   councils. Either `Disallow: /` until the content is real, or replace
+   the packs. This grows with each launch.
+2. **A new paper edits four shared files** — a dispatch arm in
+   `index.php`, `article.php` and `section.php`, and header + footer
+   chrome in `ui.php` (28 template branches there already). The Torch
+   and the Standard conflicted in all four. Before papers 11–15, replace
+   the if-chains with a convention (`front-{$template}.php` if it
+   exists) and move each paper's chrome into its own partial, so a new
+   paper is new files only.
+3. **`upgrade-papers.sh` cannot detect template loss.** Its guard
+   compares each domain's `<title>`, which comes from the database, so a
+   paper whose CSS and templates are missing from the release still
+   passes. Assert that each paper's expected stylesheet appears in the
+   served HTML.
+4. **`posts.slug` is UNIQUE network-wide.** At 15 papers that is ~225
+   slugs in one namespace in the same register, and the seeder's failure
+   mode is a silent `story exists, skipped`. Scope it per site or have
+   the seeder prefix automatically.
+5. **GitHub's default branch is the dead line.** Repoint it to the
+   release branch so the trunk that is visible is the trunk that ships.
