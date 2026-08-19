@@ -15,16 +15,39 @@ These are the failure classes that have actually bitten deployments.
 Check every new runbook and every set of deployment-agent instructions
 against this list before shipping them.
 
-1. **Verify only what exists at that step.** A site's identity
-   (`site_title`, `tagline`, `regions`) and all content are written by
-   the step-5 seeder — they do not exist at the config-mapping step.
-   Chrome checks before seeding are structural only (template class,
-   stylesheet, layout); identity and content checks belong after the
-   seed, with an explicit "do not stop over their absence" note in the
-   earlier step. This same ordering defect shipped twice (Brampton's
-   ticker/Brief rail, Western Wire's wordmark/province links). When
-   writing a Verify item, trace each expected value to the step that
-   writes it.
+1. **Verify only what exists at that step.** This defect has now shipped
+   **three times** — Brampton's ticker/Brief rail, Western Wire's
+   wordmark/province links, and Sudbury's Tips link and desk nav. Every
+   time the deployment was healthy and the gate was wrong, and every
+   time the remedy was written down as a principle that then failed to
+   stop the next one. So stop writing it as a principle. Before a
+   pre-seed Verify item goes into a runbook, run this classification,
+   and put the result in the runbook itself:
+
+   | Where the value comes from | State before the seeder |
+   | --- | --- |
+   | Release tree — stylesheet, templates, `palette.json` `chrome` keys (`place`, `hero_*`, `lead_kicker`, `nav` order) | **Present.** Safe to check. |
+   | `pp_site_default_settings()` in `app/seed.php` | **Present, at network-default values** — the tagline reads "News to the horizon", never the paper's own. |
+   | The launch pack's `settings` array | **Absent.** Everything here is post-seed, including values that gate chrome. |
+   | The global `categories` table | **Unknowable in advance.** Desks are shared network-wide, so any desk a sister paper already seeded is *already in the nav*. |
+   | `posts` | Absent. |
+
+   Two mechanical checks that would have caught all three:
+
+   - For every chrome element in a pre-seed Verify item, grep the
+     template for its guard. `<?php if (setting('contact_email') !== ''):`
+     wrapped around the Tips link, with `contact_email` in the launch
+     pack, means Tips is post-seed. The guard is the answer — don't
+     reason about it.
+   - Never assert an *absence* that depends on shared network state.
+     "The nav carries no desk links" cannot be derived from the pack.
+     Ship the query instead — `categories_all()` run from `$REL` — and
+     let the agent read the real list.
+
+   Write pre-seed expectations as a table of *what you will see and
+   why*, not as a list of what will be missing. A positive expectation
+   can be matched; "do not stop over the absence of things I have not
+   enumerated" cannot.
 
 2. **The live `config.php` has drifted from `config.example.php`.**
    Production uses a three-stage exact-match tenant selector
