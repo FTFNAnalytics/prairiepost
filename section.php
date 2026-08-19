@@ -31,6 +31,15 @@ page_header([
 ], $cat['slug']);
 ?>
 
+<?php if (pp_chrome('template') === 'torch') {
+    require PP_ROOT . '/app/views/section-torch.php';
+    page_footer();
+    return;
+} ?>
+
+    page_footer();
+    return;
+}
 
 <?php if (pp_chrome('template') === 'standard') {
     require PP_ROOT . '/app/views/section-standard.php';

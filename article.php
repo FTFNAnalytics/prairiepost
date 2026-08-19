@@ -79,6 +79,15 @@ page_header([
 ], (string) $post['category_slug']);
 ?>
 
+<?php if (pp_chrome('template') === 'torch') {
+    require PP_ROOT . '/app/views/article-torch.php';
+    page_footer();
+    return;
+} ?>
+
+    page_footer();
+    return;
+}
 
 <?php if (pp_chrome('template') === 'standard') {
     require PP_ROOT . '/app/views/article-standard.php';
