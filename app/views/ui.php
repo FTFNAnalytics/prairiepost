@@ -574,7 +574,7 @@ foreach ($activeDesk !== '' ? categories_all() : [] as $c) {
 
   <header class="bb-tete">
     <a class="bb-lock" href="/" aria-label="<?= e($siteTitle) ?>">
-      <span class="sym" aria-hidden="true"><img src="<?= e(site_asset('mark.svg')) ?>" alt="" width="46" height="40"></span>
+      <span class="sym" aria-hidden="true"><img src="<?= e(site_asset('mark.svg')) ?>" alt="" width="46" height="46"></span>
       <span>
         <span class="bb-nom"><?= e($siteTitle) ?></span>
         <span class="rub" style="display:block"><?= e($bbRub) ?></span>
@@ -841,7 +841,7 @@ $ttFirst = $ttLast !== '' ? implode(' ', $ttWords) : $siteTitle;
   <footer class="bb-pied">
     <div class="haut">
       <div>
-        <span class="sym" aria-hidden="true"><img src="<?= e(site_asset('mark.svg')) ?>" alt="" width="54" height="47"></span>
+        <span class="sym" aria-hidden="true"><img src="<?= e(site_asset('mark.svg')) ?>" alt="" width="54" height="54"></span>
         <div class="nom"><?= e($siteTitle) ?></div>
         <p class="devise"><?= e(setting('footer_line')) ?></p>
       </div>
