@@ -13,6 +13,10 @@ $img = fn (string $file) => '/assets/sites/kelowna-current/img/' . $file;
 
 return [
 
+    /* Every public hostname this paper answers on. The seeder writes these
+       into the domains table, which bootstrap resolves tenants from. */
+    'domains' => ['kelownacurrent.ca', 'www.kelownacurrent.ca'],
+
     'desks' => [
         ['name' => 'Okanagan', 'slug' => 'okanagan', 'color' => '#1C6F8A', 'description' => 'Home base: the valley, its cities, and the systems they share.'],
         ['name' => 'BC News',  'slug' => 'bc-news',  'color' => '#1E5631', 'description' => 'The province beyond the bridges, from the Island to the Kootenays.'],

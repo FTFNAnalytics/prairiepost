@@ -19,6 +19,10 @@ $img = fn (string $file) => '/assets/sites/sudbury-standard/img/' . $file;
 
 return [
 
+    /* Every public hostname this paper answers on. The seeder writes these
+       into the domains table, which bootstrap resolves tenants from. */
+    'domains' => ['sudburystandard.ca', 'www.sudburystandard.ca'],
+
     'desks' => [
         ['name' => 'Council', 'slug' => 'council', 'color' => '#0F3B8C', 'description' => 'City hall, the budget, and the votes the minutes do not explain.'],
         ['name' => 'Mining',  'slug' => 'mining',  'color' => '#0F3B8C', 'description' => 'The industry that built the basin, the companies in it, and what they owe the ground they stand on.'],

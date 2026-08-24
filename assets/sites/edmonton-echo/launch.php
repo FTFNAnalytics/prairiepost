@@ -12,6 +12,10 @@ $img = fn (string $file) => '/assets/sites/edmonton-echo/img/' . $file;
 
 return [
 
+    /* Every public hostname this paper answers on. The seeder writes these
+       into the domains table, which bootstrap resolves tenants from. */
+    'domains' => ['edmontonecho.com'],
+
     /* --- Desks the Echo adds to the network (created only if missing) ----- */
     'desks' => [
         ['name' => 'Sports',  'slug' => 'sports',  'color' => '#1D5C8C', 'description' => 'The rinks, the diamonds, and who pays for the ice.'],

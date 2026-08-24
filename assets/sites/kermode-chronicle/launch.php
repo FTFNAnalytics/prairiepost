@@ -13,6 +13,10 @@ $img = fn (string $file) => '/assets/sites/kermode-chronicle/img/' . $file;
 
 return [
 
+    /* Every public hostname this paper answers on. The seeder writes these
+       into the domains table, which bootstrap resolves tenants from. */
+    'domains' => ['kermodechronicle.ca'],
+
     /* --- Desks the Chronicle adds to the network (created if missing) ----- */
     'desks' => [
         ['name' => 'Environment', 'slug' => 'environment', 'color' => '#1C5342', 'description' => 'The land, the water, and the decisions that reach them.'],

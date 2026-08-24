@@ -5,7 +5,7 @@
  */
 
 define('PP_ROOT', dirname(__DIR__));
-define('PP_SCHEMA_VERSION', 14);
+define('PP_SCHEMA_VERSION', 15);
 
 $configFile = PP_ROOT . '/config.php';
 $GLOBALS['pp_config'] = is_file($configFile)
@@ -171,9 +171,37 @@ function pp_like(): string
 }
 
 /**
- * The site this deployment serves, resolved by config 'site_slug'.
- * Joining an existing shared database creates the site row (and its default
- * settings) on first request — no manual setup step.
+ * The site slug the domains table maps this request's hostname to, or null
+ * when no row claims it. Rows are written only by the seeder from launch
+ * packs; this is the authoritative tenant lookup, with the config selector
+ * as the fallback for hostnames that predate their row. The try/catch is
+ * load-bearing: on a database that hasn't run migration 15 yet (the first
+ * request after an upgrade resolves the tenant before it migrates), the
+ * query fails and resolution falls back to the config exactly as before.
+ */
+function pp_domain_site_slug(): ?string
+{
+    $host = strtolower(trim((string) ($_SERVER['HTTP_HOST'] ?? '')));
+    $host = preg_replace('/:\d+$/', '', $host);
+    if ($host === '' || !preg_match('/^[a-z0-9.-]+$/', $host)) {
+        return null;
+    }
+    try {
+        $stmt = db()->prepare('SELECT site_slug FROM domains WHERE hostname = ?');
+        $stmt->execute([$host]);
+        $slug = $stmt->fetchColumn();
+    } catch (PDOException) {
+        return null;
+    }
+    return $slug !== false && $slug !== '' ? (string) $slug : null;
+}
+
+/**
+ * The site this deployment serves. Resolution order: the PP_SITE
+ * environment override, then the domains table on the request hostname,
+ * then the config 'site_slug'. Joining an existing shared database creates
+ * the site row (and its default settings) on first request — no manual
+ * setup step.
  */
 function current_site(): array
 {
@@ -181,9 +209,9 @@ function current_site(): array
     if ($site !== null) {
         return $site;
     }
-    // PP_SITE overrides the config for CLI runs (cron on a multi-site host,
-    // where HTTP_HOST-based config mapping has no host to look at).
-    $slug = slugify((string) (getenv('PP_SITE') ?: pp_config('site_slug', 'prairiedispatch')));
+    // PP_SITE overrides everything for CLI runs (cron on a multi-site host,
+    // where HTTP_HOST-based mapping has no host to look at).
+    $slug = slugify((string) (getenv('PP_SITE') ?: pp_domain_site_slug() ?: pp_config('site_slug', 'prairiedispatch')));
     $stmt = db()->prepare('SELECT * FROM sites WHERE slug = ?');
     $stmt->execute([$slug]);
     $site = $stmt->fetch();

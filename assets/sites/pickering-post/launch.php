@@ -30,6 +30,10 @@ $img = fn (string $file) => '/assets/sites/pickering-post/img/' . $file;
 
 return [
 
+    /* Every public hostname this paper answers on. The seeder writes these
+       into the domains table, which bootstrap resolves tenants from. */
+    'domains' => ['pickeringpost.ca', 'www.pickeringpost.ca'],
+
     'desks' => [
         ['name' => 'Local News',  'slug' => 'local-news',  'color' => '#0088B0', 'description' => 'Council, the waterfront, the schools, and what happened overnight.'],
         ['name' => 'Community',   'slug' => 'community',   'color' => '#0088B0', 'description' => 'The people, clubs and volunteers who make the place work.'],

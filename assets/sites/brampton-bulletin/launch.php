@@ -13,6 +13,10 @@ $img = fn (string $file) => '/assets/sites/brampton-bulletin/img/' . $file;
 
 return [
 
+    /* Every public hostname this paper answers on. The seeder writes these
+       into the domains table, which bootstrap resolves tenants from. */
+    'domains' => ['bramptonbulletin.com', 'www.bramptonbulletin.com'],
+
     'desks' => [
         ['name' => 'City Hall',     'slug' => 'city-hall',   'color' => '#0B6E4F', 'description' => 'Council, the budget, and every line item with your name on it.'],
         ['name' => 'Peel & Courts', 'slug' => 'peel-courts', 'color' => '#0B6E4F', 'description' => 'The region, the police board, the courthouse — where Brampton meets Peel.'],

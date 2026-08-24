@@ -13,6 +13,10 @@ $img = fn (string $file) => '/assets/sites/pacific-post/img/' . $file;
 
 return [
 
+    /* Every public hostname this paper answers on. The seeder writes these
+       into the domains table, which bootstrap resolves tenants from. */
+    'domains' => ['thepacificpost.com'],
+
     'desks' => [
         ['name' => 'BC News',     'slug' => 'bc-news',     'color' => '#1E5631', 'description' => 'The province beyond the bridges, from the Island to the Kootenays.'],
         ['name' => 'Environment', 'slug' => 'environment', 'color' => '#1C5342', 'description' => 'The land, the water, and the decisions that reach them.'],

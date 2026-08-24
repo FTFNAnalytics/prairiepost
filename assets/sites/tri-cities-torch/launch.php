@@ -18,6 +18,10 @@ $img = fn (string $file) => '/assets/sites/tri-cities-torch/img/' . $file;
 
 return [
 
+    /* Every public hostname this paper answers on. The seeder writes these
+       into the domains table, which bootstrap resolves tenants from. */
+    'domains' => ['tricitiestorch.ca', 'www.tricitiestorch.ca'],
+
     // Shared network desks. Each is created only if missing; the Torch
     // renames "News" to "Local News" and "Business & Markets" to "Business"
     // for itself through desk_labels in palette.json.

@@ -17,6 +17,10 @@ $img = fn (string $file) => '/assets/sites/westernwire/img/' . $file;
 
 return [
 
+    /* Every public hostname this paper answers on. The seeder writes these
+       into the domains table, which bootstrap resolves tenants from. */
+    'domains' => ['westernwire.ca', 'www.westernwire.ca'],
+
     // Shared network desks are reused (news, politics, business, sports,
     // opinion); the Wire adds only what the network lacks.
     'desks' => [

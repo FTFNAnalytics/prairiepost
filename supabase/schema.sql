@@ -32,6 +32,14 @@ CREATE TABLE sites (
     created_at TIMESTAMP NOT NULL
 );
 
+CREATE TABLE domains (
+    id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    hostname VARCHAR(255) NOT NULL UNIQUE,
+    site_slug VARCHAR(191) NOT NULL,
+    created_at TIMESTAMP NOT NULL
+);
+CREATE INDEX idx_domains_site ON domains (site_slug);
+
 CREATE TABLE users (
     id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     name VARCHAR(120) NOT NULL,
@@ -415,4 +423,4 @@ CREATE TABLE ops_runs (
 );
 CREATE INDEX idx_ops_runs_job ON ops_runs (job, id);
 
-INSERT INTO settings (site_id, skey, svalue) VALUES (0, 'schema_version', '14');
+INSERT INTO settings (site_id, skey, svalue) VALUES (0, 'schema_version', '15');

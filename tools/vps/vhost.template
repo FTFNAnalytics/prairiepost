@@ -1,0 +1,35 @@
+# __VHOST_NAME__ — generated from tools/vps/vhost.template. Do not hand-edit
+# route rules into this block: nginx is a front controller here, and routes
+# live in router.php alone. Certbot appends the TLS lines after generation.
+server {
+    listen 80;
+    listen [::]:80;
+    server_name __SERVER_NAMES__;
+
+    root __RELEASE_ROOT__;
+    index index.php;
+
+    # The application tree and data are never served.
+    location ~ ^/(app|data)/                    { deny all; }
+    location ~ ^/uploads/.+\.(php|phtml|phar)$  { deny all; }
+    location ~ ^/(config\.php|config\.example\.php)$ { deny all; }
+
+    # The front controller: static files first, everything else through the
+    # router. `internal` keeps router.php unreachable directly from outside —
+    # only the try_files internal redirect may enter it.
+    location / {
+        try_files $uri /router.php$is_args$args;
+    }
+    location = /router.php {
+        internal;
+        include fastcgi_params;
+        fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
+        fastcgi_pass unix:__PHP_SOCKET__;
+    }
+    location ~ \.php$ {
+        try_files $uri =404;
+        include fastcgi_params;
+        fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
+        fastcgi_pass unix:__PHP_SOCKET__;
+    }
+}
