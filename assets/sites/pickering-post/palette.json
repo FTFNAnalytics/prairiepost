@@ -1,0 +1,31 @@
+{
+  "palette": {
+    "ink":     "#004961",
+    "paper":   "#F3F2F2",
+    "board":   "#EAE9E9",
+    "sky":     "#0088B0",
+    "hill":    "#0A303E",
+    "field":   "#0088B0",
+    "stubble": "#605D5D",
+    "red":     "#D6006C",
+    "muted":   "#605D5D"
+  },
+  "desks": {
+    "local-news":  "#0088B0",
+    "community":   "#0088B0",
+    "events":      "#0088B0",
+    "sports":      "#0088B0",
+    "business":    "#0088B0",
+    "opinion":     "#0088B0",
+    "obituaries":  "#605D5D",
+    "breaking":    "#D6006C"
+  },
+  "desk_labels": {
+    "local-news": "Local News"
+  },
+  "chrome": {
+    "template": "pickering",
+    "trending": false,
+    "nav": ["local-news", "community", "events", "sports", "opinion"]
+  }
+}

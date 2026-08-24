@@ -203,6 +203,7 @@ function page_header(array $meta = [], string $activeDesk = ''): void
 <?php endif; ?><?php if (pp_chrome('template') === 'torch'): ?><link rel="stylesheet" href="/assets/css/torch.css">
 <?php endif; ?><?php if (pp_chrome('template') === 'standard'): ?><link rel="stylesheet" href="/assets/css/standard.css">
 <?php endif; ?><?php if (pp_chrome('template') === 'turtleisland'): ?><link rel="stylesheet" href="/assets/css/turtleisland.css">
+<?php endif; ?><?php if (pp_chrome('template') === 'pickering'): ?><link rel="stylesheet" href="/assets/css/pickering.css">
 <?php endif; ?><?php if (site_asset('brand.css') !== '/assets/img/brand.css'): ?><link rel="stylesheet" href="<?= e(site_asset('brand.css')) ?>">
 <?php endif; ?>
 <meta property="og:site_name" content="<?= e($siteTitle) ?>">
@@ -217,7 +218,7 @@ function page_header(array $meta = [], string $activeDesk = ''): void
 <?php endif; ?>
 <?php $analytics = setting('analytics_code'); if ($analytics !== '') { echo $analytics . "\n"; } ?>
 </head>
-<body class="<?= trim((pp_chrome('cards') === 'panel' ? 'cards-panel ' : '') . (pp_chrome('template') === 'echo-v3' ? 't-dark' : '') . (pp_chrome('template') === 'aurora' ? 't-aurora' : '') . (pp_chrome('template') === 'chronicle' ? 't-chronicle' : '') . (pp_chrome('template') === 'pacific' ? 't-pacific' : '') . (pp_chrome('template') === 'current' ? 't-current' : '') . (pp_chrome('template') === 'bulletin' ? 't-bulletin' : '') . (pp_chrome('template') === 'westernwire' ? 't-westernwire' : '') . (pp_chrome('template') === 'torch' ? 't-torch' : '') . (pp_chrome('template') === 'standard' ? 't-standard' : '') . (pp_chrome('template') === 'turtleisland' ? 't-turtleisland' : '')) ?>">
+<body class="<?= trim((pp_chrome('cards') === 'panel' ? 'cards-panel ' : '') . (pp_chrome('template') === 'echo-v3' ? 't-dark' : '') . (pp_chrome('template') === 'aurora' ? 't-aurora' : '') . (pp_chrome('template') === 'chronicle' ? 't-chronicle' : '') . (pp_chrome('template') === 'pacific' ? 't-pacific' : '') . (pp_chrome('template') === 'current' ? 't-current' : '') . (pp_chrome('template') === 'bulletin' ? 't-bulletin' : '') . (pp_chrome('template') === 'westernwire' ? 't-westernwire' : '') . (pp_chrome('template') === 'torch' ? 't-torch' : '') . (pp_chrome('template') === 'standard' ? 't-standard' : '') . (pp_chrome('template') === 'turtleisland' ? 't-turtleisland' : '') . (pp_chrome('template') === 'pickering' ? 't-pickering' : '')) ?>">
 <a class="pp-meta" href="#content" style="position:absolute;left:-9999px" onfocus="this.style.left='8px';this.style.top='8px'" onblur="this.style.left='-9999px'">Skip to the news</a>
 
 <?php if (pp_chrome('template') === 'echo-v3'): ?>
@@ -546,6 +547,44 @@ $tiPlate = $GLOBALS['ppTiPlate'] ?? $siteTitle;
       </div>
     </header>
     <div class="ti-pad">
+<?php elseif (pp_chrome('template') === 'pickering'): ?>
+<?php
+// The tile lockup leads, because that is what the masthead uses. The name
+// splits into "The" over the rest so the two lines set flush beside the tile.
+$pkWords = preg_split('/\s+/', trim($siteTitle));
+$pkThe   = (strcasecmp($pkWords[0] ?? '', 'The') === 0) ? array_shift($pkWords) : '';
+$pkName  = implode(' ', $pkWords);
+$pkInit  = mb_strtoupper(mb_substr($pkName !== '' ? $pkName : $siteTitle, 0, 1));
+// A section front replaces the tile masthead with the centred nameplate;
+// section.php sets these before page_header() runs.
+$pkMode  = $GLOBALS['ppPkMode'] ?? 'full';
+?>
+<div class="pk-page">
+  <div class="pk-util">
+    <span><?= e(setting('tagline')) ?> &middot; <?= e(date('l, F j, Y')) ?></span>
+    <span class="grp">
+      <a href="<?= e(url('newsletter/')) ?>">Newsletter</a>
+      <?php if (setting('contact_email') !== ''): ?><a href="mailto:<?= e(setting('contact_email')) ?>">Contact</a><?php endif; ?>
+      <a href="/admin/">Sign in</a>
+    </span>
+  </div>
+  <header class="pk-mast">
+    <a class="pk-lock" href="/" aria-label="<?= e($siteTitle) ?> — front page">
+      <span class="pk-tile" aria-hidden="true"><?= e($pkInit) ?></span>
+      <span>
+        <?php if ($pkThe !== ''): ?><span class="sub" style="display:block"><?= e($pkThe) ?></span><?php endif; ?>
+        <span class="pk-name"><?= e($pkName !== '' ? $pkName : $siteTitle) ?></span>
+      </span>
+    </a>
+    <a class="pk-btn" href="<?= e(url('subscribe')) ?>">Subscribe</a>
+  </header>
+  <nav class="pk-nav" aria-label="Sections">
+    <a href="/"<?= ($GLOBALS['pp_front_page'] ?? false) ? ' aria-current="page"' : '' ?>>Home</a>
+    <?php foreach (pp_nav_categories() as $cat): ?>
+    <a href="<?= e(url('desk/' . $cat['slug'])) ?>"<?= $activeDesk === $cat['slug'] ? ' aria-current="page"' : '' ?>><?= e(pp_desk_label($cat['slug'], $cat['name'])) ?></a>
+    <?php endforeach; ?>
+    <a href="<?= e(url('contact')) ?>"<?= $activeDesk === 'contact' ? ' aria-current="page"' : '' ?>>Contact</a>
+  </nav>
 <?php elseif (pp_chrome('template') === 'westernwire'): ?>
 <div class="ww-strip">
   <div class="wrap">
@@ -750,6 +789,50 @@ $ttFirst = $ttLast !== '' ? implode(' ', $ttWords) : $siteTitle;
     </div>
   </div>
 </footer>
+</body>
+</html>
+<?php return; endif; ?>
+<?php if (pp_chrome('template') === 'pickering'): ?>
+<?php
+$pkWords = preg_split('/\s+/', trim($siteTitle));
+if (strcasecmp($pkWords[0] ?? '', 'The') === 0) { array_shift($pkWords); }
+$pkName = implode(' ', $pkWords);
+$pkInit = mb_strtoupper(mb_substr($pkName !== '' ? $pkName : $siteTitle, 0, 1));
+?>
+  <footer class="pk-foot">
+    <div class="cols">
+      <div>
+        <span class="lock">
+          <span class="pk-tile" aria-hidden="true"><?= e($pkInit) ?></span>
+          <span class="nm"><?= e($pkName !== '' ? $pkName : $siteTitle) ?></span>
+        </span>
+        <p style="font-size:15px;margin:0;color:color-mix(in srgb,var(--paper) 82%,transparent)"><?= e(setting('footer_line')) ?></p>
+      </div>
+      <div>
+        <h4>Sections</h4>
+        <?php foreach (pp_nav_categories() as $cat): ?>
+        <a href="<?= e(url('desk/' . $cat['slug'])) ?>"><?= e(pp_desk_label($cat['slug'], $cat['name'])) ?></a>
+        <?php endforeach; ?>
+      </div>
+      <div>
+        <h4>The paper</h4>
+        <a href="<?= e(url('contact')) ?>">Contact</a>
+        <a href="<?= e(url('corrections')) ?>">Corrections</a>
+        <a href="<?= e(url('search')) ?>">Search the archive</a>
+        <a href="/admin/">Newsroom sign-in</a>
+      </div>
+      <div>
+        <h4>Follow</h4>
+        <a href="<?= e(url('newsletter/')) ?>">The morning email</a>
+        <a href="<?= e(url('feed/')) ?>">RSS</a>
+        <?php if (setting('contact_email') !== ''): ?><a href="mailto:<?= e(setting('contact_email')) ?>">Send a tip</a><?php endif; ?>
+      </div>
+    </div>
+    <div class="base">
+      &copy; <?= e(date('Y')) ?> <?= e($siteTitle) ?> &middot; <?= e(setting('footer_line')) ?>
+    </div>
+  </footer>
+</div>
 </body>
 </html>
 <?php return; endif; ?>
