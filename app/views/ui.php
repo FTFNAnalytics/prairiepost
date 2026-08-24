@@ -193,18 +193,15 @@ function page_header(array $meta = [], string $activeDesk = ''): void
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="/assets/css/prairie.css">
-<?php if (pp_chrome('template') === 'echo-v3'): ?><link rel="stylesheet" href="/assets/css/broadsheet.css">
-<?php endif; ?><?php if (pp_chrome('template') === 'aurora'): ?><link rel="stylesheet" href="/assets/css/aurora.css">
-<?php endif; ?><?php if (pp_chrome('template') === 'chronicle'): ?><link rel="stylesheet" href="/assets/css/chronicle.css">
-<?php endif; ?><?php if (pp_chrome('template') === 'pacific'): ?><link rel="stylesheet" href="/assets/css/pacific.css">
-<?php endif; ?><?php if (pp_chrome('template') === 'current'): ?><link rel="stylesheet" href="/assets/css/current.css">
-<?php endif; ?><?php if (pp_chrome('template') === 'bulletin'): ?><link rel="stylesheet" href="/assets/css/bulletin.css">
-<?php endif; ?><?php if (pp_chrome('template') === 'westernwire'): ?><link rel="stylesheet" href="/assets/css/westernwire.css">
-<?php endif; ?><?php if (pp_chrome('template') === 'torch'): ?><link rel="stylesheet" href="/assets/css/torch.css">
-<?php endif; ?><?php if (pp_chrome('template') === 'standard'): ?><link rel="stylesheet" href="/assets/css/standard.css">
-<?php endif; ?><?php if (pp_chrome('template') === 'turtleisland'): ?><link rel="stylesheet" href="/assets/css/turtleisland.css">
-<?php endif; ?><?php if (pp_chrome('template') === 'pickering'): ?><link rel="stylesheet" href="/assets/css/pickering.css">
-<?php endif; ?><?php if (pp_chrome('template') === 'bleuetblanc'): ?><link rel="stylesheet" href="/assets/css/bleuetblanc.css">
+<?php
+// The paper's stylesheet, by convention rather than by name: a migrated
+// paper ships app/views/chrome/<template>-head.php and its css file. The
+// hub deliberately has no chrome partial and so links nothing here. One
+// legacy rename survives: the echo-v3 template's file is broadsheet.css.
+$ppTpl = basename((string) pp_chrome('template'));
+$ppCssFile = ['echo-v3' => 'broadsheet'][$ppTpl] ?? $ppTpl;
+$ppHasChrome = $ppTpl !== '' && is_file(PP_ROOT . '/app/views/chrome/' . $ppTpl . '-head.php');
+if ($ppHasChrome && is_file(PP_ROOT . '/assets/css/' . $ppCssFile . '.css')): ?><link rel="stylesheet" href="/assets/css/<?= e($ppCssFile) ?>.css">
 <?php endif; ?><?php if (site_asset('brand.css') !== '/assets/img/brand.css'): ?><link rel="stylesheet" href="<?= e(site_asset('brand.css')) ?>">
 <?php endif; ?>
 <meta property="og:site_name" content="<?= e($siteTitle) ?>">
@@ -219,7 +216,7 @@ function page_header(array $meta = [], string $activeDesk = ''): void
 <?php endif; ?>
 <?php $analytics = setting('analytics_code'); if ($analytics !== '') { echo $analytics . "\n"; } ?>
 </head>
-<body class="<?= trim((pp_chrome('cards') === 'panel' ? 'cards-panel ' : '') . (pp_chrome('template') === 'echo-v3' ? 't-dark' : '') . (pp_chrome('template') === 'aurora' ? 't-aurora' : '') . (pp_chrome('template') === 'chronicle' ? 't-chronicle' : '') . (pp_chrome('template') === 'pacific' ? 't-pacific' : '') . (pp_chrome('template') === 'current' ? 't-current' : '') . (pp_chrome('template') === 'bulletin' ? 't-bulletin' : '') . (pp_chrome('template') === 'westernwire' ? 't-westernwire' : '') . (pp_chrome('template') === 'torch' ? 't-torch' : '') . (pp_chrome('template') === 'standard' ? 't-standard' : '') . (pp_chrome('template') === 'turtleisland' ? 't-turtleisland' : '') . (pp_chrome('template') === 'pickering' ? 't-pickering' : '') . (pp_chrome('template') === 'bleuetblanc' ? 't-bleuetblanc' : '')) ?>">
+<body class="<?= trim((pp_chrome('cards') === 'panel' ? 'cards-panel ' : '') . ($ppHasChrome ? ($ppTpl === 'echo-v3' ? 't-dark' : 't-' . $ppTpl) : '')) ?>">
 <a class="pp-meta" href="#content" style="position:absolute;left:-9999px" onfocus="this.style.left='8px';this.style.top='8px'" onblur="this.style.left='-9999px'">Skip to the news</a>
 
 <?php

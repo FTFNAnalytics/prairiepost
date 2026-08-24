@@ -21,7 +21,7 @@ body.t-chronicle{
   --kc-mint:   #A9D0B3;   /* accents on the navy                 */
   --kc-wash:   #E6F0E7;   /* field notes / coast report ground   */
   --kc-chalk:  #D7E2DC;   /* quiet type on the navy              */
-  --kc-serif:  'Source Serif 4', Georgia, serif;
+  --kc-serif:  Georgia, 'Times New Roman', serif;
 
   /* Inner pages read as the brand: paper white, green links. */
   --pp-shelterbelt: var(--kc-ink);

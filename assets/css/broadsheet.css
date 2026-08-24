@@ -23,7 +23,7 @@ body.t-dark{
   --pp-binred:var(--v3-accent);
 
   background:var(--v3-deep);color:var(--v3-ink);
-  font-family:'Source Serif 4',Georgia,serif;
+  font-family:Georgia,'Times New Roman',serif;
 }
 body.t-dark *{border-radius:2px}
 body.t-dark .pp-horizon{border-top-color:var(--v3-accent)}

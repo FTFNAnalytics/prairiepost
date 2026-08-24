@@ -1,5 +1,5 @@
 /* ============================================================
-   The bulletin template — newsprint structure, Source Serif 4
+   The bulletin template — newsprint structure, Georgia
    throughout, Flower City green as the interactive ink, heritage
    brick reserved for live and breaking, press yellow only in the
    nameplate's plate treatment. No boxes, no dividers: the
@@ -20,7 +20,7 @@ body.t-bulletin{
   --bb-muted:  #6E6A64;
   --bb-line:   #DBD9D4;
   --bb-tint:   #E2EEE9;   /* green beat-chip tint                   */
-  --bb-serif:  'Source Serif 4', Georgia, serif;
+  --bb-serif:  Georgia, 'Times New Roman', serif;
 
   /* Inner pages read as the brand. */
   --pp-shelterbelt: var(--bb-ink);

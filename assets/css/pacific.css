@@ -17,7 +17,7 @@ body.t-pacific{
   --pf-inlet:  #0F6E9E;   /* every interactive element         */
   --pf-deep:   #0B5279;   /* inlet pressed                     */
   --pf-signal: #C2591A;   /* breaking news only                */
-  --pf-serif:  'Source Serif 4', Georgia, serif;
+  --pf-serif:  Georgia, 'Times New Roman', serif;
 
   /* Inner pages read as the brand. */
   --pp-shelterbelt: var(--pf-ink);
