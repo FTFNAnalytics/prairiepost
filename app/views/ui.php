@@ -430,43 +430,6 @@ elseif (pp_chrome('template') === 'echo-v3'): ?>
   </div>
 </div>
 <?php endif; ?>
-<?php elseif (pp_chrome('template') === 'standard'): ?>
-<?php
-// The wordmark stacks: "The Sudbury" over "STANDARD". The blackletter S is
-// the monogram only — never a word — and it carries its own font.
-$sdWords = preg_split('/\s+/', trim($siteTitle));
-$sdLast  = count($sdWords) > 1 ? array_pop($sdWords) : '';
-$sdFirst = $sdLast !== '' ? implode(' ', $sdWords) : $siteTitle;
-$sdMono  = mb_substr(preg_replace('/^The\s+/i', '', $siteTitle), 0, 1);
-?>
-<div class="sd-util">
-  <div class="in">
-    <span><?= e(pp_chrome('place') ?: setting('tagline')) ?> &middot; <?= e(date('j F Y')) ?></span>
-    <span class="grp">
-      <a href="<?= e(url('newsletter/')) ?>">Newsletter</a>
-      <?php if (setting('contact_email') !== ''): ?><a href="mailto:<?= e(setting('contact_email')) ?>">Tips</a><?php endif; ?>
-      <a href="/admin/">Sign in</a>
-    </span>
-  </div>
-</div>
-<header class="sd-mast">
-  <div class="in">
-    <a class="lock" href="/" aria-label="<?= e($siteTitle) ?> — front page">
-      <span class="sx" aria-hidden="true"><?= e($sdMono) ?></span>
-      <span>
-        <span class="l1"><?= e($sdFirst) ?></span>
-        <span class="l2"><?= e(mb_strtoupper($sdLast)) ?></span>
-      </span>
-    </a>
-    <nav class="sd-nav" aria-label="Sections">
-      <a href="/"<?= ($GLOBALS['pp_front_page'] ?? false) ? ' aria-current="page"' : '' ?>>Home</a>
-      <?php foreach (pp_nav_categories() as $cat): ?>
-      <a href="<?= e(url('desk/' . $cat['slug'])) ?>"<?= $activeDesk === $cat['slug'] ? ' aria-current="page"' : '' ?>><?= e($cat['name']) ?></a>
-      <?php endforeach; ?>
-      <a href="<?= e(url('about')) ?>"<?= $activeDesk === 'about' ? ' aria-current="page"' : '' ?>>About</a>
-    </nav>
-  </div>
-</header>
 <?php elseif (pp_chrome('template') === 'turtleisland'): ?>
 <?php
 // The ink block. The turtle sits over the nameplate and the caps cut into its
@@ -795,30 +758,6 @@ $pkInit = mb_strtoupper(mb_substr($pkName !== '' ? $pkName : $siteTitle, 0, 1));
 </html>
 <?php return; endif; ?>
 
-<?php if (pp_chrome('template') === 'standard'): ?>
-<?php
-$sdWords = preg_split('/\s+/', trim($siteTitle));
-$sdLast  = count($sdWords) > 1 ? array_pop($sdWords) : '';
-$sdMono  = mb_substr(preg_replace('/^The\s+/i', '', $siteTitle), 0, 1);
-?>
-<footer class="sd-foot">
-  <div class="in">
-    <a class="lock" href="/">
-      <span class="sx" aria-hidden="true"><?= e($sdMono) ?></span>
-      <span class="nm"><?= e(mb_strtoupper($sdLast ?: $siteTitle)) ?></span>
-    </a>
-    <span class="meta">&copy; <?= e(date('Y')) ?> <?= e($siteTitle) ?> &middot; <?= e(setting('footer_line', 'Independent, reader-funded')) ?></span>
-    <span class="lnks">
-      <a href="<?= e(url('about')) ?>">About</a>
-      <a href="<?= e(url('corrections')) ?>">Corrections</a>
-      <a href="<?= e(url('search')) ?>">Search</a>
-      <a href="<?= e(url('feed/')) ?>">RSS</a>
-    </span>
-  </div>
-</footer>
-</body>
-</html>
-<?php return; endif; ?>
 
 
 <?php if (pp_chrome('template') === 'westernwire'): ?>
