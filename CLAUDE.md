@@ -180,11 +180,21 @@ must never be `git pull`ed or rsynced into.
   branch and commit a release directory was built from — the directory
   name carries the short SHA — before writing or following a runbook.
 
-## Current operational state (as of the phase-1 machinery pass)
+## Current operational state (as of the phase-3 Hermes activation)
 
-- **Release in production: `ef183469e9b0`**, at
-  `/var/www/prairiepost-ef183469e9b0-shared`, serving all thirteen papers
-  as one release group. Schema version 15.
+- **Release in production: `3c2335fdbf53`**, at
+  `/var/www/prairiepost-3c2335fdbf53-shared`, serving all thirteen papers
+  as one release group. Schema version 16.
+- **Hermes ingest is live and closed.** `/ingest.php` answers 401
+  network-wide without a valid token (`/api/ingest` becomes the pretty
+  route with the front-controller conversion). One token exists:
+  `hermes-quebec`, scoped to bleuet-blanc / actualites,le-fil, stored
+  root-only at `/root/hermes-tokens/hermes-quebec.txt` — hand it to
+  exactly one agent; `tools/make-agent.php revoke` is the kill switch.
+  Bleuet Blanc is wire-ready: `wire_desks = le-fil`, automated byline
+  « La veille automatisée ». A deployment-verification DRAFT
+  (`verification-du-deploiement-hermes`, post id 212) sits invisible in
+  bleuet's admin awaiting newsroom rejection — reject it, don't publish.
 - **Tenant resolution is database-first.** All 22 paper hostnames have
   `domains` rows and resolve from them (`tools/resolve-host.php` says
   `db` for every one); the config selector remains as a do-nothing
