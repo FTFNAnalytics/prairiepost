@@ -167,9 +167,12 @@ rendering front page with no shared-file edits.
 > The contract for agent authors is docs/HERMES-INGEST.md. Finalized
 > repo-side: the admin posts list badges agent-filed stories, and the
 > Bleuet Blanc pack ships Hermes-ready (wire_desks 'le-fil', the
-> automated byline in French). Remaining: the deployment pass — release
-> upgrade (migration 16), bleuet re-seed, live verification, and the
-> first scoped token.
+> automated byline in French). **Deployed Aug 24:** release
+> 3c2335fdbf53 on schema 16, the endpoint verified fail-closed
+> network-wide from on-box and off-box, a live draft filing passing
+> creation/invisibility/idempotency, and token hermes-quebec issued to
+> /root/hermes-tokens/ (never printed). Phase 3 is closed; the ingest
+> path opens for real the day the first Hermes agent receives the token.
 
 Agents tracking databases and public sources will feed the papers. The
 write path they use decides whether the network stays trustworthy. No
