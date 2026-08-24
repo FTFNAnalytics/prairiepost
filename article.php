@@ -84,29 +84,16 @@ page_header([
 ], (string) $post['category_slug']);
 ?>
 
-<?php if (pp_chrome('template') === 'torch') {
-    require PP_ROOT . '/app/views/article-torch.php';
-    page_footer();
-    return;
-} ?>
+<?php
+// Convention dispatch: a paper that ships app/views/article-<template>.php
+// takes over the article here; anything else renders the shared markup
+// below. Adding a paper is adding files — this chain never grows again.
+// The block boundary below deliberately emits one newline: the chain it
+// replaced was two php blocks, and every page carries that byte.
+$ppView = PP_ROOT . '/app/views/article-' . basename((string) pp_chrome('template')) . '.php'; ?>
 
-<?php if (pp_chrome('template') === 'standard') {
-    require PP_ROOT . '/app/views/article-standard.php';
-    page_footer();
-    return;
-}
-if (pp_chrome('template') === 'turtleisland') {
-    require PP_ROOT . '/app/views/article-turtleisland.php';
-    page_footer();
-    return;
-}
-if (pp_chrome('template') === 'pickering') {
-    require PP_ROOT . '/app/views/article-pickering.php';
-    page_footer();
-    return;
-}
-if (pp_chrome('template') === 'bleuetblanc') {
-    require PP_ROOT . '/app/views/article-bleuetblanc.php';
+<?php if (is_file($ppView)) {
+    require $ppView;
     page_footer();
     return;
 } ?>
