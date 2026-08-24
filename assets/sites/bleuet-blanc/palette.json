@@ -1,0 +1,42 @@
+{
+  "palette": {
+    "ink":     "#095797",
+    "paper":   "#F3F2F2",
+    "board":   "#EAE9E9",
+    "sky":     "#0088B0",
+    "hill":    "#063C69",
+    "field":   "#095797",
+    "stubble": "#605D5D",
+    "red":     "#D6006C",
+    "muted":   "#605D5D"
+  },
+  "desks": {
+    "actualites":   "#095797",
+    "politique":    "#095797",
+    "economie":     "#095797",
+    "regions":      "#095797",
+    "culture-qc":   "#095797",
+    "societe":      "#095797",
+    "environnement":"#095797",
+    "sports-qc":    "#095797",
+    "idees":        "#095797",
+    "le-fil":       "#D6006C"
+  },
+  "desk_labels": {
+    "actualites":    "Actualités",
+    "economie":      "Économie",
+    "regions":       "Régions",
+    "culture-qc":    "Culture",
+    "societe":       "Société",
+    "environnement": "Environnement",
+    "sports-qc":     "Sports",
+    "idees":         "Idées",
+    "le-fil":        "Le fil"
+  },
+  "chrome": {
+    "template": "bleuetblanc",
+    "lang": "fr",
+    "trending": false,
+    "nav": ["actualites", "politique", "economie", "regions", "culture-qc", "societe"]
+  }
+}

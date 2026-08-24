@@ -104,6 +104,11 @@ if (pp_chrome('template') === 'pickering') {
     require PP_ROOT . '/app/views/article-pickering.php';
     page_footer();
     return;
+}
+if (pp_chrome('template') === 'bleuetblanc') {
+    require PP_ROOT . '/app/views/article-bleuetblanc.php';
+    page_footer();
+    return;
 } ?>
 <article class="article wrap">
   <div class="headwrap">
