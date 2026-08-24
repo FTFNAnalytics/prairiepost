@@ -188,14 +188,28 @@ must never be `git pull`ed or rsynced into.
    the if-chains with a convention (`front-{$template}.php` if it
    exists) and move each paper's chrome into its own partial, so a new
    paper is new files only.
-3. **`upgrade-papers.sh` cannot detect template loss.** Its guard
+3. **Nginx has no `default_server` on 443, and the papers are not
+   symmetric across address families.** With no explicit default, nginx
+   falls back to the first block bound to each socket — Brampton on
+   IPv4, the Institute on IPv6. A paper whose block is missing one
+   family's `listen` line silently inherits that default's certificate
+   and fails hostname verification for every client in that family.
+   Turtle Island hit exactly this: certbot mirrored a single-family
+   listen set, produced `listen [::]:443 ssl` with no IPv4 equivalent,
+   reported success, passed `nginx -t`, and served Brampton's
+   certificate to every A-record client. Audit all eleven blocks for
+   both `listen 443 ssl` and `listen [::]:443 ssl`, and decide whether
+   an explicit `default_server` that rejects unknown SNI is wanted
+   rather than letting the first-loaded paper serve as the fallback.
+
+4. **`upgrade-papers.sh` cannot detect template loss.** Its guard
    compares each domain's `<title>`, which comes from the database, so a
    paper whose CSS and templates are missing from the release still
    passes. Assert that each paper's expected stylesheet appears in the
    served HTML.
-4. **`posts.slug` is UNIQUE network-wide.** At 15 papers that is ~225
+5. **`posts.slug` is UNIQUE network-wide.** At 15 papers that is ~225
    slugs in one namespace in the same register, and the seeder's failure
    mode is a silent `story exists, skipped`. Scope it per site or have
    the seeder prefix automatically.
-5. **GitHub's default branch is the dead line.** Repoint it to the
+6. **GitHub's default branch is the dead line.** Repoint it to the
    release branch so the trunk that is visible is the trunk that ships.
