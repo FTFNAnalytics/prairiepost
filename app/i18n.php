@@ -79,16 +79,28 @@ function pp_fmt(int $ts, string $icu, string $fallback): string
     static $cache = [];
     $key = pp_locale() . '|' . $icu;
     if (!isset($cache[$key])) {
-        $cache[$key] = new IntlDateFormatter(
-            pp_locale(),
-            IntlDateFormatter::NONE,
-            IntlDateFormatter::NONE,
-            date_default_timezone_get(),
-            null,
-            $icu
-        );
+        // A dateline is furniture on every page. If intl is present but
+        // refuses the locale or the pattern, fall back to an English date
+        // rather than take the whole paper down over a masthead line.
+        try {
+            $cache[$key] = new IntlDateFormatter(
+                pp_locale(),
+                IntlDateFormatter::NONE,
+                IntlDateFormatter::NONE,
+                date_default_timezone_get(),
+                null,
+                $icu
+            );
+        } catch (Throwable) {
+            $cache[$key] = false;
+        }
     }
-    return $cache[$key]->format($ts);
+    try {
+        $out = $cache[$key] === false ? false : $cache[$key]->format($ts);
+    } catch (Throwable) {
+        $out = false;
+    }
+    return $out === false ? date($fallback, $ts) : $out;
 }
 
 /** "Sunday, August 23, 2026" / "dimanche 23 août 2026" — a masthead dateline. */
