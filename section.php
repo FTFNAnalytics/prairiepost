@@ -49,6 +49,11 @@ page_header([
     page_footer();
     return;
 }
+if (pp_chrome('template') === 'pickering') {
+    require PP_ROOT . '/app/views/section-pickering.php';
+    page_footer();
+    return;
+}
 if (pp_chrome('template') === 'standard') {
     require PP_ROOT . '/app/views/section-standard.php';
     page_footer();

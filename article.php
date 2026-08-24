@@ -99,6 +99,11 @@ if (pp_chrome('template') === 'turtleisland') {
     require PP_ROOT . '/app/views/article-turtleisland.php';
     page_footer();
     return;
+}
+if (pp_chrome('template') === 'pickering') {
+    require PP_ROOT . '/app/views/article-pickering.php';
+    page_footer();
+    return;
 } ?>
 <article class="article wrap">
   <div class="headwrap">

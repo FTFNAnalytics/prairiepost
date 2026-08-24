@@ -84,6 +84,11 @@ if (pp_chrome('template') === 'turtleisland') {
     require PP_ROOT . '/app/views/front-turtleisland.php';
     page_footer();
     return;
+}
+if (pp_chrome('template') === 'pickering') {
+    require PP_ROOT . '/app/views/front-pickering.php';
+    page_footer();
+    return;
 } ?>
 
 <div class="front wrap">
