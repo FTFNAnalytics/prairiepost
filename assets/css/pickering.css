@@ -227,14 +227,19 @@ body.t-pickering {
 .pk-slug--obit { color: var(--quiet); }
 .pk-slug--breaking { color: var(--paper); background: var(--magenta); padding: 2px 8px; border-radius: var(--r); }
 
-.pk-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 42px 42px; }
+/* Items anchor to the top of their row, so a text-only story beside a
+   picture story reads as a short item rather than a stretched one. */
+.pk-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 42px 42px; align-items: start; }
 .pk-item h3 { font-size: 21px; margin: 0 0 8px; }
 .pk-item p { font-size: 16px; line-height: 1.6; margin: 0; max-width: 54ch; }
 .pk-item .by {
   font-size: 13px; letter-spacing: .08em; text-transform: uppercase;
   color: var(--quiet); margin: 10px 0 0;
 }
-.pk-item .shot { margin: 0 0 14px; aspect-ratio: 16/10; overflow: hidden; background: var(--navy-900); }
+/* The shot is an <a>, and an inline element ignores aspect-ratio and
+   overflow — the image would render at its natural ratio and blow the grid
+   row out. It has to be block. */
+.pk-item .shot { display: block; margin: 0 0 14px; aspect-ratio: 16/10; overflow: hidden; background: var(--navy-900); }
 .pk-item .shot img { width: 100%; height: 100%; object-fit: cover; }
 
 /* Events read as a dated list rather than cards. */
@@ -245,7 +250,7 @@ body.t-pickering {
 /* Community Spotlight — the one feature that runs wide under the columns. */
 .pk-spot { margin: 56px 0 0; padding: 32px 0 0; border-top: 1px solid var(--rule); }
 .pk-spot .in { display: flex; flex-wrap: wrap; gap: 32px; align-items: flex-start; }
-.pk-spot .shot { flex: 0 1 340px; aspect-ratio: 1; overflow: hidden; background: var(--navy-900); border-radius: var(--r); }
+.pk-spot .shot { display: block; flex: 0 1 340px; aspect-ratio: 1; overflow: hidden; background: var(--navy-900); border-radius: var(--r); }
 .pk-spot .shot img { width: 100%; height: 100%; object-fit: cover; }
 .pk-spot .txt { flex: 1 1 320px; }
 .pk-spot h3 { font-size: 26px; margin: 8px 0 12px; }
