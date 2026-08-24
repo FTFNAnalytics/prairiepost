@@ -430,42 +430,6 @@ elseif (pp_chrome('template') === 'echo-v3'): ?>
   </div>
 </div>
 <?php endif; ?>
-<?php elseif (pp_chrome('template') === 'torch'): ?>
-<?php
-// The wordmark stacks "Tri Cities" over "TORCH"; split the title once here.
-$ttWords = preg_split('/\s+/', trim($siteTitle));
-$ttLast  = count($ttWords) > 1 ? array_pop($ttWords) : '';
-$ttFirst = $ttLast !== '' ? implode(' ', $ttWords) : $siteTitle;
-// Article and section pages carry the header lockup from the first pixel;
-// the home page fades it in once the masthead has scrolled away.
-$ttFront = (bool) ($GLOBALS['pp_front_page'] ?? false);
-?>
-<nav class="tt-nav<?= $ttFront ? '' : ' always-lockup' ?>" id="ttnav" aria-label="Sections">
-  <div class="in">
-    <a class="lockup" href="/" aria-label="<?= e($siteTitle) ?> — front page">
-      <img src="<?= e(site_asset('mark-reversed.svg')) ?>" alt="">
-      <span class="wm"><b><?= e($ttFirst) ?></b><span><?= e(mb_strtoupper($ttLast)) ?></span></span>
-    </a>
-    <?php foreach (pp_nav_categories() as $cat): ?>
-    <a href="<?= e(url('desk/' . $cat['slug'])) ?>"<?= $activeDesk === $cat['slug'] ? ' aria-current="page"' : '' ?>><?= e(pp_desk_label($cat['slug'], $cat['name'])) ?></a>
-    <?php endforeach; ?>
-  </div>
-</nav>
-<?php if ($ttFront): ?>
-<script>
-(function () {
-  var nav = document.getElementById('ttnav');
-  if (!nav) return;
-  var on = false;
-  var check = function () {
-    var should = window.scrollY > 220;
-    if (should !== on) { on = should; nav.classList.toggle('is-stuck', should); }
-  };
-  window.addEventListener('scroll', check, { passive: true });
-  check();
-})();
-</script>
-<?php endif; ?>
 <?php elseif (pp_chrome('template') === 'standard'): ?>
 <?php
 // The wordmark stacks: "The Sudbury" over "STANDARD". The blackletter S is
@@ -753,57 +717,6 @@ function page_footer(): void
 // closes the document itself; unmigrated papers follow below.
 $ppChrome = PP_ROOT . '/app/views/chrome/' . basename((string) pp_chrome('template')) . '-foot.php';
 if (is_file($ppChrome)) { require $ppChrome; return; } ?>
-<?php if (pp_chrome('template') === 'torch'): ?>
-<?php
-$ttWords = preg_split('/\s+/', trim($siteTitle));
-$ttLast  = count($ttWords) > 1 ? array_pop($ttWords) : '';
-$ttFirst = $ttLast !== '' ? implode(' ', $ttWords) : $siteTitle;
-?>
-<div class="tt-footindex">
-  <div class="in">
-    <div>
-      <a class="lock" href="/" aria-label="<?= e($siteTitle) ?> — front page">
-        <img src="<?= e(site_asset('mark-reversed.svg')) ?>" alt="">
-        <span><b><?= e($ttFirst) ?></b><span><?= e(mb_strtoupper($ttLast)) ?></span></span>
-      </a>
-      <p class="blurb"><?= e(setting('footer_line')) ?></p>
-    </div>
-    <div>
-      <p class="fh">Sections</p>
-      <div class="lnks">
-        <?php foreach (pp_nav_categories() as $cat): ?>
-        <a href="<?= e(url('desk/' . $cat['slug'])) ?>"><?= e(pp_desk_label($cat['slug'], $cat['name'])) ?></a>
-        <?php endforeach; ?>
-      </div>
-    </div>
-    <div>
-      <p class="fh">The Torch</p>
-      <div class="lnks">
-        <a href="<?= e(url('search')) ?>">Search the archive</a>
-        <a href="<?= e(url('newsletter/')) ?>">Newsletters</a>
-        <a href="<?= e(url('corrections')) ?>">Corrections</a>
-        <a href="<?= e(url('feed/')) ?>">RSS</a>
-        <?php if (setting('contact_email') !== ''): ?>
-        <a href="mailto:<?= e(setting('contact_email')) ?>">Send a tip</a>
-        <?php endif; ?>
-        <a href="/admin/">Newsroom sign-in</a>
-      </div>
-    </div>
-  </div>
-</div>
-<footer class="tt-foot">
-  <div class="in">
-    <p>© <?= e(date('Y')) ?> <?= e($siteTitle) ?> · Coquitlam, BC</p>
-    <div class="soc">
-      <a href="<?= e(url('feed/')) ?>">RSS</a>
-      <a href="<?= e(url('subscribe')) ?>">Newsletter</a>
-      <a href="<?= e(url('corrections')) ?>">Corrections</a>
-    </div>
-  </div>
-</footer>
-</body>
-</html>
-<?php return; endif; ?>
 <?php if (pp_chrome('template') === 'pickering'): ?>
 <?php
 $pkWords = preg_split('/\s+/', trim($siteTitle));
