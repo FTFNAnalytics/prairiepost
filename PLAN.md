@@ -55,6 +55,11 @@ paper serves the noindex meta until its flag is flipped.
 
 ## Phase 1 — Launch machinery (the step that has caused every stop)
 
+> **Status, Aug 24:** live on the server. 1.1 resolves all 22 hostnames
+> from the database (config arms still present, retirement pending);
+> 1.2's template is committed, conversion of existing blocks pending;
+> 1.3 and 1.4 done; 1.5 done. Papers 14–15 can launch config-edit-free.
+
 Three of the last four deployments hard-stopped at least once, and
 every stop but one traces to the same two designs: a hand-edited
 guarded config file, and routes that live in three places.
