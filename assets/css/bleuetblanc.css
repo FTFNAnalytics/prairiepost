@@ -109,7 +109,9 @@ body.t-bleuetblanc {
 }
 .bb-lock { display: flex; align-items: center; gap: 16px; color: var(--encre); }
 .bb-lock:hover { text-decoration: none; }
-.bb-lock .sym { width: 46px; flex: none; color: var(--bleu); }
+/* Pas de `color` ici : le symbole est un <img>, donc un document à part, et
+   la couleur qu'il porte est écrite dans le fichier SVG lui-même. */
+.bb-lock .sym { width: 46px; flex: none; }
 /* Direction A : une seule ligne, romaine. La plus solide en haut de page. */
 .bb-nom { font-weight: 600; font-size: 40px; line-height: 1; letter-spacing: -0.025em; }
 .bb-tete .rub {
@@ -146,7 +148,7 @@ body.t-bleuetblanc {
 /* Le symbole en filigrane, à droite, très pâle. */
 .bb-manchette .filigrane {
   position: absolute; right: 44px; top: 50%; transform: translateY(-50%);
-  width: 24%; max-width: 300px; opacity: .22; color: var(--papier);
+  width: 24%; max-width: 300px; opacity: .22;
   pointer-events: none;
 }
 .bb-manchette .dedans {
@@ -317,7 +319,7 @@ body.t-bleuetblanc {
 
 .bb-pied { background: var(--papier); padding: 40px 28px 32px; }
 .bb-pied .haut { display: grid; grid-template-columns: 190px minmax(0, 1fr); gap: 48px; align-items: start; }
-.bb-pied .sym { width: 54px; color: var(--bleu); margin: 0 0 12px; }
+.bb-pied .sym { width: 54px; margin: 0 0 12px; }
 .bb-pied .nom { font-size: 20px; font-weight: 600; letter-spacing: -0.02em; }
 .bb-pied .devise { font-size: 13px; color: var(--discret); margin: 6px 0 0; }
 .bb-pied .cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 28px; }

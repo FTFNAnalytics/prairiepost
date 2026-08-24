@@ -64,7 +64,7 @@ foreach (array_merge($hero ? [$hero] : [], $dernieres, $vogue) as $p) {
 
 <?php if ($hero): ?>
 <div class="bb-manchette">
-  <span class="filigrane" aria-hidden="true"><img src="<?= e(site_asset('mark.svg')) ?>" alt=""></span>
+  <span class="filigrane" aria-hidden="true"><img src="<?= e(site_asset('mark-reversed.svg')) ?>" alt=""></span>
   <div class="dedans">
     <?php if ($r = $rubrique($hero)): ?><p class="rub"><?= $r ?></p><?php endif; ?>
     <h1><?= e($hero['title']) ?></h1>
