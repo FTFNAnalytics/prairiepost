@@ -1,7 +1,9 @@
 /* ============================================================
    The westernwire template — the network's aggregator front.
    Archivo for chrome, labels and the tracked-out wordmark;
-   Source Serif 4 for headlines and body. Slate Ink chrome over
+   Georgia for headlines and body (the stack once named Source Serif 4
+   but never declared it, so Georgia is what every reader has always
+   seen — the stack now says so). Slate Ink chrome over
    Newsprint ground, Spruce links, Glacier hovers and live
    indicators, and Gold held to one action per view — section
    flags and the live segment of the wire rule.
@@ -20,7 +22,7 @@ body.t-westernwire{
   --ww-muted:   #5C6470;
   --ww-line:    #DAD8D3;
   --ww-sans:    'Archivo', system-ui, sans-serif;
-  --ww-serif:   'Source Serif 4', Georgia, serif;
+  --ww-serif:   Georgia, 'Times New Roman', serif;
 
   /* Inner pages read as the brand. */
   --pp-shelterbelt: var(--ww-ink);
