@@ -110,6 +110,17 @@ bespoke paper's CSS deleted rolls back automatically.
 
 ## Phase 2 — Template registry (the deferred refactor, done safely)
 
+> **Status, Aug 24 (final):** 2.1, 2.2 and 2.4 done — all twelve papers'
+> chrome in partials, ui.php name-free, the six phantom-font stacks
+> renamed honestly (CDP-verified paint-neutral) — and the operational
+> close-out with them: `tools/make-paper.php` scaffolds a complete
+> files-only paper (palette, pack skeleton with domains, css, three
+> views, two chrome partials; refuses to overwrite), so builds 14 and 15
+> start in the compliance-gate shape by construction.
+> **2.3 (accessibility levelling) is delayed by owner decision, Aug 24**
+> — moved to the standing backlog as a declared-diff pass with
+> screenshot review. Phase 2 is otherwise closed.
+
 `ui.php` carries 30+ per-paper branches across three dispatch chains;
 the Torch and the Standard conflicted in all four shared files; a blank
 line in the footer chain nearly shipped a stray newline to twelve live
@@ -153,9 +164,12 @@ rendering front page with no shared-file edits.
 > revocable tokens (tools/make-agent.php), server-side slugs, dedup by
 > external_id, draft gate with the wire-desk exception, provenance box
 > rendered on all six article templates, French labels, rate limit.
-> The contract for agent authors is docs/HERMES-INGEST.md. Remaining:
-> deploy with the next release upgrade, then issue the first scoped
-> token per paper as each Hermes agent comes online.
+> The contract for agent authors is docs/HERMES-INGEST.md. Finalized
+> repo-side: the admin posts list badges agent-filed stories, and the
+> Bleuet Blanc pack ships Hermes-ready (wire_desks 'le-fil', the
+> automated byline in French). Remaining: the deployment pass — release
+> upgrade (migration 16), bleuet re-seed, live verification, and the
+> first scoped token.
 
 Agents tracking databases and public sources will feed the papers. The
 write path they use decides whether the network stays trustworthy. No

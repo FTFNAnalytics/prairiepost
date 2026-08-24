@@ -113,6 +113,7 @@ flash_show();
         <?php if ($p['placement'] === 'hero'): ?> <span class="chip chip--scheduled">Hero</span>
         <?php elseif ($p['placement'] === 'featured'): ?> <span class="chip chip--scheduled">Featured</span>
         <?php elseif ($p['placement'] === 'desk_lead'): ?> <span class="chip chip--used">Desk lead</span><?php endif; ?>
+        <?php if (!empty($p['filed_by'])): ?> <span class="chip chip--in_review" title="Filed by the Hermes agent '<?= e($p['filed_by']) ?>' — review the sources box before publishing">Agent: <?= e($p['filed_by']) ?></span><?php endif; ?>
         <div class="mono" style="color:#5A6A5C"><?= e($p['byline']) ?><?= $p['dateline'] ? ' · ' . e(mb_strtoupper($p['dateline'])) : '' ?></div>
       </td>
       <td><?php if ($p['category_name']): ?><span class="deskdot" style="background:<?= e($p['category_color']) ?>"></span><?= e($p['category_name']) ?><?php endif; ?></td>

@@ -246,7 +246,9 @@ Check any new-paper work against the PLAN.md gate before starting it.
    about a real city, including figures and votes attributed to real
    councils. Either `Disallow: /` until the content is real, or replace
    the packs. This grows with each launch.
-2. **A new paper edits four shared files** — a dispatch arm in
+2. **[PAID — phase 2, Aug 24: convention dispatch + chrome partials;
+   a new paper is files only, scaffolded by tools/make-paper.php]**
+   A new paper edits four shared files — a dispatch arm in
    `index.php`, `article.php` and `section.php`, and header + footer
    chrome in `ui.php` (28 template branches there already). The Torch
    and the Standard conflicted in all four. Before papers 11–15, replace
