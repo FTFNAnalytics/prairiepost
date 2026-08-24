@@ -47,6 +47,11 @@ front_title() { # domain -> prints "<code>|<title>"
   printf '%s|%s' "$code" "$title"
 }
 
+front_css() { # domain -> prints the sorted set of /assets/css/*.css the front page links
+  curl -sk -m 15 --resolve "$1:443:127.0.0.1" "https://$1/" \
+    | grep -o '/assets/css/[a-z0-9._-]*\.css' | sort -u | tr '\n' ' '
+}
+
 say "Resolve the branch head"
 SHA=$(curl -fsSL "https://api.github.com/repos/$REPO/branches/${BRANCH//\//%2F}" \
       | php -r '$d=json_decode(stream_get_contents(STDIN),true); echo substr($d["commit"]["sha"]??"",0,12);')
@@ -74,12 +79,14 @@ done
 
 say "Capture every domain's title BEFORE any change (the tenant baseline)"
 declare -A TITLE_BEFORE=()
+declare -A CSS_BEFORE=()
 for OLD in "${!DIR_DOMAINS[@]}"; do
   for DOMAIN in ${DIR_DOMAINS[$OLD]}; do
     IFS='|' read -r code title <<< "$(front_title "$DOMAIN")"
     if [ "$code" = "200" ] && [ -n "$title" ]; then
       TITLE_BEFORE[$DOMAIN]="$title"
-      echo "   $DOMAIN -> $title"
+      CSS_BEFORE[$DOMAIN]="$(front_css "$DOMAIN")"
+      echo "   $DOMAIN -> $title [${CSS_BEFORE[$DOMAIN]}]"
     else
       TITLE_BEFORE[$DOMAIN]=""
       echo "   WARN: $DOMAIN answered $code before any change — it will be checked for 200 only"
@@ -207,7 +214,27 @@ for OLD in "${!DIR_NEW[@]}"; do
       echo "FAIL $DOMAIN wrong tenant — got $title, expected $expected"
       group_ok=0
     else
-      echo "PASS $DOMAIN -> ${title:-200}"
+      css_now="$(front_css "$DOMAIN")"
+      css_was="${CSS_BEFORE[$DOMAIN]:-}"
+      if [ -n "$css_was" ] && [ "$css_now" != "$css_was" ]; then
+        # The database supplies the title, so a release missing this paper's
+        # template tree still answers 200 with the right masthead. The
+        # stylesheet set is served from the release itself — losing it is
+        # template loss, and template loss rolls back like a wrong tenant.
+        echo "FAIL $DOMAIN stylesheet set changed — was [$css_was] now [$css_now]"
+        group_ok=0
+      else
+        missing=""
+        for f in $css_now; do
+          [ -f "${DIR_NEW[$OLD]}$f" ] || missing="$missing $f"
+        done
+        if [ -n "$missing" ]; then
+          echo "FAIL $DOMAIN references stylesheets absent from the new release:$missing"
+          group_ok=0
+        else
+          echo "PASS $DOMAIN -> ${title:-200}"
+        fi
+      fi
     fi
   done
   if [ "$group_ok" = "0" ]; then

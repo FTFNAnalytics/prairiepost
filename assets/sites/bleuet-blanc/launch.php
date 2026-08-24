@@ -24,6 +24,10 @@ $img = fn (string $f) => '/assets/sites/bleuet-blanc/img/' . $f;
 
 return [
 
+    /* Every public hostname this paper answers on. The seeder writes these
+       into the domains table, which bootstrap resolves tenants from. */
+    'domains' => ['bleuetblanc.ca', 'www.bleuetblanc.ca'],
+
     /* Neuf rubriques, plus le fil. La barre en porte six ; les autres vivent
        dans le pied de page. Les slugs évitent les collisions avec les
        rubriques anglaises déjà semées par les journaux frères. */

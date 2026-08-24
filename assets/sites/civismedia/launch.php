@@ -9,6 +9,10 @@
 
 return [
 
+    /* Every public hostname this paper answers on. The seeder writes these
+       into the domains table, which bootstrap resolves tenants from. */
+    'domains' => ['civismedia.ca', 'www.civismedia.ca'],
+
     'settings' => [
         'site_title'       => 'Civis Media',
         'tagline'          => 'Communications & advertising',

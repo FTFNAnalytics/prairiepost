@@ -46,6 +46,13 @@ function pp_schema_ddl(string $driver): array
             created_at $dt NOT NULL
         )$suffix",
 
+        "CREATE TABLE domains (
+            id $id,
+            hostname VARCHAR(255) NOT NULL UNIQUE,
+            site_slug VARCHAR(191) NOT NULL,
+            created_at $dt NOT NULL
+        )$suffix",
+
         "CREATE TABLE users (
             id $id,
             name VARCHAR(120) NOT NULL,
@@ -388,6 +395,7 @@ function pp_schema_ddl(string $driver): array
         'CREATE INDEX idx_monitor_status ON monitor_items (status, fetched_at)',
         'CREATE INDEX idx_ideas_status ON story_ideas (status, created_at)',
         'CREATE INDEX idx_post_sites_site ON post_sites (site_id)',
+        'CREATE INDEX idx_domains_site ON domains (site_slug)',
         'CREATE INDEX idx_ads_site_placement ON ads (site_id, placement)',
         'CREATE INDEX idx_ads_campaign ON ads (campaign_id)',
         'CREATE INDEX idx_inquiries_site ON inquiries (site_id, created_at)',
@@ -908,5 +916,28 @@ function pp_migrate(PDO $pdo, string $driver): void
         $pdo->exec('CREATE INDEX idx_ops_runs_job ON ops_runs (job, id)');
 
         $pdo->exec("UPDATE settings SET svalue = '14' WHERE site_id = 0 AND skey = 'schema_version'");
+    }
+
+    if ($version < 15) {
+        // Tenant resolution moves into the database: every public hostname a
+        // paper answers on becomes a row, and bootstrap resolves the request
+        // host here first, falling back to the config selector. Rows are
+        // written only by the seeder from launch packs — once every live
+        // hostname has one, the config file's tenant arms can retire and a
+        // launch stops needing a guarded config edit at all. The canonical
+        // hostname stays where it has always lived, in sites.domain.
+        $dt = $driver === 'pgsql' ? 'TIMESTAMP' : 'DATETIME';
+        $id = $driver === 'mysql' ? 'INT UNSIGNED AUTO_INCREMENT PRIMARY KEY'
+            : ($driver === 'pgsql' ? 'INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY' : 'INTEGER PRIMARY KEY AUTOINCREMENT');
+
+        $pdo->exec("CREATE TABLE domains (
+            id $id,
+            hostname VARCHAR(255) NOT NULL UNIQUE,
+            site_slug VARCHAR(191) NOT NULL,
+            created_at $dt NOT NULL
+        )");
+        $pdo->exec('CREATE INDEX idx_domains_site ON domains (site_slug)');
+
+        $pdo->exec("UPDATE settings SET svalue = '15' WHERE site_id = 0 AND skey = 'schema_version'");
     }
 }

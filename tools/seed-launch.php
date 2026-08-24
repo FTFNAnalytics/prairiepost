@@ -71,6 +71,33 @@ if ($site['name'] === $auto && $packTitle !== '' && $packTitle !== $site['name']
     echo "  site name: {$packTitle}\n";
 }
 
+/* --- Public hostnames: the rows bootstrap resolves tenants from ----------- */
+// The pack declares every hostname the paper answers on:
+//     'domains' => ['bleuetblanc.ca', 'www.bleuetblanc.ca'],
+// A hostname is inserted when missing and left alone when it already maps to
+// this paper. A hostname owned by ANOTHER paper is never stolen — that is a
+// pack defect, reported loudly and counted as a failure.
+$domainConflicts = 0;
+$selDom = $pdo->prepare('SELECT site_slug FROM domains WHERE hostname = ?');
+$insDom = $pdo->prepare('INSERT INTO domains (hostname, site_slug, created_at) VALUES (?, ?, ?)');
+foreach ($pack['domains'] ?? [] as $hostname) {
+    $hostname = strtolower(trim((string) $hostname));
+    if ($hostname === '' || !preg_match('/^[a-z0-9.-]+$/', $hostname)) {
+        echo "  DOMAIN INVALID, not written: {$hostname}\n";
+        $domainConflicts++;
+        continue;
+    }
+    $selDom->execute([$hostname]);
+    $owner = $selDom->fetchColumn();
+    if ($owner === false) {
+        $insDom->execute([$hostname, $slug, $now]);
+        echo "  domain: {$hostname}\n";
+    } elseif ($owner !== $slug) {
+        echo "  DOMAIN CONFLICT: {$hostname} already maps to '{$owner}', not written\n";
+        $domainConflicts++;
+    }
+}
+
 /* --- Wire sources (shared; matched by URL) -------------------------------- */
 $known = $pdo->query('SELECT url FROM sources')->fetchAll(PDO::FETCH_COLUMN);
 $insSrc = $pdo->prepare('INSERT INTO sources (name, url, region, enabled) VALUES (?, ?, ?, 1)');
@@ -95,6 +122,8 @@ $insTag = $pdo->prepare('INSERT INTO tags (name, slug) VALUES (?, ?)');
 $insPT  = $pdo->prepare('INSERT INTO post_tags (post_id, tag_id) VALUES (?, ?)');
 
 $added = 0;
+$already = 0;
+$collisions = 0;
 foreach ($pack['stories'] ?? [] as $s) {
     // A pack may set an explicit slug. Aggregator packs need this: posts.slug
     // is unique across the whole network, and a wire item titled after the
@@ -102,12 +131,25 @@ foreach ($pack['stories'] ?? [] as $s) {
     // own slug on a shared database and be skipped as "already exists".
     $pslug = $s['slug'] ?? slugify($s['title']);
     $selPost->execute([$pslug]);
-    if ($selPost->fetch()) {
-        echo "  story exists, skipped: {$pslug}\n";
+    if ($row = $selPost->fetch()) {
+        // A taken slug is two very different events. The story already
+        // belonging to THIS paper means the seeder is being re-run, which is
+        // documented as safe — count it separately and stay quiet. The slug
+        // belonging to another paper is a network-wide collision, the launch
+        // defect this tool exists to surface — say so and fail the run.
+        $selMine = $pdo->prepare('SELECT 1 FROM post_sites WHERE post_id = ? AND site_id = ?');
+        $selMine->execute([(int) $row['id'], $siteId]);
+        if ($selMine->fetch()) {
+            $already++;
+            continue;
+        }
+        echo "  SLUG COLLISION (taken by another paper): {$pslug}\n";
+        $collisions++;
         continue;
     }
     if (!isset($catId[$s['desk']])) {
         echo "  story SKIPPED (unknown desk '{$s['desk']}'): {$pslug}\n";
+        $collisions++;
         continue;
     }
     $insPost->execute([
@@ -135,4 +177,17 @@ foreach ($pack['stories'] ?? [] as $s) {
     echo "  story: {$s['title']}\n";
 }
 
-echo "Done — {$added} stories added. The front page is live.\n";
+$summary = "Done — {$added} stories added";
+if ($already > 0) {
+    $summary .= ", {$already} already seeded here";
+}
+echo $summary . ".\n";
+if ($collisions > 0 || $domainConflicts > 0) {
+    // A collision means a pack story lost its slug to another paper (or names
+    // a desk that does not exist), and a domain conflict means a hostname is
+    // claimed by another site. Both are launch defects: exit non-zero so no
+    // wrapper or agent can read this run as a success.
+    echo "FAILED — {$collisions} slug/desk collisions, {$domainConflicts} domain conflicts. Nothing to re-run; fix the pack.\n";
+    exit(1);
+}
+echo "The front page is live.\n";

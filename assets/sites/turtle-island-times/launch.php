@@ -28,6 +28,10 @@ $img = fn (string $file) => '/assets/sites/turtle-island-times/img/' . $file;
 
 return [
 
+    /* Every public hostname this paper answers on. The seeder writes these
+       into the domains table, which bootstrap resolves tenants from. */
+    'domains' => ['turtleislandtimes.ca', 'www.turtleislandtimes.ca'],
+
     'desks' => [
         ['name' => 'News',        'slug' => 'news',       'color' => '#004961', 'description' => 'What happened, across the territories.'],
         ['name' => 'Land & Water','slug' => 'land-water', 'color' => '#0088B0', 'description' => 'Rivers, fisheries, forestry and the agreements that govern them.'],

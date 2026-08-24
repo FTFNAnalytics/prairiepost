@@ -13,6 +13,10 @@ $img = fn (string $file) => '/assets/sites/grande-prairie-gazette/img/' . $file;
 
 return [
 
+    /* Every public hostname this paper answers on. The seeder writes these
+       into the domains table, which bootstrap resolves tenants from. */
+    'domains' => ['www.grandeprairiegazette.ca'],
+
     'desks' => [
         ['name' => 'Energy', 'slug' => 'energy', 'color' => '#1E3A6E', 'description' => 'Montney gas, the rigs, the royalties, and the towns they pay for.'],
         ['name' => 'Sports', 'slug' => 'sports', 'color' => '#1D5C8C', 'description' => 'The rinks, the diamonds, and who pays for the ice.'],
