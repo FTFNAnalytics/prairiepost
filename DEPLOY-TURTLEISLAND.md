@@ -157,8 +157,45 @@ mapping is step 5. Do not stop because it looks like another paper.
 certbot --nginx -d turtleislandtimes.ca -d www.turtleislandtimes.ca
 ```
 
-**Verify:** `https://turtleislandtimes.ca/` serves with a valid
-certificate; plain http redirects to https.
+**Verify — and check the listeners, not just curl.** Certbot mirrors the
+listen directives it finds. If the block it edits carries only one
+address family, certbot adds TLS for only that family, and the result
+passes `nginx -t`, reports "Successfully deployed", and still fails for
+every real client.
+
+```bash
+# BOTH address families must appear in the paper's own server block.
+awk '/server_name turtleislandtimes\.ca/,/^}/' /etc/nginx/sites-available/turtleislandtimes \
+  | grep -E 'listen.*443'
+```
+
+You must see **two** lines — `listen 443 ssl;` **and**
+`listen [::]:443 ssl;`. One alone is the failure below.
+
+Then compare the block's TLS lines against a sibling paper's, and mirror
+anything missing (the `options-ssl-nginx.conf` include and `ssl_dhparam`
+travel with the certificate lines):
+
+```bash
+awk '/listen.*443/,/^}/' /etc/nginx/sites-available/westernwire | grep -E 'ssl_|include'
+```
+
+Only then:
+
+- `https://turtleislandtimes.ca/` serves with a valid certificate, and
+  so does `www`.
+- Plain http redirects to https.
+- `echo | openssl s_client -connect 127.0.0.1:443 -servername turtleislandtimes.ca 2>/dev/null | openssl x509 -noout -subject`
+  returns **this paper's** CN, not another paper's.
+
+**If it returns another paper's certificate:** the network has no
+`default_server` on 443, so nginx falls back to the *first* block bound
+to that socket — currently Brampton on IPv4 and the Institute on IPv6.
+A paper missing an IPv4 listener therefore inherits Brampton's
+certificate and fails hostname verification for every A-record client.
+The fix is to add the missing `listen` line to **this paper's block
+only**, then `nginx -t && systemctl reload nginx`. Do not add
+`default_server` to anything, and do not touch another paper's block.
 
 ## 5 · The tenant mapping (pre-authorized, tightly scoped)
 
