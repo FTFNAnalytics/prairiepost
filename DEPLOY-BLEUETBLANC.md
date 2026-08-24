@@ -372,8 +372,12 @@ collided with an existing desk; report which.
    `/desk/environnement`, `/desk/le-fil` (2 each), `/desk/idees`,
    `/desk/sports-qc` (1 each) — all 200, none empty.
 7. `/desk/le-fil` is the **only** page anywhere on the paper showing
-   magenta: an `EN DIRECT` badge above the section head. If magenta
-   appears anywhere else, report it.
+   magenta: a badge above the section head that *paints* as EN DIRECT.
+   In the served HTML the badge is `<span class="bb-direct">En direct</span>`
+   — the capitals come from `text-transform: uppercase` in the CSS, so a
+   crawler greping raw HTML must match `En direct` (or search
+   case-insensitively), never the uppercase string. If magenta appears
+   anywhere else, report it.
 8. `/contact` — 200. A 404 means the step 3 rewrite is missing.
 9. `/search`, `/corrections`, `/feed/`, `/sitemap.xml`, `/newsletter/` —
    all 200.
