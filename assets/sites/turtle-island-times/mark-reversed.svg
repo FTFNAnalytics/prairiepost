@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 140 124" role="img" aria-label="Turtle Island Times">
+  <title>Turtle Island Times</title>
+  <!--
+    Top-down turtle in a single colour, so it reverses out of the ink block.
+    The carapace is one solid mass and the plate divisions are cut through it
+    as true gaps via a mask — a solid shape with thin cuts survives being
+    scaled to the 62px condensed masthead, where separate small plates turn
+    to mush. The nameplate's caps cut into the lower third of the shell.
+  -->
+  <defs>
+    <mask id="ti-plates">
+      <rect width="140" height="124" fill="#fff"/>
+      <g stroke="#000" stroke-width="3.4" stroke-linecap="round" fill="none">
+        <!-- the vertebral column, running the length of the shell -->
+        <path d="M57 26 V100"/>
+        <path d="M83 26 V100"/>
+        <!-- its five plates -->
+        <path d="M57 42 H83"/>
+        <path d="M57 62 H83"/>
+        <path d="M57 82 H83"/>
+        <!-- costal plates, cut outward from the column -->
+        <path d="M57 40 L30 36"/>
+        <path d="M57 62 L27 62"/>
+        <path d="M57 84 L30 88"/>
+        <path d="M83 40 L110 36"/>
+        <path d="M83 62 L113 62"/>
+        <path d="M83 84 L110 88"/>
+      </g>
+    </mask>
+  </defs>
+
+  <g fill="#F3F2F2">
+    <!-- head, tucked under the top of the shell -->
+    <path d="M70 3c7.2 0 12.4 4.8 12.4 11.2 0 6.6-5.2 11.3-12.4 11.3s-12.4-4.7-12.4-11.3C57.6 7.8 62.8 3 70 3Z"/>
+    <!-- front flippers: long paddles, swept out and slightly back -->
+    <path d="M37 32.4c3.8 2.8 4.6 8 1.8 12-2.4 3.4-6 4.4-11 5.6-5 1.2-9.6 3-13.2 5.6-3.2 2.4-6.6 1.4-7.8-1.8-1.4-3.6.8-8.4 5.4-13 4.4-4.4 9.8-7.8 14.8-9.4 4.4-1.4 7.6-1 10 1Z"/>
+    <path d="M103 32.4c2.4-2 5.6-2.4 10-1 5 1.6 10.4 5 14.8 9.4 4.6 4.6 6.8 9.4 5.4 13-1.2 3.2-4.6 4.2-7.8 1.8-3.6-2.6-8.2-4.4-13.2-5.6-5-1.2-8.6-2.2-11-5.6-2.8-4-2-9.2 1.8-12Z"/>
+    <!-- rear flippers: shorter, swept back -->
+    <path d="M39.4 85.6c3.4 3 3.8 8 .8 11.6-2.2 2.6-5 3.4-8.8 5-3.8 1.6-7 3.8-9.4 6.4-2.4 2.6-5.4 2.2-6.8-.6-1.6-3.2-.2-7.8 3.6-12.2 3.8-4.4 8.8-7.8 13.2-9.4 3.4-1.2 5.8-1 7.4-.8Z"/>
+    <path d="M100.6 85.6c1.6-.2 4-.4 7.4.8 4.4 1.6 9.4 5 13.2 9.4 3.8 4.4 5.2 9 3.6 12.2-1.4 2.8-4.4 3.2-6.8.6-2.4-2.6-5.6-4.8-9.4-6.4-3.8-1.6-6.6-2.4-8.8-5-3-3.6-2.6-8.6.8-11.6Z"/>
+    <!-- tail -->
+    <path d="M70 100.5c3 0 5.4 2 6.8 6.2 1.6 4.8 1.2 9.6-1 12.6-1.6 2.2-3.6 3.2-5.8 3.2s-4.2-1-5.8-3.2c-2.2-3-2.6-7.8-1-12.6 1.4-4.2 3.8-6.2 6.8-6.2Z"/>
+    <!-- the carapace: one mass, divisions cut through it -->
+    <path mask="url(#ti-plates)" d="M70 17c19.4 0 34.6 10.6 40.6 26.4 3.2 8.6 3.2 24.2 0 32.8C104.6 92 89.4 102.6 70 102.6S35.4 92 29.4 76.2c-3.2-8.6-3.2-24.2 0-32.8C35.4 27.6 50.6 17 70 17Z"/>
+  </g>
+</svg>

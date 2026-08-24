@@ -24,6 +24,13 @@ $posts = posts_in_category((int) $cat['id'], $perPage, [], ($page - 1) * $perPag
 
 $deskColor = empty($cat['color_is_fill']) ? pp_desk_hex($cat['slug'], $cat['color']) : pp_brand_palette()['ink'];
 
+// On Turtle Island the desk's name replaces the nameplate in the ink block
+// (screen 2b), so both are set before the header renders.
+if (pp_chrome('template') === 'turtleisland') {
+    $GLOBALS['ppTiMast'] = 'section';
+    $GLOBALS['ppTiPlate'] = pp_desk_label($cat['slug'], $cat['name']);
+}
+
 page_header([
     'title'       => $cat['name'],
     'description' => (string) $cat['description'],
@@ -37,7 +44,12 @@ page_header([
     return;
 } ?>
 
-<?php if (pp_chrome('template') === 'standard') {
+<?php if (pp_chrome('template') === 'turtleisland') {
+    require PP_ROOT . '/app/views/section-turtleisland.php';
+    page_footer();
+    return;
+}
+if (pp_chrome('template') === 'standard') {
     require PP_ROOT . '/app/views/section-standard.php';
     page_footer();
     return;

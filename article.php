@@ -69,6 +69,11 @@ if ($post['dateline']) {
     $jsonld['dateline'] = mb_strtoupper($post['dateline']);
 }
 
+// Turtle Island condenses its masthead on an article (screen 2a).
+if (pp_chrome('template') === 'turtleisland') {
+    $GLOBALS['ppTiMast'] = 'slim';
+}
+
 page_header([
     'title'       => $post['title'],
     'description' => $post['meta_description'] ?: excerpt((string) $post['lede'], 155),
@@ -87,6 +92,11 @@ page_header([
 
 <?php if (pp_chrome('template') === 'standard') {
     require PP_ROOT . '/app/views/article-standard.php';
+    page_footer();
+    return;
+}
+if (pp_chrome('template') === 'turtleisland') {
+    require PP_ROOT . '/app/views/article-turtleisland.php';
     page_footer();
     return;
 } ?>
