@@ -262,48 +262,6 @@ elseif (pp_chrome('template') === 'echo-v3'): ?>
 <?php $banner = pp_chrome('banner'); if (is_string($banner) && $banner !== '' && ($GLOBALS['pp_front_page'] ?? false)): ?>
 <div class="v3-banner" style="background-image:url('<?= e($banner) ?>')"></div>
 <?php endif; ?>
-<?php elseif (pp_chrome('template') === 'aurora'): ?>
-<div class="ga-strip">
-  <div class="wrap">
-    <div class="grp">
-      <span><?= e(date('l, F j, Y')) ?></span>
-      <?php if (setting('weather_line') !== ''): ?>
-      <a href="<?= e(url('desk/weather')) ?>"><?= e(setting('weather_line')) ?></a>
-      <?php endif; ?>
-    </div>
-    <div class="grp">
-      <?php if (setting('breaking_label') !== '' && setting('breaking_url') !== ''): ?>
-      <a class="hot" href="<?= e(setting('breaking_url')) ?>"><?= e(setting('breaking_label')) ?></a>
-      <?php endif; ?>
-      <?php if (setting('contact_email') !== ''): ?>
-      <a href="mailto:<?= e(setting('contact_email')) ?>">Send a tip</a>
-      <?php endif; ?>
-      <a href="<?= e(url('corrections')) ?>">Corrections</a>
-      <a href="<?= e(url('newsletter/')) ?>">Newsletters</a>
-    </div>
-  </div>
-</div>
-<header class="ga-head">
-  <div class="wrap">
-    <a class="logo" href="/" aria-label="<?= e($siteTitle) ?> — front page">
-      <img src="<?= e(site_asset('logo-header.png')) ?>" alt="<?= e($siteTitle) ?>">
-    </a>
-    <div class="acts">
-      <a class="lnk" href="<?= e(url('search')) ?>">Search</a>
-      <?php if (setting('contact_email') !== ''): ?>
-      <a class="ga-btn ga-btn--ghost" href="mailto:<?= e(setting('contact_email')) ?>">Send a tip</a>
-      <?php endif; ?>
-      <a class="ga-btn ga-btn--solid" href="<?= e(url('subscribe')) ?>">Get the newsletter</a>
-    </div>
-  </div>
-</header>
-<nav class="ga-nav" aria-label="Desks">
-  <div class="wrap">
-    <?php foreach (pp_nav_categories() as $cat): ?>
-    <a href="<?= e(url('desk/' . $cat['slug'])) ?>"<?= $activeDesk === $cat['slug'] ? ' aria-current="page"' : '' ?>><?= e($cat['name']) ?></a>
-    <?php endforeach; ?>
-  </div>
-</nav>
 <?php elseif (pp_chrome('header') === 'bar'): ?>
 <header class="topbar">
   <div class="wrap">
@@ -384,55 +342,6 @@ if (is_file($ppChrome)) { require $ppChrome; return; } ?>
 
 
 
-<?php if (pp_chrome('template') === 'aurora'): ?>
-<footer class="ga-foot">
-  <div class="cols">
-    <div>
-      <a class="logo" href="/"><img src="<?= e(site_asset('logo-header.png')) ?>" alt="<?= e($siteTitle) ?>"></a>
-      <p class="about"><?= e(setting('footer_line')) ?></p>
-    </div>
-    <div>
-      <div class="fh">News</div>
-      <div class="lnks">
-        <?php foreach (pp_nav_categories() as $cat): ?>
-        <a href="<?= e(url('desk/' . $cat['slug'])) ?>"><?= e($cat['name']) ?></a>
-        <?php endforeach; ?>
-      </div>
-    </div>
-    <div>
-      <div class="fh">The paper</div>
-      <div class="lnks">
-        <a href="<?= e(url('search')) ?>">Search the archive</a>
-        <a href="<?= e(url('feed/')) ?>">RSS feed</a>
-        <a href="<?= e(url('newsletter/')) ?>">Newsletter archive</a>
-        <a href="<?= e(url('corrections')) ?>">Corrections</a>
-        <a href="/admin/">Newsroom sign-in</a>
-      </div>
-    </div>
-    <div>
-      <div class="fh">Contact</div>
-      <div class="lnks">
-        <?php if (setting('contact_email') !== ''): ?>
-        <a href="mailto:<?= e(setting('contact_email')) ?>">Send a tip</a>
-        <a href="mailto:<?= e(setting('contact_email')) ?>"><?= e(setting('contact_email')) ?></a>
-        <?php endif; ?>
-        <a href="<?= e(url('subscribe')) ?>">Get the newsletter</a>
-      </div>
-      <?php if (setting('paper_address') !== ''): ?>
-      <p class="about" style="margin-top:14px"><?= nl2br(e(setting('paper_address'))) ?></p>
-      <?php endif; ?>
-    </div>
-  </div>
-  <div class="legal">
-    <div class="wrap">
-      <span>© <?= e(date('Y')) ?> <?= e($siteTitle) ?> · <?= e(setting('tagline')) ?></span>
-      <span>Source Serif 4 · Archivo</span>
-    </div>
-  </div>
-</footer>
-</body>
-</html>
-<?php return; endif; ?>
 
 <?php if (pp_chrome('template') === 'echo-v3'): ?>
 <footer class="v3-foot">
