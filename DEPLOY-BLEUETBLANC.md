@@ -304,7 +304,7 @@ php -l "$REL/config.php"
 ```
 
 **Verify:** `https://bleuetblanc.ca/` renders the paper's chrome — a
-dark-navy service strip, a three-berry mark beside the nameplate, a blue
+dark-navy service strip, a five-petal flower mark beside the nameplate, a blue
 nav band, and a blue newsletter panel above the footer. The source
 contains `bleuetblanc.css`, the `t-bleuetblanc` body class, and
 `<html lang="fr">`.  `www` reaches the same paper.
@@ -359,7 +359,9 @@ collided with an existing desk; report which.
    you the seeder ran.**
 2. The service strip's right side now reads **Infolettres · Nous joindre
    · Se connecter**.
-3. The nameplate reads **Le Bleuet Blanc** beside the three-berry mark.
+3. The nameplate reads **Le Bleuet Blanc** beside the five-petal flower
+   mark, painted in the paper’s blue (not black — a black mark means a
+   stale `mark.svg` predating the flower).
 4. The blue band carries **Accueil · Actualités · Politique · Économie ·
    Régions · Culture · Société** — seven items. The bar shows six
    rubriques by design; Environnement, Sports, Idées and Le fil live in
