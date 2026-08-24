@@ -180,21 +180,31 @@ must never be `git pull`ed or rsynced into.
   branch and commit a release directory was built from — the directory
   name carries the short SHA — before writing or following a runbook.
 
-## Current operational state (as of the Pickering Post launch)
+## Current operational state (as of the Bleuet Blanc launch)
 
-- **Release in production: `8a037f365b77`**, at
-  `/var/www/prairiepost-8a037f365b77-shared`, serving all twelve papers
-  as one release group. Schema version 14.
+- **Release in production: `4184ac02b734`**, at
+  `/var/www/prairiepost-4184ac02b734-shared`, serving all thirteen papers
+  as one release group.
 - The **CivisMedia hub** runs from its own release,
   `/var/www/prairiepost-d298039b1d40`, and is deliberately left behind by
   every paper upgrade. The Institute (`cies`, `/var/www/cies-v0.17`) is
   an unrelated site on the same box — never touch it.
-- The twelve papers: prairiedispatch.ca, edmontonecho.com,
+- The thirteen papers: prairiedispatch.ca, edmontonecho.com,
   thepacificpost.com, kelownacurrent.ca, kermodechronicle.ca,
   grandeprairiegazette.ca, bramptonbulletin.com, westernwire.ca,
   tricitiestorch.ca, sudburystandard.ca, turtleislandtimes.ca,
-  pickeringpost.ca — twenty hostnames with the `www` variants. Discover
-  the live set from the enabled nginx blocks rather than from this list.
+  pickeringpost.ca, bleuetblanc.ca — twenty-two hostnames with the `www`
+  variants. Discover the live set from the enabled nginx blocks rather
+  than from this list.
+- **bleuetblanc.ca** (site #14, slug `bleuet-blanc`, tenant key equal to
+  the slug) is the network's first French-language paper, launched with
+  its 25-story demonstration package — all slugs `bb-`-prefixed, zero
+  collisions on seed. Its ten desks are new to the network
+  (`culture-qc`, `sports-qc`, `le-fil`, …). TLS expiry Nov 22 2026.
+- **`php8.3-intl` is now installed on the box** (a one-time exception to
+  the service-action rule, authorized for the French launch). The i18n
+  layer degrades to English dates without it, so an English masthead
+  dateline on a French paper is the symptom to check first.
 - **turtleislandtimes.ca** and **pickeringpost.ca** both launched with
   **zero stories** by design: identity, desks and sources only, editorial
   from the newsroom. Their front pages carry the empty state until the
