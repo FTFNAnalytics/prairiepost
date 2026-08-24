@@ -143,6 +143,7 @@ $ppView = PP_ROOT . '/app/views/article-' . basename((string) pp_chrome('templat
 
   <div class="bodycopy">
     <?= sanitize_html((string) $post['body']) ?>
+<?= pp_provenance_box($post) ?>
   </div>
 
   <?= ad_slot('article') ?>

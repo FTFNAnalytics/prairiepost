@@ -57,4 +57,10 @@ return [
 
     // --- empty states ---------------------------------------------------
     'Nothing filed yet.'  => 'Rien de publié pour l’instant.',
+
+    // --- provenance (agent-filed stories) --------------------------------
+    'Automated report' => 'Rapport automatisé',
+    'This story was compiled by a monitoring system from the public records below and reviewed under this newsroom\'s editorial policy.'
+        => 'Ce texte a été composé par un système de veille à partir des documents publics ci-dessous, sous la politique éditoriale de la rédaction.',
+    'retrieved' => 'consulté le',
 ];

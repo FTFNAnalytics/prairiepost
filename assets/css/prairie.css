@@ -457,3 +457,12 @@ body.cards-panel .duo,body.cards-panel .deskgrid{gap:18px}
 }
 .trendmod a:hover{color:var(--pp-bigsky)}
 .trendmod .when{font-family:var(--pp-mono);font-size:10px;color:#5A6A5C;white-space:nowrap}
+
+/* The provenance box on agent-filed stories (pp_provenance_box). Rendered
+   only where filed_by is set, on every paper, so it styles from the shared
+   sheet with deliberately neutral, paper-agnostic rules. */
+.pp-provenance { margin: 28px 0 0; padding: 14px 18px; border: 1px solid rgba(0,0,0,.18); border-radius: 3px; font-size: 14px; line-height: 1.55; }
+.pp-provenance .pp-prov-label { margin: 0 0 4px; font-size: 11px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; opacity: .75; }
+.pp-provenance .pp-prov-note { margin: 0 0 10px; }
+.pp-provenance .pp-prov-sources { margin: 0; padding-left: 18px; }
+.pp-provenance .pp-prov-when { opacity: .65; }

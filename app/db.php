@@ -53,6 +53,26 @@ function pp_schema_ddl(string $driver): array
             created_at $dt NOT NULL
         )$suffix",
 
+        "CREATE TABLE ingest_agents (
+            id $id,
+            name VARCHAR(120) NOT NULL UNIQUE,
+            token_hash VARCHAR(64) NOT NULL UNIQUE,
+            sites TEXT NOT NULL,
+            desks TEXT NOT NULL DEFAULT '',
+            enabled INTEGER NOT NULL DEFAULT 1,
+            created_at $dt NOT NULL,
+            last_used_at $dt
+        )$suffix",
+
+        "CREATE TABLE story_sources (
+            id $id,
+            post_id INTEGER NOT NULL,
+            url VARCHAR(600) NOT NULL,
+            title VARCHAR(255) NOT NULL DEFAULT '',
+            retrieved_at $dt,
+            created_at $dt NOT NULL
+        )$suffix",
+
         "CREATE TABLE users (
             id $id,
             name VARCHAR(120) NOT NULL,
@@ -107,6 +127,8 @@ function pp_schema_ddl(string $driver): array
             correction TEXT,
             corrected_at $dt,
             published_at $dt,
+            filed_by VARCHAR(120) NOT NULL DEFAULT '',
+            content_hash VARCHAR(64) NOT NULL DEFAULT '',
             created_at $dt NOT NULL,
             updated_at $dt NOT NULL
         )$suffix",
@@ -396,6 +418,8 @@ function pp_schema_ddl(string $driver): array
         'CREATE INDEX idx_ideas_status ON story_ideas (status, created_at)',
         'CREATE INDEX idx_post_sites_site ON post_sites (site_id)',
         'CREATE INDEX idx_domains_site ON domains (site_slug)',
+        'CREATE INDEX idx_story_sources_post ON story_sources (post_id)',
+        'CREATE INDEX idx_posts_content_hash ON posts (content_hash)',
         'CREATE INDEX idx_ads_site_placement ON ads (site_id, placement)',
         'CREATE INDEX idx_ads_campaign ON ads (campaign_id)',
         'CREATE INDEX idx_inquiries_site ON inquiries (site_id, created_at)',
@@ -939,5 +963,43 @@ function pp_migrate(PDO $pdo, string $driver): void
         $pdo->exec('CREATE INDEX idx_domains_site ON domains (site_slug)');
 
         $pdo->exec("UPDATE settings SET svalue = '15' WHERE site_id = 0 AND skey = 'schema_version'");
+    }
+
+    if ($version < 16) {
+        // The Hermes ingest pipeline. External agents file stories through
+        // /api/ingest with a scoped bearer token; everything lands as a
+        // draft behind the newsroom's existing publish gate (wire desks
+        // excepted, labelled). Tokens are hashed at rest; a story carries
+        // its provenance — which agent, which sources, retrieved when.
+        $dt = $driver === 'pgsql' ? 'TIMESTAMP' : 'DATETIME';
+        $id = $driver === 'mysql' ? 'INT UNSIGNED AUTO_INCREMENT PRIMARY KEY'
+            : ($driver === 'pgsql' ? 'INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY' : 'INTEGER PRIMARY KEY AUTOINCREMENT');
+
+        $pdo->exec("CREATE TABLE ingest_agents (
+            id $id,
+            name VARCHAR(120) NOT NULL UNIQUE,
+            token_hash VARCHAR(64) NOT NULL UNIQUE,
+            sites TEXT NOT NULL,
+            desks TEXT NOT NULL DEFAULT '',
+            enabled INTEGER NOT NULL DEFAULT 1,
+            created_at $dt NOT NULL,
+            last_used_at $dt
+        )");
+
+        $pdo->exec("CREATE TABLE story_sources (
+            id $id,
+            post_id INTEGER NOT NULL,
+            url VARCHAR(600) NOT NULL,
+            title VARCHAR(255) NOT NULL DEFAULT '',
+            retrieved_at $dt,
+            created_at $dt NOT NULL
+        )");
+        $pdo->exec('CREATE INDEX idx_story_sources_post ON story_sources (post_id)');
+
+        $pdo->exec("ALTER TABLE posts ADD COLUMN filed_by VARCHAR(120) NOT NULL DEFAULT ''");
+        $pdo->exec("ALTER TABLE posts ADD COLUMN content_hash VARCHAR(64) NOT NULL DEFAULT ''");
+        $pdo->exec('CREATE INDEX idx_posts_content_hash ON posts (content_hash)');
+
+        $pdo->exec("UPDATE settings SET svalue = '16' WHERE site_id = 0 AND skey = 'schema_version'");
     }
 }
