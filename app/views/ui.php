@@ -228,41 +228,7 @@ function page_header(array $meta = [], string $activeDesk = ''): void
 // migrated keep their inline branch below (phase 2.2, one paper per PR).
 $ppChrome = PP_ROOT . '/app/views/chrome/' . basename((string) pp_chrome('template')) . '-head.php';
 if (is_file($ppChrome)): require $ppChrome;
-elseif (pp_chrome('template') === 'echo-v3'): ?>
-<?php $mastWords = preg_split('/\s+/', trim(preg_replace('/^The\s+/i', '', $siteTitle))); $mastLast = count($mastWords) > 1 ? array_pop($mastWords) : ''; ?>
-<div class="v3-strip">
-  <div class="wrap">
-    <div class="grp">
-      <span><?= e(date('l, F j, Y')) ?></span>
-      <a href="<?= e(url('newsletter/')) ?>">Newsletters</a>
-      <a href="<?= e(url('corrections')) ?>">Corrections</a>
-    </div>
-    <div class="grp">
-      <?php if (setting('breaking_label') !== '' && setting('breaking_url') !== ''): ?>
-      <a class="hot" href="<?= e(setting('breaking_url')) ?>"><?= e(setting('breaking_label')) ?></a>
-      <?php endif; ?>
-      <a class="hot" href="<?= e(url('subscribe')) ?>">Subscribe</a>
-      <a href="<?= e(url('search')) ?>">Search</a>
-    </div>
-  </div>
-</div>
-<div class="v3-mast">
-  <a class="box" href="/" aria-label="<?= e($siteTitle) ?> — front page">
-    <span class="l1"><?= e($mastLast !== '' ? implode(' ', $mastWords) : $siteTitle) ?></span>
-    <?php if ($mastLast !== ''): ?><span class="l2" style="display:block"><?= e($mastLast) ?></span><?php endif; ?>
-  </a>
-</div>
-<nav class="v3-nav" aria-label="Desks">
-  <div class="wrap">
-    <?php foreach (pp_nav_categories() as $cat): ?>
-    <a href="<?= e(url('desk/' . $cat['slug'])) ?>"<?= $activeDesk === $cat['slug'] ? ' aria-current="page"' : '' ?>><?= e($cat['name']) ?></a>
-    <?php endforeach; ?>
-  </div>
-</nav>
-<?php $banner = pp_chrome('banner'); if (is_string($banner) && $banner !== '' && ($GLOBALS['pp_front_page'] ?? false)): ?>
-<div class="v3-banner" style="background-image:url('<?= e($banner) ?>')"></div>
-<?php endif; ?>
-<?php elseif (pp_chrome('header') === 'bar'): ?>
+elseif (pp_chrome('header') === 'bar'): ?>
 <header class="topbar">
   <div class="wrap">
     <a class="tb-logo" href="/" aria-label="<?= e($siteTitle) ?> — front page">
@@ -343,45 +309,6 @@ if (is_file($ppChrome)) { require $ppChrome; return; } ?>
 
 
 
-<?php if (pp_chrome('template') === 'echo-v3'): ?>
-<footer class="v3-foot">
-  <div class="cols">
-    <div>
-      <div class="fh">Contact <?= e(preg_replace('/^The\s+/i', '', $siteTitle)) ?></div>
-      <p><?= nl2br(e(setting('paper_address'))) ?><?= setting('contact_email') !== '' ? '<br>' . e(setting('contact_email')) : '' ?></p>
-    </div>
-    <div>
-      <div class="fh">Sections</div>
-      <div class="lnks">
-        <?php foreach (pp_nav_categories() as $cat): ?>
-        <a href="<?= e(url('desk/' . $cat['slug'])) ?>"><?= e($cat['name']) ?></a>
-        <?php endforeach; ?>
-      </div>
-    </div>
-    <div>
-      <div class="fh">The paper</div>
-      <div class="lnks">
-        <a href="<?= e(url('search')) ?>">Search the archive</a>
-        <a href="<?= e(url('feed/')) ?>">RSS feed</a>
-        <a href="<?= e(url('corrections')) ?>">Corrections</a>
-        <a href="/admin/">Newsroom sign-in</a>
-      </div>
-    </div>
-    <div>
-      <div class="fh">Newsletter</div>
-      <p><?= e(setting('newsletter_copy')) ?></p>
-      <form class="nl" method="post" action="<?= e(url('subscribe')) ?>">
-        <input type="email" name="email" required placeholder="you@email.ca" aria-label="Email address">
-        <input type="text" name="website" value="" style="display:none" tabindex="-1" autocomplete="off" aria-hidden="true">
-        <button type="submit">Sign up</button>
-      </form>
-    </div>
-  </div>
-  <div class="legal">© <?= e(date('Y')) ?> <?= e($siteTitle) ?> · <?= e(setting('tagline')) ?></div>
-</footer>
-</body>
-</html>
-<?php return; endif; ?>
 
 <footer class="sitefoot">
   <div class="pp-horizon pp-horizon--full"></div>
