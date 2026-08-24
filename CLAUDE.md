@@ -145,7 +145,16 @@ against this list before shipping them.
      rule naming the file — and parse rules rather than grepping, since
      comments mentioning `@font-face` inflate a naive count.
 
-10. **Keep what worked:** hard stop after two failed verifications with
+10. **Verify text at the layer that produces it.** CSS
+    `text-transform: uppercase` means the painted text differs from the
+    served bytes — Le Bleuet Blanc's badge paints "EN DIRECT" while the
+    HTML says `En direct`, and an agent's crawler greping raw HTML for
+    the uppercase literal hard-stopped a healthy deployment twice over
+    its absence. When a Verify item names a visible string, state the
+    string as it appears in the served HTML, and say so when CSS
+    transforms it.
+
+11. **Keep what worked:** hard stop after two failed verifications with
    an exact report (both Western Wire stops were correct and caught
    real defects); per-step Verify gates; no manual database edits ever
    (the seeder and migrations do all writes); seeders idempotent and
