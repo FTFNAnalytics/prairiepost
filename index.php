@@ -35,63 +35,13 @@ page_header([
 ]);
 ?>
 
-<?php if (pp_chrome('template') === 'echo-v3') {
-    require PP_ROOT . '/app/views/front-v3.php';
-    page_footer();
-    return;
-}
-if (pp_chrome('template') === 'aurora') {
-    require PP_ROOT . '/app/views/front-aurora.php';
-    page_footer();
-    return;
-}
-if (pp_chrome('template') === 'chronicle') {
-    require PP_ROOT . '/app/views/front-chronicle.php';
-    page_footer();
-    return;
-}
-if (pp_chrome('template') === 'pacific') {
-    require PP_ROOT . '/app/views/front-pacific.php';
-    page_footer();
-    return;
-}
-if (pp_chrome('template') === 'current') {
-    require PP_ROOT . '/app/views/front-current.php';
-    page_footer();
-    return;
-}
-if (pp_chrome('template') === 'bulletin') {
-    require PP_ROOT . '/app/views/front-bulletin.php';
-    page_footer();
-    return;
-}
-if (pp_chrome('template') === 'westernwire') {
-    require PP_ROOT . '/app/views/front-westernwire.php';
-    page_footer();
-    return;
-}
-if (pp_chrome('template') === 'torch') {
-    require PP_ROOT . '/app/views/front-torch.php';
-    page_footer();
-    return;
-}
-if (pp_chrome('template') === 'standard') {
-    require PP_ROOT . '/app/views/front-standard.php';
-    page_footer();
-    return;
-}
-if (pp_chrome('template') === 'turtleisland') {
-    require PP_ROOT . '/app/views/front-turtleisland.php';
-    page_footer();
-    return;
-}
-if (pp_chrome('template') === 'pickering') {
-    require PP_ROOT . '/app/views/front-pickering.php';
-    page_footer();
-    return;
-}
-if (pp_chrome('template') === 'bleuetblanc') {
-    require PP_ROOT . '/app/views/front-bleuetblanc.php';
+<?php
+// Convention dispatch: a paper that ships app/views/front-<template>.php
+// takes over the page here; anything else renders the shared markup
+// below. Adding a paper is adding files — this chain never grows again.
+$ppView = PP_ROOT . '/app/views/front-' . basename((string) pp_chrome('template')) . '.php';
+if (is_file($ppView)) {
+    require $ppView;
     page_footer();
     return;
 } ?>
