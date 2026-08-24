@@ -122,7 +122,30 @@ against this list before shipping them.
    all-papers regression spot-check immediately after the first request
    against new code, not at the end of the runbook.
 
-9. **Keep what worked:** hard stop after two failed verifications with
+9. **A web font is only loaded by the stylesheet that declares it, and
+   you cannot verify typography by looking.** `pickering.css` named
+   `'Source Serif 4'` at the head of its stack and never declared the
+   face. The woff2 files were in the release — Turtle Island brought
+   them — but the only `@font-face` lived in `turtleisland.css`, which
+   Pickering does not load, and naming a family in a stack fetches
+   nothing. The masthead rendered in Liberation Serif.
+
+   The screenshots looked right. A Times clone at masthead size is not
+   distinguishable from the intended face by eye, which is precisely why
+   the visual check passed and the deployment agent's mechanical one did
+   not. Two rules follow:
+
+   - Every paper that names a self-hosted family must declare the
+     `@font-face` in **its own** stylesheet. Duplicating the block across
+     papers is correct and costs nothing — browsers dedupe by URL.
+   - Verify a typeface by asking the renderer, never by looking:
+     `CSS.getPlatformFontsForNode` over CDP returns the family that
+     actually painted and an `isCustomFont` flag. Failing a browser,
+     assert that a stylesheet the page loads contains a real `@font-face`
+     rule naming the file — and parse rules rather than grepping, since
+     comments mentioning `@font-face` inflate a naive count.
+
+10. **Keep what worked:** hard stop after two failed verifications with
    an exact report (both Western Wire stops were correct and caught
    real defects); per-step Verify gates; no manual database edits ever
    (the seeder and migrations do all writes); seeders idempotent and
@@ -148,31 +171,33 @@ must never be `git pull`ed or rsynced into.
   branch and commit a release directory was built from — the directory
   name carries the short SHA — before writing or following a runbook.
 
-## Current operational state (as of the Sudbury Standard launch)
+## Current operational state (as of the Pickering Post launch)
 
-- **Release in production: `b1352703c1dc`**, at
-  `/var/www/prairiepost-b1352703c1dc-shared`, serving all ten papers as
-  one release group. Schema version 14.
+- **Release in production: `8a037f365b77`**, at
+  `/var/www/prairiepost-8a037f365b77-shared`, serving all twelve papers
+  as one release group. Schema version 14.
 - The **CivisMedia hub** runs from its own release,
-  `/var/www/prairiepost-d298039b1d40`, and was deliberately left behind
-  by the last upgrade. The Institute (`cies`, `/var/www/cies-v0.16`) is
+  `/var/www/prairiepost-d298039b1d40`, and is deliberately left behind by
+  every paper upgrade. The Institute (`cies`, `/var/www/cies-v0.17`) is
   an unrelated site on the same box — never touch it.
-- The ten papers: prairiedispatch.ca, edmontonecho.com,
+- The twelve papers: prairiedispatch.ca, edmontonecho.com,
   thepacificpost.com, kelownacurrent.ca, kermodechronicle.ca,
   grandeprairiegazette.ca, bramptonbulletin.com, westernwire.ca,
-  tricitiestorch.ca, sudburystandard.ca. Discover the live set from the
-  enabled nginx blocks rather than from this list.
-- **sudburystandard.ca** is live (slug `sudbury-standard`, template
-  `standard`): four desks, 13 launch pieces, no slug collisions. TLS
-  expires 16 Nov 2026. Pre-edit config backup at
-  `/root/prairiepost-config-pre-sudbury-20260819T001958Z.php`.
+  tricitiestorch.ca, sudburystandard.ca, turtleislandtimes.ca,
+  pickeringpost.ca — twenty hostnames with the `www` variants. Discover
+  the live set from the enabled nginx blocks rather than from this list.
+- **turtleislandtimes.ca** and **pickeringpost.ca** both launched with
+  **zero stories** by design: identity, desks and sources only, editorial
+  from the newsroom. Their front pages carry the empty state until the
+  desk files. That is the intended state, not an unfinished deployment.
 - Every paper uses the network-wide fetch cron. No paper has a dedicated
   one.
 - **No paper has its newsletter enabled.** All are pending owner mail
   setup (mailboxes, SMTP identity, mailing address, SPF, DKIM, test
   send).
-- `deploy/torch-on-3fd4f13` and the merged feature branches are stale
-  now that the network is on `b1352703c1dc`.
+- Pre-edit config backups live in `/root/`, one per launch, mode 0600.
+- Merged feature branches and `deploy/torch-on-3fd4f13` are stale now
+  that the network is on `8a037f365b77`.
 
 ## Known debt, in the order it should be paid
 
@@ -188,7 +213,17 @@ must never be `git pull`ed or rsynced into.
    the if-chains with a convention (`front-{$template}.php` if it
    exists) and move each paper's chrome into its own partial, so a new
    paper is new files only.
-3. **Nginx has no `default_server` on 443, and the papers are not
+3. **Six papers name a font they never declare.** `westernwire.css`,
+   `pacific.css`, `aurora.css`, `chronicle.css`, `bulletin.css` and
+   `broadsheet.css` all put `'Source Serif 4'` at the head of a stack
+   with no `@font-face` anywhere they load. They predate the self-hosted
+   woff2 files and have always fallen back to Georgia — which is what
+   their owners have seen and approved, so this is a decision to make
+   rather than a bug to fix quietly. Declaring the face on all six would
+   change six live papers' typography in one release; decide whether
+   that is wanted before doing it.
+
+4. **Nginx has no `default_server` on 443, and the papers are not
    symmetric across address families.** With no explicit default, nginx
    falls back to the first block bound to each socket — Brampton on
    IPv4, the Institute on IPv6. A paper whose block is missing one
@@ -202,14 +237,14 @@ must never be `git pull`ed or rsynced into.
    an explicit `default_server` that rejects unknown SNI is wanted
    rather than letting the first-loaded paper serve as the fallback.
 
-4. **`upgrade-papers.sh` cannot detect template loss.** Its guard
+5. **`upgrade-papers.sh` cannot detect template loss.** Its guard
    compares each domain's `<title>`, which comes from the database, so a
    paper whose CSS and templates are missing from the release still
    passes. Assert that each paper's expected stylesheet appears in the
    served HTML.
-5. **`posts.slug` is UNIQUE network-wide.** At 15 papers that is ~225
+6. **`posts.slug` is UNIQUE network-wide.** At 15 papers that is ~225
    slugs in one namespace in the same register, and the seeder's failure
    mode is a silent `story exists, skipped`. Scope it per site or have
    the seeder prefix automatically.
-6. **GitHub's default branch is the dead line.** Repoint it to the
+7. **GitHub's default branch is the dead line.** Repoint it to the
    release branch so the trunk that is visible is the trunk that ships.
