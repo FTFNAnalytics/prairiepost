@@ -222,7 +222,13 @@ function page_header(array $meta = [], string $activeDesk = ''): void
 <body class="<?= trim((pp_chrome('cards') === 'panel' ? 'cards-panel ' : '') . (pp_chrome('template') === 'echo-v3' ? 't-dark' : '') . (pp_chrome('template') === 'aurora' ? 't-aurora' : '') . (pp_chrome('template') === 'chronicle' ? 't-chronicle' : '') . (pp_chrome('template') === 'pacific' ? 't-pacific' : '') . (pp_chrome('template') === 'current' ? 't-current' : '') . (pp_chrome('template') === 'bulletin' ? 't-bulletin' : '') . (pp_chrome('template') === 'westernwire' ? 't-westernwire' : '') . (pp_chrome('template') === 'torch' ? 't-torch' : '') . (pp_chrome('template') === 'standard' ? 't-standard' : '') . (pp_chrome('template') === 'turtleisland' ? 't-turtleisland' : '') . (pp_chrome('template') === 'pickering' ? 't-pickering' : '') . (pp_chrome('template') === 'bleuetblanc' ? 't-bleuetblanc' : '')) ?>">
 <a class="pp-meta" href="#content" style="position:absolute;left:-9999px" onfocus="this.style.left='8px';this.style.top='8px'" onblur="this.style.left='-9999px'">Skip to the news</a>
 
-<?php if (pp_chrome('template') === 'echo-v3'): ?>
+<?php
+// Per-paper masthead chrome, by convention: a paper that ships
+// app/views/chrome/<template>-head.php uses it, and papers not yet
+// migrated keep their inline branch below (phase 2.2, one paper per PR).
+$ppChrome = PP_ROOT . '/app/views/chrome/' . basename((string) pp_chrome('template')) . '-head.php';
+if (is_file($ppChrome)): require $ppChrome;
+elseif (pp_chrome('template') === 'echo-v3'): ?>
 <?php $mastWords = preg_split('/\s+/', trim(preg_replace('/^The\s+/i', '', $siteTitle))); $mastLast = count($mastWords) > 1 ? array_pop($mastWords) : ''; ?>
 <div class="v3-strip">
   <div class="wrap">
@@ -548,50 +554,6 @@ $tiPlate = $GLOBALS['ppTiPlate'] ?? $siteTitle;
       </div>
     </header>
     <div class="ti-pad">
-<?php elseif (pp_chrome('template') === 'bleuetblanc'): ?>
-<?php
-// La ligne sous le nom du journal : la devise à la une, la rubrique ailleurs,
-// pour que le lecteur sache toujours dans quelle section il se trouve.
-$bbRub = $tagline;
-// Toutes les rubriques, pas seulement celles de la barre : « le fil » n'y
-// figure pas et doit tout de même se nommer.
-foreach ($activeDesk !== '' ? categories_all() : [] as $c) {
-    if ($c['slug'] === $activeDesk) {
-        $bbRub = pp_desk_label($c['slug'], $c['name']);
-        break;
-    }
-}
-?>
-<div class="bb-page">
-  <div class="bb-bandeau">
-    <span>Édition du <?= e(pp_date_full()) ?></span>
-    <span class="grp">
-      <a href="<?= e(url('newsletter/')) ?>"><?= e(pp_t('Newsletters')) ?></a>
-      <?php if (setting('contact_email') !== ''): ?><a href="mailto:<?= e(setting('contact_email')) ?>"><?= e(pp_t('Contact')) ?></a><?php endif; ?>
-      <a href="/admin/"><?= e(pp_t('Sign in')) ?></a>
-    </span>
-  </div>
-
-  <header class="bb-tete">
-    <a class="bb-lock" href="/" aria-label="<?= e($siteTitle) ?>">
-      <span class="sym" aria-hidden="true"><img src="<?= e(site_asset('mark.svg')) ?>" alt="" width="46" height="46"></span>
-      <span>
-        <span class="bb-nom"><?= e($siteTitle) ?></span>
-        <span class="rub" style="display:block"><?= e($bbRub) ?></span>
-      </span>
-    </a>
-    <form class="bb-chercher" method="get" action="<?= e(url('search')) ?>" role="search">
-      <input type="search" name="q" placeholder="<?= e(pp_t('Search')) ?>" aria-label="<?= e(pp_t('Search the archive')) ?>">
-      <button class="bb-btn" type="submit"><?= e(pp_t('Search')) ?></button>
-    </form>
-  </header>
-
-  <nav class="bb-rubriques" aria-label="<?= e(pp_t('Sections')) ?>">
-    <a href="/"<?= ($GLOBALS['pp_front_page'] ?? false) ? ' aria-current="page"' : '' ?>><?= e(pp_t('Home')) ?></a>
-    <?php foreach (pp_nav_categories() as $cat): ?>
-    <a href="<?= e(url('desk/' . $cat['slug'])) ?>"<?= $activeDesk === $cat['slug'] ? ' aria-current="page"' : '' ?>><?= e(pp_desk_label($cat['slug'], $cat['name'])) ?></a>
-    <?php endforeach; ?>
-  </nav>
 <?php elseif (pp_chrome('template') === 'pickering'): ?>
 <?php
 // The tile lockup leads, because that is what the masthead uses. The name
@@ -786,6 +748,11 @@ function page_footer(): void
 <img src="<?= e(url('ad')) ?>?imp=<?= implode('-', $ppAdsShown) ?>" alt="" width="1" height="1" style="position:absolute;left:-9999px" aria-hidden="true">
 <?php endif; ?>
 
+<?php
+// Per-paper footer chrome, same convention as the masthead. A partial
+// closes the document itself; unmigrated papers follow below.
+$ppChrome = PP_ROOT . '/app/views/chrome/' . basename((string) pp_chrome('template')) . '-foot.php';
+if (is_file($ppChrome)) { require $ppChrome; return; } ?>
 <?php if (pp_chrome('template') === 'torch'): ?>
 <?php
 $ttWords = preg_split('/\s+/', trim($siteTitle));
@@ -834,45 +801,6 @@ $ttFirst = $ttLast !== '' ? implode(' ', $ttWords) : $siteTitle;
     </div>
   </div>
 </footer>
-</body>
-</html>
-<?php return; endif; ?>
-<?php if (pp_chrome('template') === 'bleuetblanc'): ?>
-  <footer class="bb-pied">
-    <div class="haut">
-      <div>
-        <span class="sym" aria-hidden="true"><img src="<?= e(site_asset('mark.svg')) ?>" alt="" width="54" height="54"></span>
-        <div class="nom"><?= e($siteTitle) ?></div>
-        <p class="devise"><?= e(setting('footer_line')) ?></p>
-      </div>
-      <div class="cols">
-        <div>
-          <h4><?= e(pp_t('Sections')) ?></h4>
-          <?php foreach (pp_nav_categories() as $cat): ?>
-          <a href="<?= e(url('desk/' . $cat['slug'])) ?>"><?= e(pp_desk_label($cat['slug'], $cat['name'])) ?></a>
-          <?php endforeach; ?>
-        </div>
-        <div>
-          <h4><?= e(pp_t('The paper')) ?></h4>
-          <a href="<?= e(url('contact')) ?>"><?= e(pp_t('Contact')) ?></a>
-          <a href="<?= e(url('corrections')) ?>"><?= e(pp_t('Corrections')) ?></a>
-          <a href="<?= e(url('search')) ?>"><?= e(pp_t('Search the archive')) ?></a>
-          <a href="/admin/"><?= e(pp_t('Newsroom sign-in')) ?></a>
-        </div>
-        <div>
-          <h4><?= e(pp_t('Follow')) ?></h4>
-          <a href="<?= e(url('newsletter/')) ?>"><?= e(setting('newsletter_heading', pp_t('Newsletter'))) ?></a>
-          <a href="<?= e(url('feed/')) ?>">RSS</a>
-          <?php if (setting('contact_email') !== ''): ?><a href="mailto:<?= e(setting('contact_email')) ?>"><?= e(pp_t('Send a tip')) ?></a><?php endif; ?>
-        </div>
-      </div>
-    </div>
-    <div class="legal">
-      <span>&copy; <?= e(date('Y')) ?> <?= e($siteTitle) ?></span>
-      <span><?= e(setting('footer_line')) ?></span>
-    </div>
-  </footer>
-</div>
 </body>
 </html>
 <?php return; endif; ?>
