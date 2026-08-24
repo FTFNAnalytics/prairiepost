@@ -54,6 +54,11 @@ if (pp_chrome('template') === 'pickering') {
     page_footer();
     return;
 }
+if (pp_chrome('template') === 'bleuetblanc') {
+    require PP_ROOT . '/app/views/section-bleuetblanc.php';
+    page_footer();
+    return;
+}
 if (pp_chrome('template') === 'standard') {
     require PP_ROOT . '/app/views/section-standard.php';
     page_footer();

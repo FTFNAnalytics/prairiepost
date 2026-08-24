@@ -89,6 +89,11 @@ if (pp_chrome('template') === 'pickering') {
     require PP_ROOT . '/app/views/front-pickering.php';
     page_footer();
     return;
+}
+if (pp_chrome('template') === 'bleuetblanc') {
+    require PP_ROOT . '/app/views/front-bleuetblanc.php';
+    page_footer();
+    return;
 } ?>
 
 <div class="front wrap">
