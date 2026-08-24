@@ -181,7 +181,7 @@ function page_header(array $meta = [], string $activeDesk = ''): void
     $ogType  = $meta['og_type'] ?? 'website';
     ?>
 <!DOCTYPE html>
-<html lang="en">
+<html lang="<?= e(pp_lang()) ?>">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">

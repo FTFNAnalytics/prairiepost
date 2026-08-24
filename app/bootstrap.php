@@ -46,6 +46,7 @@ if (PHP_SAPI !== 'cli' && session_status() === PHP_SESSION_NONE) {
 }
 
 require PP_ROOT . '/app/helpers.php';
+require PP_ROOT . '/app/i18n.php';
 require PP_ROOT . '/app/db.php';
 require PP_ROOT . '/app/models.php';
 require PP_ROOT . '/app/ai.php';
