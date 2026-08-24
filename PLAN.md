@@ -149,6 +149,14 @@ rendering front page with no shared-file edits.
 
 ## Phase 3 — The Hermes ingest pipeline (before any agent files a story)
 
+> **Status, Aug 24:** built and verified locally — endpoint, scoped
+> revocable tokens (tools/make-agent.php), server-side slugs, dedup by
+> external_id, draft gate with the wire-desk exception, provenance box
+> rendered on all six article templates, French labels, rate limit.
+> The contract for agent authors is docs/HERMES-INGEST.md. Remaining:
+> deploy with the next release upgrade, then issue the first scoped
+> token per paper as each Hermes agent comes online.
+
 Agents tracking databases and public sources will feed the papers. The
 write path they use decides whether the network stays trustworthy. No
 Hermes agent receives a token until this phase is done.

@@ -40,6 +40,27 @@ CREATE TABLE domains (
 );
 CREATE INDEX idx_domains_site ON domains (site_slug);
 
+CREATE TABLE ingest_agents (
+    id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    name VARCHAR(120) NOT NULL UNIQUE,
+    token_hash VARCHAR(64) NOT NULL UNIQUE,
+    sites TEXT NOT NULL,
+    desks TEXT NOT NULL DEFAULT '',
+    enabled INTEGER NOT NULL DEFAULT 1,
+    created_at TIMESTAMP NOT NULL,
+    last_used_at TIMESTAMP
+);
+
+CREATE TABLE story_sources (
+    id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    post_id INTEGER NOT NULL,
+    url VARCHAR(600) NOT NULL,
+    title VARCHAR(255) NOT NULL DEFAULT '',
+    retrieved_at TIMESTAMP,
+    created_at TIMESTAMP NOT NULL
+);
+CREATE INDEX idx_story_sources_post ON story_sources (post_id);
+
 CREATE TABLE users (
     id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     name VARCHAR(120) NOT NULL,
@@ -94,6 +115,8 @@ CREATE TABLE posts (
     correction TEXT,
     corrected_at TIMESTAMP,
     published_at TIMESTAMP,
+    filed_by VARCHAR(120) NOT NULL DEFAULT '',
+    content_hash VARCHAR(64) NOT NULL DEFAULT '',
     created_at TIMESTAMP NOT NULL,
     updated_at TIMESTAMP NOT NULL
 );
@@ -423,4 +446,6 @@ CREATE TABLE ops_runs (
 );
 CREATE INDEX idx_ops_runs_job ON ops_runs (job, id);
 
-INSERT INTO settings (site_id, skey, svalue) VALUES (0, 'schema_version', '15');
+INSERT INTO settings (site_id, skey, svalue) VALUES (0, 'schema_version', '16');
+
+CREATE INDEX idx_posts_content_hash ON posts (content_hash);
