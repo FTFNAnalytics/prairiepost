@@ -50,6 +50,9 @@ return [
         'meta_description'   => 'Quotidien numérique québécois : actualités, politique, économie, régions, culture, société, environnement, sports et idées.',
         'footer_line'        => 'Le Québec, de la région vers le monde',
         'contact_email'      => 'redaction@bleuetblanc.ca',
+        // Hermès : « le fil » publie en direct, la signature automatisée en français.
+        'wire_desks'         => 'le-fil',
+        'automated_byline'   => 'La veille automatisée',
         'newsletter_heading' => 'L’infolettre du matin',
         'newsletter_copy'    => 'Six textes par courriel, du lundi au vendredi, avant sept heures. Gratuite.',
         'breaking_label'     => '',
