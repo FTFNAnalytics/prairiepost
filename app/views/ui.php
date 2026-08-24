@@ -304,47 +304,6 @@ elseif (pp_chrome('template') === 'echo-v3'): ?>
     <?php endforeach; ?>
   </div>
 </nav>
-<?php elseif (pp_chrome('template') === 'chronicle'): ?>
-<div class="kc-strip">
-  <div class="wrap">
-    <div class="grp">
-      <span><?= e(date('l, j F Y')) ?><?= setting('weather_line') !== '' ? ' · ' . e(setting('weather_line')) : '' ?></span>
-    </div>
-    <div class="grp">
-      <?php if (setting('breaking_label') !== '' && setting('breaking_url') !== ''): ?>
-      <a href="<?= e(setting('breaking_url')) ?>"><strong><?= e(setting('breaking_label')) ?></strong></a>
-      <?php endif; ?>
-      <?php if (setting('contact_email') !== ''): ?>
-      <a href="mailto:<?= e(setting('contact_email')) ?>">Tips line</a>
-      <?php endif; ?>
-      <a href="<?= e(url('newsletter/')) ?>">Newsletters</a>
-      <a href="/admin/">Sign in</a>
-    </div>
-  </div>
-</div>
-<header class="kc-head">
-  <div class="wrap">
-    <a class="brand" href="/" aria-label="<?= e($siteTitle) ?> — front page">
-      <img src="<?= e(site_asset('bear-crest.png')) ?>" alt="">
-      <span>
-        <span class="t1"><?= e($siteTitle) ?></span>
-        <span class="t2"><?= e($tagline) ?></span>
-      </span>
-    </a>
-    <div class="acts">
-      <a class="kc-btn kc-btn--ghost" href="<?= e(url('corrections')) ?>">Corrections</a>
-      <a class="kc-btn kc-btn--mint" href="<?= e(url('subscribe')) ?>">Subscribe</a>
-    </div>
-  </div>
-</header>
-<nav class="kc-nav" aria-label="Desks">
-  <div class="wrap">
-    <?php foreach (pp_nav_categories() as $cat): ?>
-    <a href="<?= e(url('desk/' . $cat['slug'])) ?>"<?= $activeDesk === $cat['slug'] ? ' aria-current="page"' : '' ?>><?= e($cat['name']) ?></a>
-    <?php endforeach; ?>
-    <a class="sp" href="<?= e(url('search')) ?>">Search</a>
-  </div>
-</nav>
 <?php elseif (pp_chrome('header') === 'bar'): ?>
 <header class="topbar">
   <div class="wrap">
@@ -424,51 +383,6 @@ if (is_file($ppChrome)) { require $ppChrome; return; } ?>
 
 
 
-<?php if (pp_chrome('template') === 'chronicle'): ?>
-<footer class="kc-foot">
-  <div class="cols">
-    <div class="brand">
-      <a href="/"><img src="<?= e(site_asset('bear-crest.png')) ?>" alt=""></a>
-      <div class="t"><?= e($siteTitle) ?></div>
-    </div>
-    <div>
-      <div class="fh kc-caps">Sections</div>
-      <div class="lnks">
-        <?php foreach (pp_nav_categories() as $cat): ?>
-        <a href="<?= e(url('desk/' . $cat['slug'])) ?>"><?= e($cat['name']) ?></a>
-        <?php endforeach; ?>
-      </div>
-    </div>
-    <div>
-      <div class="fh kc-caps">The paper</div>
-      <div class="lnks">
-        <a href="<?= e(url('search')) ?>">Search the archive</a>
-        <a href="<?= e(url('feed/')) ?>">RSS feed</a>
-        <a href="<?= e(url('corrections')) ?>">Corrections</a>
-        <a href="/admin/">Newsroom sign-in</a>
-      </div>
-    </div>
-    <div>
-      <div class="fh kc-caps">Support</div>
-      <div class="lnks">
-        <a href="<?= e(url('subscribe')) ?>">Subscribe</a>
-        <a href="<?= e(url('newsletter/')) ?>">Newsletters</a>
-        <?php if (setting('contact_email') !== ''): ?>
-        <a href="mailto:<?= e(setting('contact_email')) ?>">Tips</a>
-        <?php endif; ?>
-      </div>
-    </div>
-  </div>
-  <div class="legal">
-    <div class="wrap">
-      <span><?= e(setting('footer_line')) ?> © <?= e(date('Y')) ?> <?= e($siteTitle) ?>.</span>
-      <span><?= e(setting('tagline')) ?></span>
-    </div>
-  </div>
-</footer>
-</body>
-</html>
-<?php return; endif; ?>
 
 <?php if (pp_chrome('template') === 'aurora'): ?>
 <footer class="ga-foot">
