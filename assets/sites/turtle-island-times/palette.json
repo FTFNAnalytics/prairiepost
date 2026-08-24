@@ -1,0 +1,28 @@
+{
+  "palette": {
+    "ink":     "#004961",
+    "paper":   "#F3F2F2",
+    "board":   "#D7D3D3",
+    "sky":     "#0088B0",
+    "hill":    "#0A303E",
+    "field":   "#A8451F",
+    "stubble": "#7D7979",
+    "red":     "#A8451F",
+    "muted":   "#605D5D"
+  },
+  "desks": {
+    "news":        "#004961",
+    "land-water":  "#0088B0",
+    "language":    "#A8451F",
+    "culture":     "#0A303E",
+    "governance":  "#006786"
+  },
+  "desk_labels": {
+    "land-water": "Land & Water"
+  },
+  "chrome": {
+    "template": "turtleisland",
+    "trending": false,
+    "nav": ["news", "land-water", "language", "culture", "governance"]
+  }
+}

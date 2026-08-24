@@ -79,6 +79,11 @@ if (pp_chrome('template') === 'standard') {
     require PP_ROOT . '/app/views/front-standard.php';
     page_footer();
     return;
+}
+if (pp_chrome('template') === 'turtleisland') {
+    require PP_ROOT . '/app/views/front-turtleisland.php';
+    page_footer();
+    return;
 } ?>
 
 <div class="front wrap">
