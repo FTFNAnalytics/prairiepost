@@ -180,11 +180,27 @@ must never be `git pull`ed or rsynced into.
   branch and commit a release directory was built from — the directory
   name carries the short SHA — before writing or following a runbook.
 
-## Current operational state (as of the Bleuet Blanc launch)
+## Current operational state (as of the phase-1 machinery pass)
 
-- **Release in production: `4184ac02b734`**, at
-  `/var/www/prairiepost-4184ac02b734-shared`, serving all thirteen papers
-  as one release group.
+- **Release in production: `ef183469e9b0`**, at
+  `/var/www/prairiepost-ef183469e9b0-shared`, serving all thirteen papers
+  as one release group. Schema version 15.
+- **Tenant resolution is database-first.** All 22 paper hostnames have
+  `domains` rows and resolve from them (`tools/resolve-host.php` says
+  `db` for every one); the config selector remains as a do-nothing
+  fallback until its arms are retired. A new paper's launch is now
+  config-edit-free: DNS, generated nginx block, cert, seed.
+- **A catch-all `default_server` is live** on both ports and both
+  address families, returning 444 behind the self-signed
+  `reject.invalid` certificate at `/etc/nginx/reject/`. Unknown
+  hostnames and bare-IP probes no longer fall through to Brampton/the
+  Institute. It is the only block allowed to say `default_server`.
+  All thirteen paper blocks are dual-family symmetric (Brampton,
+  Kelowna and Turtle Island were repaired in this pass).
+- One soft spot from the pass: nginx's combined log format does not
+  record the Host header, so bare-IP monitoring could only be ruled out
+  indirectly. If some external uptime check goes red after this date,
+  point it at a named paper hostname — the bare IP now answers 444.
 - The **CivisMedia hub** runs from its own release,
   `/var/www/prairiepost-d298039b1d40`, and is deliberately left behind by
   every paper upgrade. The Institute (`cies`, `/var/www/cies-v0.17`) is
