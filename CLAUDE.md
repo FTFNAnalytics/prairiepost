@@ -220,6 +220,11 @@ must never be `git pull`ed or rsynced into.
 
 ## Known debt, in the order it should be paid
 
+**The paydown schedule now lives in `PLAN.md`** — four phases and a
+compliance gate that papers 14 and 15 are built against. The list below
+remains the inventory; PLAN.md is the order and the acceptance tests.
+Check any new-paper work against the PLAN.md gate before starting it.
+
 1. **Every paper is indexable** — `robots.txt` is `Allow: /` with the
    sitemap advertised — and every paper's content is invented editorial
    about a real city, including figures and votes attributed to real
