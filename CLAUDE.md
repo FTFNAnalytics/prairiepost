@@ -197,7 +197,7 @@ must never be `git pull`ed or rsynced into.
   Aug 25 — the first config-edit-free launch: generated nginx block,
   certbot, seeder-written domain rows, no config.site.php step at all.
   It ships Hermes-ready (`wire_desks = live`, automated byline "Monitor
-  Newsroom Automation") but has NO token yet. TLS to Nov 22 2026.
+  Newsroom Automation"). TLS to Nov 22 2026.
   Live hostname inventory: 28 direct content endpoints + 4 redirect-only
   aliases (bare grandeprairiegazette.ca, www.edmontonecho.com,
   www.kermodechronicle.ca, www.thepacificpost.com).
@@ -216,10 +216,14 @@ must never be `git pull`ed or rsynced into.
   then a shallow git clone verified against the API-reported head.
 - **Hermes ingest is live and closed.** `/ingest.php` answers 401
   network-wide without a valid token (`/api/ingest` becomes the pretty
-  route with the front-controller conversion). One token exists:
-  `hermes-quebec`, scoped to bleuet-blanc / actualites,le-fil, stored
-  root-only at `/root/hermes-tokens/hermes-quebec.txt` — hand it to
-  exactly one agent; `tools/make-agent.php revoke` is the kill switch.
+  route with the front-controller conversion). Two tokens exist, each
+  stored root-only under `/root/hermes-tokens/` and each for exactly
+  one agent; `tools/make-agent.php revoke` is the kill switch:
+  `hermes-quebec` (bleuet-blanc / actualites,le-fil) and
+  `hermes-mississauga` (mississauga-monitor /
+  live,city-hall,transit,development — filings to `live` publish
+  immediately with the automated-report treatment, the other desks
+  land as drafts behind the publish gate).
   Bleuet Blanc is wire-ready: `wire_desks = le-fil`, automated byline
   « La veille automatisée ». A deployment-verification DRAFT
   (`verification-du-deploiement-hermes`, post id 212) sits invisible in
