@@ -112,7 +112,9 @@ bespoke paper's CSS deleted rolls back automatically.
 
 > **Status, Aug 24 (final):** 2.1, 2.2 and 2.4 done — all twelve papers'
 > chrome in partials, ui.php name-free, the six phantom-font stacks
-> renamed honestly (CDP-verified paint-neutral) — and the operational
+> renamed on faulty sandbox evidence — CORRECTED Aug 25: all families
+> now vendored and declared in fonts.css, six stacks restored to Source
+> Serif 4, zero font-CDN loads network-wide — and the operational
 > close-out with them: `tools/make-paper.php` scaffolds a complete
 > files-only paper (palette, pack skeleton with domains, css, three
 > views, two chrome partials; refuses to overwrite), so builds 14 and 15

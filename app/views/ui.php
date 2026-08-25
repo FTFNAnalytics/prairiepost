@@ -190,8 +190,6 @@ function page_header(array $meta = [], string $activeDesk = ''): void
 <?php endif; ?><link rel="canonical" href="<?= e($canonical) ?>">
 <link rel="icon" type="image/svg+xml" href="<?= e(site_asset('favicon.svg')) ?>">
 <link rel="alternate" type="application/rss+xml" title="<?= e($siteTitle) ?>" href="<?= e(site_url()) ?>/feed/">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="/assets/css/prairie.css">
 <?php
 // The paper's stylesheet, by convention rather than by name: a migrated

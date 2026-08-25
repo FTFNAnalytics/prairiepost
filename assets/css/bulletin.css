@@ -1,5 +1,5 @@
 /* ============================================================
-   The bulletin template — newsprint structure, Georgia
+   The bulletin template — newsprint structure, Source Serif 4
    throughout, Flower City green as the interactive ink, heritage
    brick reserved for live and breaking, press yellow only in the
    nameplate's plate treatment. No boxes, no dividers: the
@@ -8,7 +8,7 @@
    chrome.template = "bulletin"; a site's brand.css may re-tune
    the --bb-* tokens.
    ============================================================ */
-@import url('https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,300..900;1,8..60,300..700&display=swap');
+@import url('/assets/css/fonts.css');  /* self-hosted; was fonts.googleapis.com */
 
 body.t-bulletin{
   --bb-green:  #0B6E4F;   /* every link, kicker, button, beat label */
@@ -20,7 +20,7 @@ body.t-bulletin{
   --bb-muted:  #6E6A64;
   --bb-line:   #DBD9D4;
   --bb-tint:   #E2EEE9;   /* green beat-chip tint                   */
-  --bb-serif:  Georgia, 'Times New Roman', serif;
+  --bb-serif:  'Source Serif 4', Georgia, serif;
 
   /* Inner pages read as the brand. */
   --pp-shelterbelt: var(--bb-ink);

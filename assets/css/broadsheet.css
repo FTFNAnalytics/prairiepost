@@ -3,7 +3,7 @@
    chrome.template = "echo-v3". Colour comes from the --v3-* tokens below;
    a site's brand.css may override them. First user: The Edmonton Echo.
    ========================================================================== */
-@import url('https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,300..900;1,8..60,300..900&display=swap');
+@import url('/assets/css/fonts.css');  /* self-hosted; was fonts.googleapis.com */
 
 body.t-dark{
   --v3-navy:#0a2240; --v3-deep:#04142a; --v3-panel:#102c52; --v3-line:#1e3f6b;
@@ -23,7 +23,7 @@ body.t-dark{
   --pp-binred:var(--v3-accent);
 
   background:var(--v3-deep);color:var(--v3-ink);
-  font-family:Georgia,'Times New Roman',serif;
+  font-family:'Source Serif 4',Georgia,serif;
 }
 body.t-dark *{border-radius:2px}
 body.t-dark .pp-horizon{border-top-color:var(--v3-accent)}

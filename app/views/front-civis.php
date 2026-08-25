@@ -32,8 +32,6 @@ $errors    = [
 <meta name="description" content="<?= e(setting('meta_description')) ?>">
 <link rel="canonical" href="<?= e(site_url()) ?>/">
 <link rel="icon" type="image/svg+xml" href="<?= e(site_asset('favicon.svg')) ?>">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="/assets/css/civis.css">
 <meta property="og:site_name" content="<?= e($siteTitle) ?>">
 <meta property="og:title" content="<?= e($siteTitle) ?> — <?= e($tagline) ?>">

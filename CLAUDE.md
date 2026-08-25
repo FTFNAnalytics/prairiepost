@@ -145,6 +145,14 @@ against this list before shipping them.
      rule naming the file — and parse rules rather than grepping, since
      comments mentioning `@font-face` inflate a naive count.
 
+10a. **Verify in an environment with production's capabilities.** The
+    sandbox has no outbound network, so a stylesheet's @import of a
+    font CDN silently no-ops there — CDP faithfully reported the
+    fallback face as "what paints," and a conclusion built on that
+    renamed six live papers' typography. When a check's result depends
+    on a network fetch, verify the mechanism (the import exists and
+    resolves) rather than the local outcome.
+
 10. **Verify text at the layer that produces it.** CSS
     `text-transform: uppercase` means the painted text differs from the
     served bytes — Le Bleuet Blanc's badge paints "EN DIRECT" while the
@@ -265,7 +273,19 @@ Check any new-paper work against the PLAN.md gate before starting it.
    the if-chains with a convention (`front-{$template}.php` if it
    exists) and move each paper's chrome into its own partial, so a new
    paper is new files only.
-3. **Six papers name a font they never declare.** `westernwire.css`,
+3. **[CORRECTED, Aug 25 — this finding was half-wrong, and the Aug 24
+   stack rename that acted on it changed six live papers' typography
+   for a day.]** The stacks named Source Serif 4 "without declaring
+   it" — but the stylesheets @imported it from fonts.googleapis.com at
+   runtime, so readers' browsers painted Source Serif 4 all along; the
+   "phantom font" CDP check ran in a sandbox with no network, where the
+   import silently no-ops (lesson 10a). Fixed by vendoring every family
+   the network names into /assets/fonts/, declaring them all in
+   /assets/css/fonts.css (a local @import replaces every Google
+   import), restoring the six stacks to lead with Source Serif 4, and
+   removing the Google preconnects from the shared chrome. Nothing
+   loads from a font CDN anywhere. Original text follows for the
+   record: Six papers name a font they never declare. `westernwire.css`,
    `pacific.css`, `aurora.css`, `chronicle.css`, `bulletin.css` and
    `broadsheet.css` all put `'Source Serif 4'` at the head of a stack
    with no `@font-face` anywhere they load. They predate the self-hosted
