@@ -188,11 +188,32 @@ must never be `git pull`ed or rsynced into.
   branch and commit a release directory was built from — the directory
   name carries the short SHA — before writing or following a runbook.
 
-## Current operational state (as of the phase-3 Hermes activation)
+## Current operational state (as of the Mississauga Monitor launch)
 
-- **Release in production: `3c2335fdbf53`**, at
-  `/var/www/prairiepost-3c2335fdbf53-shared`, serving all thirteen papers
-  as one release group. Schema version 16.
+- **Release in production: `9fcce37149b9`**, at
+  `/var/www/prairiepost-9fcce37149b9-shared`, serving all FOURTEEN papers
+  as one release group. Schema version 16. mississaugamonitor.com
+  (site #15, slug `mississauga-monitor`, template `monitor`) launched
+  Aug 25 — the first config-edit-free launch: generated nginx block,
+  certbot, seeder-written domain rows, no config.site.php step at all.
+  It ships Hermes-ready (`wire_desks = live`, automated byline "Monitor
+  Newsroom Automation") but has NO token yet. TLS to Nov 22 2026.
+  Live hostname inventory: 28 direct content endpoints + 4 redirect-only
+  aliases (bare grandeprairiegazette.ca, www.edmontonecho.com,
+  www.kermodechronicle.ca, www.thepacificpost.com).
+- **Every typeface is self-hosted.** All families are vendored in
+  /assets/fonts/ and declared either in the paper's own stylesheet
+  (Monitor, Turtle Island, Bleuet Blanc) or via
+  `@import url('/assets/css/fonts.css')` (the eleven sheets that once
+  imported from fonts.googleapis.com). No page loads any external
+  resource; the six papers renamed on Aug 24 paint Source Serif 4
+  again. The verify rule, phrased at the right layer: every family a
+  page names is declared by @font-face in a stylesheet the page loads,
+  with all src urls local.
+- **The upgrade fetch has fallbacks**: PP_RELEASE_TARBALL for a
+  pre-staged tarball (used Aug 25 when the VPS could not reach
+  codeload.github.com while api.github.com answered), then codeload,
+  then a shallow git clone verified against the API-reported head.
 - **Hermes ingest is live and closed.** `/ingest.php` answers 401
   network-wide without a valid token (`/api/ingest` becomes the pretty
   route with the front-controller conversion). One token exists:
