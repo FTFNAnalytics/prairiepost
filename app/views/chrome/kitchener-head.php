@@ -14,6 +14,29 @@ $kcRoman = function (int $n): string {
     }
     return $out;
 };
+/* Every card carries art: the story's own image, or a desk-mapped
+   sketch from the paper's illustration set — rotated by post id so a
+   desk's cards don't all repeat one drawing. Fallbacks exist because
+   desks are shared and stories arrive (from Hermes, from the newsroom)
+   without photography. */
+if (!function_exists('kc_art')) {
+    function kc_art(array $p): string
+    {
+        if (!empty($p['image'])) {
+            return (string) $p['image'];
+        }
+        $set = [
+            'local-news' => ['rowhouses.svg', 'iontrain.svg', 'tower.svg'],
+            'politics'   => ['tower.svg', 'legislature.svg'],
+            'ontario'    => ['legislature.svg', 'river.svg'],
+            'business'   => ['corridor.svg', 'rowhouses.svg'],
+            'sports'     => ['arena.svg'],
+            'culture'    => ['market.svg', 'arena.svg'],
+        ];
+        $pick = $set[$p['category_slug'] ?? ''] ?? ['skyline.svg', 'tower.svg', 'river.svg'];
+        return site_asset('img/' . $pick[((int) ($p['id'] ?? 0)) % count($pick)]);
+    }
+}
 ?>
 <div class="kc-topbar"></div>
 <header class="kc-mast">

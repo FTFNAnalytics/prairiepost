@@ -35,10 +35,8 @@ $kcMail = 'mailto:?subject=' . rawurlencode((string) $post['title'])
         <span>&middot;</span><span><?= e(read_minutes($post)) ?> min read</span>
       </div>
 
-      <?php if ($post['image']): ?>
-      <figure class="lede-fig"><img src="<?= e($post['image']) ?>" alt=""></figure>
-      <?php if ($post['dateline']): ?><figcaption style="margin-bottom:32px"><?= e($post['dateline']) ?>. <span>Sketch: Chronicle graphics</span></figcaption><?php endif; ?>
-      <?php endif; ?>
+      <figure class="lede-fig"><img src="<?= e(kc_art($post)) ?>" alt=""></figure>
+      <?php if ($post['image'] && $post['dateline']): ?><figcaption style="margin-bottom:32px"><?= e($post['dateline']) ?>. <span>Sketch: Chronicle graphics</span></figcaption><?php endif; ?>
 
       <div class="kc-body">
         <?= sanitize_html((string) $post['body']) ?>
