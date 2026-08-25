@@ -5,7 +5,7 @@
    Loaded only when chrome.template = "pacific"; a site's brand.css
    may re-tune the --pf-* tokens.
    ============================================================ */
-@import url('https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,300..900;1,8..60,300..700&display=swap');
+@import url('/assets/css/fonts.css');  /* self-hosted; was fonts.googleapis.com */
 
 body.t-pacific{
   --pf-ink:    #201E1D;   /* body copy, headlines, rules       */
@@ -17,7 +17,7 @@ body.t-pacific{
   --pf-inlet:  #0F6E9E;   /* every interactive element         */
   --pf-deep:   #0B5279;   /* inlet pressed                     */
   --pf-signal: #C2591A;   /* breaking news only                */
-  --pf-serif:  Georgia, 'Times New Roman', serif;
+  --pf-serif:  'Source Serif 4', Georgia, serif;
 
   /* Inner pages read as the brand. */
   --pp-shelterbelt: var(--pf-ink);

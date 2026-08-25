@@ -5,7 +5,7 @@
    chrome.template = "chronicle"; a site's brand.css may re-tune
    the --kc-* tokens.
    ============================================================ */
-@import url('https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,300..900;1,8..60,300..700&display=swap');
+@import url('/assets/css/fonts.css');  /* self-hosted; was fonts.googleapis.com */
 
 body.t-chronicle{
   --kc-navy:   #0E2233;   /* the banner and footer               */
@@ -21,7 +21,7 @@ body.t-chronicle{
   --kc-mint:   #A9D0B3;   /* accents on the navy                 */
   --kc-wash:   #E6F0E7;   /* field notes / coast report ground   */
   --kc-chalk:  #D7E2DC;   /* quiet type on the navy              */
-  --kc-serif:  Georgia, 'Times New Roman', serif;
+  --kc-serif:  'Source Serif 4', Georgia, serif;
 
   /* Inner pages read as the brand: paper white, green links. */
   --pp-shelterbelt: var(--kc-ink);
