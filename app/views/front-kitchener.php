@@ -39,10 +39,8 @@ $kcWeather = trim(setting('weather_line'));
           <?php if ($hero['byline']): ?>By <?= e($hero['byline']) ?> &middot; <?php endif; ?>
           <?= e($kcClock($hero)) ?> &middot; <?= e(read_minutes($hero)) ?> min read
         </p>
-        <?php if ($hero['image']): ?>
-        <figure><img src="<?= e($hero['image']) ?>" alt=""></figure>
-        <?php if ($hero['dateline']): ?><figcaption><?= e($hero['dateline']) ?>. <span>Sketch: Chronicle graphics</span></figcaption><?php endif; ?>
-        <?php endif; ?>
+        <figure><img src="<?= e(kc_art($hero)) ?>" alt=""></figure>
+        <?php if ($hero['image'] && $hero['dateline']): ?><figcaption><?= e($hero['dateline']) ?>. <span>Sketch: Chronicle graphics</span></figcaption><?php endif; ?>
       </article>
       <?php endif; ?>
 
@@ -50,6 +48,7 @@ $kcWeather = trim(setting('weather_line'));
       <div class="kc-duo">
         <?php foreach ($duo as $p): ?>
         <article>
+          <figure class="kc-cardfig"><img src="<?= e(kc_art($p)) ?>" alt=""></figure>
           <span class="kc-kicker"><?= e(pp_desk_label($p['category_slug'], $p['category_name'])) ?></span>
           <h2><a href="<?= e(post_href($p)) ?>"><?= e($p['title']) ?></a></h2>
           <?php if ($p['lede']): ?><p><?= e(excerpt($p['lede'], 160)) ?></p><?php endif; ?>
@@ -63,6 +62,7 @@ $kcWeather = trim(setting('weather_line'));
       <div class="kc-trio">
         <?php foreach ($trio as $p): ?>
         <article>
+          <figure class="kc-cardfig kc-cardfig--s"><img src="<?= e(kc_art($p)) ?>" alt=""></figure>
           <span class="kc-kicker"><?= e(pp_desk_label($p['category_slug'], $p['category_name'])) ?></span>
           <h2><a href="<?= e(post_href($p)) ?>"><?= e($p['title']) ?></a></h2>
           <?php if ($p['lede']): ?><p><?= e(excerpt($p['lede'], 80)) ?></p><?php endif; ?>
@@ -81,6 +81,7 @@ $kcWeather = trim(setting('weather_line'));
         <div class="grid">
           <?php foreach ($ontario as $p): ?>
           <article>
+            <?php if ($p === $ontario[0]): ?><figure class="kc-cardfig"><img src="<?= e(kc_art($p)) ?>" alt=""></figure><?php endif; ?>
             <h2><a href="<?= e(post_href($p)) ?>"><?= e($p['title']) ?></a></h2>
             <?php if ($p === $ontario[0] && $p['lede']): ?><p><?= e(excerpt($p['lede'], 170)) ?></p><?php endif; ?>
           </article>

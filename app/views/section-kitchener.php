@@ -23,7 +23,7 @@ $kcRows = array_slice($posts, 3);
     <div>
       <?php if ($kcLead): ?>
       <article class="kc-seclead">
-        <?php if ($kcLead['image']): ?><figure><img src="<?= e($kcLead['image']) ?>" alt=""></figure><?php endif; ?>
+        <figure><img src="<?= e(kc_art($kcLead)) ?>" alt=""></figure>
         <div>
           <?php if ($kcLead['dateline']): ?><span class="kc-kicker"><?= e($kcLead['dateline']) ?></span><?php endif; ?>
           <h2><a href="<?= e(post_href($kcLead)) ?>"><?= e($kcLead['title']) ?></a></h2>
@@ -40,6 +40,7 @@ $kcRows = array_slice($posts, 3);
       <div class="kc-secduo">
         <?php foreach ($kcDuo as $p): ?>
         <article>
+          <figure class="kc-cardfig"><img src="<?= e(kc_art($p)) ?>" alt=""></figure>
           <?php if ($p['dateline']): ?><span class="kc-kicker" style="margin-bottom:10px"><?= e($p['dateline']) ?></span><?php endif; ?>
           <h2><a href="<?= e(post_href($p)) ?>"><?= e($p['title']) ?></a></h2>
           <?php if ($p['lede']): ?><p><?= e(excerpt($p['lede'], 140)) ?></p><?php endif; ?>

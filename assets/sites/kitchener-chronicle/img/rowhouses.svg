@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 560">
+  <!-- The housing story's rowhouses. -->
+  <rect width="1200" height="560" fill="#DFE1E6"/>
+  <g fill="#16264D" opacity="0.55">
+    <polygon points="140,280 250,200 360,280 360,460 140,460"/>
+    <polygon points="360,280 470,200 580,280 580,460 360,460"/>
+    <polygon points="580,280 690,200 800,280 800,460 580,460"/>
+    <polygon points="800,280 910,200 1020,280 1020,460 800,460"/>
+    <rect x="80" y="460" width="1040" height="12"/>
+  </g>
+  <g fill="#F3F2F2" opacity="0.85">
+    <rect x="190" y="320" width="44" height="60"/><rect x="410" y="320" width="44" height="60"/>
+    <rect x="630" y="320" width="44" height="60"/><rect x="850" y="320" width="44" height="60"/>
+    <rect x="270" y="390" width="40" height="70"/><rect x="490" y="390" width="40" height="70"/>
+    <rect x="710" y="390" width="40" height="70"/><rect x="930" y="390" width="40" height="70"/>
+  </g>
+  <g fill="#B98B3C" opacity="0.6"><circle cx="1090" cy="150" r="44"/></g>
+</svg>

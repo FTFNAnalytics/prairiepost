@@ -92,6 +92,9 @@ return [
         [
             'title' => 'Waterloo\'s rental vacancy rate falls to 1.2 per cent, the lowest since 2019',
             'slug' => 'kc-rental-vacancy-lowest-since-2019',
+            'image' => $img('rowhouses.svg'),
+            'image_caption' => 'Completions fell by a third while the region added 4,100 residents.',
+            'image_credit' => 'Chronicle graphics',
             'desk' => 'local-news', 'byline' => 'Devon Marsh', 'dateline' => 'Waterloo',
             'lede' => 'Student demand is only part of it, CMHC says. Completions in the city fell by a third year over year while the region added 4,100 residents.',
             'views' => 2900, 'published' => $ago('-5 hours'), 'placement' => 'featured',
@@ -105,6 +108,9 @@ return [
         [
             'title' => 'Provincial housing bill would override Kitchener\'s own zoning reforms, planners warn',
             'slug' => 'kc-bill-34-overrides-zoning-reforms',
+            'image' => $img('legislature.svg'),
+            'image_caption' => 'Queen\'s Park, where Bill 34 was tabled last week.',
+            'image_credit' => 'Chronicle graphics',
             'desk' => 'ontario', 'byline' => 'Alice Renwick', 'dateline' => 'Queen\'s Park',
             'lede' => 'The city spent two years legalising fourplexes citywide. Bill 34 would replace that framework with a provincial standard by spring.',
             'views' => 2600, 'published' => $ago('-7 hours'), 'placement' => 'featured',
@@ -120,6 +126,9 @@ return [
         [
             'title' => 'A Waterloo chipmaker\'s quiet bet on defence contracts',
             'slug' => 'kc-chipmaker-defence-contracts',
+            'image' => $img('corridor.svg'),
+            'image_caption' => 'The Northfield Drive fab, quietly expanding.',
+            'image_credit' => 'Chronicle graphics',
             'desk' => 'business', 'byline' => 'Nadia Brunner', 'dateline' => 'Waterloo',
             'lede' => 'Four of its six largest customers are now governments.',
             'views' => 1800, 'published' => $ago('-9 hours'),
@@ -133,6 +142,9 @@ return [
         [
             'title' => 'Rangers open at the Aud with a new captain and an old problem',
             'slug' => 'kc-rangers-open-at-the-aud',
+            'image' => $img('arena.svg'),
+            'image_caption' => 'The Aud, entering its seventy-fifth season.',
+            'image_credit' => 'Chronicle graphics',
             'desk' => 'sports', 'byline' => 'Sam Okafor', 'dateline' => 'The Aud',
             'lede' => 'The blue line lost three regulars to graduation.',
             'views' => 1500, 'published' => $ago('-11 hours'),
@@ -164,6 +176,9 @@ return [
         [
             'title' => 'Two-way, all-day GO service to Kitchener slips again, to 2029',
             'slug' => 'kc-two-way-all-day-go-2029',
+            'image' => $img('iontrain.svg'),
+            'image_caption' => 'The corridor\'s trains, still one-way at peak.',
+            'image_credit' => 'Chronicle graphics',
             'desk' => 'ontario', 'byline' => 'Alice Renwick', 'dateline' => 'Queen\'s Park',
             'lede' => 'Metrolinx blames a freight-corridor agreement it has been negotiating since 2018. Local MPPs say they were told in June the date would hold.',
             'views' => 2200, 'published' => $ago('-16 hours'),

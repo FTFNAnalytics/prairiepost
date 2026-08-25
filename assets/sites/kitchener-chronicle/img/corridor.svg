@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 560">
+  <!-- The corridor's tech sheds and the rail line — the business desk's sketch. -->
+  <rect width="1200" height="560" fill="#DFE1E6"/>
+  <g fill="#16264D" opacity="0.55">
+    <polygon points="120,300 240,220 360,300 360,440 120,440"/>
+    <polygon points="360,300 480,220 600,300 600,440 360,440"/>
+    <rect x="660" y="260" width="180" height="180"/>
+    <rect x="880" y="200" width="60" height="240"/>
+    <rect x="960" y="300" width="160" height="140"/>
+    <rect x="60" y="452" width="1080" height="10"/>
+    <rect x="60" y="474" width="1080" height="4"/>
+  </g>
+  <g fill="#B98B3C" opacity="0.7">
+    <rect x="700" y="300" width="26" height="26"/><rect x="740" y="300" width="26" height="26"/>
+    <rect x="700" y="340" width="26" height="26"/><rect x="740" y="340" width="26" height="26"/>
+    <circle cx="910" cy="180" r="12"/>
+  </g>
+</svg>
