@@ -1,0 +1,280 @@
+/* The Kitchener Chronicle — design system (kitchener template).
+
+   From the design package: everything sets in Source Serif 4 on
+   newsprint white #F3F2F2. Kitchener navy #16264D carries the chrome
+   and every headline; Waterloo gold #B98B3C is the kickers, the rules
+   and the single call to action (its light step #D9B463 lives on navy);
+   Ontario green #1D5138 is reserved for civic and election work and
+   never appears beside gold in one component. The page is separated by
+   whitespace and hairline rules — never cards or boxes. */
+
+@import url('/assets/css/fonts.css');  /* self-hosted Source Serif 4 */
+
+body.t-kitchener {
+  --kc-navy:  #16264D;
+  --kc-gold:  #B98B3C;
+  --kc-goldlt:#D9B463;
+  --kc-green: #1D5138;
+  --kc-paper: #F3F2F2;
+  --kc-ink:   #201E1D;
+  --kc-meta:  #6E6A67;
+  --kc-line:  #D8D5D0;
+  --kc-tint:  #EAE9E9;
+  --kc-imgbg: #DFE1E6;
+  --kc-serif: 'Source Serif 4', Georgia, 'Times New Roman', serif;
+  margin: 0;
+  background: var(--kc-paper);
+  color: var(--kc-ink);
+  font-family: var(--kc-serif);
+  font-size: 17px;
+  line-height: 1.7;
+}
+.t-kitchener a { color: var(--kc-navy); text-decoration: none; }
+.t-kitchener a:hover { color: var(--kc-gold); }
+.t-kitchener .in { max-width: 1180px; margin: 0 auto; padding: 0 24px; }
+.t-kitchener h1, .t-kitchener h2, .t-kitchener h3, .t-kitchener h4 {
+  font-family: var(--kc-serif); font-weight: 600; color: var(--kc-navy);
+  margin: 0; text-wrap: pretty;
+}
+.t-kitchener img { max-width: 100%; display: block; }
+
+/* --- Kickers, rules, meta -------------------------------------------------- */
+.kc-kicker {
+  display: block; font-size: 12px; letter-spacing: 0.16em;
+  text-transform: uppercase; color: var(--kc-gold); font-weight: 400;
+}
+.kc-kicker--green { color: var(--kc-green); }
+.kc-meta { font-size: 13px; color: var(--kc-meta); }
+.kc-rulerow { display: flex; align-items: baseline; gap: 12px; }
+.kc-rulerow::after { content: ''; flex: 1; height: 1px; background: var(--kc-line); align-self: center; }
+
+/* --- Chrome: top bar, masthead, nav band ----------------------------------- */
+.kc-topbar { height: 7px; background: var(--kc-navy); }
+.kc-mast { position: relative; overflow: hidden; }
+.kc-mast .in { position: relative; padding-top: 18px; padding-bottom: 20px; }
+.kc-sky {
+  position: absolute; right: -40px; bottom: -8px; width: 940px; max-width: 85%;
+  opacity: 0.1; pointer-events: none;
+}
+.kc-dateline {
+  display: flex; justify-content: space-between; font-size: 12px;
+  letter-spacing: 0.12em; text-transform: uppercase; color: var(--kc-meta);
+}
+.kc-lock { display: flex; flex-direction: column; align-items: center; gap: 2px; margin-top: 12px; position: relative; }
+.kc-lock .the {
+  font-family: var(--kc-serif); font-size: 14px; letter-spacing: 0.42em;
+  text-transform: uppercase; color: var(--kc-gold);
+}
+.kc-lock .name {
+  font-family: var(--kc-serif); font-weight: 600; font-size: 64px;
+  line-height: 1; letter-spacing: -0.015em; color: var(--kc-navy); text-align: center;
+}
+.kc-lock .places { display: flex; align-items: center; gap: 14px; margin-top: 10px; }
+.kc-lock .places::before, .kc-lock .places::after { content: ''; width: 64px; height: 1px; background: var(--kc-line); }
+.kc-lock .places span {
+  font-size: 12px; letter-spacing: 0.28em; text-transform: uppercase; color: var(--kc-meta);
+}
+.kc-rule { height: 2px; background: var(--kc-navy); }
+.kc-nav { background: var(--kc-navy); }
+.kc-nav .in { display: flex; align-items: center; justify-content: space-between; min-height: 56px; gap: 18px; }
+.kc-nav .links { display: flex; align-items: center; gap: 30px; overflow-x: auto; }
+.kc-nav .links a {
+  font-size: 13px; letter-spacing: 0.16em; text-transform: uppercase;
+  color: rgba(243,242,242,0.78); white-space: nowrap; padding: 18px 0 15px;
+  border-bottom: 2px solid transparent;
+}
+.kc-nav .links a:hover { color: var(--kc-goldlt); }
+.kc-nav .links a[aria-current="page"] { color: var(--kc-paper); border-bottom-color: var(--kc-goldlt); }
+.kc-nav .tools { display: flex; align-items: center; gap: 16px; flex: none; }
+.kc-nav .tools .find { font-size: 13px; color: rgba(243,242,242,0.7); }
+.kc-nav .tools .find:hover { color: var(--kc-goldlt); }
+.kc-subscribe {
+  background: var(--kc-gold); color: var(--kc-navy) !important; font-size: 12px;
+  letter-spacing: 0.14em; text-transform: uppercase; padding: 10px 20px; border-radius: 2px;
+}
+.kc-subscribe:hover { background: var(--kc-goldlt); }
+
+/* --- Figures --------------------------------------------------------------- */
+.t-kitchener figure { margin: 0; background: var(--kc-imgbg); overflow: hidden; }
+.t-kitchener figure img { width: 100%; height: 100%; object-fit: cover; }
+.t-kitchener figcaption {
+  font-size: 13px; line-height: 1.5; color: var(--kc-meta);
+  margin-top: 10px; background: none;
+}
+
+/* --- Front page ------------------------------------------------------------ */
+.kc-front { padding: 44px 0 0; }
+.kc-front .cols { display: grid; grid-template-columns: minmax(0,1fr) 300px; gap: 48px; }
+.kc-lead h1 {
+  font-size: 52px; line-height: 1.03; letter-spacing: -0.018em; max-width: 20ch;
+}
+.kc-lead .dek {
+  margin: 18px 0 0; font-size: 22px; line-height: 1.45; font-style: italic;
+  color: #4A4744; max-width: 52ch;
+}
+.kc-lead .kc-meta { margin: 16px 0 24px; }
+.kc-lead figure { height: 340px; display: flex; align-items: flex-end; }
+.kc-duo { display: grid; grid-template-columns: 1fr 1fr; gap: 44px; margin-top: 44px; padding-top: 38px; border-top: 1px solid var(--kc-line); }
+.kc-duo h2 { font-size: 29px; line-height: 1.12; }
+.kc-duo p { margin: 12px 0 0; font-size: 17px; line-height: 1.65; }
+.kc-duo .kc-meta { margin-top: 12px; }
+.kc-trio {
+  display: grid; grid-template-columns: repeat(3,1fr); gap: 38px; margin-top: 40px;
+  padding: 38px 0; border-top: 1px solid var(--kc-line); border-bottom: 1px solid var(--kc-line);
+}
+.kc-trio h2 { font-size: 22px; line-height: 1.18; }
+.kc-trio p { margin: 10px 0 0; font-size: 16px; line-height: 1.6; }
+.kc-kicker { margin-bottom: 10px; }
+
+/* The Ontario band — the one green component on the front. */
+.kc-ontario { margin-top: 40px; padding-bottom: 40px; }
+.kc-ontario .head { display: flex; align-items: baseline; gap: 12px; margin-bottom: 22px; }
+.kc-ontario .head .line { flex: 1; height: 1px; background: var(--kc-line); }
+.kc-ontario .head .tail { font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--kc-meta); }
+.kc-ontario .grid { display: grid; grid-template-columns: 1.4fr 1fr 1fr; gap: 36px; }
+.kc-ontario .grid h2 { font-size: 26px; line-height: 1.14; }
+.kc-ontario .grid p { margin: 11px 0 0; font-size: 16px; line-height: 1.62; }
+.kc-ontario .grid article + article { border-left: 1px solid var(--kc-line); padding-left: 30px; }
+.kc-ontario .grid article + article h2 { font-size: 20px; line-height: 1.2; }
+
+/* The rail. */
+.kc-rail { border-left: 1px solid var(--kc-line); padding-left: 32px; display: flex; flex-direction: column; gap: 38px; }
+.kc-rail .box h2 {
+  font-size: 15px; letter-spacing: 0.16em; text-transform: uppercase;
+  padding-bottom: 12px; border-bottom: 2px solid var(--kc-navy);
+}
+.kc-rail .row { padding: 15px 0; border-bottom: 1px solid var(--kc-line); }
+.kc-rail .row:last-child { border-bottom: 0; }
+.kc-rail .row .when { font-size: 12px; letter-spacing: 0.1em; color: var(--kc-gold); margin-bottom: 5px; }
+.kc-rail .row a { font-size: 16px; line-height: 1.4; display: block; }
+.kc-rail .rank { display: flex; gap: 16px; align-items: baseline; }
+.kc-rail .rank .n { font-family: var(--kc-serif); font-weight: 600; font-size: 22px; color: var(--kc-gold); line-height: 1; flex: none; }
+.kc-weather .deg { display: flex; align-items: flex-end; gap: 16px; padding-top: 16px; }
+.kc-weather .deg .t { font-family: var(--kc-serif); font-weight: 600; font-size: 52px; line-height: 0.9; color: var(--kc-navy); }
+.kc-weather .deg .w { font-size: 15px; line-height: 1.4; padding-bottom: 4px; }
+.kc-weather .src { margin-top: 12px; font-size: 12px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--kc-meta); }
+
+/* --- Section pages --------------------------------------------------------- */
+.kc-sec { padding: 48px 0 0; }
+.kc-sechead { padding-bottom: 24px; border-bottom: 2px solid var(--kc-navy); }
+.kc-sechead h1 { font-size: 58px; line-height: 1; letter-spacing: -0.02em; }
+.kc-sechead .desc { margin: 14px 0 0; font-size: 19px; line-height: 1.5; font-style: italic; color: #4A4744; max-width: 56ch; }
+.kc-sec .cols { display: grid; grid-template-columns: minmax(0,1fr) 300px; gap: 48px; padding-top: 36px; }
+.kc-seclead { display: grid; grid-template-columns: 1.05fr 1fr; gap: 36px; align-items: start; padding-bottom: 36px; border-bottom: 1px solid var(--kc-line); }
+.kc-seclead figure { height: 260px; display: flex; align-items: flex-end; }
+.kc-seclead h2 { font-size: 34px; line-height: 1.08; }
+.kc-seclead p { margin: 14px 0 0; font-size: 17px; line-height: 1.68; }
+.kc-seclead .kc-meta { margin-top: 14px; }
+.kc-secduo { display: grid; grid-template-columns: 1fr 1fr; gap: 44px; padding: 32px 0; border-bottom: 1px solid var(--kc-line); }
+.kc-secduo h2 { font-size: 25px; line-height: 1.14; }
+.kc-secduo p { margin: 12px 0 0; font-size: 16px; line-height: 1.64; }
+.kc-list .item { display: flex; gap: 26px; align-items: baseline; padding: 20px 0; border-bottom: 1px solid var(--kc-line); }
+.kc-list .item .d { font-size: 13px; color: var(--kc-meta); width: 72px; flex: none; }
+.kc-list .item h2 { font-size: 20px; line-height: 1.24; flex: 1; }
+.kc-list .item .tag { font-size: 12px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--kc-gold); flex: none; }
+.kc-more { display: flex; justify-content: center; padding: 40px 0 52px; }
+.kc-more a {
+  border: 1px solid var(--kc-navy); color: var(--kc-navy); font-size: 12px;
+  letter-spacing: 0.16em; text-transform: uppercase; padding: 13px 34px; border-radius: 2px;
+}
+.kc-more a:hover { background: var(--kc-navy); color: var(--kc-paper); }
+/* Civic desks (Ontario green in palette.json) take the green accents —
+   but never inside the navy newsletter card, where gold lives: the
+   design forbids gold and green in one component. */
+.kc-sec.kc-civic .kc-sechead { border-bottom-color: var(--kc-green); }
+.kc-sec.kc-civic .kc-kicker, .kc-sec.kc-civic .kc-list .item .tag { color: var(--kc-green); }
+.kc-sec.kc-civic .kc-nlcard .kc-kicker { color: var(--kc-goldlt); }
+
+/* --- Article pages --------------------------------------------------------- */
+.kc-art { padding: 52px 0 0; }
+.kc-art .cols { display: grid; grid-template-columns: 130px minmax(0,1fr) 280px; gap: 44px; }
+.kc-share { display: flex; flex-direction: column; gap: 12px; padding-top: 8px; font-size: 14px; }
+.kc-share .lbl { font-size: 12px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--kc-meta); margin-bottom: 4px; }
+.kc-art h1 { font-size: 48px; line-height: 1.04; letter-spacing: -0.018em; }
+.kc-art .dek { margin: 20px 0 0; font-size: 22px; line-height: 1.45; font-style: italic; color: #4A4744; }
+.kc-art .byrow {
+  display: flex; flex-wrap: wrap; gap: 8px 14px; margin: 24px 0; padding: 16px 0;
+  border-top: 1px solid var(--kc-line); border-bottom: 1px solid var(--kc-line);
+  font-size: 13px; color: var(--kc-meta);
+}
+.kc-art .byrow .who { color: var(--kc-navy); }
+.kc-art .lede-fig { height: 400px; display: flex; align-items: flex-end; margin-bottom: 12px; }
+.kc-body { max-width: 66ch; font-size: 18px; line-height: 1.72; }
+.kc-body p { margin: 0 0 22px; }
+.kc-body p:first-child::first-line { font-weight: 600; }
+.kc-body blockquote {
+  margin: 30px 0; padding-left: 26px; border-left: 3px solid var(--kc-gold);
+}
+.kc-body blockquote p {
+  margin: 0; font-family: var(--kc-serif); font-size: 25px; line-height: 1.32;
+  font-style: italic; color: var(--kc-navy);
+}
+.kc-body blockquote cite {
+  display: block; margin-top: 12px; font-size: 13px; letter-spacing: 0.1em;
+  text-transform: uppercase; font-style: normal; color: var(--kc-meta);
+}
+.kc-related { max-width: 66ch; margin: 40px 0 56px; padding-top: 26px; border-top: 2px solid var(--kc-navy); }
+.kc-related .kc-kicker { margin-bottom: 20px; }
+.kc-related h2 { font-size: 21px; line-height: 1.24; margin-bottom: 16px; }
+.kc-aside { display: flex; flex-direction: column; gap: 32px; }
+.kc-topics { border-left: 1px solid var(--kc-line); padding-left: 26px; }
+.kc-topics h2 { font-size: 15px; letter-spacing: 0.16em; text-transform: uppercase; padding-bottom: 12px; border-bottom: 2px solid var(--kc-navy); }
+.kc-topics p { padding: 14px 0 0; margin: 0; font-size: 15px; line-height: 1.5; color: #4A4744; }
+.kc-nlcard { background: var(--kc-navy); padding: 28px 26px; }
+.kc-nlcard .kc-kicker { color: var(--kc-goldlt); margin-bottom: 12px; }
+.kc-nlcard .pitch { font-family: var(--kc-serif); font-weight: 600; font-size: 22px; line-height: 1.22; color: var(--kc-paper); }
+.kc-nlcard .go {
+  display: block; margin-top: 18px; background: var(--kc-gold); color: var(--kc-navy) !important;
+  text-align: center; font-size: 12px; letter-spacing: 0.14em; text-transform: uppercase;
+  padding: 12px; border-radius: 2px;
+}
+.kc-nlcard .go:hover { background: var(--kc-goldlt); }
+/* The provenance box inherits the paper's hairline voice. */
+.t-kitchener .pp-provenance { border-top: 2px solid var(--kc-navy); font-size: 14px; }
+
+/* --- Footer ---------------------------------------------------------------- */
+.kc-foot { margin-top: 56px; background: var(--kc-navy); padding: 44px 0 28px; }
+.kc-foot .in { display: flex; justify-content: space-between; gap: 48px; flex-wrap: wrap; }
+.kc-foot .name { font-family: var(--kc-serif); font-weight: 600; font-size: 25px; color: var(--kc-paper); }
+.kc-foot .tag { font-size: 13px; line-height: 1.6; color: rgba(243,242,242,0.62); margin: 10px 0 0; max-width: 38ch; }
+.kc-foot .colset { display: flex; gap: 56px; flex-wrap: wrap; }
+.kc-foot h4 {
+  font-size: 12px; letter-spacing: 0.16em; text-transform: uppercase;
+  color: var(--kc-goldlt); font-weight: 400; margin: 0 0 12px;
+}
+.kc-foot .col { display: flex; flex-direction: column; gap: 9px; }
+.kc-foot .col a { font-size: 14px; color: rgba(243,242,242,0.8); }
+.kc-foot .col a:hover { color: var(--kc-goldlt); }
+.kc-foot .base {
+  max-width: 1180px; margin: 34px auto 0; padding: 20px 24px 0;
+  border-top: 1px solid rgba(243,242,242,0.18);
+  font-size: 12px; letter-spacing: 0.1em; color: rgba(243,242,242,0.5);
+}
+.kc-empty { padding: 60px 0 80px; font-style: italic; color: var(--kc-meta); }
+
+/* --- Mobile (plate 08): one column, scrolling nav strip --------------------- */
+@media (max-width: 900px) {
+  .kc-front .cols, .kc-sec .cols { grid-template-columns: 1fr; }
+  .kc-rail { border-left: 0; padding-left: 0; border-top: 1px solid var(--kc-line); padding-top: 32px; }
+  .kc-art .cols { grid-template-columns: 1fr; }
+  .kc-share { flex-direction: row; align-items: baseline; gap: 18px; }
+  .kc-seclead { grid-template-columns: 1fr; }
+  .kc-ontario .grid { grid-template-columns: 1fr; }
+  .kc-ontario .grid article + article { border-left: 0; padding-left: 0; border-top: 1px solid var(--kc-line); padding-top: 20px; }
+}
+@media (max-width: 700px) {
+  .kc-lock .name { font-size: 31px; }
+  .kc-lock .the { font-size: 9px; letter-spacing: 0.32em; }
+  .kc-lock .places { display: none; }
+  .kc-dateline { justify-content: center; }
+  .kc-dateline .vol { display: none; }
+  .kc-sky { display: none; }
+  .kc-nav .tools .find { display: none; }
+  .kc-lead h1 { font-size: 31px; }
+  .kc-duo, .kc-trio, .kc-secduo { grid-template-columns: 1fr; }
+  .kc-lead figure { height: 180px; }
+  .kc-art h1 { font-size: 33px; }
+  .kc-art .lede-fig { height: 200px; }
+  .kc-sechead h1 { font-size: 40px; }
+  .kc-list .item { flex-wrap: wrap; gap: 8px 18px; }
+}

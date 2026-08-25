@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120">
+  <!-- The KW monogram: Waterloo gold on Kitchener navy (design pkg plate 01). -->
+  <rect width="120" height="120" fill="#16264D"/>
+  <g stroke="#D9B463" stroke-width="10" fill="none" stroke-linecap="square">
+    <path d="M27 32 V88"/>
+    <path d="M52 32 L31 60 M35 55 L54 88" stroke-width="9"/>
+    <path d="M63 32 L73 88 L85 50 L97 88 L107 32" stroke-width="9" stroke-linejoin="miter"/>
+  </g>
+</svg>

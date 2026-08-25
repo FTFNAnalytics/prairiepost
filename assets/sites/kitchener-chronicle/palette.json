@@ -1,0 +1,27 @@
+{
+  "palette": {
+    "ink":   "#201E1D",
+    "paper": "#F3F2F2",
+    "navy":  "#16264D",
+    "gold":  "#B98B3C",
+    "goldlt":"#D9B463",
+    "green": "#1D5138",
+    "muted": "#6E6A67"
+  },
+  "desks": {
+    "local-news": "#16264D",
+    "politics":   "#16264D",
+    "business":   "#16264D",
+    "sports":     "#16264D",
+    "culture":    "#16264D",
+    "ontario":    "#1D5138"
+  },
+  "desk_labels": {
+    "local-news": "Local",
+    "business": "Business"
+  },
+  "chrome": {
+    "template": "kitchener",
+    "nav": ["local-news", "politics", "business", "sports", "culture"]
+  }
+}
