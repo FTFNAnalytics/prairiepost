@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 104" role="img" aria-label="The Mississauga Monitor">
+  <title>The Mississauga Monitor</title>
+  <!--
+    Two overlapping triangles read as the city's M; the inverted orange
+    triangle is the messenger's signal, and doubles as a water form
+    (design package, section 2). Colours are written in the file — an SVG
+    loaded through <img> is its own document and inherits nothing.
+    Verified legible at 128, 64, 32 and 24 px on white and on navy.
+  -->
+  <path fill="#FFFFFF" d="M8 96 L34 8 L60 66 L86 8 L112 96 L88 96 L76 52 L60 96 L44 52 L32 96 Z"/>
+  <path fill="#F5821F" d="M44 24 L76 24 L60 58 Z"/>
+</svg>

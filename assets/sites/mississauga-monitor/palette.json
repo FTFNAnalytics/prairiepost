@@ -1,0 +1,33 @@
+{
+  "palette": {
+    "ink":     "#1A1A1A",
+    "paper":   "#FFFFFF",
+    "board":   "#EEF1F5",
+    "sky":     "#5DC3E7",
+    "hill":    "#0B2D4F",
+    "field":   "#006BB6",
+    "stubble": "#5A6472",
+    "red":     "#F5821F",
+    "muted":   "#5A6472"
+  },
+  "desks": {
+    "city-hall":   "#006BB6",
+    "transit":     "#006BB6",
+    "development": "#006BB6",
+    "courts":      "#006BB6",
+    "business":    "#006BB6",
+    "peel-region": "#006BB6",
+    "communities": "#006BB6",
+    "environment": "#00B862",
+    "live":        "#F5821F"
+  },
+  "desk_labels": {
+    "business": "Business",
+    "peel-region": "Peel Region",
+    "live": "Live"
+  },
+  "chrome": {
+    "template": "monitor",
+    "nav": ["city-hall", "transit", "development", "courts", "business", "peel-region", "communities"]
+  }
+}
