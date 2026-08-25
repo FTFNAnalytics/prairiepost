@@ -188,17 +188,21 @@ must never be `git pull`ed or rsynced into.
   branch and commit a release directory was built from — the directory
   name carries the short SHA — before writing or following a runbook.
 
-## Current operational state (as of the Mississauga Monitor launch)
+## Current operational state (as of the Kitchener Chronicle launch)
 
-- **Release in production: `9fcce37149b9`**, at
-  `/var/www/prairiepost-9fcce37149b9-shared`, serving all FOURTEEN papers
-  as one release group. Schema version 16. mississaugamonitor.com
-  (site #15, slug `mississauga-monitor`, template `monitor`) launched
-  Aug 25 — the first config-edit-free launch: generated nginx block,
-  certbot, seeder-written domain rows, no config.site.php step at all.
-  It ships Hermes-ready (`wire_desks = live`, automated byline "Monitor
-  Newsroom Automation"). TLS to Nov 22 2026.
-  Live hostname inventory: 28 direct content endpoints + 4 redirect-only
+- **Release in production: `0fce16f81589`**, at
+  `/var/www/prairiepost-0fce16f81589-shared`, serving all FIFTEEN papers
+  as one release group. Schema version 16.
+  kitchenerchronicle.com (site #16, slug `kitchener-chronicle`, template
+  `kitchener`) launched Aug 25 — the network's first ZERO-hard-stop
+  launch, end to end under the no-config machinery. Its Ontario desk is
+  the paper's one shared-desk addition (green civic treatment); it
+  declares NO wire desk, so any future Hermes filing lands as a draft.
+  TLS to Nov 23 2026. mississaugamonitor.com (site #15, slug
+  `mississauga-monitor`, template `monitor`) launched Aug 25 as the
+  first config-edit-free launch; Hermes-ready (`wire_desks = live`,
+  automated byline "Monitor Newsroom Automation"); TLS to Nov 22 2026.
+  Live hostname inventory: 30 direct content endpoints + 4 redirect-only
   aliases (bare grandeprairiegazette.ca, www.edmontonecho.com,
   www.kermodechronicle.ca, www.thepacificpost.com).
 - **Every typeface is self-hosted.** All families are vendored in
