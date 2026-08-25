@@ -131,10 +131,15 @@ On https://mississaugamonitor.com — all strings as served bytes:
    `<blockquote>` with a `<cite>` naming Councillor Nair.
 7. `/search`, `/corrections`, `/feed/`, `/sitemap.xml`, `/newsletter/`
    all 200.
-8. Headlines paint in **Playfair Display** and chrome in **Inter** —
-   assert `/assets/fonts/inter-latin.woff2` returns 200 and the served
-   CSS contains `@font-face` rules naming both; nothing loads from a
-   font CDN.
+8. Fonts, phrased at the layer that produces them: every family the
+   page names is declared by `@font-face` in a stylesheet the page
+   loads, with all `src` urls local — for this paper, `monitor.css`
+   itself declares Playfair Display and Inter from `/assets/fonts/`
+   (it does NOT import fonts.css; papers whose sheets once imported
+   from Google use that route instead — both shapes are correct).
+   `/assets/fonts/inter-latin.woff2` returns 200; no external host
+   appears as a loaded resource anywhere in the page or its CSS graph
+   (links inside article content are content, not loads).
 9. The full network loop: every existing domain still 200 as itself,
    English controls still `lang="en"`, bleuetblanc.ca `lang="fr"`.
 
