@@ -96,8 +96,35 @@ done
 
 say "Fetch the release template once"
 TMP=$(mktemp -d)
-curl -fsSL "https://codeload.github.com/$REPO/tar.gz/refs/heads/$BRANCH" -o "$TMP/rel.tgz" || fail "tarball download failed"
-tar -xzf "$TMP/rel.tgz" -C "$TMP" || fail "tarball didn't extract"
+# Three ways in, because the upgrade must not depend on one CDN host:
+#   1. PP_RELEASE_TARBALL=/path.tgz — a pre-staged tarball (an operator can
+#      download it anywhere github is reachable and scp it to the box);
+#   2. the codeload tarball (the normal path);
+#   3. a shallow git clone of the branch from github.com — codeload and
+#      github.com are different edges, and one has been unreachable from
+#      this box while the other answered.
+if [ -n "${PP_RELEASE_TARBALL:-}" ]; then
+  [ -f "$PP_RELEASE_TARBALL" ] || fail "PP_RELEASE_TARBALL points at nothing"
+  cp "$PP_RELEASE_TARBALL" "$TMP/rel.tgz"
+  echo "   using pre-staged tarball: $PP_RELEASE_TARBALL"
+elif curl -fsSL --connect-timeout 25 "https://codeload.github.com/$REPO/tar.gz/refs/heads/$BRANCH" -o "$TMP/rel.tgz"; then
+  :
+else
+  echo "   codeload unreachable — falling back to a shallow git clone"
+  git clone --depth 1 --branch "$BRANCH" "https://github.com/$REPO.git" "$TMP/clone" \
+    || fail "tarball download failed AND git clone fallback failed"
+  # Verify the clone's head is the branch head the API reported.
+  CLONE_SHA=$(git -C "$TMP/clone" rev-parse HEAD)
+  case "$CLONE_SHA" in
+    "$SHA"*|"${SHA:0:12}"*) : ;;
+    *) [ "${CLONE_SHA:0:12}" = "${SHA:0:12}" ] || fail "clone head $CLONE_SHA is not the API-reported head $SHA" ;;
+  esac
+  rm -rf "$TMP/clone/.git"
+  mv "$TMP/clone" "$TMP/prairiepost-$BRANCH-clone"
+fi
+if [ -f "$TMP/rel.tgz" ]; then
+  tar -xzf "$TMP/rel.tgz" -C "$TMP" || fail "tarball didn't extract"
+fi
 TPL=$(find "$TMP" -maxdepth 1 -mindepth 1 -type d | head -1)
 [ -f "$TPL/app/bootstrap.php" ] || fail "extracted tree doesn't look like the app"
 
