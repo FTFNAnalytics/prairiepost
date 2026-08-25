@@ -190,9 +190,12 @@ must never be `git pull`ed or rsynced into.
 
 ## Current operational state (as of the Kitchener Chronicle launch)
 
-- **Release in production: `0fce16f81589`**, at
-  `/var/www/prairiepost-0fce16f81589-shared`, serving all FIFTEEN papers
-  as one release group. Schema version 16.
+- **Release in production: `1b8195bc533d`**, at
+  `/var/www/prairiepost-1b8195bc533d-shared`, serving all FIFTEEN papers
+  as one release group. Schema version 16. (The Aug 25 card-art release:
+  every Chronicle story card carries art via the kc_art() desk-mapped
+  fallback — template-level, so agent filings and photo-less rows get
+  sketches without database writes.)
   kitchenerchronicle.com (site #16, slug `kitchener-chronicle`, template
   `kitchener`) launched Aug 25 — the network's first ZERO-hard-stop
   launch, end to end under the no-config machinery. Its Ontario desk is
