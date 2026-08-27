@@ -51,6 +51,16 @@ CREATE TABLE ingest_agents (
     last_used_at TIMESTAMP
 );
 
+CREATE TABLE media_clients (
+    id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    name VARCHAR(120) NOT NULL UNIQUE,
+    token_hash VARCHAR(64) NOT NULL UNIQUE,
+    scopes VARCHAR(255) NOT NULL,
+    enabled INTEGER NOT NULL DEFAULT 1,
+    created_at TIMESTAMP NOT NULL,
+    last_used_at TIMESTAMP
+);
+
 CREATE TABLE story_sources (
     id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     post_id INTEGER NOT NULL,
@@ -308,6 +318,76 @@ CREATE TABLE story_ideas (
     created_at TIMESTAMP NOT NULL
 );
 
+-- Provider-neutral Pantheon request desk. Inbound submissions are proposals;
+-- paid lanes stop at quote and editorial acceptance creates story ideas only.
+CREATE TABLE media_requests (
+    id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    public_ref VARCHAR(64) NOT NULL UNIQUE,
+    client_id INTEGER NOT NULL,
+    idempotency_key VARCHAR(191) NOT NULL,
+    pantheon_request_id VARCHAR(80) NOT NULL,
+    pantheon_brief_id VARCHAR(80) NOT NULL,
+    schema_version VARCHAR(20) NOT NULL,
+    request_kind VARCHAR(30) NOT NULL,
+    title VARCHAR(255) NOT NULL,
+    advertiser VARCHAR(160),
+    sponsor VARCHAR(160),
+    disclosure TEXT,
+    landing_url VARCHAR(600),
+    desired_start VARCHAR(10),
+    desired_end VARCHAR(10),
+    max_budget DECIMAL(14,2),
+    currency VARCHAR(3) NOT NULL DEFAULT 'CAD',
+    target_json TEXT,
+    content_json TEXT,
+    notes TEXT,
+    state VARCHAR(30) NOT NULL DEFAULT 'received',
+    review_note TEXT,
+    quote_ref VARCHAR(80),
+    quote_amount DECIMAL(14,2),
+    quote_currency VARCHAR(3),
+    quote_valid_until TIMESTAMP,
+    quote_terms TEXT,
+    reviewed_by VARCHAR(120) NOT NULL DEFAULT '',
+    created_at TIMESTAMP NOT NULL,
+    updated_at TIMESTAMP NOT NULL,
+    CONSTRAINT uq_media_request_idempotency UNIQUE (client_id, idempotency_key),
+    CONSTRAINT uq_media_request_pantheon UNIQUE (client_id, pantheon_request_id)
+);
+CREATE INDEX idx_media_requests_state ON media_requests (state, request_kind, updated_at);
+CREATE INDEX idx_media_requests_client ON media_requests (client_id, created_at);
+
+CREATE TABLE media_request_sites (
+    request_id INTEGER NOT NULL,
+    site_id INTEGER NOT NULL,
+    product_ref VARCHAR(191) NOT NULL,
+    budget_cap DECIMAL(14,2),
+    creative_json TEXT,
+    state VARCHAR(30) NOT NULL DEFAULT 'requested',
+    PRIMARY KEY (request_id, site_id)
+);
+CREATE INDEX idx_media_request_sites_site ON media_request_sites (site_id, state);
+
+CREATE TABLE media_request_outputs (
+    request_id INTEGER NOT NULL,
+    site_id INTEGER NOT NULL DEFAULT 0,
+    output_kind VARCHAR(30) NOT NULL,
+    output_id INTEGER NOT NULL,
+    created_at TIMESTAMP NOT NULL,
+    CONSTRAINT uq_media_request_output UNIQUE (request_id, site_id, output_kind, output_id)
+);
+CREATE INDEX idx_media_request_outputs_request ON media_request_outputs (request_id);
+
+CREATE TABLE media_request_events (
+    id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    request_id INTEGER NOT NULL,
+    event_type VARCHAR(40) NOT NULL,
+    actor VARCHAR(120) NOT NULL,
+    payload TEXT,
+    created_at TIMESTAMP NOT NULL
+);
+CREATE INDEX idx_media_request_events_request ON media_request_events (request_id, id);
+
 CREATE INDEX idx_posts_status ON posts (status, published_at);
 CREATE INDEX idx_posts_category ON posts (category_id);
 CREATE INDEX idx_posts_author ON posts (author_id);
@@ -446,6 +526,6 @@ CREATE TABLE ops_runs (
 );
 CREATE INDEX idx_ops_runs_job ON ops_runs (job, id);
 
-INSERT INTO settings (site_id, skey, svalue) VALUES (0, 'schema_version', '16');
+INSERT INTO settings (site_id, skey, svalue) VALUES (0, 'schema_version', '17');
 
 CREATE INDEX idx_posts_content_hash ON posts (content_hash);

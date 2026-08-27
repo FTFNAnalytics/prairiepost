@@ -20,6 +20,8 @@ RewriteRule ^contact/?$ contact.php [L,QSA]
 # The monitoring ingest API. Apache drops the Authorization header for
 # FastCGI unless it's re-exported — the E= flag carries the bearer through.
 RewriteRule ^api/monitor/?$ monitor-ingest.php [L,QSA,E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
+# Pantheon media gateway. The script itself returns 404 outside the Civis hub.
+RewriteRule ^api/media/?$ media-gateway.php [L,QSA,E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
 RewriteRule ^ad/?$ ad.php [L,QSA]
 RewriteRule ^card/([a-z0-9-]+)\.png$ card.php?slug=$1 [L]
 RewriteRule ^corrections/?$ corrections.php [L]

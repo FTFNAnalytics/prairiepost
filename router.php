@@ -49,6 +49,8 @@ $map = [
     '/api/ingest/'  => '/ingest.php',
     '/api/monitor'  => '/monitor-ingest.php',
     '/api/monitor/' => '/monitor-ingest.php',
+    '/api/media'    => '/media-gateway.php',
+    '/api/media/'   => '/media-gateway.php',
 ];
 if (isset($map[$path])) {
     require __DIR__ . $map[$path];

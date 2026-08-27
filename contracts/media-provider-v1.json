@@ -1,0 +1,65 @@
+{
+  "schemaVersion": "2026-08-27",
+  "catalog": {
+    "schemaVersion": "2026-08-27",
+    "providerKey": "prairiepost",
+    "providerName": "Civis Media newspaper network",
+    "generatedAt": "2026-08-27T00:00:00Z",
+    "properties": [
+      {
+        "externalRef": "tri-cities-torch",
+        "name": "Tri Cities Torch",
+        "domain": "tricitiestorch.ca",
+        "propertyKind": "newspaper",
+        "countryCode": "CA",
+        "serviceArea": { "jurisdictionCodes": ["ca-bc"], "regions": ["Coquitlam", "Port Coquitlam", "Port Moody"] },
+        "status": "sandbox",
+        "sandbox": true,
+        "metadata": { "reviewRequired": true, "hubExcluded": true }
+      }
+    ],
+    "products": [
+      {
+        "externalRef": "tri-cities-torch:display-ad",
+        "propertyRef": "tri-cities-torch",
+        "requestKind": "display_ad",
+        "name": "Display advertising request",
+        "description": "Sandbox inventory request.",
+        "pricingModel": "no_charge",
+        "currency": "CAD",
+        "rateAmount": 0,
+        "specifications": { "humanLaunchRequired": true },
+        "status": "active"
+      }
+    ]
+  },
+  "submission": {
+    "schemaVersion": "2026-08-27",
+    "idempotencyKey": "contract-brief:prairiepost:v1",
+    "requestId": "contract-request",
+    "briefId": "contract-brief",
+    "briefVersion": 1,
+    "objectiveRef": "contract-objective",
+    "requestKind": "display_ad",
+    "title": "Power, water, and local benefit",
+    "advertiserOfRecord": "Example organization",
+    "sponsorName": "Example organization",
+    "disclosureText": "Paid for by Example organization",
+    "landingUrl": "https://example.test/data-centres",
+    "desiredStart": "2026-09-01",
+    "desiredEnd": "2026-09-14",
+    "maxBudget": 0,
+    "currency": "CAD",
+    "targetSpec": { "jurisdictions": ["ca-bc"] },
+    "content": { "heading": "The local benefit test" },
+    "notes": "No-charge sandbox contract fixture.",
+    "placements": [
+      {
+        "propertyRef": "tri-cities-torch",
+        "productRef": "tri-cities-torch:display-ad",
+        "budgetCap": 0,
+        "creative": { "placement": "rail" }
+      }
+    ]
+  }
+}

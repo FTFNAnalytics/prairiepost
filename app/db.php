@@ -64,6 +64,16 @@ function pp_schema_ddl(string $driver): array
             last_used_at $dt
         )$suffix",
 
+        "CREATE TABLE media_clients (
+            id $id,
+            name VARCHAR(120) NOT NULL UNIQUE,
+            token_hash VARCHAR(64) NOT NULL UNIQUE,
+            scopes VARCHAR(255) NOT NULL,
+            enabled INTEGER NOT NULL DEFAULT 1,
+            created_at $dt NOT NULL,
+            last_used_at $dt
+        )$suffix",
+
         "CREATE TABLE story_sources (
             id $id,
             post_id INTEGER NOT NULL,
@@ -306,6 +316,69 @@ function pp_schema_ddl(string $driver): array
             created_at $dt NOT NULL
         )$suffix",
 
+        "CREATE TABLE media_requests (
+            id $id,
+            public_ref VARCHAR(64) NOT NULL UNIQUE,
+            client_id INTEGER NOT NULL,
+            idempotency_key VARCHAR(191) NOT NULL,
+            pantheon_request_id VARCHAR(80) NOT NULL,
+            pantheon_brief_id VARCHAR(80) NOT NULL,
+            schema_version VARCHAR(20) NOT NULL,
+            request_kind VARCHAR(30) NOT NULL,
+            title VARCHAR(255) NOT NULL,
+            advertiser VARCHAR(160),
+            sponsor VARCHAR(160),
+            disclosure TEXT,
+            landing_url VARCHAR(600),
+            desired_start VARCHAR(10),
+            desired_end VARCHAR(10),
+            max_budget DECIMAL(14,2),
+            currency VARCHAR(3) NOT NULL DEFAULT 'CAD',
+            target_json TEXT,
+            content_json TEXT,
+            notes TEXT,
+            state VARCHAR(30) NOT NULL DEFAULT 'received',
+            review_note TEXT,
+            quote_ref VARCHAR(80),
+            quote_amount DECIMAL(14,2),
+            quote_currency VARCHAR(3),
+            quote_valid_until $dt,
+            quote_terms TEXT,
+            reviewed_by VARCHAR(120) NOT NULL DEFAULT '',
+            created_at $dt NOT NULL,
+            updated_at $dt NOT NULL,
+            CONSTRAINT uq_media_request_idempotency UNIQUE (client_id, idempotency_key),
+            CONSTRAINT uq_media_request_pantheon UNIQUE (client_id, pantheon_request_id)
+        )$suffix",
+
+        "CREATE TABLE media_request_sites (
+            request_id INTEGER NOT NULL,
+            site_id INTEGER NOT NULL,
+            product_ref VARCHAR(191) NOT NULL,
+            budget_cap DECIMAL(14,2),
+            creative_json TEXT,
+            state VARCHAR(30) NOT NULL DEFAULT 'requested',
+            PRIMARY KEY (request_id, site_id)
+        )$suffix",
+
+        "CREATE TABLE media_request_outputs (
+            request_id INTEGER NOT NULL,
+            site_id INTEGER NOT NULL DEFAULT 0,
+            output_kind VARCHAR(30) NOT NULL,
+            output_id INTEGER NOT NULL,
+            created_at $dt NOT NULL,
+            CONSTRAINT uq_media_request_output UNIQUE (request_id, site_id, output_kind, output_id)
+        )$suffix",
+
+        "CREATE TABLE media_request_events (
+            id $id,
+            request_id INTEGER NOT NULL,
+            event_type VARCHAR(40) NOT NULL,
+            actor VARCHAR(120) NOT NULL,
+            payload TEXT,
+            created_at $dt NOT NULL
+        )$suffix",
+
         "CREATE TABLE site_metrics_daily (
             id $id,
             site_id INTEGER NOT NULL,
@@ -428,6 +501,11 @@ function pp_schema_ddl(string $driver): array
         'CREATE INDEX idx_audit_created ON audit_log (created_at)',
         'CREATE INDEX idx_revisions_post ON post_revisions (post_id, id)',
         'CREATE INDEX idx_ops_runs_job ON ops_runs (job, id)',
+        'CREATE INDEX idx_media_requests_state ON media_requests (state, request_kind, updated_at)',
+        'CREATE INDEX idx_media_requests_client ON media_requests (client_id, created_at)',
+        'CREATE INDEX idx_media_request_sites_site ON media_request_sites (site_id, state)',
+        'CREATE INDEX idx_media_request_outputs_request ON media_request_outputs (request_id)',
+        'CREATE INDEX idx_media_request_events_request ON media_request_events (request_id, id)',
     ];
 }
 
@@ -1001,5 +1079,96 @@ function pp_migrate(PDO $pdo, string $driver): void
         $pdo->exec('CREATE INDEX idx_posts_content_hash ON posts (content_hash)');
 
         $pdo->exec("UPDATE settings SET svalue = '16' WHERE site_id = 0 AND skey = 'schema_version'");
+    }
+
+    if ($version < 17) {
+        // Provider-neutral media gateway for Pantheon. These credentials are
+        // separate from Hermes ingest tokens and scope to catalog/request
+        // operations. Every inbound item is a proposal; editorial pitches
+        // can become story ideas only, and paid lanes stop at quote/review.
+        $dt = $driver === 'pgsql' ? 'TIMESTAMP' : 'DATETIME';
+        $id = $driver === 'mysql' ? 'INT UNSIGNED AUTO_INCREMENT PRIMARY KEY'
+            : ($driver === 'pgsql' ? 'INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY' : 'INTEGER PRIMARY KEY AUTOINCREMENT');
+        $suffix = $driver === 'mysql' ? ' ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci' : '';
+
+        $pdo->exec("CREATE TABLE media_clients (
+            id $id,
+            name VARCHAR(120) NOT NULL UNIQUE,
+            token_hash VARCHAR(64) NOT NULL UNIQUE,
+            scopes VARCHAR(255) NOT NULL,
+            enabled INTEGER NOT NULL DEFAULT 1,
+            created_at $dt NOT NULL,
+            last_used_at $dt
+        )$suffix");
+
+        $pdo->exec("CREATE TABLE media_requests (
+            id $id,
+            public_ref VARCHAR(64) NOT NULL UNIQUE,
+            client_id INTEGER NOT NULL,
+            idempotency_key VARCHAR(191) NOT NULL,
+            pantheon_request_id VARCHAR(80) NOT NULL,
+            pantheon_brief_id VARCHAR(80) NOT NULL,
+            schema_version VARCHAR(20) NOT NULL,
+            request_kind VARCHAR(30) NOT NULL,
+            title VARCHAR(255) NOT NULL,
+            advertiser VARCHAR(160),
+            sponsor VARCHAR(160),
+            disclosure TEXT,
+            landing_url VARCHAR(600),
+            desired_start VARCHAR(10),
+            desired_end VARCHAR(10),
+            max_budget DECIMAL(14,2),
+            currency VARCHAR(3) NOT NULL DEFAULT 'CAD',
+            target_json TEXT,
+            content_json TEXT,
+            notes TEXT,
+            state VARCHAR(30) NOT NULL DEFAULT 'received',
+            review_note TEXT,
+            quote_ref VARCHAR(80),
+            quote_amount DECIMAL(14,2),
+            quote_currency VARCHAR(3),
+            quote_valid_until $dt,
+            quote_terms TEXT,
+            reviewed_by VARCHAR(120) NOT NULL DEFAULT '',
+            created_at $dt NOT NULL,
+            updated_at $dt NOT NULL,
+            CONSTRAINT uq_media_request_idempotency UNIQUE (client_id, idempotency_key),
+            CONSTRAINT uq_media_request_pantheon UNIQUE (client_id, pantheon_request_id)
+        )$suffix");
+        $pdo->exec('CREATE INDEX idx_media_requests_state ON media_requests (state, request_kind, updated_at)');
+        $pdo->exec('CREATE INDEX idx_media_requests_client ON media_requests (client_id, created_at)');
+
+        $pdo->exec("CREATE TABLE media_request_sites (
+            request_id INTEGER NOT NULL,
+            site_id INTEGER NOT NULL,
+            product_ref VARCHAR(191) NOT NULL,
+            budget_cap DECIMAL(14,2),
+            creative_json TEXT,
+            state VARCHAR(30) NOT NULL DEFAULT 'requested',
+            PRIMARY KEY (request_id, site_id)
+        )$suffix");
+        $pdo->exec('CREATE INDEX idx_media_request_sites_site ON media_request_sites (site_id, state)');
+
+        $pdo->exec("CREATE TABLE media_request_outputs (
+            request_id INTEGER NOT NULL,
+            site_id INTEGER NOT NULL DEFAULT 0,
+            output_kind VARCHAR(30) NOT NULL,
+            output_id INTEGER NOT NULL,
+            created_at $dt NOT NULL,
+            CONSTRAINT uq_media_request_output UNIQUE (request_id, site_id, output_kind, output_id)
+        )$suffix");
+        $pdo->exec('CREATE INDEX idx_media_request_outputs_request ON media_request_outputs (request_id)');
+
+        $pdo->exec("CREATE TABLE media_request_events (
+            id $id,
+            request_id INTEGER NOT NULL,
+            event_type VARCHAR(40) NOT NULL,
+            actor VARCHAR(120) NOT NULL,
+            payload TEXT,
+            created_at $dt NOT NULL
+        )$suffix");
+        $pdo->exec('CREATE INDEX idx_media_request_events_request ON media_request_events (request_id, id)');
+
+        $pdo->exec("UPDATE settings SET svalue = '17' WHERE site_id = 0 AND skey = 'schema_version'");
     }
 }

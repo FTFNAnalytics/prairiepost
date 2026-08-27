@@ -97,6 +97,13 @@ pasted **embed code**. Several ads in a slot rotate evenly; clicks route
 through a counter, so served/click numbers in the admin are real. Empty slots
 render nothing.
 
+**Pantheon media requests** — the Civis control room can expose the network's
+15 publications as a versioned, server-to-server catalog for editorial pitches,
+sponsored-post proposals, and display-ad quote requests. Every submission lands
+in a human review queue; the gateway cannot publish, launch a campaign, or spend.
+Setup, token scopes, endpoints, and release checks are in
+[`PANTHEON-MEDIA.md`](PANTHEON-MEDIA.md).
+
 **Social cards** — every story gets a generated 1200×630 Open Graph card at
 `/card/{slug}.png`: desk kicker, the horizon rule, the headline in condensed
 type, the five-band prairie ground. Cards are drawn server-side with the
