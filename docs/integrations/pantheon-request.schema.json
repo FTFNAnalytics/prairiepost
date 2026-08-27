@@ -1,0 +1,284 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://civismedia.ca/contracts/pantheon-request-v1.schema.json",
+  "title": "Pantheon media request v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "contract_version",
+    "request_id",
+    "request_type",
+    "tenant_ref",
+    "objective_ref",
+    "property_slugs",
+    "geography",
+    "brief",
+    "commercial",
+    "disclosure",
+    "approval"
+  ],
+  "properties": {
+    "contract_version": {
+      "const": "2026-08-27"
+    },
+    "request_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "request_type": {
+      "enum": [
+        "editorial_pitch",
+        "sponsored_post",
+        "display_ad"
+      ]
+    },
+    "tenant_ref": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "objective_ref": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "property_slugs": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 15,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+      }
+    },
+    "geography": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "jurisdiction_codes",
+        "district_codes",
+        "summary"
+      ],
+      "properties": {
+        "jurisdiction_codes": {
+          "type": "array",
+          "maxItems": 50,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "maxLength": 64
+          }
+        },
+        "district_codes": {
+          "type": "array",
+          "maxItems": 500,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "maxLength": 128
+          }
+        },
+        "summary": {
+          "type": "string",
+          "maxLength": 2000
+        }
+      }
+    },
+    "brief": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "title",
+        "purpose",
+        "audience",
+        "key_claims",
+        "source_urls",
+        "landing_url"
+      ],
+      "properties": {
+        "title": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 255
+        },
+        "purpose": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4000
+        },
+        "audience": {
+          "type": "string",
+          "maxLength": 2000
+        },
+        "key_claims": {
+          "type": "array",
+          "maxItems": 50,
+          "items": {
+            "type": "string",
+            "maxLength": 1000
+          }
+        },
+        "source_urls": {
+          "type": "array",
+          "maxItems": 50,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "format": "uri",
+            "pattern": "^https://"
+          }
+        },
+        "landing_url": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "uri",
+          "pattern": "^https://"
+        }
+      }
+    },
+    "commercial": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "currency",
+        "budget_cap",
+        "requested_start",
+        "requested_end",
+        "slot_preferences"
+      ],
+      "properties": {
+        "currency": {
+          "const": "CAD"
+        },
+        "budget_cap": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 0,
+          "multipleOf": 0.01
+        },
+        "requested_start": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "date-time"
+        },
+        "requested_end": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "date-time"
+        },
+        "slot_preferences": {
+          "type": "array",
+          "maxItems": 3,
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              "top",
+              "rail",
+              "article"
+            ]
+          }
+        }
+      }
+    },
+    "disclosure": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "advertiser_legal_name",
+        "sponsorship_label",
+        "political_or_issue_related"
+      ],
+      "properties": {
+        "advertiser_legal_name": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 255
+        },
+        "sponsorship_label": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 255
+        },
+        "political_or_issue_related": {
+          "type": "boolean"
+        }
+      }
+    },
+    "approval": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "pantheon_approval_id",
+        "message_hash",
+        "capability_resolution_id"
+      ],
+      "properties": {
+        "pantheon_approval_id": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "uuid"
+        },
+        "message_hash": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "capability_resolution_id": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "uuid"
+        }
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "request_type": {
+            "enum": [
+              "sponsored_post",
+              "display_ad"
+            ]
+          }
+        },
+        "required": [
+          "request_type"
+        ]
+      },
+      "then": {
+        "properties": {
+          "disclosure": {
+            "properties": {
+              "advertiser_legal_name": {
+                "type": "string",
+                "minLength": 1
+              },
+              "sponsorship_label": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          }
+        }
+      }
+    }
+  ]
+}
