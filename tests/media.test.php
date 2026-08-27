@@ -13,6 +13,7 @@ function db(): PDO
 }
 function current_site_id(): int { return 1; }
 function pp_like(): string { return 'LIKE'; }
+function pp_last_id(string $table): int { return (int) db()->lastInsertId(); }
 function pp_config(string $key, mixed $default = null): mixed
 {
     return $key === 'hub_slug' ? 'civismedia' : $default;
