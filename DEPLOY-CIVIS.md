@@ -105,6 +105,7 @@ server {
     location ~ ^/(config\.php|config\.example\.php|router\.php)$ { deny all; }
 
     rewrite ^/contact/?$              /contact.php           last;
+    rewrite ^/api/media/?$            /media-gateway.php     last;
     # The story/desk/feed rewrites from §3a can stay — they resolve to
     # nothing on the hub (no stories are mapped to it) — but the brochure
     # only actually needs /contact.

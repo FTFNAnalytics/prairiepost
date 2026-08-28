@@ -51,6 +51,7 @@ function admin_header(string $title, string $active = '', string $actions = ''):
             if ($user['role'] === 'admin') {
                 $items['ads'] = ['network-ads.php', 'Advertising'];
             }
+            $items['media'] = ['media-requests.php', 'Submissions'];
         } else {
             $items['ads'] = ['ads.php', 'Advertising'];
             // The hub is not a paper — no daily edition, no subscriber list.

@@ -4,7 +4,7 @@
 # Follows the box's own convention: a fresh /var/www/prairiepost-<sha>
 # release directory for the hub, its own nginx vhost, its own cert.
 # Touches NOTHING the papers serve from. The only shared change is the
-# database's additive v8 migration, which runs on the hub's first boot.
+# database's additive migrations, which run on the hub's first boot.
 #
 # Secrets never appear here: the database credentials are copied on the
 # box, from the Prairie Dispatch's existing config.php.
@@ -188,6 +188,7 @@ server {
     rewrite ^/subscribe/?\$            /subscribe.php         last;
     rewrite ^/contact/?\$              /contact.php           last;
     rewrite ^/api/monitor/?\$          /monitor-ingest.php    last;
+    rewrite ^/api/media/?\$            /media-gateway.php     last;
     rewrite ^/ad/?\$                   /ad.php                last;
     rewrite ^/corrections/?\$          /corrections.php       last;
 
@@ -211,7 +212,7 @@ systemctl reload nginx
 sleep 2   # let the new workers take over before the first checks hit them
 echo "vhost live (HTTP)"
 
-say "First boot — provisions the site row, migrates the shared database to v8"
+say "First boot — provisions the site row, migrates the shared database to the current schema"
 BOOT=$(curl -s -H "Host: civismedia.ca" -o /tmp/civis_boot.html -w "%{http_code}" http://127.0.0.1/)
 echo "first request: HTTP $BOOT"
 grep -q "Clear communications" /tmp/civis_boot.html \
@@ -227,6 +228,7 @@ hcheck() { # path expect label
 hcheck "/app/bootstrap.php" 403 "app/ blocked"
 hcheck "/story/anything"    404 "stories 404 on the hub"
 hcheck "/contact"           302 "contact endpoint answers (redirects GETs home)"
+hcheck "/api/media?action=catalog" 401 "media gateway is routed and requires a bearer token"
 
 say "Launch package (identity + brochure copy; never overwrites saved edits)"
 ( cd "$REL" && PP_SITE=civismedia php tools/seed-launch.php )
