@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 700">
+  <!-- Records released under an FOI request — the accountability desk's still life. -->
+  <defs><linearGradient id="p" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2A2F68"/><stop offset="1" stop-color="#14173A"/></linearGradient></defs>
+  <rect width="1200" height="700" fill="url(#p)"/>
+  <g fill="#F3F5FE" opacity="0.14" transform="rotate(-6 600 350)">
+    <rect x="330" y="150" width="380" height="480" rx="6"/>
+  </g>
+  <g fill="#F3F5FE" opacity="0.2" transform="rotate(3 600 350)">
+    <rect x="420" y="120" width="380" height="480" rx="6"/>
+  </g>
+  <g fill="#F3F5FE" opacity="0.28">
+    <rect x="470" y="150" width="380" height="480" rx="6"/>
+  </g>
+  <g fill="#0F1235" opacity="0.5">
+    <rect x="510" y="210" width="300" height="12"/><rect x="510" y="248" width="240" height="12"/>
+    <rect x="510" y="300" width="300" height="12"/><rect x="510" y="338" width="180" height="12"/>
+    <rect x="510" y="404" width="300" height="12"/><rect x="510" y="442" width="260" height="12"/>
+  </g>
+  <g fill="#262A60" opacity="0.85">
+    <rect x="510" y="490" width="150" height="46" rx="4"/>
+  </g>
+  <g fill="#B5ABFC" opacity="0.5"><circle cx="900" cy="180" r="44"/></g>
+</svg>
