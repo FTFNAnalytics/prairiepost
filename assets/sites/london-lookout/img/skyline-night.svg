@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 700">
+  <!-- London at night from the forks of the Thames. -->
+  <defs><linearGradient id="s" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#353B80"/><stop offset="1" stop-color="#181B44"/></linearGradient></defs>
+  <rect width="1200" height="700" fill="url(#s)"/>
+  <circle cx="980" cy="130" r="46" fill="#B5ABFC" opacity="0.35"/>
+  <g fill="#12142F" opacity="0.85">
+    <rect x="80" y="360" width="110" height="240"/><rect x="210" y="300" width="90" height="300"/>
+    <rect x="320" y="250" width="70" height="350"/><polygon points="355,180 320,252 390,252"/>
+    <rect x="410" y="330" width="130" height="270"/><rect x="560" y="220" width="80" height="380"/>
+    <rect x="660" y="300" width="120" height="300"/><rect x="800" y="360" width="90" height="240"/>
+    <rect x="910" y="280" width="110" height="320"/><rect x="1040" y="340" width="90" height="260"/>
+  </g>
+  <g fill="#B5ABFC" opacity="0.5">
+    <rect x="240" y="330" width="12" height="16"/><rect x="270" y="370" width="12" height="16"/>
+    <rect x="440" y="370" width="12" height="16"/><rect x="480" y="410" width="12" height="16"/>
+    <rect x="585" y="260" width="12" height="16"/><rect x="585" y="330" width="12" height="16"/>
+    <rect x="700" y="340" width="12" height="16"/><rect x="940" y="320" width="12" height="16"/>
+  </g>
+  <path d="M0 600 h1200 v100 H0 z" fill="#0D1030" opacity="0.8"/>
+  <g stroke="#B5ABFC" opacity="0.25" stroke-width="3">
+    <path d="M120 640 h240 M420 660 h300 M780 640 h300"/>
+  </g>
+</svg>
