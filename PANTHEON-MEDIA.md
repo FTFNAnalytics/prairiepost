@@ -50,9 +50,9 @@ The Civis hub gains **Submissions** in its control-room navigation.
 
 1. Deploy the release to the shared code directory through the normal immutable
    release process; first request runs migration 17.
-2. Confirm `/api/media` reaches `media-gateway.php` (add the equivalent nginx
-   route when Apache `.htaccess` is not in use). The script itself returns 404
-   on every host except the Civis hub.
+2. Confirm `/api/media` reaches `media-gateway.php`. The normal Civis deploy
+   script installs the nginx route; Apache uses the bundled `.htaccess`. The
+   gateway itself returns 404 on every host except the Civis hub.
 3. Issue a scoped token and configure Pantheon.
 4. Verify the catalog reports 15 properties and excludes `civismedia`.
 5. Submit one Tri Cities Torch sandbox request and confirm it appears in the
