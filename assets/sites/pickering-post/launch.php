@@ -63,9 +63,14 @@ return [
     ],
 
     'sources' => [
-        ['CBC Toronto', 'https://www.cbc.ca/webfeed/rss/rss-canada-toronto', 'durham'],
-        ['TVO Today',   'https://www.tvo.org/feeds/rss/all',                 'ontario'],
-        ['CBC Canada',  'https://www.cbc.ca/webfeed/rss/rss-canada',         'ontario'],
+        // One URL fills one bucket: sources are matched by URL and
+        // news_items.url_hash is globally unique, so the CBC Toronto and
+        // CBC Canada feeds this pack once listed here did nothing — other
+        // packs had already claimed them for `gta` and `canada`. Durham
+        // needs feeds of its own, and now has them.
+        ['Durham Radio News',  'https://www.durhamradionews.com/feed', 'durham'],
+        ['The Oshawa Express', 'https://www.oshawaexpress.ca/feed/',   'durham'],
+        ['The Trillium',       'https://www.thetrillium.ca/rss',       'ontario'],
     ],
 
     'stories' => [

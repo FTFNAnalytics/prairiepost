@@ -58,7 +58,9 @@ return [
 
     'sources' => [
         ['CBC Kitchener-Waterloo', 'https://www.cbc.ca/webfeed/rss/rss-canada-kitchenerwaterloo', 'waterloo'],
-        ['CBC Toronto', 'https://www.cbc.ca/webfeed/rss/rss-canada-toronto', 'ontario'],
+        // CBC Toronto is `gta`, claimed by the Bulletin's pack — one URL
+        // fills one bucket, so listing it for `ontario` did nothing.
+        ['The London Free Press', 'https://www.lfpress.com/feed', 'ontario'],
     ],
 
     'stories' => [

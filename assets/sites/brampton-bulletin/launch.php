@@ -48,7 +48,7 @@ return [
 
     'sources' => [
         ['insauga',            'https://www.insauga.com/feed/',                  'brampton'],
-        ['Bramptonist',        'https://www.bramptonist.com/feed/',              'brampton'],
+        ['Brampton Focus',     'https://bramptonfocus.ca/feed',                  'brampton'],
         ['Global News Toronto','https://globalnews.ca/toronto/feed/',            'gta'],
         ['CBC Toronto',        'https://www.cbc.ca/webfeed/rss/rss-canada-toronto', 'gta'],
     ],
