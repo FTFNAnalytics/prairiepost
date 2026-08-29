@@ -57,10 +57,13 @@ Two equally good options (the open question in the roadmap):
   directory; civismedia.ca becomes one more host in the `site_slug` map.
   Cheapest, and the shared `uploads/` rule is automatic. This is what runs
   today, and `upgrade-papers.sh` rolls the hub forward with the papers.
-  It did not always: the hub was excluded by name from that script and sat
-  on its original release for the whole of Phases 7-13, which is why it
-  lacked pages the papers had. Never exclude it again — a hub frozen
-  behind the code its own database has migrated past is a bug factory.
+  It did not always: the hub was excluded by name from that script, so it
+  only ever moved when someone ran `deploy-civis.sh` at it by hand. The
+  drift that produced was real but bounded — at the moment it was folded
+  back in, the papers served `1b8195bc533d` and the hub `a55d90d6fab0`,
+  one release apart, not the several assumed while diagnosing it. Never
+  exclude it again: a hub on a different release from the papers, against
+  the same database, is a class of bug nobody thinks to look for.
 - **Its own server** — a fresh clone of the same release, `config.php`
   pointing at the same Supabase pooler. Remember the shared-`uploads/`
   caveat from DEPLOY.md §10 if stories with images will ever be filed from
@@ -468,7 +471,9 @@ an epoch) — one re-login, no data touched.
 Verify after deploy: dashboard shows the Operations panel (the watch
 reports within five minutes); `/admin → Ops` lists runs; edit a story
 twice → History shows both, open one → Restore puts it back;
-`php tests/run.php` passes on the release; two curls to a paper front
+`php tests/run.php` passes on a development checkout (not on the
+production host — three files need PDO SQLite, which production PHP CLI
+does not carry; see RUNBOOK-KILL-2FA.md); two curls to a paper front
 page read MISS then HIT.
 
 ## Troubleshooting quick table

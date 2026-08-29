@@ -97,10 +97,10 @@ As root, from the papers' release root:
 box; the script also falls back to a shallow clone on its own.)
 
 This run differs from every previous one: **civismedia is in the vhost
-map for the first time.** The script excluded it by name, which is why
-the hub sat on its original release while the papers rolled forward on
-the same database. Seeing `civismedia.ca` listed is the drift closing,
-not an error. `cies` is still excluded and must stay excluded — it is
+map for the first time.** The script excluded it by name, so the hub
+only ever moved when someone ran `deploy-civis.sh` at it by hand, and it
+drifted onto a different release from the papers against the same
+database. Seeing `civismedia.ca` listed is that closing, not an error. `cies` is still excluded and must stay excluded — it is
 the Institute, a different application.
 
 The verification rule has changed with it: every domain must answer
@@ -134,14 +134,21 @@ Against the **new** release, signed in at civismedia.ca:
    a two-step checkbox.
 4. `/admin/audit.php` — 200, and the trail now carries a `totp.killed`
    row from step 1 and a `password.reset`-family row if one was set.
-5. `ls "$REL/app/totp.php"` — absent. `php "$REL/tests/run.php"` — all
-   five files pass.
+5. `ls "$REL/app/totp.php"` — absent.
 6. The papers are unchanged where they should be: the Kitchener
    Chronicle's draft filed by `hermes-network` still shows its
    `Agent: hermes-network` chip in `/admin/posts.php`.
 7. Ingest is still closed: POST to `https://kitchenerchronicle.com/`
    `ingest.php` with no `Authorization` header → 401
    `{"ok":false,"error":"missing bearer token"}`.
+
+**Do not run `tests/run.php` on the production host.** Three of the five
+files build a `sqlite::memory:` database, and production PHP CLI carries
+`pdo_pgsql` without PDO SQLite — so `media`, `revisions` and `throttle`
+fail there on the driver, not on the code. That is an unrunnable check,
+not a failing one. Do not install a package to make it run: the suite
+belongs in development, where it passes. If someone asks for it anyway,
+report the driver and move on.
 
 ## Standing rules
 
