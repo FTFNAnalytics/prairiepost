@@ -18,41 +18,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['session_action'])) {
     redirect('profile.php#sessions');
 }
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['totp_action'])) {
-    csrf_check();
-    $action = (string) $_POST['totp_action'];
-    $fresh = user_by_id((int) $user['id']);
-
-    if ($action === 'begin' && empty($fresh['totp_enabled'])) {
-        // The secret stays in the session until a working code proves the
-        // authenticator really holds it — a half-finished setup can't lock
-        // anyone out.
-        $_SESSION['totp_setup'] = pp_totp_new_secret();
-    } elseif ($action === 'cancel') {
-        unset($_SESSION['totp_setup']);
-    } elseif ($action === 'confirm' && !empty($_SESSION['totp_setup'])) {
-        if (pp_totp_verify((string) $_SESSION['totp_setup'], (string) ($_POST['totp_code'] ?? ''))) {
-            db()->prepare('UPDATE users SET totp_secret = ?, totp_enabled = 1 WHERE id = ?')
-                ->execute([$_SESSION['totp_setup'], (int) $user['id']]);
-            unset($_SESSION['totp_setup']);
-            pp_audit('totp.enabled', $user['email']);
-            flash_set('Two-step sign-in is on. From now on, signing in asks for a code from your app.');
-        } else {
-            flash_set('That code didn\'t match, so two-step is not on yet. Check the app and try the current code.', true);
-        }
-    } elseif ($action === 'disable' && !empty($fresh['totp_enabled'])) {
-        if (pp_totp_verify((string) $fresh['totp_secret'], (string) ($_POST['totp_code'] ?? ''))) {
-            db()->prepare("UPDATE users SET totp_secret = '', totp_enabled = 0 WHERE id = ?")
-                ->execute([(int) $user['id']]);
-            pp_audit('totp.disabled', $user['email']);
-            flash_set('Two-step sign-in is off for your account.');
-        } else {
-            flash_set('Turning two-step off needs a current code from your app. That one didn\'t match.', true);
-        }
-    }
-    redirect('profile.php#totp');
-}
-
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     csrf_check();
     $name  = trim((string) ($_POST['name'] ?? ''));
@@ -134,57 +99,6 @@ flash_show();
   </div>
   <p style="margin-top:20px"><button class="btn" type="submit">Save the profile</button></p>
 </form>
-
-<?php
-$setupSecret = (string) ($_SESSION['totp_setup'] ?? '');
-$mustEnrol = $user['role'] === 'admin' && empty($user['totp_enabled']) && function_exists('pp_totp_required') && pp_totp_required();
-?>
-<h2 id="totp" style="margin-top:36px">Two-step sign-in</h2>
-<?php if ($mustEnrol): ?>
-<div class="flash flash--error">The control room requires two-step sign-in for administrators. Set it up below — the rest of the newsroom unlocks as soon as it's on.</div>
-<?php endif; ?>
-
-<?php if (!empty($user['totp_enabled'])): ?>
-<p class="pagesub">On. Signing in asks for your passphrase, then a six-digit code from your authenticator app.</p>
-<form method="post" style="max-width:420px">
-  <?= csrf_field() ?>
-  <input type="hidden" name="totp_action" value="disable">
-  <label for="totp_off">Current code from the app · required to turn this off</label>
-  <input type="text" id="totp_off" name="totp_code" inputmode="numeric" pattern="[0-9 ]*" maxlength="8" autocomplete="one-time-code" required>
-  <p style="margin-top:12px"><button class="btn btn--ghost" type="submit">Turn two-step off</button></p>
-</form>
-
-<?php elseif ($setupSecret !== ''): ?>
-<p class="pagesub">Step 2 of 2 — add the key to your authenticator app, then prove it with a code.</p>
-<div class="panel" style="max-width:560px">
-  <p style="margin:0 0 6px"><strong>In your authenticator app</strong> (Google Authenticator, Aegis, 1Password, Authy…), add an account by entering this key manually:</p>
-  <p class="mono" style="font-size:18px;letter-spacing:1px;word-break:break-all"><?= e(trim(chunk_split($setupSecret, 4, ' '))) ?></p>
-  <p style="margin:6px 0 0;font-size:14px">Or paste the full setup address:</p>
-  <p class="mono" style="font-size:12px;word-break:break-all"><?= e(pp_totp_uri($setupSecret, $user['email'], setting('site_title', 'Civis Media'))) ?></p>
-</div>
-<form method="post" style="max-width:420px;margin-top:12px">
-  <?= csrf_field() ?>
-  <input type="hidden" name="totp_action" value="confirm">
-  <label for="totp_code">Six-digit code the app shows now</label>
-  <input type="text" id="totp_code" name="totp_code" inputmode="numeric" pattern="[0-9 ]*" maxlength="8" autocomplete="one-time-code" required autofocus>
-  <p style="margin-top:12px">
-    <button class="btn" type="submit">Confirm and turn it on</button>
-  </p>
-</form>
-<form method="post" style="margin-top:6px">
-  <?= csrf_field() ?>
-  <input type="hidden" name="totp_action" value="cancel">
-  <button class="btn btn--ghost" type="submit">Cancel setup</button>
-</form>
-
-<?php else: ?>
-<p class="pagesub">Off. When it's on, signing in needs your passphrase <em>and</em> a six-digit code from an authenticator app on your phone — a stolen passphrase alone stops working.</p>
-<form method="post">
-  <?= csrf_field() ?>
-  <input type="hidden" name="totp_action" value="begin">
-  <button class="btn" type="submit">Set up two-step sign-in</button>
-</form>
-<?php endif; ?>
 
 <h2 id="sessions" style="margin-top:36px">Signed-in sessions</h2>
 <p class="pagesub">Left a newsroom machine signed in, or worried a session cookie walked off? This signs out every browser and device on your account — except the one you're using now. Changing your passphrase does the same automatically.</p>

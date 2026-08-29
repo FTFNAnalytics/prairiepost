@@ -1,9 +1,9 @@
 <?php
 /**
  * Newsroom sign-in. On a fresh install this creates the founding account.
- * Sign-in is throttled through login_attempts, and accounts with two-step
- * enabled get a second screen: passphrase first, then the six-digit code
- * from their authenticator app.
+ * One step — email and passphrase — throttled through login_attempts.
+ * Two-step sign-in was removed while the network is private; recovery for
+ * a lost passphrase is tools/reset-password.php, on the server.
  */
 require dirname(__DIR__) . '/app/bootstrap.php';
 require __DIR__ . '/_layout.php';
@@ -14,20 +14,6 @@ const PP_DECOY_HASH = '$2y$12$1IpKG16KXsBLZNzEgkM61urfG8pcWxG20k3PIPYc2xbIanXl48
 
 $firstRun = users_count() === 0;
 $error = '';
-
-if (isset($_GET['cancel'])) {
-    unset($_SESSION['totp_uid'], $_SESSION['totp_exp']);
-}
-
-/** The half-signed-in account: passphrase accepted, code still owed. */
-function pp_totp_pending(): ?array
-{
-    $uid = (int) ($_SESSION['totp_uid'] ?? 0);
-    if ($uid > 0 && time() < (int) ($_SESSION['totp_exp'] ?? 0)) {
-        return user_by_id($uid);
-    }
-    return null;
-}
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     csrf_check();
@@ -49,24 +35,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             pp_audit('account.founded', $email, 'founding administrator created at first run', ['id' => $_SESSION['uid'], 'name' => $name]);
             redirect('index.php');
         }
-    } elseif (isset($_POST['totp_code'])) {
-        $pending = pp_totp_pending();
-        if (!$pending) {
-            $error = 'That sign-in took too long. Start again from your email and passphrase.';
-        } elseif (pp_login_blocked($pending['email'])) {
-            $error = 'Too many attempts. Wait fifteen minutes, then try again.';
-        } elseif (pp_totp_verify((string) $pending['totp_secret'], (string) $_POST['totp_code'])) {
-            unset($_SESSION['totp_uid'], $_SESSION['totp_exp']);
-            $_SESSION['uid'] = (int) $pending['id'];
-            pp_session_stamp((int) ($pending['session_epoch'] ?? 0));
-            session_regenerate_id(true);
-            pp_login_record($pending['email'], true);
-            pp_audit('login', $pending['email'], 'two-step', $pending);
-            redirect('index.php');
-        } else {
-            pp_login_record($pending['email'], false);
-            $error = 'That code didn\'t match. Codes change every 30 seconds — check the app and try the current one.';
-        }
     } else {
         $email = (string) ($_POST['email'] ?? '');
         if (pp_login_blocked($email)) {
@@ -74,12 +42,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         } else {
             $user = user_by_email($email);
             $verified = password_verify((string) ($_POST['password'] ?? ''), $user['pass_hash'] ?? PP_DECOY_HASH);
-            if ($user && $verified && !empty($user['totp_enabled'])) {
-                $_SESSION['totp_uid'] = (int) $user['id'];
-                $_SESSION['totp_exp'] = time() + 300;
-                session_regenerate_id(true);
-                redirect('login.php');
-            } elseif ($user && $verified) {
+            if ($user && $verified) {
                 $_SESSION['uid'] = (int) $user['id'];
                 pp_session_stamp((int) ($user['session_epoch'] ?? 0));
                 session_regenerate_id(true);
@@ -97,7 +60,6 @@ if (current_user()) {
     redirect('index.php');
 }
 
-$totpStep = pp_totp_pending() !== null;
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -114,18 +76,6 @@ $totpStep = pp_totp_pending() !== null;
   <img class="mast" src="<?= e(site_asset('logo-primary.svg')) ?>" alt="<?= e(setting('site_title', 'The Prairie Dispatch')) ?>">
   <div class="pp-horizon"></div>
   <div class="panel">
-    <?php if ($totpStep): ?>
-    <h2>Second step</h2>
-    <p style="font-size:15px;margin:0 0 4px">Passphrase accepted. Enter the six-digit code from your authenticator app.</p>
-    <?php if ($error): ?><div class="flash flash--error"><?= e($error) ?></div><?php endif; ?>
-    <form method="post">
-      <?= csrf_field() ?>
-      <label for="totp_code">Authenticator code</label>
-      <input type="text" id="totp_code" name="totp_code" required autofocus inputmode="numeric" pattern="[0-9 ]*" maxlength="8" autocomplete="one-time-code" placeholder="123 456">
-      <p style="margin-top:18px"><button class="btn" type="submit">Finish signing in</button></p>
-      <p style="font-size:14px;margin:10px 0 0"><a href="login.php?cancel=1">Start over with a different account</a></p>
-    </form>
-    <?php else: ?>
     <h2><?= $firstRun ? 'Start the paper' : 'Newsroom sign-in' ?></h2>
     <?php if ($firstRun): ?>
     <p style="font-size:15px;margin:0 0 4px">No accounts exist yet. This form creates the founding administrator.</p>
@@ -144,7 +94,6 @@ $totpStep = pp_totp_pending() !== null;
       <input type="password" id="password" name="password" required autocomplete="<?= $firstRun ? 'new-password' : 'current-password' ?>">
       <p style="margin-top:18px"><button class="btn" type="submit"><?= $firstRun ? 'Create the account' : 'Sign in' ?></button></p>
     </form>
-    <?php endif; ?>
   </div>
 </div>
 </body>

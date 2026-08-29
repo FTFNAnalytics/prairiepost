@@ -345,38 +345,32 @@ Verify: queue the linkifier on a story naming a seeded politician → *Run
 queued now* → the proposal shows the outlined anchor → approve → the
 story body carries the link; the dashboard rail counts open proposals.
 
-## 13 · Phase 7 — hardening: two-step sign-in, throttling, audit trail
+## 13 · Phase 7 — hardening: throttling, audit trail
 
-One deploy: migration v13 runs on first request (TOTP columns on users,
-`login_attempts`, `audit_log`). No new cron, no vhost change — the hourly
-monitor pass now also prunes the two ledgers (attempts after 30 days,
-audit after ~13 months).
+One deploy: migration v13 runs on first request (`login_attempts`,
+`audit_log`). No new cron, no vhost change — the hourly monitor pass now
+also prunes the two ledgers (attempts after 30 days, audit after ~13
+months).
 
-**Heads-up before you deploy:** two-step is **required for hub
-administrators by default**. On their next sign-in to civismedia.ca they
-land on their profile page and nothing else opens until they enrol —
-a funnel, not a lockout. Have an authenticator app ready (Google
-Authenticator, Aegis, 1Password, Authy — anything TOTP). Papers are not
-funnelled; anyone can still enable two-step voluntarily from their
-profile.
+**Two-step sign-in was removed** while the network is private. It shipped
+here required-by-default for hub administrators, and the enrolment funnel
+it used — every hub page redirecting to the profile page until an
+authenticator was enrolled — is exactly how a hub locks its own
+administrators out. Sign-in is one step everywhere: email and passphrase.
+A lost passphrase is recovered on the server; see
+`docs/ACCOUNT-RECOVERY.md`. The `users.totp_secret` and `totp_enabled`
+columns stay (the schema only grows) and nothing reads them.
 
-1. **Enrol** (each hub admin): profile page → *Set up two-step sign-in*
-   → enter the shown key in the app (no QR on purpose — no third-party
-   code at the sign-in path) → type the six-digit code to confirm.
-   The secret only saves once a working code proves the app holds it.
-2. **Sign-in flow from then on:** email + passphrase, then the code.
-   Five minutes to complete the second step, one 30-second period of
-   clock drift tolerated either side.
-3. **Throttle** (all sites, automatic): 6 failed tries per account or
+1. **Throttle** (all sites, automatic): 6 failed tries per account or
    20 per address inside 15 minutes → "wait fifteen minutes." Successes
-   never count; the window simply expires. Failures at the code step
-   count too, so codes can't be brute-forced.
-4. **Audit trail** (hub, admins): `/admin → Audit`. Sign-ins, settings
+   never count; the window simply expires. `tools/reset-password.php
+   unlock` lifts a block early.
+2. **Audit trail** (hub, admins): `/admin → Audit`. Sign-ins, settings
    saves, token rotations, campaign changes, syndication moves, agent
-   approvals/rejections, account and entity changes, two-step on/off —
-   who, what, when, from which address. Append-only by design; there is
+   approvals/rejections, account and entity changes — who, what,
+   when, from which address. Append-only by design; there is
    deliberately no delete button.
-5. **Address allowlist** (optional, off by default): hub Settings →
+3. **Address allowlist** (optional, off by default): hub Settings →
    *Security*. One IP or CIDR per line; applies to signed-in hub pages
    only, never the papers. The form refuses a list that doesn't cover
    the address you're saving from, so you can't lock yourself out from
@@ -387,21 +381,10 @@ profile.
    cd /var/www/prairiepost-<current-release> \
      && PP_SITE=civismedia php -r 'require "app/bootstrap.php"; set_setting("admin_ip_allowlist", "");'
    ```
-6. **Turning the requirement off** (not recommended): hub Settings →
-   *Security* → untick *Require two-step sign-in*.
-7. **Lost authenticator:** another hub admin clears the flag from the
-   box, then the person re-enrols:
 
-   ```bash
-   cd /var/www/prairiepost-<current-release> \
-     && PP_SITE=civismedia php -r 'require "app/bootstrap.php";
-        db()->prepare("UPDATE users SET totp_secret = \"\", totp_enabled = 0 WHERE email = ?")->execute(["person@example.com"]);'
-   ```
-
-Verify: sign out and back in → funnel to profile → enrol with a real
-app → sign out → email + passphrase + code gets you in; wrong passphrase
-six times on a dummy email shows the wait message; `/admin → Audit`
-carries the whole story.
+Verify: sign out and back in → email + passphrase gets you straight to
+the dashboard, no second screen; wrong passphrase six times on a dummy
+email shows the wait message; `/admin → Audit` carries the whole story.
 
 ## 14 · Phase 8 — resilience: backups, the watch, revisions, the edge
 
@@ -490,9 +473,8 @@ page read MISS then HIT.
 | Contact form always bounces back with `err=rate` | More than five posts from one IP in an hour — that's the rate limit doing its job; wait, or check for a proxy collapsing all visitors to one IP |
 | Inquiry stored but no email copy | `contact_email` unset, or SMTP not configured — the row in /admin → Inquiries is the source of truth either way |
 | Papers suddenly show a "Civis Media" checkbox in Runs on | That paper's `config.php` doesn't have `hub_slug` yet — add the one line (§2) |
-| Hub admin stuck on the profile page after deploy | That's Phase 7's enrolment funnel — set up two-step there and everything unlocks (§13) |
 | "Too many attempts. Wait fifteen minutes" | The sign-in throttle — 6 failures per account / 20 per address in 15 min. It expires on its own; check `/admin → Audit` and the `login_attempts` table if it wasn't you |
-| Control room answers 403 "limited to approved addresses" | The IP allowlist no longer covers you (address changed?) — clear it from the box (§13.5) |
+| Control room answers 403 "limited to approved addresses" | The IP allowlist no longer covers you (address changed?) — `PP_SITE=civismedia php tools/reset-password.php hub-unfence` |
 | Everyone got signed out after the Phase 8 deploy | Expected, once — sessions gained an epoch in v14; sign in again |
 | Dashboard says "backup FAILED" or "backups not set up" | Read `/var/log/civis/backup.log`, re-run `/usr/local/bin/civis-backup.sh`; "not set up" means run setup-backups.sh (§14.2) |
 | Front pages always say X-PP-Cache: BYPASS | The browser holds a `ppsession` cookie (sign out or use a private window), or that paper hasn't been upgraded to the lazy-session release yet (§14.5) |

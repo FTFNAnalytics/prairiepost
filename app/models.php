@@ -837,16 +837,6 @@ function pp_audit(string $action, string $target = '', string $detail = '', ?arr
     }
 }
 
-/**
- * Whether the hub demands TOTP from its administrators. On by default —
- * the control room can edit every masthead — and the hub settings page
- * can switch it off ('0') deliberately.
- */
-function pp_totp_required(): bool
-{
-    return pp_is_hub() && setting('require_totp', '1') !== '0';
-}
-
 /** Is this a plausible allowlist entry — an IP, or an IP with /bits? */
 function pp_cidr_valid(string $entry): bool
 {

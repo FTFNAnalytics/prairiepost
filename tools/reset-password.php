@@ -7,7 +7,7 @@
  *   php tools/reset-password.php list
  *   php tools/reset-password.php set --email you@example.com
  *   php tools/reset-password.php unlock --email you@example.com
- *   php tools/reset-password.php disable-2fa --email you@example.com
+ *   php tools/reset-password.php clear-2fa --all
  *   php tools/reset-password.php promote --email you@example.com --role admin
  *   php tools/reset-password.php create --email you@example.com --name "Your Name"
  *
@@ -37,7 +37,7 @@ for ($i = 2; $i < count($argv); $i++) {
         $opt[$m[1]] = $argv[++$i];
     } elseif (preg_match('/^--(email|name|role)=(.*)$/', $argv[$i], $m)) {
         $opt[$m[1]] = $m[2];
-    } elseif (preg_match('/^--(stdin|yes)$/', $argv[$i], $m)) {
+    } elseif (preg_match('/^--(stdin|yes|all)$/', $argv[$i], $m)) {
         $flags[$m[1]] = true;
     }
 }
@@ -98,20 +98,19 @@ $pdo = db();
 
 switch ($cmd) {
     case 'list':
-        $rows = $pdo->query('SELECT id, name, email, role, totp_enabled, created_at FROM users ORDER BY id')->fetchAll();
+        $rows = $pdo->query('SELECT id, name, email, role, created_at FROM users ORDER BY id')->fetchAll();
         if (!$rows) {
             echo "No accounts exist. The first sign-in page will offer to found one, or run `create`.\n";
             break;
         }
-        printf("%-4s %-26s %-34s %-8s %-6s %s\n", 'ID', 'NAME', 'EMAIL', 'ROLE', '2FA', 'CREATED');
+        printf("%-4s %-26s %-34s %-8s %s\n", 'ID', 'NAME', 'EMAIL', 'ROLE', 'CREATED');
         foreach ($rows as $r) {
             printf(
-                "%-4d %-26s %-34s %-8s %-6s %s\n",
+                "%-4d %-26s %-34s %-8s %s\n",
                 (int) $r['id'],
                 mb_strimwidth((string) $r['name'], 0, 26, '…'),
                 mb_strimwidth((string) $r['email'], 0, 34, '…'),
                 (string) $r['role'],
-                empty($r['totp_enabled']) ? 'off' : 'ON',
                 (string) $r['created_at']
             );
         }
@@ -123,6 +122,13 @@ switch ($cmd) {
         foreach ($blocked->fetchAll() as $b) {
             echo "\nthrottled: {$b['email']} has {$b['n']} failed attempts in the last 15 minutes — "
                . "sign-in is refused until they age out, or run `unlock --email {$b['email']}`.\n";
+        }
+        // Two-step is gone; a row still carrying a secret is a leftover that
+        // would strand its owner if the feature is ever switched back on.
+        $left = (int) $pdo->query("SELECT COUNT(*) FROM users WHERE totp_enabled = 1 OR totp_secret != ''")->fetchColumn();
+        if ($left > 0) {
+            echo "\nleftovers: {$left} account(s) still hold a two-step secret from before the feature was "
+               . "removed. Nothing reads it now. `clear-2fa --all` wipes them.\n";
         }
         break;
 
@@ -136,10 +142,7 @@ switch ($cmd) {
         pp_login_clear((string) $user['email']);
         pp_audit('password.reset', (string) $user['email'], 'set from the command line; all sessions signed out', pp_rp_actor());
         echo "Passphrase set for {$user['email']} ({$user['role']}). Any open session for that account is now signed out.\n";
-        if (!empty($user['totp_enabled'])) {
-            echo "Two-step is ON for this account — the authenticator app is still required at sign-in.\n";
-            echo "If that device is gone: php tools/reset-password.php disable-2fa --email {$user['email']}\n";
-        }
+        echo "Sign-in is one step — email and passphrase, nothing else to carry.\n";
         break;
 
     case 'unlock':
@@ -149,24 +152,30 @@ switch ($cmd) {
         echo "Cleared {$n} failed sign-in attempts for {$user['email']}. The throttle is off for that account.\n";
         break;
 
-    case 'disable-2fa':
-        $user = pp_rp_user($opt);
-        if (empty($user['totp_enabled']) && (string) $user['totp_secret'] === '') {
-            echo "Two-step was already off for {$user['email']}. Nothing changed.\n";
+    case 'clear-2fa':
+        // Two-step sign-in is gone from the code, but the columns stay (the
+        // schema only ever grows). This wipes the stored secrets so that if
+        // the feature is ever restored, nobody is enrolled to a lost phone.
+        if (!empty($flags['all'])) {
+            $n = $pdo->exec("UPDATE users SET totp_secret = '', totp_enabled = 0 WHERE totp_enabled = 1 OR totp_secret != ''");
+            pp_audit('totp.cleared', 'all accounts', "wiped {$n} leftover secret(s) from the command line", pp_rp_actor());
+            echo $n > 0 ? "Wiped {$n} leftover two-step secret(s).\n" : "No leftovers to wipe.\n";
             break;
         }
-        $pdo->prepare("UPDATE users SET totp_secret = '', totp_enabled = 0, session_epoch = session_epoch + 1 WHERE id = ?")
-            ->execute([(int) $user['id']]);
-        pp_audit('totp.disabled', (string) $user['email'], 'cleared from the command line', pp_rp_actor());
-        echo "Two-step is off for {$user['email']} and the old secret is gone — enrol a fresh one from Profile.\n";
-        if ($user['role'] === 'admin' && pp_totp_required()) {
-            echo "The hub still requires two-step of administrators, so the next sign-in there will ask to enrol again.\n";
+        $user = pp_rp_user($opt);
+        if (empty($user['totp_enabled']) && (string) $user['totp_secret'] === '') {
+            echo "{$user['email']} holds no two-step secret. Nothing changed.\n";
+            break;
         }
+        $pdo->prepare("UPDATE users SET totp_secret = '', totp_enabled = 0 WHERE id = ?")
+            ->execute([(int) $user['id']]);
+        pp_audit('totp.cleared', (string) $user['email'], 'leftover secret wiped from the command line', pp_rp_actor());
+        echo "Wiped the leftover two-step secret for {$user['email']}.\n";
         break;
 
     case 'hub-check':
-        // Four gates stand between an administrator and a hub page, and from
-        // the browser all four look alike — a bounce, a 403, a blank list.
+        // Three gates stand between an administrator and a hub page, and from
+        // the browser all three look alike — a bounce, a 403, a blank list.
         // Read them out instead of guessing which one is shut.
         // Read the raw key: slugify() answers 'story' for an empty string,
         // which would report a hub that isn't configured at all.
@@ -181,11 +190,9 @@ switch ($cmd) {
         }
         $fence = trim(setting('admin_ip_allowlist', ''));
         echo "address fence   : " . ($fence === '' ? 'open (no allowlist)' : "ON — only {$fence}") . "\n";
-        echo "two-step demand : " . (pp_totp_required() ? 'ON — admins without an authenticator are funnelled to Profile' : 'off') . "\n";
-        $admins = $pdo->query("SELECT email, totp_enabled FROM users WHERE role = 'admin' ORDER BY id")->fetchAll();
-        foreach ($admins as $a) {
-            echo "  admin {$a['email']}: two-step " . (empty($a['totp_enabled']) ? 'not enrolled' : 'enrolled') . "\n";
-        }
+        echo "two-step        : removed — sign-in is one step everywhere\n";
+        $admins = $pdo->query("SELECT email FROM users WHERE role = 'admin' ORDER BY id")->fetchAll();
+        echo "administrators  : " . ($admins ? implode(', ', array_column($admins, 'email')) : 'NONE — no account can open a hub page') . "\n";
         $n = (int) $pdo->query('SELECT COUNT(*) FROM audit_log')->fetchColumn();
         echo "audit_log rows  : {$n}\n";
         if ($fence !== '') {
@@ -249,13 +256,13 @@ switch ($cmd) {
           list                              every account, plus any the throttle is holding
           set --email X                     set a new passphrase (prompted, never echoed)
           unlock --email X                  clear the 15-minute failed-attempt throttle
-          disable-2fa --email X             drop a lost authenticator so sign-in is one step
+          clear-2fa --all                   wipe secrets left by the removed two-step feature
           promote --email X --role admin    change a role (admin|editor|author)
           create --email X --name "N"       add an account when none can be recovered
 
         When it is the hub that won't open (civismedia), two more:
 
-          hub-check                         read out all four gates on a hub page
+          hub-check                         read out every gate on a hub page
           hub-unfence                       clear the admin address allowlist
 
         Accounts are network-wide: one row signs in at every paper and at the hub.
