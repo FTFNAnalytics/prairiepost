@@ -56,12 +56,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // non-empty list must cover the address making this request — the one
     // rule that makes locking yourself out impossible from this form.
     if (pp_is_hub() && isset($_POST['security_marker'])) {
-        $new = isset($_POST['require_totp']) ? '1' : '0';
-        if ($new !== setting('require_totp', '1')) {
-            $changed[] = 'require_totp';
-        }
-        set_setting('require_totp', $new);
-
         // Session limits: whole numbers, blank = the default, 0 = off.
         foreach (['session_idle_hours' => 720, 'session_max_days' => 365] as $key => $cap) {
             if (isset($_POST[$key])) {
@@ -259,11 +253,7 @@ flash_show();
   <div class="panel">
     <h2>Security</h2>
     <input type="hidden" name="security_marker" value="1">
-    <label style="display:flex;align-items:center;gap:8px;text-transform:none;letter-spacing:.04em;margin:6px 0">
-      <input type="checkbox" name="require_totp" value="1" style="width:auto"<?= setting('require_totp', '1') !== '0' ? ' checked' : '' ?>>
-      Require <strong>two-step sign-in</strong> for control-room administrators
-    </label>
-    <p class="help">On by default. An administrator without two-step is funnelled to their profile page to set it up — nothing else opens until it's on. Editors and authors can enable it voluntarily from their profiles.</p>
+    <p class="help">Two-step sign-in was removed while the network is private. A lost passphrase is recovered on the server with <span class="mono">tools/reset-password.php</span>.</p>
     <label for="admin_ip_allowlist" style="margin-top:12px">Control-room address allowlist · blank = open from anywhere (the default)</label>
     <textarea id="admin_ip_allowlist" name="admin_ip_allowlist" class="mono" style="min-height:64px" placeholder="203.0.113.7&#10;198.51.100.0/24"><?= e(setting('admin_ip_allowlist')) ?></textarea>
     <p class="help">One IP or CIDR range per line. Applies to signed-in <em>hub</em> pages only — the papers' newsrooms never check it. The form refuses a list that doesn't cover your own current address (<span class="mono"><?= e(pp_client_ip()) ?></span>), so you can't lock yourself out from here. Careful with home connections — most change address without notice.</p>

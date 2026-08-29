@@ -116,18 +116,6 @@ function require_login(): array
         exit('The control room is limited to approved addresses. Yours isn\'t on the list — a network administrator can add it under Settings → Security.');
     }
 
-    // Hub administrators must carry two-step sign-in. Until they enrol,
-    // the control room shrinks to the profile page (where enrolment lives)
-    // and the door out — a funnel, not a lockout.
-    if ($user['role'] === 'admin' && empty($user['totp_enabled']) && pp_totp_required()) {
-        // SCRIPT_NAME, not REQUEST_URI: the executed script can't be spoofed
-        // by PATH_INFO suffixes like /admin/settings.php/profile.php.
-        $here = basename((string) ($_SERVER['SCRIPT_NAME'] ?? ''));
-        if (!in_array($here, ['profile.php', 'logout.php', 'upload.php'], true)) {
-            redirect('/admin/profile.php?totp=required');
-        }
-    }
-
     return $user;
 }
 

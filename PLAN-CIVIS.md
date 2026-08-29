@@ -366,9 +366,11 @@ A task queue where agents do the tedious passes and editors keep the pen.
 
 The hub concentrates power, so it gets locks the papers never needed.
 
-- **TOTP two-factor** for admin-role accounts (pure PHP: base32 secret +
+- ~~**TOTP two-factor** for admin-role accounts (pure PHP: base32 secret +
   HMAC-SHA1, manual-entry key + `otpauth://` URI — no dependencies),
-  enforced on the hub, optional elsewhere.
+  enforced on the hub, optional elsewhere.~~ Built, then **removed**: the
+  enrolment funnel locked hub administrators out of their own control
+  room. To be reconsidered when the network is public.
 - **Login rate limiting** (per-account and per-IP, table-backed) — today
   sign-in is unthrottled.
 - **Audit log**: one row per control-room write — who assigned what where,
