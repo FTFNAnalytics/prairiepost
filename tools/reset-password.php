@@ -152,6 +152,51 @@ switch ($cmd) {
         echo "Cleared {$n} failed sign-in attempts for {$user['email']}. The throttle is off for that account.\n";
         break;
 
+    case 'kill-2fa':
+        // Turn two-step off for a release that still HAS two-step — an older
+        // deployment reading this shared database. Both halves, in the order
+        // that never leaves anyone worse off than they started:
+        //
+        //   1. require_totp = '0' on every site, so no administrator is
+        //      funnelled to the profile page to enrol. Written to every site
+        //      row on purpose: only the hub reads it, but writing it
+        //      everywhere means a wrong guess about the hub's slug cannot
+        //      make this command quietly do nothing.
+        //   2. the per-account flag, so nobody is asked for a code at
+        //      sign-in. Doing this first would move an enrolled admin from
+        //      "asks for a code" to "funnelled to enrol" — worse, not better.
+        //
+        // Safe to run against the current code too, which reads neither.
+        $sites = $pdo->query('SELECT id, slug FROM sites ORDER BY id')->fetchAll();
+        foreach ($sites as $s) {
+            set_setting('require_totp', '0', (int) $s['id']);
+        }
+        echo "require_totp = 0 on " . count($sites) . " site(s): "
+           . implode(', ', array_column($sites, 'slug')) . "\n";
+        $n = $pdo->exec("UPDATE users SET totp_secret = '', totp_enabled = 0 WHERE totp_enabled = 1 OR totp_secret != ''");
+        echo "cleared the two-step flag on {$n} account(s)\n";
+        pp_audit('totp.killed', 'network', "two-step disabled everywhere from the command line ({$n} account(s))", pp_rp_actor());
+
+        // Read it all back, so the proof is in the output and not in trust.
+        $stillOn = [];
+        foreach ($sites as $s) {
+            $row = $pdo->prepare('SELECT svalue FROM settings WHERE site_id = ? AND skey = ?');
+            $row->execute([(int) $s['id'], 'require_totp']);
+            // fetchColumn() returns the string '0' here, which is falsy in
+            // PHP — `?: ''` would turn every success into a reported failure.
+            $val = $row->fetchColumn();
+            if ($val === false || (string) $val !== '0') {
+                $stillOn[] = $s['slug'];
+            }
+        }
+        $flagged = (int) $pdo->query("SELECT COUNT(*) FROM users WHERE totp_enabled = 1 OR totp_secret != ''")->fetchColumn();
+        echo "\nverify: sites still demanding two-step: " . ($stillOn ? implode(', ', $stillOn) : 'none') . "\n";
+        echo "verify: accounts still flagged           : {$flagged}\n";
+        echo ($stillOn || $flagged)
+            ? "\nSomething did not take — send this output back.\n"
+            : "\nTwo-step is off everywhere, on every release reading this database.\n";
+        break;
+
     case 'clear-2fa':
         // Two-step sign-in is gone from the code, but the columns stay (the
         // schema only ever grows). This wipes the stored secrets so that if
@@ -264,6 +309,7 @@ switch ($cmd) {
           list                              every account, plus any the throttle is holding
           set --email X                     set a new passphrase (prompted, never echoed)
           unlock --email X                  clear the 15-minute failed-attempt throttle
+          kill-2fa                          turn two-step off for an OLDER release still serving it
           clear-2fa --all                   wipe secrets left by the removed two-step feature
           promote --email X --role admin    change a role (admin|editor|author)
           create --email X --name "N"       add an account when none can be recovered
