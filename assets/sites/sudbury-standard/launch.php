@@ -61,8 +61,11 @@ return [
     'sources' => [
         ['CBC Sudbury',      'https://www.cbc.ca/webfeed/rss/rss-canada-sudbury',   'sudbury'],
         ['CBC Thunder Bay',  'https://www.cbc.ca/webfeed/rss/rss-canada-thunderbay', 'northern'],
-        ['CBC Toronto',      'https://www.cbc.ca/webfeed/rss/rss-canada-toronto',   'ontario'],
-        ['TVO Today',        'https://www.tvo.org/feeds/rss/all',                   'ontario'],
+        // CBC Toronto belongs to `gta`, claimed by another pack — listing
+        // it again here never added anything. TVO retired its feed.
+        ['SooToday',                  'https://www.sootoday.com/rss',                'northern'],
+        ['Northern Ontario Business', 'https://www.northernontariobusiness.com/rss', 'northern'],
+        ['The Trillium',              'https://www.thetrillium.ca/rss',              'ontario'],
     ],
 
     'stories' => [

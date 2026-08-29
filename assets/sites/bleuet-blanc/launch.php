@@ -68,7 +68,7 @@ return [
        tableau de bord ; ils ne publient rien d'eux-mêmes. */
     'sources' => [
         ['Radio-Canada · Québec',  'https://ici.radio-canada.ca/rss/4159',  'quebec'],
-        ['Radio-Canada · Économie', 'https://ici.radio-canada.ca/rss/5877', 'national'],
+        ['Radio-Canada · En continu', 'https://ici.radio-canada.ca/rss/1000524', 'national'],
     ],
 
     'stories' => [

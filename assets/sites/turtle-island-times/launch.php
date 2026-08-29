@@ -62,10 +62,10 @@ return [
      */
     'sources' => [
         ['APTN News',          'https://www.aptnnews.ca/feed/',                          'territories'],
-        ['CBC Indigenous',     'https://www.cbc.ca/webfeed/rss/rss-canada-indigenous',   'national'],
+        ['CBC Indigenous',     'https://www.cbc.ca/webfeed/rss/rss-Indigenous',          'national'],
         ['IndigiNews',         'https://indiginews.com/feed',                            'territories'],
         ['Ku\'ku\'kwes News',  'https://kukukwes.com/feed/',                             'territories'],
-        ['Windspeaker',        'https://windspeaker.com/rss.xml',                        'national'],
+        ['The Turtle Island News', 'https://theturtleislandnews.com/index.php/feed/',    'national'],
     ],
 
     'stories' => [
