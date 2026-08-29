@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 #
-# Upgrade every paper on the network box to the branch's current release.
+# Upgrade every paper — and the hub — on the network box to the branch's
+# current release. The hub is a site row in the shared database running the
+# same code, never a fork, so it rolls forward with the papers.
 #
 # v2 — rewritten after preflight caught a tenant-freezing bug in v1. The
 # papers run on host-mapped config.php files whose site_slug resolves per
@@ -63,7 +65,9 @@ declare -A DIR_VHOSTS=()   # OLD dir -> "vhostbase vhostbase..."
 declare -A DIR_DOMAINS=()  # OLD dir -> "domain domain..."
 for link in /etc/nginx/sites-enabled/*; do
   base=$(basename "$link")
-  case "$base" in civismedia|cies|README|default) continue ;; esac
+  # cies is the Institute — a different application. The hub IS a paper's
+  # release (one site row, same code), so it rolls forward with them.
+  case "$base" in cies|README|default) continue ;; esac
   VH=$(readlink -f "$link")
   [ -f "$VH" ] || continue
   OLD=$(grep -Eo 'root[[:space:]]+/var/www/prairiepost-[A-Za-z0-9._-]+' "$VH" | head -1 | awk '{print $2}')
@@ -80,16 +84,22 @@ done
 say "Capture every domain's title BEFORE any change (the tenant baseline)"
 declare -A TITLE_BEFORE=()
 declare -A CSS_BEFORE=()
+declare -A CODE_BEFORE=()
 for OLD in "${!DIR_DOMAINS[@]}"; do
   for DOMAIN in ${DIR_DOMAINS[$OLD]}; do
     IFS='|' read -r code title <<< "$(front_title "$DOMAIN")"
+    CODE_BEFORE[$DOMAIN]="$code"
     if [ "$code" = "200" ] && [ -n "$title" ]; then
       TITLE_BEFORE[$DOMAIN]="$title"
       CSS_BEFORE[$DOMAIN]="$(front_css "$DOMAIN")"
       echo "   $DOMAIN -> $title [${CSS_BEFORE[$DOMAIN]}]"
     else
       TITLE_BEFORE[$DOMAIN]=""
-      echo "   WARN: $DOMAIN answered $code before any change — it will be checked for 200 only"
+      # The rule is "serve afterwards what it served before", not "serve
+      # 200": the hub's front page is not a paper's front page, and a
+      # domain that redirected before must still redirect, not suddenly
+      # answer 200. curl is not following redirects here on purpose.
+      echo "   $DOMAIN answered $code with no title — it will be held to $code afterwards"
     fi
   done
 done
@@ -234,9 +244,12 @@ for OLD in "${!DIR_NEW[@]}"; do
   for DOMAIN in ${DIR_DOMAINS[$OLD]}; do
     IFS='|' read -r code title <<< "$(front_title "$DOMAIN")"
     expected="${TITLE_BEFORE[$DOMAIN]}"
-    if [ "$code" != "200" ]; then
-      echo "FAIL $DOMAIN answered $code"
+    want_code="${CODE_BEFORE[$DOMAIN]:-200}"
+    if [ "$code" != "$want_code" ]; then
+      echo "FAIL $DOMAIN answered $code, served $want_code before"
       group_ok=0
+    elif [ "$code" != "200" ]; then
+      echo "PASS $DOMAIN -> $code (unchanged)"
     elif [ -n "$expected" ] && [ "$title" != "$expected" ]; then
       echo "FAIL $DOMAIN wrong tenant — got $title, expected $expected"
       group_ok=0
@@ -281,7 +294,7 @@ if [ "$RESTORED" = "1" ]; then
   echo "WARN: at least one release group was restored — send this output back for a look."
 fi
 
-say "Point the hub's release at the shared uploads too"
+say "Fallback: the hub's uploads, if it was skipped above (no config.php)"
 HUBVH=$(readlink -f /etc/nginx/sites-enabled/civismedia 2>/dev/null || true)
 if [ -n "$HUBVH" ] && [ -f "$HUBVH" ]; then
   HUBROOT=$(grep -Eo 'root[[:space:]]+/var/www/prairiepost-[A-Za-z0-9._-]+' "$HUBVH" | head -1 | awk '{print $2}')

@@ -16,13 +16,15 @@ hub does differently.
 for the existing box in `tools/vps/` — `discover.sh` (read-only server map),
 `deploy-civis.sh` (release dir, config copied from the Dispatch's, vhost,
 first boot, launch package, certbot, verification), and
-`upgrade-papers.sh` (every paper to the branch's current release: one new
-release dir per release *group* — a directory serving several vhosts
-upgrades once — with the existing config carried **verbatim** as
-`app/config.site.php` behind a wrapper that adds `hub_slug` at request
-time, vhosts repointed, crons updated, and tenant-aware verification:
-every domain must serve 200 with the same front-page title it had before
-the change, or its whole group's vhosts and cron files revert — and the
+`upgrade-papers.sh` (every paper **and the hub** to the branch's current
+release: one new release dir per release *group* — a directory serving
+several vhosts upgrades once — with the existing config carried
+**verbatim** as `app/config.site.php` behind a wrapper that adds
+`hub_slug` at request time, vhosts repointed, crons updated, and
+tenant-aware verification: every domain must answer afterwards exactly as
+it answered before — same status code, and where that was 200, the same
+front-page title and stylesheet set — or its whole group's vhosts and
+cron files revert — and the
 network's **shared uploads** directory, symlinked into every release so
 campaign creatives and syndicated images resolve on every domain). One paste each into the VPS terminal; the manual steps below
 remain the reference and the path for any other server.
@@ -53,7 +55,12 @@ Two equally good options (the open question in the roadmap):
 
 - **Same server as the papers** — the document root is the same release
   directory; civismedia.ca becomes one more host in the `site_slug` map.
-  Cheapest, and the shared `uploads/` rule is automatic.
+  Cheapest, and the shared `uploads/` rule is automatic. This is what runs
+  today, and `upgrade-papers.sh` rolls the hub forward with the papers.
+  It did not always: the hub was excluded by name from that script and sat
+  on its original release for the whole of Phases 7-13, which is why it
+  lacked pages the papers had. Never exclude it again — a hub frozen
+  behind the code its own database has migrated past is a bug factory.
 - **Its own server** — a fresh clone of the same release, `config.php`
   pointing at the same Supabase pooler. Remember the shared-`uploads/`
   caveat from DEPLOY.md §10 if stories with images will ever be filed from
