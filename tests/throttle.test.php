@@ -62,4 +62,17 @@ ok(pp_login_blocked('fresh@b.ca'), 'twenty failures from one address block it fo
 db()->exec("UPDATE login_attempts SET created_at = '2020-01-01 00:00:00'");
 ok(!pp_login_blocked('a@b.ca'), 'the window expires');
 
+// Command-line recovery lifts a block without waiting the window out, and
+// touches only the account it was pointed at.
+db()->exec('DELETE FROM login_attempts');
+for ($i = 0; $i < 6; $i++) {
+    pp_login_record('locked@b.ca', false);
+    pp_login_record('BYSTANDER@b.ca', false);
+}
+ok(pp_login_blocked('locked@b.ca'), 'six failures block before the clear');
+ok(pp_login_clear('locked@b.ca') === 6, 'the clear reports what it removed');
+ok(!pp_login_blocked('locked@b.ca'), 'the cleared account signs in again');
+ok((int) db()->query("SELECT COUNT(*) FROM login_attempts WHERE email = 'bystander@b.ca'")->fetchColumn() === 6, 'the other account keeps its history');
+ok(pp_login_clear('  Locked@B.ca  ') === 0, 'clearing twice is harmless, and the address is normalised');
+
 exit($fails ? 1 : 0);

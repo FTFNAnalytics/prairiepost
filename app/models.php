@@ -796,6 +796,23 @@ function pp_login_blocked(string $email): bool
 }
 
 /**
+ * Forget this account's recent failures, lifting the throttle at once
+ * instead of waiting out the 15-minute window. Only the command-line
+ * recovery tool calls this: from a browser the wait *is* the defence.
+ * Returns how many attempts were cleared.
+ */
+function pp_login_clear(string $email): int
+{
+    try {
+        $stmt = db()->prepare('DELETE FROM login_attempts WHERE succeeded = 0 AND email = ?');
+        $stmt->execute([mb_substr(mb_strtolower(trim($email)), 0, 191)]);
+        return $stmt->rowCount();
+    } catch (PDOException) {
+        return 0;
+    }
+}
+
+/**
  * Append to the audit trail. Best-effort by design: the recorded action has
  * already happened, so a logging hiccup must never roll it back or 500 the
  * page. Pass $asUser when the session user isn't set yet (the sign-in itself).
