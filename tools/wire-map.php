@@ -53,22 +53,58 @@ foreach ($pdo->query('SELECT region, COUNT(*) n, MAX(fetched_at) last FROM news_
 // A paper can subscribe to a bucket nothing feeds. That reads as "quiet
 // wire" and is really "no sources", so name it rather than leave it to
 // be inferred from an empty discovery run.
-echo "\n== DEAD BUCKETS (subscribed by a paper, fed by nothing)\n";
+echo "\n== BUCKETS THAT DELIVER NOTHING (subscribed by a paper)\n";
+// Two ways a paper reads an empty wire, and they need different fixes.
+// DEAD: no enabled source at all — someone has to add a feed.
+// SILENT: sources exist but nothing arrived in seven days — the feeds
+// are broken, and a bucket whose only source 404s is exactly as empty
+// as one with no source. Judging this on delivered items rather than on
+// last_status is deliberate: statuses are free text ("error: HTTP 404",
+// but also "not a valid RSS or Atom feed"), and what a paper actually
+// gets is not a matter of interpretation.
 $fed = [];
 foreach ($pdo->query('SELECT DISTINCT region FROM sources WHERE enabled = 1') as $r) { $fed[$r['region']] = true; }
-$dead = [];
+$delivered = [];
+$dq = $pdo->prepare('SELECT COUNT(*) FROM news_items WHERE region = ? AND fetched_at > ?');
+foreach (array_keys($fed) as $bucket) {
+    $dq->execute([$bucket, $week]);
+    $delivered[$bucket] = (int) $dq->fetchColumn();
+}
+$readers = [];
 foreach ($pdo->query('SELECT id, slug FROM sites ORDER BY id') as $site) {
     $g = $pdo->prepare('SELECT svalue FROM settings WHERE site_id = ? AND skey = ?');
     $g->execute([(int) $site['id'], 'regions']);
     foreach (array_keys(json_decode((string) ($g->fetchColumn() ?: ''), true) ?: []) as $k) {
-        if (!isset($fed[$k])) { $dead[$k][] = $site['slug']; }
+        $readers[$k][] = $site['slug'];
     }
 }
-if (!$dead) {
-    echo "  none — every subscribed bucket has at least one enabled source\n";
+$why = $pdo->prepare('SELECT name, last_status FROM sources WHERE region = ? AND enabled = 1 ORDER BY name');
+// If NOTHING has been fetched network-wide, every bucket is silent and the
+// per-bucket listing is noise hiding one fact: the fetch cron is not running.
+$dq->execute(['', $week]);
+$anywhere = (int) $pdo->query('SELECT COUNT(*) FROM news_items')->fetchColumn();
+if ($anywhere === 0) {
+    echo "  the pool is empty network-wide — no news_items at all.\n";
+    echo "  That is the fetch cron, not the buckets. Check /etc/cron.d for the\n";
+    echo "  fetch-news jobs before reading anything else here.\n\n";
 }
-foreach ($dead as $bucket => $slugs) {
-    printf("  %-18s no enabled source; read by %s\n", $bucket, implode(', ', $slugs));
+$found = false;
+foreach ($readers as $bucket => $slugs) {
+    if (!isset($fed[$bucket])) {
+        $found = true;
+        printf("  DEAD   %-16s no enabled source; read by %s\n", $bucket, implode(', ', $slugs));
+    } elseif ($delivered[$bucket] === 0) {
+        $found = true;
+        printf("  SILENT %-16s sources exist, nothing in 7 days; read by %s\n", $bucket, implode(', ', $slugs));
+        $why->execute([$bucket]);
+        foreach ($why->fetchAll() as $srow) {
+            printf("         %-30s %s\n", mb_strimwidth((string) $srow['name'], 0, 30, '…'),
+                trim((string) $srow['last_status']) !== '' ? $srow['last_status'] : '(never fetched)');
+        }
+    }
+}
+if (!$found) {
+    echo "  none — every subscribed bucket has a source and delivered inside 7 days\n";
 }
 
 echo "\n== INGEST TOKENS (scope only; no secret is stored or printed)\n";
