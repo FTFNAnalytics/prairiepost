@@ -182,6 +182,7 @@ switch ($cmd) {
         $raw = trim((string) pp_config('hub_slug', ''));
         $hub = $raw === '' ? '' : slugify($raw);
         $here = (string) (current_site()['slug'] ?? '');
+        echo "release path    : " . PP_ROOT . "\n";
         echo "config hub_slug : " . ($hub === '' ? "(unset — no site is the hub)" : $hub) . "\n";
         echo "this release    : {$here}\n";
         echo "pp_is_hub()     : " . (pp_is_hub() ? 'yes' : 'NO — hub-only pages redirect to the dashboard') . "\n";
@@ -190,9 +191,16 @@ switch ($cmd) {
         }
         $fence = trim(setting('admin_ip_allowlist', ''));
         echo "address fence   : " . ($fence === '' ? 'open (no allowlist)' : "ON — only {$fence}") . "\n";
-        echo "two-step        : removed — sign-in is one step everywhere\n";
-        $admins = $pdo->query("SELECT email FROM users WHERE role = 'admin' ORDER BY id")->fetchAll();
-        echo "administrators  : " . ($admins ? implode(', ', array_column($admins, 'email')) : 'NONE — no account can open a hub page') . "\n";
+        echo "two-step demand : " . (setting('require_totp', '1') !== '0' ? 'ON in settings' : 'off in settings')
+           . " (the deployed hub release may still read this; the current code ignores it)\n";
+        // The Audit link needs role 'admin' AND pp_is_hub() — nothing else.
+        // If it has vanished from the menu, one of those two is the reason.
+        $everyone = $pdo->query('SELECT email, role FROM users ORDER BY id')->fetchAll();
+        foreach ($everyone as $u) {
+            echo "  account {$u['email']}: {$u['role']}"
+               . ($u['role'] === 'admin' ? '' : "  <- not an admin: no Audit, Accounts, Settings or Ops link") . "\n";
+        }
+        echo "audit page file : " . (is_file(PP_ROOT . '/admin/audit.php') ? 'present' : 'MISSING from this release') . "\n";
         $n = (int) $pdo->query('SELECT COUNT(*) FROM audit_log')->fetchColumn();
         echo "audit_log rows  : {$n}\n";
         if ($fence !== '') {
