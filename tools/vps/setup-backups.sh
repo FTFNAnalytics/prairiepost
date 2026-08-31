@@ -98,7 +98,17 @@ VH=$(readlink -f /etc/nginx/sites-enabled/civismedia 2>/dev/null) || finish fals
 ROOT=$(grep -Eo 'root[[:space:]]+/var/www/prairiepost-[A-Za-z0-9._-]+' "$VH" | head -1 | awk '{print $2}')
 CFG="$ROOT/config.php"
 [ -f "$CFG" ] || finish false "no hub config at $ROOT"
-grep -q "'site_slug' => 'civismedia'" "$CFG" || finish false "config guard failed"
+# The identity guard reads the file that actually CARRIES the identity.
+# Since the hub joined the release roll, upgrade-papers.sh writes
+# config.php as a two-line wrapper and the real configuration lives in
+# app/config.site.php — the same both-shapes rule that script follows.
+# Grepping the wrapper for the site_slug literal failed every backup
+# from the night the hub was first rolled (2026-08-30) until this fix.
+# Evaluation still goes through $CFG: the wrapper requires the real
+# file, so the db read below is identical in either shape.
+GUARD="$CFG"
+[ -f "$ROOT/app/config.site.php" ] && GUARD="$ROOT/app/config.site.php"
+grep -q "'site_slug' => 'civismedia'" "$GUARD" || finish false "config guard failed"
 
 # Read connection fields; the password rides the environment into pg_dump only.
 IFS=$'\t' read -r PGH PGP PGDB PGU PGPASS PGSCHEMA < <(php -r '
