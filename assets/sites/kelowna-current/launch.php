@@ -27,6 +27,9 @@ return [
     ],
 
     'settings' => [
+        // The byline every Hermes filing carries here. Without it the
+        // server falls back to the generic 'Automated report'.
+        'automated_byline'   => 'Current Newsroom Automation',
         'site_title'         => 'Kelowna Current',
         'tagline'            => 'From the Okanagan. Across British Columbia.',
         'meta_description'   => 'Independent B.C. journalism with an Okanagan point of view. Clear reporting, regional intelligence and a wider view of the province.',

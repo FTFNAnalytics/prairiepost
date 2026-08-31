@@ -1,14 +1,52 @@
-# Hardening plan — before papers 14 and 15
+# Roadmap — the platform plan and where it stands
 
-Thirteen papers are live. Before the final two launch, the platform gets
-four phases of work, in order. Each phase ends with an acceptance test
-that either passes or the phase is not done; papers 14 and 15 are built
-only after the **compliance gate** at the end of this document, and are
-built *to* it.
+## Current state · 31 Aug 2026
 
-The ordering rule: safety nets before surgery, launch machinery before
-launches, template surgery under baseline protection, and the ingest
-pipeline before any Hermes agent holds a token.
+**Live:** fifteen papers plus the CivisMedia hub, all serving one release
+(the hub joined the release roll in #46 after drifting on its own
+deploys). The sixteenth paper, the London Lookout, is built, tested and
+merged, waiting only on londonlookout.com pointing at the server.
+
+**Of the four phases below:** Phase 1 (launch machinery), Phase 2
+(template registry) and Phase 3 (Hermes ingest) are **done** and proved
+in production — papers launch from packs with no config edit, and the
+ingest path has carried a real agent filing end to end: filed with a
+scoped token, badged in the admin, reviewed and rejected by the owner.
+**Phase 0 is not built** and is now the largest standing gap: no
+committed baseline harness, no seed/render checks in CI (CI runs lint
+and the unit suite only), the GitHub default branch still points at a
+stale feature branch, and — the risk item — every masthead of
+demonstration content remains **indexable**. The owner's recorded
+decision is noindex-until-real-editorial; `indexing_enabled` does not
+exist in the code yet.
+
+**Working now:** single-agent Hermes discovery is proven (wire map +
+nine sourced proposals across three papers, nothing filed); the wire
+itself was repaired on 31 Aug — five dead feeds replaced after
+verification, `durham` and `northern` given their own sources, and the
+one-URL-one-bucket rule documented after it silently emptied `ontario`.
+First agent-filed stories are the next milestone.
+
+**Operational debts, from the 31 Aug audit:** the hub's five-minute
+watch read only `sites.domain` and so never monitored the six papers
+launched since Phase 1 (fixed in code; needs the next release roll); the
+nightly 03:17 backup is failing and needs server-side diagnosis from
+`/var/log/civis/backup.log`; `tri-cities` and `saguenay` still have no
+working wire source. Two-step sign-in was removed entirely while the
+network is private (#45-#48) — recovery is `tools/reset-password.php`
+over SSH, documented in `docs/ACCOUNT-RECOVERY.md`.
+
+The hub's own Roadmap page (database-backed, edited in the admin) is the
+newsroom's working copy; this file is the repository's.
+
+---
+
+## The hardening plan as written (papers 14 and 15 shipped against it)
+
+Each phase ends with an acceptance test that either passes or the phase
+is not done. The ordering rule: safety nets before surgery, launch
+machinery before launches, template surgery under baseline protection,
+and the ingest pipeline before any Hermes agent holds a token.
 
 ---
 

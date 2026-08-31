@@ -1,7 +1,7 @@
 <?php
 /**
  * The watch — the hub's own five-minute patrol (via cron/run.php watch).
- * It checks what a person would check: do all nine domains answer, are
+ * It checks what a person would check: does every masthead answer, are
  * the TLS certificates comfortably far from expiry, are the cron jobs
  * actually running, is the wire fresh, is the nightly backup recent, is
  * anyone hammering the sign-in form. The findings land in one snapshot
@@ -24,10 +24,22 @@ $problems = [];
 $snapshot = ['at' => now(), 'domains' => [], 'certs' => [], 'jobs' => [], 'backup' => null, 'login_failures' => 0, 'wire_fresh' => true];
 
 /* -- 1 · Every masthead answers ------------------------------------------ */
+// The original papers carry their hostname in sites.domain; every paper
+// launched since Phase 1 records it only in the domains table, which is
+// what the request resolver actually uses. Reading sites.domain alone
+// therefore made the watch blind to each new paper at birth — six of
+// fifteen went unmonitored. Read both, preferring the resolver's truth,
+// and take the bare hostname where a site also registers its www form.
 $domains = [];
 foreach (db()->query('SELECT slug, domain FROM sites ORDER BY id') as $site) {
     if (trim((string) $site['domain']) !== '') {
         $domains[$site['slug']] = trim((string) $site['domain']);
+    }
+}
+foreach (db()->query('SELECT site_slug, hostname FROM domains ORDER BY LENGTH(hostname), hostname') as $d) {
+    $slug = (string) $d['site_slug'];
+    if (!isset($domains[$slug])) {
+        $domains[$slug] = trim((string) $d['hostname']);
     }
 }
 foreach ($domains as $slug => $domain) {

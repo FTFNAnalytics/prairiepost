@@ -32,6 +32,9 @@ return [
     ],
 
     'settings' => [
+        // The byline every Hermes filing carries here. Without it the
+        // server falls back to the generic 'Automated report'.
+        'automated_byline'   => 'Western Wire Newsroom Automation',
         'site_title'         => 'Western Wire',
         'tagline'            => 'The West, on one wire',
         'meta_description'   => 'A news aggregator for Western Canada — the day\'s reporting from Vancouver to Winnipeg, gathered on one page and credited to the newsrooms that filed it.',

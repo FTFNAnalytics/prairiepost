@@ -46,6 +46,9 @@ return [
     ],
 
     'settings' => [
+        // The byline every Hermes filing carries here. Without it the
+        // server falls back to the generic 'Automated report'.
+        'automated_byline'   => 'Pickering Post Newsroom Automation',
         'site_title'         => 'The Pickering Post',
         'tagline'            => "Durham Region's daily",
         'meta_description'   => 'Local news for Pickering and Durham Region: council, the waterfront, community, events, sports and business.',
