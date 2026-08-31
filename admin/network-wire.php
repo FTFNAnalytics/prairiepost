@@ -89,7 +89,7 @@ flash_show();
   A draft started here runs nowhere until it's assigned to papers.
 </p>
 
-<div class="tabs" role="tablist" aria-label="Regions">
+<div class="tabs tabs--wrap" role="tablist" aria-label="Regions">
   <?php foreach ($regions as $key => $label): ?>
   <a href="network-wire.php?region=<?= e(urlencode($key)) ?>"<?= $key === $region ? ' aria-current="page"' : '' ?>><?= e($label) ?></a>
   <?php endforeach; ?>
