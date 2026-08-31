@@ -26,8 +26,14 @@ ROOT=$(grep -Eo 'root[[:space:]]+/var/www/prairiepost-[A-Za-z0-9._-]+' "$VH" | h
 [ -n "$ROOT" ] && [ -d "$ROOT" ] || fail "couldn't resolve the hub's release directory from the vhost"
 CFG="$ROOT/config.php"
 [ -f "$CFG" ] || fail "no config.php at $ROOT"
+# Since the hub joined the release roll, config.php can be a generated
+# two-line wrapper whose real configuration is app/config.site.php. The
+# key must land in the REAL file: upgrade-papers.sh carries that file
+# forward verbatim on every roll and regenerates the wrapper, so a key
+# written into the wrapper would silently vanish at the next release.
+[ -f "$ROOT/app/config.site.php" ] && CFG="$ROOT/app/config.site.php"
 grep -q "'site_slug' => 'civismedia'" "$CFG" \
-  || fail "$CFG doesn't look like the generated hub config (no literal civismedia slug) — not touching it"
+  || fail "$CFG doesn't look like the hub's config (no literal civismedia slug) — not touching it"
 echo "hub config: $CFG"
 
 printf 'Paste the Anthropic API key (input is hidden), then press Enter: '
