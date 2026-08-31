@@ -39,8 +39,15 @@ ROOT=$(grep -Eo 'root[[:space:]]+/var/www/prairiepost-[A-Za-z0-9._-]+' "$VH" | h
 [ -n "$ROOT" ] && [ -d "$ROOT" ] || fail "couldn't resolve the hub release from the vhost"
 CFG="$ROOT/config.php"
 [ -f "$CFG" ] || fail "no config.php at $ROOT"
-grep -q "'site_slug' => 'civismedia'" "$CFG" || fail "$CFG isn't the generated hub config — not touching it"
-echo "hub config: $CFG"
+# Both shapes of the hub config are legitimate: the original single file,
+# and — since the hub joined the release roll — a two-line wrapper whose
+# real configuration is app/config.site.php. Identity is checked in the
+# file that carries it; evaluation still goes through config.php, which
+# in the wrapped shape requires the real file itself.
+GUARD="$CFG"
+[ -f "$ROOT/app/config.site.php" ] && GUARD="$ROOT/app/config.site.php"
+grep -q "'site_slug' => 'civismedia'" "$GUARD" || fail "$GUARD isn't the hub's config — not touching it"
+echo "hub config: $CFG (identity checked in $GUARD)"
 
 DRIVER=$(php -r '$c = require $argv[1]; echo $c["db"]["driver"] ?? "";' "$CFG")
 [ "$DRIVER" = "pgsql" ] || fail "db driver is '$DRIVER' — this backup job is built for the shared Postgres database"
