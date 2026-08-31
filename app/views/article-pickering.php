@@ -58,7 +58,6 @@ if ($deskSlug === 'opinion') {
       <?php endif; ?>
 
       <div class="pk-body"><?= sanitize_html((string) $post['body']) ?></div>
-<?= pp_provenance_box($post) ?>
 
       <div style="max-width:58ch">
         <?= ad_slot('article') ?>

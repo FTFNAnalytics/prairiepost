@@ -42,7 +42,6 @@ $ts = strtotime($post['published_at']);
     <?php endif; ?>
 
     <div class="bb-texte"><?= sanitize_html((string) $post['body']) ?></div>
-<?= pp_provenance_box($post) ?>
 
     <?= ad_slot('article') ?>
 

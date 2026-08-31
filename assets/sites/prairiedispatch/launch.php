@@ -19,6 +19,6 @@ return [
        filing carries. The seeder writes settings only where absent, so the
        newsroom's own edits are never overwritten. */
     'settings' => [
-        'automated_byline' => 'Dispatch Newsroom Automation',
+        'automated_byline' => 'Dispatch Newsroom',
     ],
 ];

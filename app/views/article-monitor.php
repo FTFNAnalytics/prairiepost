@@ -47,7 +47,6 @@ $mmUpdated = ($post['updated_at'] ?? '') > ($post['published_at'] ?? '') ? $post
     <div class="copy">
 <?= sanitize_html((string) $post['body']) ?>
     </div>
-<?= pp_provenance_box($post) ?>
     <?php $tags = tags_for_post((int) $post['id']); if ($tags): ?>
     <div class="mm-tags">
       <?php foreach ($tags as $tag): ?>

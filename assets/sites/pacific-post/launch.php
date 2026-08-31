@@ -27,7 +27,7 @@ return [
     'settings' => [
         // The byline every Hermes filing carries here. Without it the
         // server falls back to the generic 'Automated report'.
-        'automated_byline'   => 'Pacific Post Newsroom Automation',
+        'automated_byline'   => 'Pacific Post Newsroom',
         'site_title'         => 'The Pacific Post',
         'tagline'            => 'Your source for B.C. news',
         'meta_description'   => 'A Greater Vancouver daily: city hall, transit, housing, the province and the coast — reported plainly, from the region that never stops arguing about all four.',

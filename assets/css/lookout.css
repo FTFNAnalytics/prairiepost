@@ -285,14 +285,7 @@ body.t-lookout figcaption .credit {
 }
 /* "How we know this" — the provenance box the brand book asks for, and the
    same element the ingest pipeline fills for agent-filed stories. */
-.t-lookout .pp-provenance {
-  border: 1px solid var(--ll-accent8); border-radius: 8px; background: rgba(38,42,96,0.08);
-  padding: 22px; margin: 26px 0; max-width: 64ch; font-size: 14px; line-height: 1.7; color: var(--ll-n300);
-}
-.t-lookout .pp-provenance h2, .t-lookout .pp-provenance h3 {
-  font-size: 11px; font-weight: 500; letter-spacing: 0.14em; text-transform: uppercase;
-  color: var(--ll-accent); margin: 0 0 10px;
-}
+
 .ll-updates { max-width: 64ch; margin: 26px 0; display: flex; flex-direction: column; gap: 12px; }
 .ll-updates .row { display: flex; gap: 16px; align-items: baseline; }
 .ll-updates .row .when {

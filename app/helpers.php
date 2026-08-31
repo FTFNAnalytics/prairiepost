@@ -179,42 +179,6 @@ function sanitize_html(string $html): string
     return $html;
 }
 
-/**
- * The provenance box for an agent-filed story: the automated-report
- * disclosure and the sources it was drawn from. Returns '' for every
- * human-written story — the box exists only where there is provenance
- * to show, so pages without it are byte-identical to before it existed.
- * Chrome strings go through pp_t(); a French paper labels it in French.
- */
-function pp_provenance_box(array $post): string
-{
-    $filedBy = trim((string) ($post['filed_by'] ?? ''));
-    if ($filedBy === '') {
-        return '';
-    }
-    $stmt = db()->prepare('SELECT url, title, retrieved_at FROM story_sources WHERE post_id = ? ORDER BY id');
-    $stmt->execute([(int) ($post['id'] ?? 0)]);
-    $sources = $stmt->fetchAll();
-
-    $out = '<aside class="pp-provenance">';
-    $out .= '<p class="pp-prov-label">' . e(pp_t('Automated report')) . '</p>';
-    $out .= '<p class="pp-prov-note">' . e(pp_t('This story was compiled by a monitoring system from the public records below and reviewed under this newsroom\'s editorial policy.')) . '</p>';
-    if ($sources) {
-        $out .= '<p class="pp-prov-label">' . e(pp_t('Sources')) . '</p><ul class="pp-prov-sources">';
-        foreach ($sources as $s) {
-            $label = $s['title'] !== '' ? $s['title'] : preg_replace('#^https?://#', '', $s['url']);
-            $out .= '<li><a href="' . e($s['url']) . '" rel="nofollow noopener">' . e($label) . '</a>';
-            if (!empty($s['retrieved_at'])) {
-                $ts = strtotime((string) $s['retrieved_at']);
-                $out .= ' <span class="pp-prov-when">(' . e(pp_t('retrieved')) . ' ' . e($ts ? pp_date_long($ts) : (string) $s['retrieved_at']) . ')</span>';
-            }
-            $out .= '</li>';
-        }
-        $out .= '</ul>';
-    }
-    return $out . '</aside>';
-}
-
 function fmt_date(?string $dt, string $format = 'M j, Y'): string
 {
     if (!$dt) {

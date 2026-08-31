@@ -60,7 +60,6 @@ $initials = mb_substr($initials, 0, 2) ?: 'TT';
       <?php endif; ?>
 
       <div class="bodycopy"><?= sanitize_html((string) $post['body']) ?></div>
-<?= pp_provenance_box($post) ?>
 
       <?= ad_slot('article') ?>
 

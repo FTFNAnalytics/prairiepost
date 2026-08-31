@@ -235,7 +235,6 @@ body.t-kitchener {
 }
 .kc-nlcard .go:hover { background: var(--kc-goldlt); }
 /* The provenance box inherits the paper's hairline voice. */
-.t-kitchener .pp-provenance { border-top: 2px solid var(--kc-navy); font-size: 14px; }
 
 /* --- Footer ---------------------------------------------------------------- */
 .kc-foot { margin-top: 56px; background: var(--kc-navy); padding: 44px 0 28px; }

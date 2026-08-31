@@ -26,7 +26,7 @@ return [
     'settings' => [
         // The byline every Hermes filing carries here. Without it the
         // server falls back to the generic 'Automated report'.
-        'automated_byline'   => 'Echo Newsroom Automation',
+        'automated_byline'   => 'Echo Newsroom',
         'site_title'       => 'The Edmonton Echo',
         'tagline'          => 'Edmonton, first thing',
         'meta_description' => 'An independent daily for Edmonton: city hall, courts, transit, the neighbourhoods and the games — reported plainly, delivered before the day starts.',
