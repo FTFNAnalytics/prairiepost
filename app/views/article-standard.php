@@ -65,7 +65,6 @@ $more = related_posts($post['category_id'] ? (int) $post['category_id'] : null, 
     ?>
 
     <div class="sd-measure">
-<?= pp_provenance_box($post) ?>
       <?= ad_slot('article') ?>
 
       <?php if ($post['source_url']): ?>

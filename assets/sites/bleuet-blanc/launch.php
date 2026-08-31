@@ -52,7 +52,7 @@ return [
         'contact_email'      => 'redaction@bleuetblanc.ca',
         // Hermès : « le fil » publie en direct, la signature automatisée en français.
         'wire_desks'         => 'le-fil',
-        'automated_byline'   => 'La veille automatisée',
+        'automated_byline'   => 'La rédaction',
         'newsletter_heading' => 'L’infolettre du matin',
         'newsletter_copy'    => 'Six textes par courriel, du lundi au vendredi, avant sept heures. Gratuite.',
         'breaking_label'     => '',

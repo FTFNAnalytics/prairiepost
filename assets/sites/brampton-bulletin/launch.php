@@ -31,7 +31,7 @@ return [
     'settings' => [
         // The byline every Hermes filing carries here. Without it the
         // server falls back to the generic 'Automated report'.
-        'automated_byline'   => 'Bulletin Newsroom Automation',
+        'automated_byline'   => 'Bulletin Newsroom',
         'site_title'         => 'The Brampton Bulletin',
         'tagline'            => 'Brampton first. The GTA in full.',
         'meta_description'   => 'Independent local journalism for Brampton and the western GTA — city hall, Peel Region, transit, housing, and the stories the big papers drive past.',

@@ -25,7 +25,7 @@ return [
     'settings' => [
         // The byline every Hermes filing carries here. Without it the
         // server falls back to the generic 'Automated report'.
-        'automated_byline'   => 'Gazette Newsroom Automation',
+        'automated_byline'   => 'Gazette Newsroom',
         'site_title'         => 'Grande Prairie Gazette',
         'tagline'            => "Peace Country's daily",
         'meta_description'   => 'Independent local reporting for Grande Prairie, the County and the Peace Country: council, courts, energy, agriculture and the games.',

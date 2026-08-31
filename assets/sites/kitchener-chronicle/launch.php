@@ -53,7 +53,7 @@ return [
         ]),
         // Hermes-ready when the owner orders a token: drafts only — this
         // paper declares no wire desk.
-        'automated_byline'   => 'Chronicle Newsroom Automation',
+        'automated_byline'   => 'Chronicle Newsroom',
     ],
 
     'sources' => [

@@ -50,7 +50,7 @@ return [
         'breaking_url'       => '/story/mm-401-crash-eastbound-delays',
         // Hermes: the live desk publishes on filing, clearly labelled.
         'wire_desks'         => 'live',
-        'automated_byline'   => 'Monitor Newsroom Automation',
+        'automated_byline'   => 'Monitor Newsroom',
     ],
 
     'sources' => [

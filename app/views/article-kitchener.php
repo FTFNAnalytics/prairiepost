@@ -42,7 +42,6 @@ $kcMail = 'mailto:?subject=' . rawurlencode((string) $post['title'])
         <?= sanitize_html((string) $post['body']) ?>
       </div>
 
-<?= pp_provenance_box($post) ?>
       <?php if ($kcRelated): ?>
       <div class="kc-related">
         <span class="kc-kicker">More on this desk</span>

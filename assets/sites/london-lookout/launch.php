@@ -84,7 +84,7 @@ return [
         /* Hermes-ready when the owner orders a token: drafts only — this
            paper declares no wire desk. The byline names the newsroom's
            automation, never a person (brand §08: we say how we know). */
-        'automated_byline' => 'Lookout Newsroom Automation',
+        'automated_byline' => 'Lookout Newsroom',
     ],
 
     'sources' => [

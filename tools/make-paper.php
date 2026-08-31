@@ -99,7 +99,6 @@ PHP,
   <h1><?= e(\$post['title']) ?></h1>
   <?php if (\$post['lede']): ?><p><em><?= e(\$post['lede']) ?></em></p><?php endif; ?>
   <?= sanitize_html((string) \$post['body']) ?>
-<?= pp_provenance_box(\$post) ?>
 </article>
 PHP,
     "app/views/section-$tpl.php" => <<<PHP

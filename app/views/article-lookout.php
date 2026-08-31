@@ -75,7 +75,6 @@ $llUpd = strtotime((string) ($post['updated_at'] ?: $post['published_at']));
         <?= sanitize_html((string) $post['body']) ?>
       </div>
 
-<?= pp_provenance_box($post) ?>
       <section class="ll-updates" aria-label="Update log">
         <span class="ll-kick ll-kick--n">Update log</span>
         <?php if ($llUpd > $llPub): ?>

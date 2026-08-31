@@ -242,7 +242,6 @@ body.t-monitor {
 .mm-tags a:hover { background: #D2E7F5; text-decoration: none; }
 
 /* Provenance box, tuned to the card language. */
-.t-monitor .pp-provenance { border: 1px solid var(--mm-line); border-radius: var(--mm-r); background: #FAFBFC; }
 
 /* --- Section front ---------------------------------------------------------- */
 
