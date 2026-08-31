@@ -153,6 +153,12 @@ textarea.prose{font-size:15px}
 .tabs a + a{border-left:1px solid var(--color-divider)}
 .tabs a:hover{background:color-mix(in srgb, var(--color-text) 7%, transparent)}
 .tabs a[aria-current="page"]{background:var(--color-accent);color:var(--color-bg)}
+/* The network newswire's region strip carries twenty-plus regions. A joined
+   segmented control cannot wrap without losing its shared borders, so past a
+   handful of entries the strip becomes chips that wrap to as many rows as
+   they need. The dashboard's few-region strip keeps the segmented look. */
+.tabs--wrap{display:flex;flex-wrap:wrap;gap:6px;border:0;border-radius:0;overflow:visible;max-width:100%}
+.tabs--wrap a,.tabs--wrap a + a{border:1px solid var(--color-divider);border-radius:var(--radius-md)}
 
 /* Generic wire/list rows (network wire, inquiries, roadmap) */
 .newsitem{display:flex;gap:14px;padding:13px 0;border-bottom:1px solid color-mix(in srgb, var(--color-text) 8%, transparent);align-items:baseline;flex-wrap:wrap}
