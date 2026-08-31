@@ -21,7 +21,7 @@ flash_show();
 ?>
 
 <h1 class="pagetitle">Operations</h1>
-<p class="pagesub">The watch patrols every five minutes: nine domains, their certificates, the cron jobs, the wire's freshness, last night's backup, and pressure on the sign-in form. Alerts go to <?= $alertTo !== '' ? '<span class="mono">' . e($alertTo) . '</span>' : 'nobody yet — set an alert address under Settings → Security' ?>, at most one email every six hours.</p>
+<p class="pagesub">The watch patrols every five minutes: every masthead the network serves, their certificates, the cron jobs, the wire's freshness, last night's backup, and pressure on the sign-in form. Alerts go to <?= $alertTo !== '' ? '<span class="mono">' . e($alertTo) . '</span>' : 'nobody yet — set an alert address under Settings → Security' ?>, at most one email every six hours.</p>
 
 <?php if (!$ops): ?>
 <div class="panel"><p>No watch report yet. Once this release's cron is live it files one every five minutes — check back shortly, or run it by hand: <span class="mono">PP_SITE=civismedia php cron/run.php watch</span></p></div>
