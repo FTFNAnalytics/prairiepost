@@ -188,6 +188,27 @@ must never be `git pull`ed or rsynced into.
   branch and commit a release directory was built from — the directory
   name carries the short SHA — before writing or following a runbook.
 
+## The two agents — never conflate them
+
+Two separate agents work this network, holding different credentials,
+and a brief must never mix their steps:
+
+- **The VPS agent** holds root SSH to the server and nothing else. It
+  deploys releases, runs the repo's `tools/` from a release directory,
+  reads logs, and reports. It holds no ingest token and never files,
+  edits, or publishes a story. Its briefs are server work only.
+- **The news agent (Hermes)** holds one ingest bearer token and nothing
+  else — no SSH, no shell, no database access. It reaches the network
+  only through `POST /api/ingest`, which is write-only and files drafts.
+  Everything it knows about the wire comes from exports the VPS agent
+  produces (`tools/wire-map.php`); there is no read API.
+
+The dependency runs one way: when a task needs both (deploy, then file),
+brief the VPS agent first, wait for its report, then brief the news
+agent. Never give the news agent a shell command or the VPS agent a
+filing step — each such mix has produced a stopped run or an agent
+holding a capability it should not have.
+
 ## Current operational state (as of the Kitchener Chronicle launch)
 
 - **Release in production: `1b8195bc533d`**, at
