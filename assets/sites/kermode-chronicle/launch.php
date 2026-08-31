@@ -31,6 +31,9 @@ return [
 
     /* --- Settings (written only over untouched defaults) ------------------ */
     'settings' => [
+        // The byline every Hermes filing carries here. Without it the
+        // server falls back to the generic 'Automated report'.
+        'automated_byline'   => 'Kermode Newsroom Automation',
         'site_title'         => 'Kermode Chronicle',
         'tagline'            => 'Reporting from the coast and the interior',
         'meta_description'   => 'Independent, reader-funded journalism for British Columbia: environment, wildlife, climate, resources, and the communities of the coast and the interior.',

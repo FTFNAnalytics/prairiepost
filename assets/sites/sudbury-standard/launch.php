@@ -31,6 +31,9 @@ return [
     ],
 
     'settings' => [
+        // The byline every Hermes filing carries here. Without it the
+        // server falls back to the generic 'Automated report'.
+        'automated_byline'   => 'Standard Newsroom Automation',
         'site_title'         => 'The Sudbury Standard',
         'tagline'            => 'Opinion and argument from the Nickel City',
         'meta_description'   => 'An opinion desk for Sudbury: city hall, mining, housing and the arguments that follow. Independent and reader-funded.',

@@ -35,6 +35,9 @@ return [
     ],
 
     'settings' => [
+        // The byline every Hermes filing carries here. Without it the
+        // server falls back to the generic 'Automated report'.
+        'automated_byline'   => 'Torch Newsroom Automation',
         'site_title'         => 'Tri Cities Torch',
         'tagline'            => 'Coquitlam · Port Coquitlam · Port Moody',
         'meta_description'   => 'Independent local journalism for Coquitlam, Port Coquitlam and Port Moody, with Anmore and Belcarra — city halls, transit, housing, and the neighbourhoods between them.',

@@ -41,6 +41,9 @@ return [
     ],
 
     'settings' => [
+        // The byline every Hermes filing carries here. Without it the
+        // server falls back to the generic 'Automated report'.
+        'automated_byline'   => 'Times Newsroom Automation',
         'site_title'         => 'Turtle Island Times',
         'tagline'            => 'Independent news from across the territories',
         'meta_description'   => 'Independent news from across the territories: land and water, language, culture and governance.',

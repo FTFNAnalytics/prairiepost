@@ -14,4 +14,11 @@ return [
     /* Every public hostname this paper answers on. The seeder writes these
        into the domains table, which bootstrap resolves tenants from. */
     'domains' => ['prairiedispatch.ca', 'www.prairiedispatch.ca'],
+
+    /* The one setting the founding paper was missing: the byline a Hermes
+       filing carries. The seeder writes settings only where absent, so the
+       newsroom's own edits are never overwritten. */
+    'settings' => [
+        'automated_byline' => 'Dispatch Newsroom Automation',
+    ],
 ];
