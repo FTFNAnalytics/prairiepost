@@ -21,9 +21,14 @@
  * have never done anything, which is why `ontario` ran on one source and
  * `durham` on none.
  *
- * Everything here is idempotent: a repair whose row already carries the
- * new URL is reported as already done, and an addition whose URL exists
- * is left alone. Nothing is ever deleted or disabled.
+ * Everything here is idempotent, and nothing is ever deleted. One narrow
+ * disable exists, learned from the first production run: if the packs
+ * were re-seeded BEFORE this ran, the seeder inserted the replacement
+ * URLs as new rows, so "the new URL exists" no longer proves the repair
+ * happened — the old broken row is still there, still fetched every
+ * cycle, still erroring. In that one case the old row is retired
+ * (enabled = 0, audited), because a feed on this list's left-hand side
+ * is broken by definition and re-fetching it forever helps nobody.
  */
 
 if (PHP_SAPI !== 'cli') {
@@ -86,14 +91,26 @@ $changed = 0;
 echo $apply ? "Applying.\n\n" : "Dry run — nothing is written. Add --apply to do it.\n\n";
 
 echo "== REPAIRS\n";
+$retire = $pdo->prepare('UPDATE sources SET enabled = 0 WHERE id = ?');
 foreach ($repairs as [$oldUrl, $name, $newUrl, $region]) {
     $byUrl->execute([$newUrl]);
-    if ($byUrl->fetch()) {
-        printf("  done already  %-28s %s\n", $name, $newUrl);
-        continue;
-    }
+    $newRow = $byUrl->fetch();
     $byUrl->execute([$oldUrl]);
     $row = $byUrl->fetch();
+    if ($newRow) {
+        if ($row && !empty($row['enabled'])) {
+            printf("  %-13s %-28s old row still enabled alongside its replacement — disabling it\n",
+                $apply ? 'retiring' : 'would retire', $row['name']);
+            if ($apply) {
+                $retire->execute([(int) $row['id']]);
+                pp_audit('source.retired', (string) $row['name'], "broken feed {$row['url']} disabled; replaced by {$newUrl}", ['id' => 0, 'name' => 'cli:fix-sources']);
+                $changed++;
+            }
+        } else {
+            printf("  done already  %-28s %s\n", $name, $newUrl);
+        }
+        continue;
+    }
     if (!$row) {
         printf("  NOT FOUND     %-28s no row with url %s\n", $name, $oldUrl);
         continue;
