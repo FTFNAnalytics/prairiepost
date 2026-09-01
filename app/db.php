@@ -83,6 +83,20 @@ function pp_schema_ddl(string $driver): array
             created_at $dt NOT NULL
         )$suffix",
 
+        "CREATE TABLE social_shares (
+            id $id,
+            post_id INTEGER NOT NULL,
+            platform VARCHAR(20) NOT NULL,
+            post_title VARCHAR(255) NOT NULL DEFAULT '',
+            post_content TEXT,
+            image_url VARCHAR(500) NOT NULL DEFAULT '',
+            is_posted INTEGER NOT NULL DEFAULT 0,
+            posted_at $dt,
+            created_at $dt NOT NULL,
+            updated_at $dt NOT NULL,
+            CONSTRAINT uq_social_share UNIQUE (post_id, platform)
+        )$suffix",
+
         "CREATE TABLE users (
             id $id,
             name VARCHAR(120) NOT NULL,
@@ -1170,5 +1184,32 @@ function pp_migrate(PDO $pdo, string $driver): void
         $pdo->exec('CREATE INDEX idx_media_request_events_request ON media_request_events (request_id, id)');
 
         $pdo->exec("UPDATE settings SET svalue = '17' WHERE site_id = 0 AND skey = 'schema_version'");
+    }
+
+    if ($version < 18) {
+        // v18 — the social desk. One row per story and platform: the drafted
+        // post, its image, and whether a person has confirmed it was posted.
+        // The desk never posts on the network's behalf; it prepares, opens
+        // the platform, and records what a human says happened.
+        $dt = $driver === 'pgsql' ? 'TIMESTAMP' : 'DATETIME';
+        $id = $driver === 'mysql' ? 'INT UNSIGNED AUTO_INCREMENT PRIMARY KEY'
+            : ($driver === 'pgsql' ? 'INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY' : 'INTEGER PRIMARY KEY AUTOINCREMENT');
+        $suffix = $driver === 'mysql' ? ' ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci' : '';
+
+        $pdo->exec("CREATE TABLE social_shares (
+            id $id,
+            post_id INTEGER NOT NULL,
+            platform VARCHAR(20) NOT NULL,
+            post_title VARCHAR(255) NOT NULL DEFAULT '',
+            post_content TEXT,
+            image_url VARCHAR(500) NOT NULL DEFAULT '',
+            is_posted INTEGER NOT NULL DEFAULT 0,
+            posted_at $dt,
+            created_at $dt NOT NULL,
+            updated_at $dt NOT NULL,
+            CONSTRAINT uq_social_share UNIQUE (post_id, platform)
+        )$suffix");
+        $pdo->exec('CREATE INDEX idx_social_shares_post ON social_shares (post_id)');
+        $pdo->exec("UPDATE settings SET svalue = '18' WHERE site_id = 0 AND skey = 'schema_version'");
     }
 }

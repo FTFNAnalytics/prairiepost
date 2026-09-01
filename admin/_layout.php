@@ -38,6 +38,7 @@ function admin_header(string $title, string $active = '', string $actions = ''):
     if ($hub && is_editor($user)) {
         $items['analytics'] = ['analytics.php', 'Analytics'];
         $items['agents'] = ['agents.php', 'Agent desk'];
+        $items['social'] = ['social.php', 'Social desk'];
     }
     if ($hub && $user && $user['role'] === 'admin') {
         $items['entities'] = ['entities.php', 'Entities'];
