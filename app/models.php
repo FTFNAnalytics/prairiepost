@@ -900,6 +900,89 @@ function pp_ip_allowlisted(): bool
     return false;
 }
 
+/* --- The social desk ------------------------------------------------------- */
+
+/** The desk's platforms, in display order. Keys are what social_shares stores. */
+function pp_social_platforms(): array
+{
+    return ['x' => 'X (Twitter)', 'threads' => 'Threads', 'instagram' => 'Instagram', 'facebook' => 'Facebook'];
+}
+
+/** Every share row for one story, keyed by platform. */
+function pp_social_shares(int $postId): array
+{
+    $stmt = db()->prepare('SELECT * FROM social_shares WHERE post_id = ?');
+    $stmt->execute([$postId]);
+    $out = [];
+    foreach ($stmt->fetchAll() as $row) {
+        $out[$row['platform']] = $row;
+    }
+    return $out;
+}
+
+/**
+ * Insert-or-update one platform's share row. posted_at follows the checkbox:
+ * first confirmation stamps it, unticking clears it, re-saving an already
+ * confirmed row keeps the original stamp — the tracker reads it as "when did
+ * this actually go out", not "when was this row last touched".
+ */
+function pp_social_save(int $postId, string $platform, array $f): void
+{
+    if (!isset(pp_social_platforms()[$platform])) {
+        return;
+    }
+    $stmt = db()->prepare('SELECT id, posted_at FROM social_shares WHERE post_id = ? AND platform = ?');
+    $stmt->execute([$postId, $platform]);
+    $row = $stmt->fetch();
+    $isPosted = (int) !empty($f['is_posted']);
+    $postedAt = $isPosted ? (($row['posted_at'] ?? null) ?: now()) : null;
+    $vals = [
+        mb_substr(trim((string) ($f['post_title'] ?? '')), 0, 255),
+        (string) ($f['post_content'] ?? ''),
+        mb_substr(trim((string) ($f['image_url'] ?? '')), 0, 500),
+        $isPosted,
+        $postedAt,
+        now(),
+    ];
+    if ($row) {
+        db()->prepare('UPDATE social_shares SET post_title = ?, post_content = ?, image_url = ?, is_posted = ?, posted_at = ?, updated_at = ? WHERE id = ?')
+            ->execute([...$vals, (int) $row['id']]);
+    } else {
+        db()->prepare('INSERT INTO social_shares (post_title, post_content, image_url, is_posted, posted_at, updated_at, post_id, platform, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)')
+            ->execute([...$vals, $postId, $platform, now()]);
+    }
+}
+
+/**
+ * The public URL a story is shared under. A story can run on several papers;
+ * the share always points at ONE of them — the canonical paper where set,
+ * otherwise the first paper it runs on. The hostname comes from the same two
+ * places the watch reads: sites.domain for the founding papers, the domains
+ * table (shortest form, so bare beats www) for everything since.
+ */
+function pp_post_public_url(array $post): string
+{
+    $siteId = (int) ($post['canonical_site_id'] ?? 0);
+    if ($siteId === 0) {
+        $stmt = db()->prepare('SELECT site_id FROM post_sites WHERE post_id = ? ORDER BY site_id LIMIT 1');
+        $stmt->execute([(int) ($post['id'] ?? 0)]);
+        $siteId = (int) ($stmt->fetchColumn() ?: current_site_id());
+    }
+    $stmt = db()->prepare('SELECT slug, domain FROM sites WHERE id = ?');
+    $stmt->execute([$siteId]);
+    $site = $stmt->fetch() ?: ['slug' => '', 'domain' => ''];
+    $host = trim((string) $site['domain']);
+    if ($host === '' && $site['slug'] !== '') {
+        $stmt = db()->prepare('SELECT hostname FROM domains WHERE site_slug = ? ORDER BY LENGTH(hostname), hostname LIMIT 1');
+        $stmt->execute([$site['slug']]);
+        $host = trim((string) ($stmt->fetchColumn() ?: ''));
+    }
+    if ($host === '') {
+        return rtrim(site_url(), '/') . '/story/' . rawurlencode((string) ($post['slug'] ?? ''));
+    }
+    return 'https://' . $host . '/story/' . rawurlencode((string) ($post['slug'] ?? ''));
+}
+
 /* --- Revision history: what was live, when --------------------------------- */
 
 /**
