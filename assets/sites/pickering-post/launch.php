@@ -58,8 +58,11 @@ return [
         'newsletter_copy'    => 'Six stories from Pickering in your inbox by seven. Free, and short enough for the GO train.',
         'breaking_label'     => '',
         'breaking_url'       => '',
+        // No outlet publishes a Pickering-only feed; Durham Radio News and
+        // The Oshawa Express cover the city inside `durham`. A subscribed
+        // bucket nothing can feed reads as a quiet wire forever, so the
+        // paper subscribes only to buckets that can actually fill.
         'regions'            => json_encode([
-            'pickering' => 'Pickering',
             'durham'    => 'Durham Region',
             'ontario'   => 'Ontario',
         ]),

@@ -67,6 +67,7 @@ return [
     /* Fils de veille pour la revue de presse du matin. Ils alimentent le
        tableau de bord ; ils ne publient rien d'eux-mêmes. */
     'sources' => [
+        ['Le Quotidien', 'https://www.lequotidien.com/arc/outboundfeeds/rss/?outputType=xml', 'saguenay'],
         ['Radio-Canada · Québec',  'https://ici.radio-canada.ca/rss/4159',  'quebec'],
         ['Radio-Canada · En continu', 'https://ici.radio-canada.ca/rss/1000524', 'national'],
     ],
