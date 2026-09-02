@@ -51,6 +51,15 @@ return [
         // Hermes: the live desk publishes on filing, clearly labelled.
         'wire_desks'         => 'live',
         'automated_byline'   => 'Monitor Newsroom',
+        // The Monitor inherited the founding paper's default regions —
+        // Alberta and agriculture wire for a Mississauga paper. Its real
+        // coverage: the GTA bucket (CBC/CityNews/Global Toronto, and
+        // insauga, which reports Mississauga heavily), Ontario, Canada.
+        'regions'            => json_encode([
+            'gta'     => 'Greater Toronto',
+            'ontario' => 'Ontario',
+            'canada'  => 'Canada',
+        ]),
     ],
 
     'sources' => [

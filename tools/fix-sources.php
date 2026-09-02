@@ -80,6 +80,14 @@ $additions = [
     ['SooToday',                 'https://www.sootoday.com/rss',                'northern'], // 20; bucket had one feed
     ['Northern Ontario Business','https://www.northernontariobusiness.com/rss', 'northern'], // 20
     ['The London Free Press',    'https://www.lfpress.com/feed',                'ontario'],  // 10; so ontario is not one feed again
+    // The two buckets that stayed DEAD through the first repair round.
+    // tricitynews.com folded into Vancouver Is Awesome (its /rss now
+    // redirects to an archive page); the Tri-Cities Dispatch covers the
+    // same three cities independently. Le Quotidien is Saguenay's daily,
+    // on Arc's outbound-feed route. Both verified through http_get/
+    // parse_feed like every other row here.
+    ['Tri-Cities Dispatch',      'https://www.tricitiesdispatch.com/feed',      'tri-cities'], // 10
+    ['Le Quotidien',             'https://www.lequotidien.com/arc/outboundfeeds/rss/?outputType=xml', 'saguenay'], // 100
 ];
 
 $pdo = db();

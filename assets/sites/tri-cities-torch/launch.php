@@ -59,6 +59,7 @@ return [
     // paper's nearest neighbour, publishes no discoverable feed — add it by
     // hand under Newsroom → Sources if the newsroom obtains a working URL.
     'sources' => [
+        ['Tri-Cities Dispatch', 'https://www.tricitiesdispatch.com/feed', 'tri-cities'],
         ['CityNews Vancouver',   'https://vancouver.citynews.ca/feed/',                        'metro'],
         ['Daily Hive Vancouver', 'https://dailyhive.com/feed/vancouver',                       'metro'],
         ['CBC British Columbia', 'https://www.cbc.ca/webfeed/rss/rss-canada-britishcolumbia',  'bc'],
