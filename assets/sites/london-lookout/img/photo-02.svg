@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 500" role="img" aria-label="City hall before the meeting">
+  <rect width="800" height="500" fill="#e7e2d2"/>
+  <circle cx="646" cy="102" r="44" fill="#b08a2e"/>
+  <path d="M0 320c140-56 300-52 440 4 110 44 240 40 360-10v186H0z" fill="#d4dcd6"/>
+  <rect x="180" y="140" width="440" height="220" fill="#3e5c66"/>
+  <rect x="180" y="140" width="440" height="26" fill="#182420"/>
+  <g fill="#faf8f2">
+    <rect x="212" y="196" width="52" height="120"/><rect x="290" y="196" width="52" height="120"/>
+    <rect x="368" y="196" width="52" height="120"/><rect x="446" y="196" width="52" height="120"/>
+    <rect x="524" y="196" width="52" height="120"/>
+  </g>
+  <rect x="384" y="88" width="26" height="52" fill="#182420"/>
+  <circle cx="397" cy="80" r="10" fill="#a03d2e"/>
+  <path d="M0 448h800v52H0z" fill="#1e4d38"/>
+</svg>
