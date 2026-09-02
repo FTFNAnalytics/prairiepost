@@ -7,7 +7,13 @@
 define('PP_ROOT', dirname(__DIR__));
 define('PP_SCHEMA_VERSION', 18);
 
+// PP_CONFIG lets the committed harness (tools/seed-all.sh, baseline.sh)
+// point a CLI run at a throwaway config without touching the checkout's
+// own config.php. CLI and the dev server only — FPM never honours it.
 $configFile = PP_ROOT . '/config.php';
+if (in_array(PHP_SAPI, ['cli', 'cli-server'], true) && getenv('PP_CONFIG') !== false && is_file((string) getenv('PP_CONFIG'))) {
+    $configFile = (string) getenv('PP_CONFIG');
+}
 $GLOBALS['pp_config'] = is_file($configFile)
     ? require $configFile
     : require PP_ROOT . '/config.example.php';
