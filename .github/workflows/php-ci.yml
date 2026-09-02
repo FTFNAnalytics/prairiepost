@@ -19,3 +19,17 @@ jobs:
         run: find . -type f -name '*.php' -not -path './data/*' -print0 | xargs -0 -n1 php -l
       - name: Run regression suite
         run: php tests/run.php
+      - name: Seed the full network — zero skipped lines
+        run: bash tools/seed-all.sh /tmp/ci-network.sqlite
+      - name: Render baseline against the base branch
+        run: |
+          git fetch --no-tags origin "${{ github.base_ref }}"
+          if bash tools/baseline.sh "origin/${{ github.base_ref }}"; then
+            exit 0
+          fi
+          if [[ "${{ github.event.pull_request.title }}" == *"[render]"* ]]; then
+            echo "Rendered output changed and the PR title declares [render] — allowed."
+          else
+            echo "Rendered output changed and the PR does not declare it. Add [render] to the PR title if this is deliberate."
+            exit 1
+          fi
