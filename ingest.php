@@ -123,6 +123,17 @@ if (mb_strlen($externalId) > 120) {
     pp_hermes_out(422, ['ok' => false, 'error' => 'external_id is at most 120 characters']);
 }
 
+// Optional image: a URL the server fetches ITSELF, so it goes through the
+// public-address guard first — the token holder writes the request but must
+// not be able to point it inward. A fetch or format failure never sinks the
+// filing; the story lands without a picture and the response says why.
+$imageUrl = trim((string) ($in['image'] ?? ''));
+$imageCaption = mb_substr(trim(strip_tags((string) ($in['image_caption'] ?? ''))), 0, 255);
+$imageCredit = mb_substr(trim(strip_tags((string) ($in['image_credit'] ?? ''))), 0, 120);
+if ($imageUrl !== '' && (strlen($imageUrl) > 600 || !preg_match('#^https?://#i', $imageUrl))) {
+    pp_hermes_out(422, ['ok' => false, 'error' => 'image must be an http(s) URL, at most 600 characters']);
+}
+
 $sources = [];
 foreach ((array) ($in['sources'] ?? []) as $i => $src) {
     if (!is_array($src)) {
@@ -187,15 +198,36 @@ $status = $isWire ? 'published' : 'draft';
 $byline = pp_hermes_setting($siteId, 'automated_byline', 'Automated report');
 $now = now();
 
+$imagePath = '';
+$imageNote = '';
+if ($imageUrl !== '') {
+    if (!pp_url_is_public($imageUrl)) {
+        $imageNote = 'skipped — the image URL does not resolve to a public address';
+    } else {
+        [$bytes, $err] = http_get($imageUrl, 15);
+        if ($err !== null) {
+            $imageNote = 'skipped — fetch failed: ' . $err;
+        } else {
+            [$imagePath, $storeErr] = pp_store_image_bytes((string) $bytes, pathinfo(parse_url($imageUrl, PHP_URL_PATH) ?? '', PATHINFO_FILENAME) ?: 'wire-image');
+            if ($imagePath === null) {
+                $imagePath = '';
+                $imageNote = 'skipped — ' . $storeErr;
+            }
+        }
+    }
+}
+
 $pdo = db();
 $pdo->prepare('INSERT INTO posts
     (title, slug, category_id, byline, dateline, lede, body,
      meta_description, post_type, origin, status,
+     image, image_caption, image_credit,
      filed_by, content_hash, published_at, created_at, updated_at)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)')
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)')
     ->execute([
         $title, $slug, (int) $desk['id'], $byline, $dateline, $lede, $body,
         excerpt($lede, 155), 'story', 'hermes', $status,
+        $imagePath, $imagePath !== '' ? $imageCaption : '', $imagePath !== '' ? $imageCredit : '',
         $agent['name'], $hash, $status === 'published' ? $now : null, $now, $now,
     ]);
 $postId = pp_last_id('posts');
@@ -233,4 +265,8 @@ $pdo->prepare('INSERT INTO audit_log (site_id, user_id, user_name, action, targe
         $isWire ? 'wire desk, published' : 'filed as draft',
         (string) ($_SERVER['REMOTE_ADDR'] ?? ''), $now]);
 
-pp_hermes_out(201, ['ok' => true, 'id' => $postId, 'slug' => $slug, 'status' => $status]);
+$out = ['ok' => true, 'id' => $postId, 'slug' => $slug, 'status' => $status];
+if ($imageUrl !== '') {
+    $out['image'] = $imagePath !== '' ? $imagePath : $imageNote;
+}
+pp_hermes_out(201, $out);

@@ -385,6 +385,70 @@ function pp_handle_image_upload(array $file): array
     return ['/uploads/' . date('Y/m') . '/' . $name, null];
 }
 
+/**
+ * Store image BYTES the server fetched itself (the ingest pipeline's image
+ * field) under the same rules as a browser upload: 8 MB cap, MIME sniffed
+ * from the bytes, the same four formats, the same /uploads/YYYY/MM home.
+ * Returns [public path, null] or [null, reason].
+ */
+function pp_store_image_bytes(string $bytes, string $baseName): array
+{
+    if ($bytes === '') {
+        return [null, 'the image was empty'];
+    }
+    if (strlen($bytes) > 8 * 1024 * 1024) {
+        return [null, 'the image is over 8 MB'];
+    }
+    $finfo = new finfo(FILEINFO_MIME_TYPE);
+    $mime = $finfo->buffer($bytes);
+    $extensions = [
+        'image/jpeg' => 'jpg',
+        'image/png'  => 'png',
+        'image/webp' => 'webp',
+        'image/gif'  => 'gif',
+    ];
+    if (!isset($extensions[$mime])) {
+        return [null, 'only JPEG, PNG, WebP or GIF images are accepted (got ' . $mime . ')'];
+    }
+    $dir = PP_ROOT . '/uploads/' . date('Y/m');
+    if (!is_dir($dir)) {
+        mkdir($dir, 0775, true);
+    }
+    $base = slugify($baseName) ?: 'image';
+    $name = $base . '-' . substr(bin2hex(random_bytes(4)), 0, 6) . '.' . $extensions[$mime];
+    if (file_put_contents($dir . '/' . $name, $bytes) === false) {
+        return [null, 'the server could not write the file'];
+    }
+    return ['/uploads/' . date('Y/m') . '/' . $name, null];
+}
+
+/**
+ * May the server fetch this URL on someone else's say-so? The ingest
+ * image field hands the box a URL to download, which is a request the
+ * token holder writes and the server executes — so it must not be able to
+ * point inward. http(s) only, and the host must not resolve to loopback,
+ * private, link-local or otherwise non-public address space.
+ */
+function pp_url_is_public(string $url): bool
+{
+    $parts = parse_url($url);
+    $scheme = strtolower((string) ($parts['scheme'] ?? ''));
+    $host = (string) ($parts['host'] ?? '');
+    if (!in_array($scheme, ['http', 'https'], true) || $host === '') {
+        return false;
+    }
+    $ips = filter_var($host, FILTER_VALIDATE_IP) ? [$host] : (gethostbynamel($host) ?: []);
+    if (!$ips) {
+        return false;
+    }
+    foreach ($ips as $ip) {
+        if (filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE) === false) {
+            return false;
+        }
+    }
+    return true;
+}
+
 /* --- Feeds (shared by cron and the sources admin) ----------------------- */
 
 /** Fetch a URL with a short timeout; returns [body, error]. */
