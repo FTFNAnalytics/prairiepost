@@ -157,7 +157,6 @@ function page_header(array $meta = [], string $activeDesk = ''): void
 <?php endif; ?><?php if (pp_chrome('template') === 'pacific'): ?><link rel="stylesheet" href="/assets/css/pacific.css">
 <?php endif; ?><?php if (pp_chrome('template') === 'current'): ?><link rel="stylesheet" href="/assets/css/current.css">
 <?php endif; ?><?php if (pp_chrome('template') === 'bulletin'): ?><link rel="stylesheet" href="/assets/css/bulletin.css">
-<?php endif; ?><?php if (pp_chrome('template') === 'lookout'): ?><link rel="stylesheet" href="/assets/css/lookout.css">
 <?php endif; ?><?php if (pp_chrome('template') === 'westernwire'): ?><link rel="stylesheet" href="/assets/css/westernwire.css">
 <?php endif; ?><?php if (pp_chrome('template') === 'torch'): ?><link rel="stylesheet" href="/assets/css/torch.css">
 <?php endif; ?><?php if (site_asset('brand.css') !== '/assets/img/brand.css'): ?><link rel="stylesheet" href="<?= e(site_asset('brand.css')) ?>">
@@ -174,7 +173,7 @@ function page_header(array $meta = [], string $activeDesk = ''): void
 <?php endif; ?>
 <?php $analytics = setting('analytics_code'); if ($analytics !== '') { echo $analytics . "\n"; } ?>
 </head>
-<body class="<?= trim((pp_chrome('cards') === 'panel' ? 'cards-panel ' : '') . (pp_chrome('template') === 'echo-v3' ? 't-dark' : '') . (pp_chrome('template') === 'aurora' ? 't-aurora' : '') . (pp_chrome('template') === 'chronicle' ? 't-chronicle' : '') . (pp_chrome('template') === 'pacific' ? 't-pacific' : '') . (pp_chrome('template') === 'current' ? 't-current' : '') . (pp_chrome('template') === 'bulletin' ? 't-bulletin' : '') . (pp_chrome('template') === 'lookout' ? 't-lookout' : '') . (pp_chrome('template') === 'westernwire' ? 't-westernwire' : '') . (pp_chrome('template') === 'torch' ? 't-torch' : '')) ?>">
+<body class="<?= trim((pp_chrome('cards') === 'panel' ? 'cards-panel ' : '') . (pp_chrome('template') === 'echo-v3' ? 't-dark' : '') . (pp_chrome('template') === 'aurora' ? 't-aurora' : '') . (pp_chrome('template') === 'chronicle' ? 't-chronicle' : '') . (pp_chrome('template') === 'pacific' ? 't-pacific' : '') . (pp_chrome('template') === 'current' ? 't-current' : '') . (pp_chrome('template') === 'bulletin' ? 't-bulletin' : '') . (pp_chrome('template') === 'westernwire' ? 't-westernwire' : '') . (pp_chrome('template') === 'torch' ? 't-torch' : '')) ?>">
 <a class="pp-meta" href="#content" style="position:absolute;left:-9999px" onfocus="this.style.left='8px';this.style.top='8px'" onblur="this.style.left='-9999px'">Skip to the news</a>
 
 <?php if (pp_chrome('template') === 'echo-v3'): ?>
@@ -374,51 +373,6 @@ function page_header(array $meta = [], string $activeDesk = ''): void
 <div class="cu-strip<?= pp_chrome('strip_tone') === 'teal' ? ' cu-strip--teal' : '' ?>">
   <div class="wrap">
     <span class="lab">The Current</span>
-    <span class="cp"><a href="<?= e(setting('breaking_url')) ?>"><?= e(setting('breaking_label')) ?></a></span>
-    <a class="go" href="<?= e(setting('breaking_url')) ?>">Read more</a>
-  </div>
-</div>
-<?php endif; ?>
-<?php elseif (pp_chrome('template') === 'lookout'): ?>
-<?php $loWords = preg_split('/\s+/', trim($siteTitle), 2); ?>
-<div class="lo-util">
-  <div class="wrap">
-    <div class="grp">
-      <strong><?= e(date('l, F j')) ?></strong>
-      <?php if (setting('weather_line') !== ''): ?><span><?= e(setting('weather_line')) ?></span><?php endif; ?>
-    </div>
-    <div class="grp">
-      <a href="<?= e(url('newsletter/')) ?>">Newsletters</a>
-      <a href="<?= e(url('subscribe')) ?>">Become a member</a>
-      <strong><a href="/admin/" style="color:#fff;text-decoration:none">Sign in</a></strong>
-    </div>
-  </div>
-</div>
-<header class="lo-mast">
-  <div class="wrap">
-    <div class="side"><?= nl2br(e(pp_chrome('mast_left') ?: '')) ?></div>
-    <a class="lockup" href="/" aria-label="<?= e($siteTitle) ?> — front page">
-      <span class="l1"><?= e(strtoupper($loWords[0])) ?></span>
-      <svg class="sight" viewBox="0 0 300 18" aria-hidden="true"><path d="M6 13h116M178 13h116" fill="none" stroke="#1E4D38" stroke-width="2" stroke-linecap="round"/><path d="M139 13l11-10 11 10z" fill="#1E4D38"/><circle cx="150" cy="5" r="2.6" fill="#B08A2E"/></svg>
-      <span class="l2"><?= e(strtoupper($loWords[1] ?? '')) ?></span>
-      <span class="l3"><?= e($tagline) ?></span>
-    </a>
-    <div class="side right"><?= nl2br(e(pp_chrome('mast_right') ?: '')) ?></div>
-  </div>
-</header>
-<nav class="lo-nav" aria-label="Desks">
-  <div class="wrap">
-    <a href="/"<?= ($GLOBALS['pp_front_page'] ?? false) ? ' aria-current="page"' : '' ?>>Latest</a>
-    <?php foreach (pp_nav_categories() as $cat): ?>
-    <a href="<?= e(url('desk/' . $cat['slug'])) ?>"<?= $activeDesk === $cat['slug'] ? ' aria-current="page"' : '' ?>><?= e($cat['name']) ?></a>
-    <?php endforeach; ?>
-    <a class="sp" href="<?= e(url('search')) ?>" aria-label="Search the archive">Search</a>
-  </div>
-</nav>
-<?php if (setting('breaking_label') !== '' && setting('breaking_url') !== ''): ?>
-<div class="lo-strip">
-  <div class="wrap">
-    <span class="lab"><?= e(pp_chrome('strip_label') ?: 'The Briefing') ?></span>
     <span class="cp"><a href="<?= e(setting('breaking_url')) ?>"><?= e(setting('breaking_label')) ?></a></span>
     <a class="go" href="<?= e(setting('breaking_url')) ?>">Read more</a>
   </div>
@@ -757,48 +711,6 @@ $ttFirst = $ttLast !== '' ? implode(' ', $ttWords) : $siteTitle;
       <span>© <?= e(date('Y')) ?> <?= e($siteTitle) ?> · <?= e(setting('tagline')) ?></span>
       <span>Set in Source Serif 4 on newsprint</span>
     </div>
-  </div>
-</footer>
-</body>
-</html>
-<?php return; endif; ?>
-
-<?php if (pp_chrome('template') === 'lookout'): ?>
-<footer class="lo-foot">
-  <div class="grid">
-    <div class="brand">
-      <h2><?= e($siteTitle) ?></h2>
-      <p><?= e(setting('footer_line')) ?></p>
-    </div>
-    <div class="col">
-      <h3>Read</h3>
-      <a href="/">Latest</a>
-      <?php foreach (array_slice(pp_nav_categories(), 0, 4) as $cat): ?>
-      <a href="<?= e(url('desk/' . $cat['slug'])) ?>"><?= e($cat['name']) ?></a>
-      <?php endforeach; ?>
-    </div>
-    <div class="col">
-      <h3>About</h3>
-      <a href="<?= e(url('search')) ?>">Search the archive</a>
-      <a href="<?= e(url('corrections')) ?>">Corrections</a>
-      <a href="/admin/">Newsroom sign-in</a>
-      <?php if (setting('contact_email') !== ''): ?>
-      <a href="mailto:<?= e(setting('contact_email')) ?>">Contact</a>
-      <?php endif; ?>
-    </div>
-    <div class="col">
-      <h3>Connect</h3>
-      <a href="<?= e(url('newsletter/')) ?>">Newsletters</a>
-      <a href="<?= e(url('subscribe')) ?>">Membership</a>
-      <a href="<?= e(url('feed/')) ?>">RSS</a>
-      <?php if (setting('contact_email') !== ''): ?>
-      <a href="mailto:<?= e(setting('contact_email')) ?>">Send a tip</a>
-      <?php endif; ?>
-    </div>
-  </div>
-  <div class="bottom">
-    <span>© <?= e(date('Y')) ?> <?= e($siteTitle) ?></span>
-    <span><?= e(setting('tagline')) ?></span>
   </div>
 </footer>
 </body>
