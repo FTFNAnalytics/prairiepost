@@ -32,6 +32,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         } elseif ($action === 'accept_editorial') {
             $count = pp_media_accept_editorial($id, $user['name']);
             flash_set("Accepted into {$count} paper story-idea queue(s). Nothing was published.");
+        } elseif ($action === 'order_cancel') {
+            if ($user['role'] !== 'admin') {
+                throw new RuntimeException('Only an administrator can cancel a booked order.');
+            }
+            pp_media_order_cancel_admin((int) ($_POST['order_id'] ?? 0), $note, $user['name']);
+            flash_set('Order cancelled; the request returned to its quote.');
         } elseif ($action === 'quote') {
             if ($user['role'] !== 'admin') {
                 throw new RuntimeException('Only an administrator can issue a commercial quote.');
@@ -66,7 +72,7 @@ flash_show();
 
 <div class="panel">
   <div class="formrow">
-    <?php foreach (['open' => 'Open', 'received' => 'Received', 'quoted' => 'Quoted', 'accepted' => 'Accepted', 'declined' => 'Declined', 'cancelled' => 'Cancelled', 'all' => 'All'] as $key => $label): ?>
+    <?php foreach (['open' => 'Open', 'received' => 'Received', 'quoted' => 'Quoted', 'booked' => 'Booked', 'accepted' => 'Accepted', 'declined' => 'Declined', 'cancelled' => 'Cancelled', 'all' => 'All'] as $key => $label): ?>
       <a class="btn btn--small <?= $state === $key ? 'btn--sky' : 'btn--ghost' ?>" href="media-requests.php?state=<?= e($key) ?><?= $kind ? '&kind=' . e($kind) : '' ?>"><?= e($label) ?></a>
     <?php endforeach; ?>
     <span style="margin-left:auto"></span>
@@ -103,11 +109,32 @@ flash_show();
   <h3>Submitted content</h3><pre class="mono" style="white-space:pre-wrap;max-height:420px;overflow:auto"><?= e(json_encode($content, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES)) ?></pre>
   <h3>Requested properties</h3><table class="tbl"><tr><th>Paper</th><th>Product</th><th>Cap</th></tr><?php foreach ($selected['sites'] as $site): ?><tr><td><?= e($site['site_name']) ?><div class="mono"><?= e($site['site_slug']) ?></div></td><td><?= e($site['product_ref']) ?></td><td class="mono"><?= $site['budget_cap'] === null ? '—' : number_format((float) $site['budget_cap'], 2) ?></td></tr><?php endforeach; ?></table>
 
-  <?php if (!in_array($selected['state'], ['accepted', 'declined', 'cancelled', 'fulfilled'], true)): ?>
+  <?php if (!in_array($selected['state'], ['accepted', 'declined', 'cancelled', 'fulfilled', 'booked'], true)): ?>
   <div class="formgrid" style="margin-top:18px">
     <form method="post"><?= csrf_field() ?><input type="hidden" name="id" value="<?= (int) $selected['id'] ?>"><label for="review-note">Review note</label><textarea id="review-note" name="note"><?= e((string) $selected['review_note']) ?></textarea><div class="formrow" style="margin-top:8px"><button class="btn btn--ghost" name="action" value="review">Mark in review</button><button class="btn btn--outline" name="action" value="changes">Request changes</button><button class="btn btn--danger" name="action" value="decline">Decline</button></div><?php if ($selected['request_kind'] === 'editorial_pitch'): ?><button class="btn" name="action" value="accept_editorial" style="margin-top:12px">Accept into story-idea desks</button><p class="help">Creates ideas only. No post and no publication.</p><?php endif; ?></form>
     <?php if ($selected['request_kind'] !== 'editorial_pitch' && $user['role'] === 'admin'): ?><form method="post"><?= csrf_field() ?><input type="hidden" name="id" value="<?= (int) $selected['id'] ?>"><label>Quote amount · <?= e($selected['currency']) ?><input type="number" name="amount" min="0" max="<?= e((string) ($selected['max_budget'] ?? '')) ?>" step="0.01" required></label><label>Valid until<input type="date" name="valid_until" required></label><label>Terms / note<textarea name="note"></textarea></label><button class="btn" name="action" value="quote">Issue quote</button><p class="help">A quote is not an order. Pantheon must separately approve any paid booking.</p></form><?php endif; ?>
   </div>
+  <?php endif; ?>
+
+  <?php if (!empty($selected['orders'])): ?>
+  <h3>Orders</h3>
+  <p class="help">An order is Pantheon's spend authorization against this desk's quote. Booking launches nothing; going live stays a human action here.</p>
+  <table class="tbl"><tr><th>Order</th><th>Authorization</th><th>Cap</th><th>Window</th><th>Status</th><th></th></tr>
+  <?php foreach ($selected['orders'] as $order): ?>
+    <tr>
+      <td class="mono"><?= e($order['order_ref']) ?><div><?= e($order['client_name']) ?> · <?= e(fmt_date($order['created_at'], 'M j, g:i a')) ?></div></td>
+      <td class="mono"><?= e($order['approval_ref']) ?></td>
+      <td class="mono"><?= e($order['currency']) ?> <?= number_format((float) $order['amount_cap'], 2) ?></td>
+      <td class="mono"><?= e($order['desired_start'] ?: 'open') ?> → <?= e($order['desired_end'] ?: 'open') ?></td>
+      <td><span class="chip <?= in_array($order['state'], ['cancelled', 'failed'], true) ? 'chip--error' : 'chip--used' ?>"><?= e($order['state']) ?></span></td>
+      <td>
+        <?php if ($user['role'] === 'admin' && in_array($order['state'], ['booked', 'scheduled'], true)): ?>
+        <form method="post"><?= csrf_field() ?><input type="hidden" name="id" value="<?= (int) $selected['id'] ?>"><input type="hidden" name="order_id" value="<?= (int) $order['id'] ?>"><input type="text" name="note" placeholder="Reason" required style="max-width:160px"><button class="btn btn--small btn--danger" name="action" value="order_cancel">Cancel order</button></form>
+        <?php endif; ?>
+      </td>
+    </tr>
+  <?php endforeach; ?>
+  </table>
   <?php endif; ?>
 
   <?php if ($selected['outputs']): ?><h3>Outputs</h3><table class="tbl"><tr><th>Kind</th><th>Paper</th><th>ID</th></tr><?php foreach ($selected['outputs'] as $output): ?><tr><td><?= e($output['output_kind']) ?></td><td><?= e($output['site_name'] ?: 'network') ?></td><td class="mono"><?= (int) $output['output_id'] ?></td></tr><?php endforeach; ?></table><?php endif; ?>

@@ -393,6 +393,27 @@ function pp_schema_ddl(string $driver): array
             created_at $dt NOT NULL
         )$suffix",
 
+        "CREATE TABLE media_orders (
+            id $id,
+            order_ref VARCHAR(64) NOT NULL UNIQUE,
+            request_id INTEGER NOT NULL,
+            client_id INTEGER NOT NULL,
+            idempotency_key VARCHAR(191) NOT NULL,
+            pantheon_order_id VARCHAR(80) NOT NULL,
+            quote_ref VARCHAR(80) NOT NULL,
+            approval_ref VARCHAR(160) NOT NULL,
+            amount_cap DECIMAL(14,2) NOT NULL,
+            currency VARCHAR(3) NOT NULL,
+            desired_start VARCHAR(10),
+            desired_end VARCHAR(10),
+            state VARCHAR(30) NOT NULL DEFAULT 'booked',
+            state_note TEXT,
+            created_at $dt NOT NULL,
+            updated_at $dt NOT NULL,
+            CONSTRAINT uq_media_order_idempotency UNIQUE (client_id, idempotency_key),
+            CONSTRAINT uq_media_order_pantheon UNIQUE (client_id, pantheon_order_id)
+        )$suffix",
+
         "CREATE TABLE site_metrics_daily (
             id $id,
             site_id INTEGER NOT NULL,
@@ -520,6 +541,7 @@ function pp_schema_ddl(string $driver): array
         'CREATE INDEX idx_media_request_sites_site ON media_request_sites (site_id, state)',
         'CREATE INDEX idx_media_request_outputs_request ON media_request_outputs (request_id)',
         'CREATE INDEX idx_media_request_events_request ON media_request_events (request_id, id)',
+        'CREATE INDEX idx_media_orders_request ON media_orders (request_id, state)',
     ];
 }
 
@@ -1211,5 +1233,36 @@ function pp_migrate(PDO $pdo, string $driver): void
         )$suffix");
         $pdo->exec('CREATE INDEX idx_social_shares_post ON social_shares (post_id)');
         $pdo->exec("UPDATE settings SET svalue = '18' WHERE site_id = 0 AND skey = 'schema_version'");
+    }
+
+    if ($version < 19) {
+        $dt = $driver === 'pgsql' ? 'TIMESTAMP' : 'DATETIME';
+        $id = $driver === 'mysql' ? 'INT UNSIGNED AUTO_INCREMENT PRIMARY KEY'
+            : ($driver === 'pgsql' ? 'INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY' : 'INTEGER PRIMARY KEY AUTOINCREMENT');
+
+        // The Pantheon order lane: a booked authorization against a quoted
+        // request. Booking never launches anything; launch stays human.
+        $pdo->exec("CREATE TABLE media_orders (
+            id $id,
+            order_ref VARCHAR(64) NOT NULL UNIQUE,
+            request_id INTEGER NOT NULL,
+            client_id INTEGER NOT NULL,
+            idempotency_key VARCHAR(191) NOT NULL,
+            pantheon_order_id VARCHAR(80) NOT NULL,
+            quote_ref VARCHAR(80) NOT NULL,
+            approval_ref VARCHAR(160) NOT NULL,
+            amount_cap DECIMAL(14,2) NOT NULL,
+            currency VARCHAR(3) NOT NULL,
+            desired_start VARCHAR(10),
+            desired_end VARCHAR(10),
+            state VARCHAR(30) NOT NULL DEFAULT 'booked',
+            state_note TEXT,
+            created_at $dt NOT NULL,
+            updated_at $dt NOT NULL,
+            CONSTRAINT uq_media_order_idempotency UNIQUE (client_id, idempotency_key),
+            CONSTRAINT uq_media_order_pantheon UNIQUE (client_id, pantheon_order_id)
+        )");
+        $pdo->exec('CREATE INDEX idx_media_orders_request ON media_orders (request_id, state)');
+        $pdo->exec("UPDATE settings SET svalue = '19' WHERE site_id = 0 AND skey = 'schema_version'");
     }
 }

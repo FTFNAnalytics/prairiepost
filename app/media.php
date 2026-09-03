@@ -11,7 +11,10 @@
 
 const PP_MEDIA_SCHEMA_VERSION = '2026-08-27';
 const PP_MEDIA_KINDS = ['editorial_pitch', 'sponsored_post', 'display_ad'];
-const PP_MEDIA_SCOPES = ['catalog', 'submit', 'status', 'cancel', 'metrics'];
+const PP_MEDIA_SCOPES = ['catalog', 'submit', 'status', 'cancel', 'metrics', 'order'];
+// Order states this provider can report. Booking is synchronous, so 'pending'
+// never leaves this gateway; scheduled/live/paused arrive with launch tooling.
+const PP_MEDIA_ORDER_STATES = ['booked', 'scheduled', 'live', 'paused', 'completed', 'cancelled', 'failed'];
 
 final class PPMediaError extends RuntimeException
 {
@@ -34,8 +37,8 @@ function pp_media_jurisdiction_codes(string $slug): array
 {
     return match ($slug) {
         'bleuet-blanc' => ['ca-qc'],
-        'brampton-bulletin', 'kitchener-chronicle', 'mississauga-monitor',
-        'pickering-post', 'sudbury-standard' => ['ca-on'],
+        'brampton-bulletin', 'kitchener-chronicle', 'london-lookout',
+        'mississauga-monitor', 'pickering-post', 'sudbury-standard' => ['ca-on'],
         'edmonton-echo', 'grande-prairie-gazette', 'prairiedispatch' => ['ca-ab'],
         'kelowna-current', 'kermode-chronicle', 'pacific-post',
         'tri-cities-torch' => ['ca-bc'],
@@ -411,6 +414,226 @@ function pp_media_metrics(array $client, string $publicRef): array
     return ['schemaVersion' => PP_MEDIA_SCHEMA_VERSION, 'providerKey' => 'prairiepost', 'metrics' => $metrics];
 }
 
+/* --- The order lane -------------------------------------------------------
+ *
+ * An order is Pantheon's spend authorization arriving against a quote this
+ * desk issued. Booking records that authorization and nothing else: no
+ * campaign, ad, post, or spend exists until a human launches the work, and
+ * the desk keeps its right of refusal right up to that launch.
+ */
+
+function pp_media_order_receipt(array $order): array
+{
+    return [
+        'schemaVersion' => PP_MEDIA_SCHEMA_VERSION,
+        'providerKey' => 'prairiepost',
+        'externalRef' => (string) $order['order_ref'],
+        'state' => (string) $order['state'],
+        'acceptedAt' => date(DATE_ATOM, strtotime((string) $order['created_at'])),
+        'message' => $order['state_note'] ?: null,
+        'raw' => [
+            'requestRef' => (string) ($order['request_ref'] ?? ''),
+            'quoteRef' => (string) $order['quote_ref'],
+            'amountCap' => (float) $order['amount_cap'],
+            'currency' => (string) $order['currency'],
+        ],
+    ];
+}
+
+function pp_media_order_by_ref(array $client, string $orderRef): ?array
+{
+    $stmt = db()->prepare('SELECT o.*, r.public_ref AS request_ref
+        FROM media_orders o JOIN media_requests r ON r.id = o.request_id
+        WHERE o.order_ref = ? AND o.client_id = ?');
+    $stmt->execute([$orderRef, (int) $client['id']]);
+    return $stmt->fetch() ?: null;
+}
+
+/** Validate one Pantheon order payload against the wire contract. */
+function pp_media_order_validate(array $payload, string $publicRef, string $headerIdempotency): array
+{
+    if (($payload['schemaVersion'] ?? '') !== PP_MEDIA_SCHEMA_VERSION) {
+        throw new PPMediaError(422, 'unsupported schemaVersion');
+    }
+    $key = trim((string) ($payload['idempotencyKey'] ?? ''));
+    if ($key === '' || strlen($key) > 191 || ($headerIdempotency !== '' && !hash_equals($key, $headerIdempotency))) {
+        throw new PPMediaError(422, 'idempotency key is missing, too long, or does not match the header');
+    }
+    $orderId = trim((string) ($payload['orderId'] ?? ''));
+    if ($orderId === '' || strlen($orderId) > 80) {
+        throw new PPMediaError(422, 'orderId is required');
+    }
+    $externalRef = trim((string) ($payload['externalRef'] ?? ''));
+    if (!hash_equals($publicRef, $externalRef)) {
+        throw new PPMediaError(422, 'externalRef must name the request being ordered');
+    }
+    $approvalRef = trim((string) ($payload['approvalRef'] ?? ''));
+    if ($approvalRef === '' || strlen($approvalRef) > 160) {
+        throw new PPMediaError(422, 'an order carries its authorization: approvalRef is required');
+    }
+    $amountCap = $payload['amountCap'] ?? null;
+    if (!is_numeric($amountCap) || (float) $amountCap < 0) {
+        throw new PPMediaError(422, 'amountCap must be a non-negative number');
+    }
+    $currency = strtoupper(trim((string) ($payload['currency'] ?? '')));
+    if (!preg_match('/^[A-Z]{3}$/', $currency)) {
+        throw new PPMediaError(422, 'currency must be a three-letter code');
+    }
+    $quoteRef = trim((string) ($payload['quoteRef'] ?? ''));
+    if (strlen($quoteRef) > 80) {
+        throw new PPMediaError(422, 'quoteRef is at most 80 characters');
+    }
+    $desiredStart = pp_media_date($payload['desiredStart'] ?? null);
+    $desiredEnd = pp_media_date($payload['desiredEnd'] ?? null);
+    if ($desiredStart !== null && $desiredEnd !== null && $desiredEnd < $desiredStart) {
+        throw new PPMediaError(422, 'desiredEnd cannot precede desiredStart');
+    }
+    return [
+        'idempotency_key' => $key,
+        'order_id' => $orderId,
+        'approval_ref' => $approvalRef,
+        'amount_cap' => round((float) $amountCap, 2),
+        'currency' => $currency,
+        'quote_ref' => $quoteRef ?: null,
+        'desired_start' => $desiredStart,
+        'desired_end' => $desiredEnd,
+    ];
+}
+
+/** Book an order against a quoted request. Records authorization; launches nothing. */
+function pp_media_order_place(array $client, string $publicRef, array $payload, string $headerIdempotency = ''): array
+{
+    $input = pp_media_order_validate($payload, $publicRef, $headerIdempotency);
+    $pdo = db();
+    $dup = $pdo->prepare('SELECT o.*, r.public_ref AS request_ref
+        FROM media_orders o JOIN media_requests r ON r.id = o.request_id
+        WHERE o.client_id = ? AND o.idempotency_key = ?');
+    $dup->execute([(int) $client['id'], $input['idempotency_key']]);
+    if ($existing = $dup->fetch()) {
+        return [200, pp_media_order_receipt($existing) + ['duplicate' => true]];
+    }
+    $sameOrder = $pdo->prepare('SELECT id FROM media_orders WHERE client_id = ? AND pantheon_order_id = ?');
+    $sameOrder->execute([(int) $client['id'], $input['order_id']]);
+    if ($sameOrder->fetch()) {
+        throw new PPMediaError(409, 'orderId was already used with a different idempotency key');
+    }
+    $request = pp_media_request_by_ref($client, $publicRef);
+    if (!$request) {
+        throw new PPMediaError(404, 'media request not found');
+    }
+    if (!in_array($request['request_kind'], ['sponsored_post', 'display_ad'], true)) {
+        throw new PPMediaError(409, 'an editorial pitch cannot carry an order');
+    }
+    if ($request['state'] !== 'quoted') {
+        throw new PPMediaError(409, "request in state {$request['state']} cannot be ordered; a live quote is required");
+    }
+    if (!$request['quote_ref'] || $request['quote_amount'] === null || !$request['quote_valid_until']
+        || strtotime((string) $request['quote_valid_until']) < time()) {
+        throw new PPMediaError(409, 'the quote has expired; request a fresh quote before ordering');
+    }
+    if ($input['quote_ref'] !== null && !hash_equals((string) $request['quote_ref'], $input['quote_ref'])) {
+        throw new PPMediaError(409, 'quoteRef does not match the live quote');
+    }
+    $quoteCurrency = (string) ($request['quote_currency'] ?: $request['currency']);
+    if ($input['currency'] !== $quoteCurrency) {
+        throw new PPMediaError(422, "order currency must match the quote ({$quoteCurrency})");
+    }
+    if ($input['amount_cap'] < (float) $request['quote_amount']) {
+        throw new PPMediaError(422, 'amountCap does not cover the quote');
+    }
+    $open = $pdo->prepare("SELECT COUNT(*) FROM media_orders
+        WHERE request_id = ? AND state NOT IN ('cancelled', 'failed')");
+    $open->execute([(int) $request['id']]);
+    if ((int) $open->fetchColumn() > 0) {
+        throw new PPMediaError(409, 'the request already carries an open order');
+    }
+    $orderRef = 'cmo_' . bin2hex(random_bytes(12));
+    $now = now();
+    $pdo->beginTransaction();
+    try {
+        $pdo->prepare('INSERT INTO media_orders
+            (order_ref, request_id, client_id, idempotency_key, pantheon_order_id,
+             quote_ref, approval_ref, amount_cap, currency, desired_start, desired_end,
+             state, state_note, created_at, updated_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)')
+            ->execute([
+                $orderRef, (int) $request['id'], (int) $client['id'], $input['idempotency_key'],
+                $input['order_id'], (string) $request['quote_ref'], $input['approval_ref'],
+                $input['amount_cap'], $input['currency'], $input['desired_start'], $input['desired_end'],
+                'booked', 'Booked. Launch remains a human action on the Civis desk.', $now, $now,
+            ]);
+        $pdo->prepare("UPDATE media_requests SET state = 'booked', updated_at = ? WHERE id = ?")
+            ->execute([$now, (int) $request['id']]);
+        pp_media_event((int) $request['id'], 'order_booked', 'client:' . $client['name'], [
+            'order_ref' => $orderRef,
+            'pantheon_order_id' => $input['order_id'],
+            'approval_ref' => $input['approval_ref'],
+            'amount_cap' => $input['amount_cap'],
+            'currency' => $input['currency'],
+        ]);
+        $pdo->commit();
+    } catch (Throwable $e) {
+        if ($pdo->inTransaction()) {
+            $pdo->rollBack();
+        }
+        // A concurrent retry can lose the unique-insert race; return the
+        // winning receipt rather than turning a safe retry into an error.
+        $dup->execute([(int) $client['id'], $input['idempotency_key']]);
+        if ($existing = $dup->fetch()) {
+            return [200, pp_media_order_receipt($existing) + ['duplicate' => true]];
+        }
+        throw $e;
+    }
+    return [201, pp_media_order_receipt(pp_media_order_by_ref($client, $orderRef))];
+}
+
+/** @return array<int,array> booked and historical orders for one request */
+function pp_media_orders_for_request(int $requestId): array
+{
+    $stmt = db()->prepare('SELECT o.*, r.public_ref AS request_ref, c.name AS client_name
+        FROM media_orders o
+        JOIN media_requests r ON r.id = o.request_id
+        JOIN media_clients c ON c.id = o.client_id
+        WHERE o.request_id = ? ORDER BY o.id DESC');
+    $stmt->execute([$requestId]);
+    return $stmt->fetchAll();
+}
+
+/**
+ * Desk-side order cancellation. The request returns to its quote so a fresh
+ * order can arrive while the quote lives; expiry keeps governing re-orders.
+ */
+function pp_media_order_cancel_admin(int $orderId, string $note, string $reviewer): void
+{
+    if ($note === '') {
+        throw new RuntimeException('Cancelling a booked order needs a reason on the record.');
+    }
+    $stmt = db()->prepare('SELECT * FROM media_orders WHERE id = ?');
+    $stmt->execute([$orderId]);
+    $order = $stmt->fetch();
+    if (!$order || !in_array($order['state'], ['booked', 'scheduled'], true)) {
+        throw new RuntimeException('Only a booked order that has not gone live can be cancelled here.');
+    }
+    $pdo = db();
+    $pdo->beginTransaction();
+    try {
+        $pdo->prepare("UPDATE media_orders SET state = 'cancelled', state_note = ?, updated_at = ? WHERE id = ?")
+            ->execute([$note, now(), $orderId]);
+        $pdo->prepare("UPDATE media_requests SET state = 'quoted', updated_at = ? WHERE id = ? AND state = 'booked'")
+            ->execute([now(), (int) $order['request_id']]);
+        pp_media_event((int) $order['request_id'], 'order_cancelled', 'civis:' . $reviewer, [
+            'order_ref' => (string) $order['order_ref'],
+            'note' => $note,
+        ]);
+        $pdo->commit();
+    } catch (Throwable $e) {
+        if ($pdo->inTransaction()) {
+            $pdo->rollBack();
+        }
+        throw $e;
+    }
+}
+
 /* --- Human control-room workflow ----------------------------------------- */
 
 function pp_media_requests_list(string $state = 'open', string $kind = ''): array
@@ -418,7 +641,7 @@ function pp_media_requests_list(string $state = 'open', string $kind = ''): arra
     $where = [];
     $params = [];
     if ($state === 'open') {
-        $where[] = "r.state IN ('received','in_review','changes_requested','quoted')";
+        $where[] = "r.state IN ('received','in_review','changes_requested','quoted','booked')";
     } elseif ($state !== 'all') {
         $where[] = 'r.state = ?';
         $params[] = $state;
@@ -459,6 +682,7 @@ function pp_media_request_full(int $id): ?array
                               LEFT JOIN sites s ON s.id = o.site_id WHERE o.request_id = ? ORDER BY o.created_at');
     $outputs->execute([$id]);
     $request['outputs'] = $outputs->fetchAll();
+    $request['orders'] = pp_media_orders_for_request($id);
     return $request;
 }
 

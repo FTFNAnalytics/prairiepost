@@ -41,21 +41,34 @@ The Civis hub gains **Submissions** in its control-room navigation.
   paper. No post is created or published.
 - Sponsored-post and display-ad requests may be reviewed, changed, declined,
   or quoted by an administrator.
-- A quote is not an order. This release intentionally exposes no paid-order,
-  campaign-launch, post-publication, or spend endpoint.
+- A quote is still not an order, but the order lane now exists: Pantheon may
+  take up a live quote with `POST ?action=order`, carrying its own
+  `approvalRef` (the human spend authorization on the Pantheon side), an
+  `amountCap` that covers the quote, and an idempotency key. Booking records
+  that authorization and moves the request to `booked` — it launches nothing.
+  `GET ?action=order-status` reports the order. There is still no
+  campaign-launch, post-publication, or spend endpoint: going live remains a
+  human action on this desk, which keeps its right of refusal (an
+  administrator can cancel a booked order, returning the request to its
+  quote) until that launch.
 - Tri Cities Torch is marked sandbox and no-charge in the catalog, but its
   requests still require human review and cannot go live automatically.
 
 ## Deployment
 
 1. Deploy the release to the shared code directory through the normal immutable
-   release process; first request runs migration 17.
+   release process; first request runs the pending migrations (19 adds
+   `media_orders`).
 2. Confirm `/api/media` reaches `media-gateway.php`. The normal Civis deploy
    script installs the nginx route; Apache uses the bundled `.htaccess`. The
    gateway itself returns 404 on every host except the Civis hub.
 3. Issue a scoped token and configure Pantheon.
-4. Verify the catalog reports 15 properties and excludes `civismedia`.
+4. Verify the catalog reports one property per live paper (16 at this
+   writing) and excludes `civismedia`.
 5. Submit one Tri Cities Torch sandbox request and confirm it appears in the
    control room without creating a post, campaign, or ad row.
-6. Run `php tests/run.php` and the 15-property front/admin smoke suite before
-   promoting the release.
+6. Run `php tests/run.php` and the full-network front/admin smoke suite
+   before promoting the release.
+7. Grant the existing Pantheon client the order scope without rotating its
+   token: `php tools/make-media-client.php scopes --name pantheon
+   --scopes catalog,submit,status,cancel,metrics,order`.

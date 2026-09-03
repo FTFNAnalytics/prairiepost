@@ -2,7 +2,8 @@
 /**
  * GET/POST /api/media — provider-scoped Pantheon gateway.
  *
- * Query actions: catalog, submit, request, cancel, metrics. The production
+ * Query actions: catalog, submit, request, cancel, order, order-status,
+ * metrics. The production
  * web server maps /api/media to this file, just as /api/ingest maps to
  * ingest.php. Tokens are issued by tools/make-media-client.php, hashed at
  * rest, and carry explicit operation scopes.
@@ -69,6 +70,8 @@ $scope = match ($action) {
     'submit' => 'submit',
     'request' => 'status',
     'cancel' => 'cancel',
+    'order' => 'order',
+    'order-status' => 'status',
     'metrics' => 'metrics',
     default => '',
 };
@@ -90,8 +93,30 @@ try {
         pp_media_gateway_out($code, $receipt);
     }
     $publicRef = trim((string) ($_GET['id'] ?? ''));
+    if ($action === 'order-status') {
+        if ($method !== 'GET') {
+            pp_media_gateway_out(405, ['ok' => false, 'error' => 'method not allowed for this action']);
+        }
+        if (!preg_match('/^cmo_[a-f0-9]{24}$/', $publicRef)) {
+            throw new PPMediaError(404, 'media order not found');
+        }
+        $order = pp_media_order_by_ref($client, $publicRef);
+        if (!$order) {
+            throw new PPMediaError(404, 'media order not found');
+        }
+        pp_media_gateway_out(200, pp_media_order_receipt($order));
+    }
     if (!preg_match('/^cmr_[a-f0-9]{24}$/', $publicRef)) {
         throw new PPMediaError(404, 'media request not found');
+    }
+    if ($action === 'order' && $method === 'POST') {
+        [$code, $receipt] = pp_media_order_place(
+            $client,
+            $publicRef,
+            pp_media_gateway_body(),
+            trim((string) ($_SERVER['HTTP_X_IDEMPOTENCY_KEY'] ?? '')),
+        );
+        pp_media_gateway_out($code, $receipt);
     }
     if ($action === 'request' && $method === 'GET') {
         $request = pp_media_request_by_ref($client, $publicRef);
