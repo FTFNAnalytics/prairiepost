@@ -12,10 +12,22 @@
         "domain": "tricitiestorch.ca",
         "propertyKind": "newspaper",
         "countryCode": "CA",
-        "serviceArea": { "jurisdictionCodes": ["ca-bc"], "regions": ["Coquitlam", "Port Coquitlam", "Port Moody"] },
+        "serviceArea": {
+          "jurisdictionCodes": [
+            "ca-bc"
+          ],
+          "regions": [
+            "Coquitlam",
+            "Port Coquitlam",
+            "Port Moody"
+          ]
+        },
         "status": "sandbox",
         "sandbox": true,
-        "metadata": { "reviewRequired": true, "hubExcluded": true }
+        "metadata": {
+          "reviewRequired": true,
+          "hubExcluded": true
+        }
       }
     ],
     "products": [
@@ -28,7 +40,9 @@
         "pricingModel": "no_charge",
         "currency": "CAD",
         "rateAmount": 0,
-        "specifications": { "humanLaunchRequired": true },
+        "specifications": {
+          "humanLaunchRequired": true
+        },
         "status": "active"
       }
     ]
@@ -50,16 +64,36 @@
     "desiredEnd": "2026-09-14",
     "maxBudget": 0,
     "currency": "CAD",
-    "targetSpec": { "jurisdictions": ["ca-bc"] },
-    "content": { "heading": "The local benefit test" },
+    "targetSpec": {
+      "jurisdictions": [
+        "ca-bc"
+      ]
+    },
+    "content": {
+      "heading": "The local benefit test"
+    },
     "notes": "No-charge sandbox contract fixture.",
     "placements": [
       {
         "propertyRef": "tri-cities-torch",
         "productRef": "tri-cities-torch:display-ad",
         "budgetCap": 0,
-        "creative": { "placement": "rail" }
+        "creative": {
+          "placement": "rail"
+        }
       }
     ]
+  },
+  "order": {
+    "schemaVersion": "2026-08-27",
+    "idempotencyKey": "contract-order:prairiepost:v1",
+    "orderId": "contract-order",
+    "externalRef": "cmr_000000000000000000000000",
+    "quoteRef": null,
+    "amountCap": 0,
+    "currency": "CAD",
+    "approvalRef": "approval-contract-0001",
+    "desiredStart": "2026-09-01",
+    "desiredEnd": "2026-09-14"
   }
 }

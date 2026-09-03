@@ -5,7 +5,7 @@
  */
 
 define('PP_ROOT', dirname(__DIR__));
-define('PP_SCHEMA_VERSION', 18);
+define('PP_SCHEMA_VERSION', 19);
 
 // PP_CONFIG lets the committed harness (tools/seed-all.sh, baseline.sh)
 // point a CLI run at a throwaway config without touching the checkout's

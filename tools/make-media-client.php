@@ -3,10 +3,12 @@
  * Issue and revoke credentials for the Pantheon media gateway.
  *
  *   php tools/make-media-client.php create --name pantheon \
- *       --scopes catalog,submit,status,cancel,metrics
+ *       --scopes catalog,submit,status,cancel,metrics,order
  *   php tools/make-media-client.php list
  *   php tools/make-media-client.php revoke --name pantheon
  *   php tools/make-media-client.php enable --name pantheon
+ *   php tools/make-media-client.php scopes --name pantheon \
+ *       --scopes catalog,submit,status,cancel,metrics,order
  *
  * The raw token is printed once. Only its SHA-256 hash enters the database.
  * This credential is deliberately separate from Hermes reporting tokens.
@@ -87,6 +89,25 @@ switch ($cmd) {
             : "Media client '{$name}' revoked; its next call answers 401.\n";
         break;
 
+    case 'scopes':
+        // Re-scope without rotating: the token stays as issued, so granting a
+        // new capability (e.g. 'order') never forces a credential handoff.
+        $name = slugify((string) ($opt['name'] ?? ''));
+        $row = pp_media_client_named($pdo, $name);
+        $scopes = array_values(array_unique(array_filter(array_map('trim', explode(',', (string) ($opt['scopes'] ?? ''))))));
+        foreach ($scopes as $scope) {
+            if (!in_array($scope, PP_MEDIA_SCOPES, true)) {
+                exit("Unknown scope '{$scope}'. Allowed: " . implode(', ', PP_MEDIA_SCOPES) . "\n");
+            }
+        }
+        if (!$scopes) {
+            exit("--scopes is required, e.g. --scopes " . implode(',', PP_MEDIA_SCOPES) . "\n");
+        }
+        $pdo->prepare('UPDATE media_clients SET scopes = ? WHERE id = ?')
+            ->execute([implode(',', $scopes), (int) $row['id']]);
+        echo "Media client '{$name}' scopes: " . implode(', ', $scopes) . "\n";
+        break;
+
     default:
-        exit("Usage: php tools/make-media-client.php create|list|revoke|enable [--name ...] [--scopes ...]\n");
+        exit("Usage: php tools/make-media-client.php create|list|revoke|enable|scopes [--name ...] [--scopes ...]\n");
 }
