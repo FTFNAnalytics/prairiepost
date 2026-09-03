@@ -1,25 +1,25 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 700">
   <!-- The council chamber at night. -->
-  <defs><linearGradient id="g" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2C3170"/><stop offset="1" stop-color="#1B1F4A"/></linearGradient></defs>
+  <defs><linearGradient id="g" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#255540"/><stop offset="1" stop-color="#17392A"/></linearGradient></defs>
   <rect width="1200" height="700" fill="url(#g)"/>
-  <g fill="#B5ABFC" opacity="0.22">
+  <g fill="#D8B04A" opacity="0.22">
     <ellipse cx="600" cy="120" rx="300" ry="46"/>
   </g>
-  <g fill="#F3F5FE" opacity="0.14">
+  <g fill="#F1F5EB" opacity="0.14">
     <path d="M300 470 h600 v40 H300 z"/>
     <path d="M340 400 h520 v34 H340 z"/>
   </g>
-  <g fill="#0F1235" opacity="0.55">
+  <g fill="#0D2418" opacity="0.55">
     <rect x="0" y="560" width="1200" height="140"/>
   </g>
-  <g fill="#B5ABFC" opacity="0.5">
+  <g fill="#D8B04A" opacity="0.5">
     <circle cx="420" cy="372" r="22"/><circle cx="530" cy="366" r="22"/><circle cx="660" cy="366" r="22"/><circle cx="770" cy="372" r="22"/>
   </g>
-  <g fill="#F3F5FE" opacity="0.35">
+  <g fill="#F1F5EB" opacity="0.35">
     <rect x="398" y="398" width="44" height="40"/><rect x="508" y="392" width="44" height="46"/>
     <rect x="638" y="392" width="44" height="46"/><rect x="748" y="398" width="44" height="40"/>
   </g>
-  <g fill="#B5ABFC" opacity="0.16">
+  <g fill="#D8B04A" opacity="0.16">
     <rect x="120" y="120" width="140" height="300" rx="6"/><rect x="940" y="120" width="140" height="300" rx="6"/>
   </g>
 </svg>

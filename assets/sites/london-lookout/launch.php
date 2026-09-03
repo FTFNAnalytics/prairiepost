@@ -30,12 +30,12 @@ return [
     'domains' => ['londonlookout.com', 'www.londonlookout.com'],
 
     'desks' => [
-        ['name' => 'Local News', 'slug' => 'local-news', 'color' => '#262A60', 'description' => 'Neighbourhoods, schools, transit and what happened overnight in London.'],
-        ['name' => 'City Hall',  'slug' => 'city-hall',  'color' => '#262A60', 'description' => 'Council, committees, the budget and the paperwork behind them. A Lookout reporter is in the chamber every Tuesday night.'],
-        ['name' => 'Business & Markets', 'slug' => 'business', 'color' => '#262A60', 'description' => 'Employers, storefronts and the local economy.'],
-        ['name' => 'Events',     'slug' => 'events',     'color' => '#262A60', 'description' => 'What is on this week, from the bandshell to the committee room.'],
-        ['name' => 'Sports',     'slug' => 'sports',     'color' => '#262A60', 'description' => 'The Knights, the Mustangs, and who pays for the ice.'],
-        ['name' => 'Opinion',    'slug' => 'opinion',    'color' => '#262A60', 'description' => 'Columns and letters, always labelled. Editorial positions are the board\'s alone.'],
+        ['name' => 'Local News', 'slug' => 'local-news', 'color' => '#1E4D38', 'description' => 'Neighbourhoods, schools, transit and what happened overnight in London.'],
+        ['name' => 'City Hall',  'slug' => 'city-hall',  'color' => '#1E4D38', 'description' => 'Council, committees, the budget and the paperwork behind them. A Lookout reporter is in the chamber every Tuesday night.'],
+        ['name' => 'Business & Markets', 'slug' => 'business', 'color' => '#1E4D38', 'description' => 'Employers, storefronts and the local economy.'],
+        ['name' => 'Events',     'slug' => 'events',     'color' => '#1E4D38', 'description' => 'What is on this week, from the bandshell to the committee room.'],
+        ['name' => 'Sports',     'slug' => 'sports',     'color' => '#1E4D38', 'description' => 'The Knights, the Mustangs, and who pays for the ice.'],
+        ['name' => 'Opinion',    'slug' => 'opinion',    'color' => '#1E4D38', 'description' => 'Columns and letters, always labelled. Editorial positions are the board\'s alone.'],
     ],
 
     'settings' => [
