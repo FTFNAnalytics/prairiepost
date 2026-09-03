@@ -58,11 +58,6 @@ if (pp_chrome('template') === 'bulletin') {
     page_footer();
     return;
 }
-if (pp_chrome('template') === 'lookout') {
-    require PP_ROOT . '/app/views/front-lookout.php';
-    page_footer();
-    return;
-}
 if (pp_chrome('template') === 'westernwire') {
     require PP_ROOT . '/app/views/front-westernwire.php';
     page_footer();
