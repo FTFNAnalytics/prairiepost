@@ -1,7 +1,7 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 52" fill="none">
-  <!-- On the indigo band: lilac frame, paper-white skyline. -->
-  <rect x="1.5" y="1.5" width="49" height="49" rx="7" stroke="#B5ABFC" stroke-width="2.2"/>
-  <path d="M11 34.5h30" stroke="#B5ABFC" stroke-width="2.2"/>
-  <path d="M11 34.5 20.5 22l6.5 7.5L34 18l7 16.5" stroke="#F3F5FE" stroke-width="2.2" stroke-linejoin="round" fill="none"/>
-  <circle cx="37.5" cy="14" r="3.5" fill="#B5ABFC"/>
+  <!-- On the forest band: gold frame, paper-white skyline. -->
+  <rect x="1.5" y="1.5" width="49" height="49" rx="7" stroke="#D8B04A" stroke-width="2.2"/>
+  <path d="M11 34.5h30" stroke="#D8B04A" stroke-width="2.2"/>
+  <path d="M11 34.5 20.5 22l6.5 7.5L34 18l7 16.5" stroke="#F1F5EB" stroke-width="2.2" stroke-linejoin="round" fill="none"/>
+  <circle cx="37.5" cy="14" r="3.5" fill="#D8B04A"/>
 </svg>

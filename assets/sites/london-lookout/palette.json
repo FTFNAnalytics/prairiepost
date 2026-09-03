@@ -1,21 +1,21 @@
 {
   "palette": {
-    "ink":     "#22242E",
-    "paper":   "#ECEEF6",
-    "surface": "#F8F9FD",
-    "accent":  "#262A60",
-    "glow":    "#353B80",
-    "lilac":   "#B5ABFC",
-    "muted":   "#75798C",
-    "line":    "#DCDFEB"
+    "ink":     "#1D241F",
+    "paper":   "#EDEFE6",
+    "surface": "#F9FAF4",
+    "accent":  "#1E4D38",
+    "glow":    "#2A6047",
+    "lilac":   "#D8B04A",
+    "muted":   "#6F7C71",
+    "line":    "#DBE1D2"
   },
   "desks": {
-    "local-news": "#262A60",
-    "city-hall":  "#262A60",
-    "business":   "#262A60",
-    "events":     "#262A60",
-    "sports":     "#262A60",
-    "opinion":    "#262A60"
+    "local-news": "#1E4D38",
+    "city-hall":  "#1E4D38",
+    "business":   "#1E4D38",
+    "events":     "#1E4D38",
+    "sports":     "#1E4D38",
+    "opinion":    "#1E4D38"
   },
   "desk_labels": {
     "business": "Business",

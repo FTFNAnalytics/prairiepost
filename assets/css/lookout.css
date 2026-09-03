@@ -2,32 +2,33 @@
 
    From the brand package: one family (Inter), hierarchy from size,
    tracking and space — headlines never pass weight 500. The ground is
-   light (#ECEEF6) with cards on #F8F9FD; Lookout navy #262A60 is the
+   light (#EDEFE6) with cards on #F9FAF4; Lookout green #1E4D38 is the
    only accent, appearing as a line, a kicker or a rule and never as a
-   fill behind body text. The deep indigo field (#353B80 → #262A60) is
-   reserved for the masthead band and the membership panel. Kickers and
+   fill behind body text. The deep forest field (#2A6047 → #1E4D38) is
+   reserved for the masthead band and the membership panel, where the
+   harvest-gold pop (#D8B04A) does the lilac's old job. Kickers and
    section labels are the only uppercase on the page. */
 
 @import url('/assets/css/fonts.css');  /* self-hosted Inter */
 
 body.t-lookout {
-  --ll-bg:      #ECEEF6;
-  --ll-surface: #F8F9FD;
-  --ll-ink:     #22242E;
-  --ll-n200:    #3F424D;
-  --ll-n300:    #4A4D59;
-  --ll-n400:    #5F6373;
-  --ll-n500:    #75798C;
-  --ll-n600:    #7F8394;
-  --ll-n700:    #C2C6D6;
-  --ll-line:    #DCDFEB;
-  --ll-accent:  #262A60;
-  --ll-accent6: #3B4589;
-  --ll-accent7: #4B5599;
-  --ll-accent8: #CCD1E9;
-  --ll-glow:    #353B80;
-  --ll-lilac:   #B5ABFC;
-  --ll-paper:   #F3F5FE;
+  --ll-bg:      #EDEFE6;
+  --ll-surface: #F9FAF4;
+  --ll-ink:     #1D241F;
+  --ll-n200:    #3A443C;
+  --ll-n300:    #46514A;
+  --ll-n400:    #5A665C;
+  --ll-n500:    #6F7C71;
+  --ll-n600:    #7A877C;
+  --ll-n700:    #C3CFC3;
+  --ll-line:    #DBE1D2;
+  --ll-accent:  #1E4D38;
+  --ll-accent6: #2C6549;
+  --ll-accent7: #3B7659;
+  --ll-accent8: #CBDECF;
+  --ll-glow:    #2A6047;
+  --ll-lilac:   #D8B04A;
+  --ll-paper:   #F1F5EB;
   --ll-sans: 'Inter', system-ui, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif;
   margin: 0;
   background: var(--ll-bg);
@@ -71,7 +72,7 @@ body.t-lookout {
 .ll-util .digest { color: var(--ll-accent); }
 .ll-util .sep { color: var(--ll-n700); }
 
-.ll-mast { background: linear-gradient(160deg, var(--ll-glow) 0%, var(--ll-accent) 62%, #1F2350 100%); }
+.ll-mast { background: linear-gradient(160deg, var(--ll-glow) 0%, var(--ll-accent) 62%, #153927 100%); }
 .ll-mast .in {
   max-width: 1280px; margin: 0 auto; padding: 22px 34px;
   display: flex; align-items: center; justify-content: space-between; gap: 28px; flex-wrap: wrap;
@@ -80,7 +81,7 @@ body.t-lookout {
 .ll-lock img { width: 34px; height: 34px; }
 .ll-lock .the {
   display: block; font-size: 9px; line-height: 1; letter-spacing: 0.3em;
-  text-transform: uppercase; color: #9AA0D8;
+  text-transform: uppercase; color: #9DBFA9;
 }
 .ll-lock .name {
   display: block; font-size: 26px; line-height: 1; font-weight: 500;
@@ -89,15 +90,15 @@ body.t-lookout {
 .ll-mast .tools { display: flex; align-items: center; gap: 14px; }
 .ll-search {
   display: flex; align-items: center; gap: 9px; background: rgba(22,24,38,0.4);
-  border: 1px solid rgba(181,171,252,0.34); border-radius: 6px; padding: 8px 14px;
-  font-size: 12px; color: #C9CDF0 !important;
+  border: 1px solid rgba(216,176,74,0.34); border-radius: 6px; padding: 8px 14px;
+  font-size: 12px; color: #D3E4D6 !important;
 }
 .ll-search:hover { border-color: var(--ll-lilac); color: var(--ll-paper) !important; }
 .ll-member {
   border: 1px solid var(--ll-lilac); color: var(--ll-paper) !important; border-radius: 6px;
   padding: 8px 15px; font-size: 12px; font-weight: 500;
 }
-.ll-member:hover { background: rgba(181,171,252,0.14); }
+.ll-member:hover { background: rgba(216,176,74,0.14); }
 
 .ll-nav { background: var(--ll-surface); box-shadow: inset 0 -1px 0 var(--ll-line); }
 .ll-nav .in {
@@ -212,18 +213,18 @@ body.t-lookout figcaption .credit {
 /* The membership band — the one other indigo field. */
 .ll-member-band {
   margin: 44px 0 0; border-radius: 8px; padding: 40px 44px;
-  background: linear-gradient(115deg, var(--ll-glow) 0%, var(--ll-accent) 68%, #1C1F4D 100%);
-  border: 1px solid rgba(181,171,252,0.24);
+  background: linear-gradient(115deg, var(--ll-glow) 0%, var(--ll-accent) 68%, #12331F 100%);
+  border: 1px solid rgba(216,176,74,0.24);
   display: grid; grid-template-columns: 1.3fr 1fr; gap: 44px; align-items: center;
 }
-.ll-member-band .ll-kick { color: #9AA0D8; }
+.ll-member-band .ll-kick { color: #9DBFA9; }
 .ll-member-band h2 { font-size: 30px; line-height: 1.14; letter-spacing: -0.022em; color: var(--ll-paper); margin-top: 12px; }
-.ll-member-band p { font-size: 14px; line-height: 1.65; color: #C9CDF0; margin: 12px 0 0; max-width: 52ch; }
+.ll-member-band p { font-size: 14px; line-height: 1.65; color: #D3E4D6; margin: 12px 0 0; max-width: 52ch; }
 .ll-member-band .cta { display: flex; gap: 10px; margin-top: 18px; flex-wrap: wrap; }
 .ll-member-band .bar { height: 6px; border-radius: 3px; background: rgba(22,24,38,0.55); overflow: hidden; }
 .ll-member-band .bar span { display: block; height: 100%; background: var(--ll-lilac); }
-.ll-member-band .nums { display: flex; justify-content: space-between; font-size: 12px; color: #9AA0D8; margin-bottom: 10px; }
-.ll-member-band .foot { font-size: 11px; line-height: 1.6; color: #9AA0D8; margin-top: 10px; }
+.ll-member-band .nums { display: flex; justify-content: space-between; font-size: 12px; color: #9DBFA9; margin-bottom: 10px; }
+.ll-member-band .foot { font-size: 11px; line-height: 1.6; color: #9DBFA9; margin-top: 10px; }
 
 /* --- Section pages --------------------------------------------------------- */
 .ll-sec { padding-top: 34px; }
@@ -315,25 +316,25 @@ body.t-lookout figcaption .credit {
 .ll-digest p { font-size: 12px; line-height: 1.6; color: var(--ll-n400); margin: 0; }
 
 /* --- Footer ---------------------------------------------------------------- */
-.ll-foot { margin-top: 56px; background: var(--ll-accent); color: #C9CDF0; padding: 44px 0 28px; }
+.ll-foot { margin-top: 56px; background: var(--ll-accent); color: #D3E4D6; padding: 44px 0 28px; }
 .ll-foot .in {
   max-width: 1280px; margin: 0 auto; padding: 0 34px;
   display: flex; justify-content: space-between; gap: 44px; flex-wrap: wrap;
 }
 .ll-foot .name { font-size: 22px; font-weight: 500; letter-spacing: 0.03em; text-transform: uppercase; color: var(--ll-paper); }
-.ll-foot .the { font-size: 9px; letter-spacing: 0.3em; text-transform: uppercase; color: #9AA0D8; }
-.ll-foot p { font-size: 13px; line-height: 1.6; color: #9AA0D8; margin: 10px 0 0; max-width: 38ch; }
+.ll-foot .the { font-size: 9px; letter-spacing: 0.3em; text-transform: uppercase; color: #9DBFA9; }
+.ll-foot p { font-size: 13px; line-height: 1.6; color: #9DBFA9; margin: 10px 0 0; max-width: 38ch; }
 .ll-foot .cols { display: flex; gap: 56px; flex-wrap: wrap; }
 .ll-foot h4 {
   font-size: 11px; font-weight: 500; letter-spacing: 0.14em; text-transform: uppercase;
   color: var(--ll-lilac); margin: 0 0 12px;
 }
 .ll-foot .col { display: flex; flex-direction: column; gap: 9px; }
-.ll-foot .col a { font-size: 13px; color: #C9CDF0; }
+.ll-foot .col a { font-size: 13px; color: #D3E4D6; }
 .ll-foot .col a:hover { color: var(--ll-paper); }
 .ll-foot .base {
   max-width: 1280px; margin: 34px auto 0; padding: 18px 34px 0;
-  border-top: 1px solid rgba(181,171,252,0.2); font-size: 11px; color: #8388B8;
+  border-top: 1px solid rgba(216,176,74,0.2); font-size: 11px; color: #86A791;
   display: flex; justify-content: space-between; gap: 20px; flex-wrap: wrap;
 }
 .ll-empty { padding: 60px 0 80px; color: var(--ll-n500); }

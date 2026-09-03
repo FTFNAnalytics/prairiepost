@@ -1,21 +1,21 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 700">
   <!-- The Thames Valley Parkway, dusk. -->
-  <defs><linearGradient id="r" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3B4189"/><stop offset="1" stop-color="#191C46"/></linearGradient></defs>
+  <defs><linearGradient id="r" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#357052"/><stop offset="1" stop-color="#163727"/></linearGradient></defs>
   <rect width="1200" height="700" fill="url(#r)"/>
-  <g fill="#12142F" opacity="0.7">
+  <g fill="#0F261A" opacity="0.7">
     <path d="M0 420 C200 380 320 440 520 420 C760 396 900 452 1200 424 V700 H0 Z"/>
   </g>
-  <g fill="#B5ABFC" opacity="0.18">
+  <g fill="#D8B04A" opacity="0.18">
     <path d="M0 470 C260 440 460 500 700 470 C900 446 1060 490 1200 466 V700 H0 Z"/>
   </g>
-  <g stroke="#F3F5FE" opacity="0.3" stroke-width="4" fill="none">
+  <g stroke="#F1F5EB" opacity="0.3" stroke-width="4" fill="none">
     <path d="M120 300 a180 130 0 0 1 360 0"/><path d="M520 300 a180 130 0 0 1 360 0"/>
     <path d="M60 300 h1080"/>
   </g>
-  <g fill="#12142F" opacity="0.75">
+  <g fill="#0F261A" opacity="0.75">
     <rect x="130" y="300" width="22" height="130"/><rect x="520" y="300" width="22" height="130"/><rect x="900" y="300" width="22" height="130"/>
   </g>
-  <g fill="#B5ABFC" opacity="0.4">
+  <g fill="#D8B04A" opacity="0.4">
     <circle cx="150" cy="200" r="40"/><circle cx="1060" cy="176" r="52"/>
   </g>
 </svg>
