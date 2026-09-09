@@ -373,3 +373,27 @@ Check any new-paper work against the PLAN.md gate before starting it.
    the seeder prefix automatically.
 7. **GitHub's default branch is the dead line.** Repoint it to the
    release branch so the trunk that is visible is the trunk that ships.
+
+## Phase 1 security invariants (do not regress)
+
+Full detail and evidence: `docs/build/phase-01-handoff.md`.
+
+- **Stored HTML** renders and saves only through `sanitize_html()`, which
+  is HTML Purifier (parser-based, vendored under `vendor/`, pinned in
+  `composer.lock`) — never reintroduce regex sanitization. JSON inside
+  HTML (JSON-LD, inline `var X =`) goes through `pp_json_for_html()`.
+- **Post writes** (edit, autosave, restore, delete) ask
+  `pp_post_write_denied()` against the PERSISTED row and, for authors,
+  write through `pp_guarded_post_update()` with a state condition —
+  published/scheduled stories change only at an editor's desk.
+- **Untrusted URLs** are fetched only through `http_get()`/`pp_http_get()`
+  (app/transport.php): destination policy, per-hop redirect validation,
+  pinned connections, streamed size caps. Never hand a user-supplied URL
+  to raw curl.
+- **First administrator** comes from `php tools/setup-admin.php` on the
+  server; the login page never creates accounts.
+- **Indexing is per-site opt-in** (`indexing_enabled`, default OFF —
+  every page noindex until an admin ticks the box in Settings).
+- **CI** (`tools/render-gate.sh`): `[render]` in a PR title excuses ONLY
+  a classified rendered-output diff (baseline exit 10) — and PR titles
+  are environment data, never shell source.

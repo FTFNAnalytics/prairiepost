@@ -16,9 +16,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $target = $stmt->fetch();
     }
     if ($action === 'delete' && $target) {
-        // Authors clear their own unpublished work; editors delete anything.
-        if (!$editor && ((int) $target['author_id'] !== (int) $user['id'] || $target['status'] === 'published')) {
-            flash_set("Only editors can delete a published story or another author's work.", true);
+        // Authors clear their own unpublished, unscheduled work; editors
+        // delete anything. Same policy as every other post write.
+        if (pp_post_write_denied($user, $target, 'delete') !== null) {
+            flash_set("Only editors can delete a published or scheduled story, or another author's work.", true);
         } else {
             db()->prepare('DELETE FROM posts WHERE id = ?')->execute([$id]);
             db()->prepare('DELETE FROM post_tags WHERE post_id = ?')->execute([$id]);

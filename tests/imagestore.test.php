@@ -3,6 +3,8 @@
 define('PP_ROOT', sys_get_temp_dir() . '/pp-imagestore-' . getmypid());
 mkdir(PP_ROOT);
 require dirname(__DIR__) . '/app/helpers.php';
+require dirname(__DIR__) . '/app/models.php';    // pp_ip_in_cidr, used by the transport policy
+require dirname(__DIR__) . '/app/transport.php'; // pp_url_is_public now rides the shared transport
 
 $fails = 0;
 function ok(bool $cond, string $label): void

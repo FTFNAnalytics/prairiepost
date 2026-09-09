@@ -151,6 +151,38 @@ function can_edit_post(array $user, array $post): bool
     return is_editor($user) || (int) ($post['author_id'] ?? 0) === (int) $user['id'];
 }
 
+/** A post the approval gate has signed off on: live now, or queued to go live. */
+function pp_post_locked(array $post): bool
+{
+    return in_array((string) ($post['status'] ?? ''), ['published', 'scheduled'], true);
+}
+
+/**
+ * May this user WRITE to this post (edit, autosave, restore, delete)?
+ * The one policy every mutating endpoint asks, against the post's
+ * PERSISTED state — not the state the form was rendered from.
+ *
+ * Editors and admins: anything. Authors: their own stories only, and only
+ * while the story is still theirs to shape (draft / in review). Once an
+ * editor has published or scheduled it, changing it — by edit, restore,
+ * autosave or delete — is the approval gate's job, so the author is
+ * refused and told why. Returns null when allowed, the refusal otherwise.
+ */
+function pp_post_write_denied(array $user, array $post, string $action = 'edit'): ?string
+{
+    if (is_editor($user)) {
+        return null;
+    }
+    if ((int) ($post['author_id'] ?? 0) !== (int) $user['id']) {
+        return 'That story belongs to another author.';
+    }
+    if (pp_post_locked($post)) {
+        return 'This story is ' . $post['status'] . ' — the live version only changes at an editor\'s desk. '
+             . 'Ask an editor to ' . ($action === 'restore' ? 'restore it' : 'take your changes') . ', or to send it back to draft first.';
+    }
+    return null;
+}
+
 /* --- Text --------------------------------------------------------------- */
 
 function excerpt(string $html, int $chars = 180): string
@@ -165,18 +197,45 @@ function excerpt(string $html, int $chars = 180): string
 }
 
 /**
- * Whitelist-sanitize stored article HTML before rendering or saving.
- * Keeps editorial tags, strips scripts, event handlers and javascript: URLs.
+ * Allowlist-sanitize stored article HTML before rendering or saving.
+ * Parser-based (HTML Purifier): the document is decoded and rebuilt the
+ * way a browser reads it, so entity-encoded schemes, event handlers and
+ * malformed markup cannot survive. The allowlist lives in app/security.php.
  */
 function sanitize_html(string $html): string
 {
-    $allowed = '<p><br><strong><em><b><i><u><s><a><h2><h3><blockquote><cite><ul><ol><li>'
-             . '<figure><figcaption><img><table><thead><tbody><tr><td><th><hr><div><span>';
-    $html = strip_tags($html, $allowed);
-    $html = preg_replace('/\son\w+\s*=\s*("[^"]*"|\'[^\']*\'|[^\s>]+)/i', '', $html);
-    $html = preg_replace('/\s(href|src)\s*=\s*(["\']?)\s*javascript:[^"\'>\s]*\2/i', '', $html);
-    $html = preg_replace('/\s(href|src)\s*=\s*(["\']?)\s*data:text\/html[^"\'>\s]*\2/i', '', $html);
-    return $html;
+    if (trim($html) === '') {
+        return '';
+    }
+    return pp_purifier()->purify($html);
+}
+
+/* --- Search-engine indexing (per site, default OFF) ---------------------- */
+
+/**
+ * May search engines index THIS paper? Off unless the site's own
+ * `indexing_enabled` setting is exactly '1' — a missing value means no:
+ * a hostname existing is not approval to index it, and an unfinished
+ * paper must never leak into results because someone forgot a setting.
+ * Site-scoped by construction (settings are per-site rows).
+ */
+function pp_indexing_enabled(): bool
+{
+    return setting('indexing_enabled', '0') === '1';
+}
+
+/**
+ * Send the robots response header for non-HTML public representations
+ * (feeds, sitemaps, social cards) when this site isn't cleared to index.
+ * The header travels with the response, so crawlers can fetch the URL and
+ * still read the directive — which is why robots.txt Disallow is NOT used:
+ * it would stop crawlers from ever seeing the noindex.
+ */
+function pp_robots_header(): void
+{
+    if (!pp_indexing_enabled()) {
+        header('X-Robots-Tag: noindex, nofollow');
+    }
 }
 
 function fmt_date(?string $dt, string $format = 'M j, Y'): string
@@ -410,6 +469,11 @@ function pp_store_image_bytes(string $bytes, string $baseName): array
     if (!isset($extensions[$mime])) {
         return [null, 'only JPEG, PNG, WebP or GIF images are accepted (got ' . $mime . ')'];
     }
+    // The content-type sniff says what the bytes claim to be; this says the
+    // bytes actually decode as an image of that kind.
+    if (@getimagesizefromstring($bytes) === false) {
+        return [null, 'the file does not decode as an image'];
+    }
     $dir = PP_ROOT . '/uploads/' . date('Y/m');
     if (!is_dir($dir)) {
         mkdir($dir, 0775, true);
@@ -431,51 +495,26 @@ function pp_store_image_bytes(string $bytes, string $baseName): array
  */
 function pp_url_is_public(string $url): bool
 {
-    $parts = parse_url($url);
-    $scheme = strtolower((string) ($parts['scheme'] ?? ''));
-    $host = (string) ($parts['host'] ?? '');
-    if (!in_array($scheme, ['http', 'https'], true) || $host === '') {
+    [$p, $err] = pp_http_check_url($url);
+    if ($err !== null) {
         return false;
     }
-    $ips = filter_var($host, FILTER_VALIDATE_IP) ? [$host] : (gethostbynamel($host) ?: []);
-    if (!$ips) {
-        return false;
-    }
-    foreach ($ips as $ip) {
-        if (filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE) === false) {
-            return false;
-        }
-    }
-    return true;
+    [, $resolveErr] = pp_http_resolve((string) $p['host']);
+    return $resolveErr === null;
 }
 
 /* --- Feeds (shared by cron and the sources admin) ----------------------- */
 
-/** Fetch a URL with a short timeout; returns [body, error]. */
+/**
+ * Fetch a URL with a short timeout; returns [body, error]. Every caller
+ * of this function handles URLs someone else wrote (feed rows, pasted
+ * links, ingest payloads), so it IS the safe untrusted-URL transport:
+ * destination policy, per-hop redirect validation, address pinning and
+ * a streamed size cap all live in app/transport.php.
+ */
 function http_get(string $url, int $timeout = 12): array
 {
-    $ch = curl_init($url);
-    curl_setopt_array($ch, [
-        CURLOPT_RETURNTRANSFER => true,
-        CURLOPT_FOLLOWLOCATION => true,
-        CURLOPT_MAXREDIRS      => 5,
-        CURLOPT_TIMEOUT        => $timeout,
-        CURLOPT_CONNECTTIMEOUT => 8,
-        CURLOPT_USERAGENT      => 'PrairieDispatch/1.0 (+news reader)',
-        CURLOPT_ENCODING       => '',
-    ]);
-    $body = curl_exec($ch);
-    $err  = curl_error($ch);
-    $code = (int) curl_getinfo($ch, CURLINFO_RESPONSE_CODE);
-    curl_close($ch);
-
-    if ($body === false) {
-        return [null, $err ?: 'request failed'];
-    }
-    if ($code >= 400) {
-        return [null, 'HTTP ' . $code];
-    }
-    return [$body, null];
+    return pp_http_get($url, ['timeout' => $timeout]);
 }
 
 /**

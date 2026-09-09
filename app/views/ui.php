@@ -186,7 +186,8 @@ function page_header(array $meta = [], string $activeDesk = ''): void
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title><?= e($title) ?></title>
-<?php if ($description !== ''): ?><meta name="description" content="<?= e($description) ?>">
+<?php if (!pp_indexing_enabled()): ?><meta name="robots" content="noindex, nofollow">
+<?php endif; ?><?php if ($description !== ''): ?><meta name="description" content="<?= e($description) ?>">
 <?php endif; ?><link rel="canonical" href="<?= e($canonical) ?>">
 <link rel="icon" type="image/svg+xml" href="<?= e(site_asset('favicon.svg')) ?>">
 <link rel="alternate" type="application/rss+xml" title="<?= e($siteTitle) ?>" href="<?= e(site_url()) ?>/feed/">
@@ -210,7 +211,7 @@ if ($ppHasChrome && is_file(PP_ROOT . '/assets/css/' . $ppCssFile . '.css')): ?>
 <meta property="og:image" content="<?= e($ogImage) ?>">
 <meta name="twitter:card" content="summary_large_image">
 <?php if (!empty($meta['jsonld'])): ?>
-<script type="application/ld+json"><?= json_encode($meta['jsonld'], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) ?></script>
+<script type="application/ld+json"><?= pp_json_for_html($meta['jsonld']) ?></script>
 <?php endif; ?>
 <?php $analytics = setting('analytics_code'); if ($analytics !== '') { echo $analytics . "\n"; } ?>
 </head>

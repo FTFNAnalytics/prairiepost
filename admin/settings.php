@@ -40,6 +40,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             set_setting($key, $new);
         }
     }
+    // Search-engine indexing: a checkbox, so an unchecked box doesn't POST —
+    // the marker says the panel was on the form, and the value written is
+    // for THIS site's settings row only. Admin-only (this whole page is).
+    if (isset($_POST['indexing_marker'])) {
+        set_setting('indexing_enabled', isset($_POST['indexing_enabled']) ? '1' : '0');
+    }
+
     // Agent auto-queue checkboxes (hub): unchecked boxes don't POST, so the
     // marker field tells us the panel was on the submitted form at all.
     if (pp_is_hub() && isset($_POST['agent_auto_marker'])) {
@@ -162,6 +169,13 @@ flash_show();
         <textarea id="meta_description" name="meta_description" style="min-height:64px"><?= e(setting('meta_description')) ?></textarea>
         <label for="footer_line">Footer line</label>
         <textarea id="footer_line" name="footer_line" style="min-height:64px"><?= e(setting('footer_line')) ?></textarea>
+        <input type="hidden" name="indexing_marker" value="1">
+        <label style="display:flex;align-items:center;gap:8px;text-transform:none;letter-spacing:.04em;margin-top:12px">
+          <input type="checkbox" name="indexing_enabled" value="1" style="width:auto"<?= pp_indexing_enabled() ? ' checked' : '' ?>>
+          Search engines may index this paper
+        </label>
+        <p class="help">Off by default: every page carries <span class="mono">noindex</span> until this paper is
+        editorially ready and this box is ticked. This site only — the other papers keep their own switch.</p>
       </div>
     </div>
   </div>

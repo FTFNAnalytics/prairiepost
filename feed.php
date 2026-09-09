@@ -5,6 +5,7 @@ require __DIR__ . '/app/bootstrap.php';
 $posts = latest_posts(20);
 $siteTitle = setting('site_title', 'The Prairie Dispatch');
 
+pp_robots_header();
 header('Content-Type: application/rss+xml; charset=utf-8');
 echo '<?xml version="1.0" encoding="UTF-8"?>' . "\n";
 ?>

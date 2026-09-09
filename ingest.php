@@ -204,7 +204,7 @@ if ($imageUrl !== '') {
     if (!pp_url_is_public($imageUrl)) {
         $imageNote = 'skipped — the image URL does not resolve to a public address';
     } else {
-        [$bytes, $err] = http_get($imageUrl, 15);
+        [$bytes, $err] = pp_http_get($imageUrl, ['timeout' => 15, 'max_bytes' => 8 * 1024 * 1024]);
         if ($err !== null) {
             $imageNote = 'skipped — fetch failed: ' . $err;
         } else {

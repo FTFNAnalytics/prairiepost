@@ -29,6 +29,8 @@ $errors    = [
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title><?= e($siteTitle) ?> — <?= e($tagline) ?></title>
+<?php if (!pp_indexing_enabled()): ?><meta name="robots" content="noindex, nofollow">
+<?php endif; ?>
 <meta name="description" content="<?= e(setting('meta_description')) ?>">
 <link rel="canonical" href="<?= e(site_url()) ?>/">
 <link rel="icon" type="image/svg+xml" href="<?= e(site_asset('favicon.svg')) ?>">
@@ -37,13 +39,13 @@ $errors    = [
 <meta property="og:title" content="<?= e($siteTitle) ?> — <?= e($tagline) ?>">
 <meta property="og:type" content="website">
 <meta property="og:url" content="<?= e(site_url()) ?>/">
-<script type="application/ld+json"><?= json_encode([
+<script type="application/ld+json"><?= pp_json_for_html([
     '@context' => 'https://schema.org',
     '@type'    => 'Organization',
     'name'     => $siteTitle,
     'url'      => site_url(),
     'description' => setting('meta_description'),
-], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) ?></script>
+]) ?></script>
 <?php $analytics = setting('analytics_code'); if ($analytics !== '') { echo $analytics . "\n"; } ?>
 </head>
 <body class="t-civis">

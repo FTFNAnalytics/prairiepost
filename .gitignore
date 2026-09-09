@@ -10,3 +10,6 @@ data/cards/
 # Reader uploads.
 uploads/*
 !uploads/.htaccess
+
+# Runtime caches (HTML Purifier definitions, etc.)
+data/cache/

@@ -133,12 +133,12 @@ function pp_cache_remote_image(string $url): array
     if (!filter_var($url, FILTER_VALIDATE_URL) || !preg_match('#^https?://#i', $url)) {
         return [null, 'not a valid image URL'];
     }
-    [$body, $err] = http_get($url, 20);
+    // The shared transport enforces the destination policy and streams the
+    // body against the cap — an oversized image aborts mid-transfer instead
+    // of buffering first.
+    [$body, $err] = pp_http_get($url, ['timeout' => 20, 'max_bytes' => 8 * 1024 * 1024]);
     if ($err !== null) {
         return [null, $err];
-    }
-    if (strlen($body) > 8 * 1024 * 1024) {
-        return [null, 'the image is over 8 MB'];
     }
     $finfo = new finfo(FILEINFO_MIME_TYPE);
     $mime = $finfo->buffer($body);

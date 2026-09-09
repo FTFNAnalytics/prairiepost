@@ -986,6 +986,37 @@ function pp_post_public_url(array $post): string
 /* --- Revision history: what was live, when --------------------------------- */
 
 /**
+ * Update a post's fields, conditionally on its CURRENT status still being
+ * one of $requireStatus — the write and the state check are one atomic
+ * statement, so a request that read the post as a draft cannot land its
+ * write after another request published it. Pass null to skip the state
+ * condition (editor writes, which are authorized in any state). Returns
+ * whether a row was actually written; a false return means the post is
+ * gone or its state moved on, and the caller must not proceed with
+ * dependent writes (tags, sites, snapshots).
+ *
+ * (Row counts: Postgres and SQLite count matched rows even when the new
+ * values equal the old, so an identical re-save still reports true.)
+ */
+function pp_guarded_post_update(int $postId, array $fields, ?array $requireStatus): bool
+{
+    if (!$fields) {
+        return false;
+    }
+    $set = implode(', ', array_map(fn ($k) => "$k = ?", array_keys($fields)));
+    $sql = "UPDATE posts SET $set WHERE id = ?";
+    $params = [...array_values($fields), $postId];
+    if ($requireStatus !== null) {
+        $marks = implode(',', array_fill(0, count($requireStatus), '?'));
+        $sql .= " AND status IN ($marks)";
+        $params = [...$params, ...$requireStatus];
+    }
+    $stmt = db()->prepare($sql);
+    $stmt->execute($params);
+    return $stmt->rowCount() > 0;
+}
+
+/**
  * Snapshot a story's current text into its revision history. Called after
  * every content-changing write (create, save, agent approval, restore), so
  * each row answers "what did the story say from this moment on". History is

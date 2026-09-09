@@ -3,14 +3,27 @@
 # The render baseline: every public page type on every paper, against a
 # freshly seeded full-network database, compared between two trees.
 #
-#   tools/baseline.sh              snapshot this tree only (smoke: no 5xx)
-#   tools/baseline.sh REF          snapshot this tree AND git ref REF from
-#                                  the same database, then diff. Nonzero
-#                                  exit on any real difference.
+#   tools/baseline.sh              smoke this tree only
+#   tools/baseline.sh REF          smoke this tree AND git ref REF from the
+#                                  same database, then byte-diff.
 #
-# This harness has caught three shipped-invisible defects; committing it
-# is Phase 0.1. Both trees render against the SAME database within the
-# same run, so content is identical by construction and any diff is code.
+# Exit codes are a CLASSIFICATION, not a boolean — the CI gate
+# (tools/render-gate.sh) relies on them to tell an intended visual change
+# from a genuine failure. A declared [render] may excuse ONLY exit 10.
+#
+#   0   pages identical (or smoke-only run passed)
+#   10  rendered output differs — nothing else wrong
+#   2   the full-network seed failed
+#   3   THIS tree fails the smoke contract (5xx, wrong masthead, empty page)
+#   4   the comparison ref can't be checked out, or renders errors itself
+#   5   no pages could be derived from the seeded database
+#
+# The smoke contract per page: HTTP 200, a non-empty body, and the front
+# page carrying its own site's exact title — a blank 200 or another
+# paper's masthead is a failure, not a render change.
+#
+# PP_BASELINE_OUT=dir  copy both snapshots and the diff there (CI artifact)
+# PP_BASELINE_KEEP=1   keep the work directory for inspection
 #
 set -uo pipefail
 cd "$(dirname "$0")/.."
@@ -27,7 +40,7 @@ cleanup() {
 trap cleanup EXIT
 
 echo "== Seeding the full network once (both trees read the same file)"
-bash "$ROOT/tools/seed-all.sh" "$WORK/net.sqlite" >/dev/null || { echo "seed-all failed — run it directly for the detail"; exit 1; }
+bash "$ROOT/tools/seed-all.sh" "$WORK/net.sqlite" >/dev/null || { echo "seed-all failed — run it directly for the detail"; exit 2; }
 
 cat > "$WORK/config.php" <<PHP
 <?php
@@ -38,6 +51,7 @@ PHP
 
 # The page list per site: front, one story, one desk, search, feed,
 # sitemap. Derived from the database so a new paper joins automatically.
+# Column 4 carries the site's own title — the smoke's masthead assertion.
 PAGES=$(PP_CONFIG="$WORK/config.php" php -r '
 require "app/bootstrap.php";
 $pdo = db();
@@ -46,20 +60,23 @@ foreach ($pdo->query("SELECT id, slug FROM sites ORDER BY id") as $site) {
     $h->execute([$site["slug"]]);
     $host = (string) ($h->fetchColumn() ?: "");
     if ($host === "") continue;
+    $t = $pdo->prepare("SELECT svalue FROM settings WHERE site_id = ? AND skey = ?");
+    $t->execute([(int) $site["id"], "site_title"]);
+    $title = (string) ($t->fetchColumn() ?: "");
     $s = $pdo->prepare("SELECT p.slug FROM posts p JOIN post_sites ps ON ps.post_id = p.id AND ps.site_id = ? WHERE p.status = ? ORDER BY p.id LIMIT 1");
     $s->execute([(int) $site["id"], "published"]);
     $story = (string) ($s->fetchColumn() ?: "");
     $d = $pdo->prepare("SELECT c.slug FROM categories c JOIN posts p ON p.category_id = c.id JOIN post_sites ps ON ps.post_id = p.id AND ps.site_id = ? LIMIT 1");
     $d->execute([(int) $site["id"]]);
     $desk = (string) ($d->fetchColumn() ?: "");
-    echo $site["slug"], "\t", $host, "\t/\n";
-    if ($story !== "") echo $site["slug"], "\t", $host, "\t/story/", $story, "\n";
-    if ($desk !== "")  echo $site["slug"], "\t", $host, "\t/desk/", $desk, "\n";
-    echo $site["slug"], "\t", $host, "\t/search?q=council\n";
-    echo $site["slug"], "\t", $host, "\t/feed/\n";
-    echo $site["slug"], "\t", $host, "\t/sitemap.xml\n";
+    echo $site["slug"], "\t", $host, "\t/\t", $title, "\n";
+    if ($story !== "") echo $site["slug"], "\t", $host, "\t/story/", $story, "\t\n";
+    if ($desk !== "")  echo $site["slug"], "\t", $host, "\t/desk/", $desk, "\t\n";
+    echo $site["slug"], "\t", $host, "\t/search?q=council\t\n";
+    echo $site["slug"], "\t", $host, "\t/feed/\t\n";
+    echo $site["slug"], "\t", $host, "\t/sitemap.xml\t\n";
 }')
-[ -n "$PAGES" ] || { echo "no pages derived — is the seed empty?"; exit 1; }
+[ -n "$PAGES" ] || { echo "no pages derived — is the seed empty?"; exit 5; }
 echo "   $(echo "$PAGES" | wc -l) pages across $(echo "$PAGES" | cut -f1 | sort -u | wc -l) sites"
 
 snapshot() { # tree_dir out_dir
@@ -67,12 +84,20 @@ snapshot() { # tree_dir out_dir
   mkdir -p "$out"
   (cd "$tree" && PP_CONFIG="$WORK/config.php" php -S 127.0.0.1:$PORT router.php >"$out/.server.log" 2>&1 &)
   sleep 1.5
-  while IFS=$(printf '\t') read -r slug host path; do
+  while IFS=$(printf '\t') read -r slug host path expect; do
     local file="$out/${slug}$(echo "$path" | tr '/?&=' '____').html"
     local code
     code=$(curl -s -m 20 -H "Host: $host" -o "$file" -w '%{http_code}' "http://127.0.0.1:$PORT$path")
-    if [ "$code" -ge 500 ] || [ "$code" = "000" ]; then
-      echo "   FAIL $host$path -> $code"
+    # The smoke contract: 200, non-empty, and the front page wears its own
+    # masthead. Anything else is a failure — never a "render difference".
+    if [ "$code" != "200" ]; then
+      echo "   FAIL $host$path -> HTTP $code"
+      fails=1
+    elif [ ! -s "$file" ]; then
+      echo "   FAIL $host$path -> 200 but an empty body"
+      fails=1
+    elif [ -n "$expect" ] && ! grep -qF "$expect" "$file"; then
+      echo "   FAIL $host$path -> 200 but does not carry its own title ($expect)"
       fails=1
     fi
     # Volatile lines that are clock, not code: the chrome's live date
@@ -85,30 +110,49 @@ snapshot() { # tree_dir out_dir
   return $fails
 }
 
+publish_artifacts() {
+  [ -n "${PP_BASELINE_OUT:-}" ] || return 0
+  mkdir -p "$PP_BASELINE_OUT"
+  [ -d "$WORK/now" ] && cp -r "$WORK/now" "$PP_BASELINE_OUT/now"
+  [ -d "$WORK/base" ] && cp -r "$WORK/base" "$PP_BASELINE_OUT/base"
+  [ -f "$WORK/diff.txt" ] && cp "$WORK/diff.txt" "$PP_BASELINE_OUT/diff.txt"
+}
+
 echo "== Rendering this tree"
-snapshot "$ROOT" "$WORK/now" || { echo "FATAL: this tree serves errors — fix before comparing"; exit 1; }
+if ! snapshot "$ROOT" "$WORK/now"; then
+  publish_artifacts
+  echo "FATAL: this tree fails the smoke contract — fix before comparing"
+  exit 3
+fi
 
 if [ -z "$REF" ]; then
-  echo "Smoke pass: every page rendered without a server error."
+  echo "Smoke pass: every page answered 200 with its own masthead."
   exit 0
 fi
 
 echo "== Rendering $REF"
-git worktree add --detach "$WORK/ref" "$REF" >/dev/null 2>&1 || { echo "cannot check out $REF"; exit 1; }
+git worktree add --detach "$WORK/ref" "$REF" >/dev/null 2>&1 || { echo "cannot check out $REF"; exit 4; }
 # The ref tree may predate PP_CONFIG support, so it gets the throwaway
 # config as a real file — the worktree is disposable, so this is safe,
 # and it makes any historical ref comparable.
 cp "$WORK/config.php" "$WORK/ref/config.php"
-snapshot "$WORK/ref" "$WORK/base" || { echo "note: $REF itself serves errors; differences below include them"; }
+if ! snapshot "$WORK/ref" "$WORK/base"; then
+  publish_artifacts
+  echo "The comparison ref $REF fails the smoke contract itself — the diff"
+  echo "would be meaningless. This is comparison infrastructure, not a"
+  echo "render change; no declaration excuses it."
+  exit 4
+fi
 
 echo "== Comparing"
 if diff -qr "$WORK/base" "$WORK/now" --exclude='.server.log' > "$WORK/diff.txt"; then
   echo "Byte-identical against $REF across every page."
   exit 0
 fi
+publish_artifacts
 echo "RENDERED OUTPUT CHANGED against $REF:"
 sed 's/^/   /' "$WORK/diff.txt" | head -40
 echo
-echo "If this PR deliberately changes rendered output, say so with [render]"
-echo "in the PR title; otherwise this is a regression."
-exit 1
+echo "If this PR deliberately changes rendered output, declare it with"
+echo "[render] in the PR title; the gate then accepts THIS difference only."
+exit 10

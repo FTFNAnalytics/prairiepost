@@ -3,6 +3,9 @@ name: PHP CI
 on:
   pull_request:
 
+# The workflow only reads the repository. Event metadata (the PR title
+# above all) is attacker-influenced: it reaches shell steps ONLY through
+# environment variables and is never interpolated into script source.
 permissions:
   contents: read
 
@@ -14,22 +17,37 @@ jobs:
       - name: Install test runtime
         run: |
           sudo apt-get update
-          sudo apt-get install --yes php-cli php-sqlite3 php-mbstring
+          sudo apt-get install --yes php-cli php-sqlite3 php-mbstring php-xml php-curl php-gd
       - name: Lint PHP
-        run: find . -type f -name '*.php' -not -path './data/*' -print0 | xargs -0 -n1 php -l
+        run: find . -type f -name '*.php' -not -path './data/*' -not -path './vendor/*' -print0 | xargs -0 -n1 php -l
+      - name: Validate brand palettes
+        run: |
+          for f in assets/sites/*/palette.json; do
+            php -r 'exit(json_decode(file_get_contents($argv[1]), true) === null ? 1 : 0);' "$f" \
+              || { echo "invalid JSON: $f"; exit 1; }
+          done
       - name: Run regression suite
         run: php tests/run.php
       - name: Seed the full network — zero skipped lines
         run: bash tools/seed-all.sh /tmp/ci-network.sqlite
       - name: Render baseline against the base branch
+        env:
+          # Event metadata stays data: quoted env expansion only, and the
+          # title is read exclusively by render-gate.sh's case match.
+          PR_TITLE: ${{ github.event.pull_request.title }}
+          BASE_REF: ${{ github.base_ref }}
         run: |
-          git fetch --no-tags origin "${{ github.base_ref }}"
-          if bash tools/baseline.sh "origin/${{ github.base_ref }}"; then
-            exit 0
-          fi
-          if [[ "${{ github.event.pull_request.title }}" == *"[render]"* ]]; then
-            echo "Rendered output changed and the PR title declares [render] — allowed."
-          else
-            echo "Rendered output changed and the PR does not declare it. Add [render] to the PR title if this is deliberate."
-            exit 1
-          fi
+          git fetch --no-tags origin "$BASE_REF"
+          set +e
+          PP_BASELINE_OUT=/tmp/baseline-artifacts bash tools/baseline.sh "origin/$BASE_REF"
+          rc=$?
+          set -e
+          bash tools/render-gate.sh "$rc"
+      - name: Keep the render diff for reviewers
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: render-baseline
+          path: /tmp/baseline-artifacts
+          if-no-files-found: ignore
+          retention-days: 14

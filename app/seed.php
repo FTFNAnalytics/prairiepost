@@ -54,6 +54,9 @@ function pp_site_default_settings(string $title): array
         'newsletter_send_hour' => '6',
         'breaking_label'     => '',
         'breaking_url'       => '',
+        // Search engines stay out until the newsroom explicitly opens the
+        // doors, per paper — see pp_indexing_enabled().
+        'indexing_enabled'   => '0',
         'contact_email'      => '',
         'traffic_items'      => '',
         'events_items'       => '',

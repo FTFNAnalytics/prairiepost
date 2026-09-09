@@ -9,10 +9,17 @@ server {
     root __RELEASE_ROOT__;
     index index.php;
 
-    # The application tree and data are never served.
-    location ~ ^/(app|data)/                    { deny all; }
+    # Application internals are never served: code, runtime data, server-
+    # side tools and tests, vendored dependencies, runbooks. cron/ stays
+    # reachable by design — each script 403s without the cron secret.
+    location ~ ^/(app|data|tools|tests|vendor|docs)(/|$) { deny all; }
     location ~ ^/uploads/.+\.(php|phtml|phar)$  { deny all; }
-    location ~ ^/(config\.php|config\.example\.php)$ { deny all; }
+    location ~ ^/(config\.php|config\.example\.php|composer\.json|composer\.lock|router\.php)$ { deny all; }
+    # Dotfiles (.git above all), except the ACME challenge path.
+    location ^~ /.well-known/acme-challenge/    { }
+    location ~ /\.                              { deny all; }
+    # Database dumps, shell scripts, backups, markdown.
+    location ~ \.(sqlite[0-9]*|sql|sh|md|bak|dist|lock)$ { deny all; }
 
     # The front controller: static files first, everything else through the
     # router. `internal` keeps router.php unreachable directly from outside —

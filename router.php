@@ -5,6 +5,27 @@
  */
 $path = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
 
+// Judge the path as the filesystem will see it: percent-decoded, with any
+// traversal refused outright rather than resolved.
+$decoded = rawurldecode((string) $path);
+if (str_contains($decoded, "\0") || str_contains($decoded, '..') || str_contains($decoded, '\\')) {
+    http_response_code(404);
+    return true;
+}
+// Internal trees and dotfiles are never served: application code, runtime
+// data, server-side tools and tests, the vendored dependencies, runbooks,
+// and anything hidden (.git above all). Encoded variants hit the same wall
+// because $decoded is the decoded path.
+if (preg_match('#^/(app|data|tools|tests|vendor|docs)(/|$)#i', $decoded)
+    || (preg_match('#/\.#', $decoded) && !str_starts_with($decoded, '/.well-known/acme-challenge/'))
+    || preg_match('#^/(composer\.(json|lock)|config\.php|config\.example\.php|router\.php)$#i', $decoded)
+    || preg_match('#\.(sqlite[0-9]*|sql|sh|md|bak|dist|lock)$#i', $decoded)
+    || preg_match('#^/uploads/.+\.(php|phtml|phar)$#i', $decoded)) {
+    http_response_code(404);
+    return true;
+}
+$path = $decoded;
+
 if (preg_match('#^/story/([a-z0-9-]+)/?$#', $path, $m)) {
     $_GET['slug'] = $m[1];
     require __DIR__ . '/article.php';
@@ -54,10 +75,6 @@ $map = [
 ];
 if (isset($map[$path])) {
     require __DIR__ . $map[$path];
-    return true;
-}
-if (preg_match('#^/(app|data)/#', $path)) {
-    http_response_code(403);
     return true;
 }
 if ($path !== '/' && is_file(__DIR__ . $path)) {

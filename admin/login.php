@@ -1,9 +1,13 @@
 <?php
 /**
- * Newsroom sign-in. On a fresh install this creates the founding account.
- * One step — email and passphrase — throttled through login_attempts.
- * Two-step sign-in was removed while the network is private; recovery for
- * a lost passphrase is tools/reset-password.php, on the server.
+ * Newsroom sign-in. One step — email and passphrase — throttled through
+ * login_attempts. Two-step sign-in was removed while the network is
+ * private; recovery for a lost passphrase is tools/reset-password.php, on
+ * the server. On a fresh install NO public form creates the founding
+ * account — that was first-visitor ownership: whoever reached an
+ * unprovisioned hostname first owned the installation. Provisioning is
+ * tools/setup-admin.php, run on the server by someone who can already
+ * open a shell there.
  */
 require dirname(__DIR__) . '/app/bootstrap.php';
 require __DIR__ . '/_layout.php';
@@ -19,22 +23,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     csrf_check();
 
     if ($firstRun) {
-        $name  = trim((string) ($_POST['name'] ?? ''));
-        $email = mb_strtolower(trim((string) ($_POST['email'] ?? '')));
-        $pass  = (string) ($_POST['password'] ?? '');
-        if ($name === '' || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
-            $error = 'The account needs a name and a working email address.';
-        } elseif (strlen($pass) < 10) {
-            $error = 'Pick a passphrase of at least 10 characters — a few words will do.';
-        } else {
-            db()->prepare('INSERT INTO users (name, email, pass_hash, role, slug, created_at) VALUES (?, ?, ?, ?, ?, ?)')
-                ->execute([$name, $email, password_hash($pass, PASSWORD_DEFAULT), 'admin', unique_user_slug($name), now()]);
-            $_SESSION['uid'] = pp_last_id('users');
-            pp_session_stamp(0);
-            session_regenerate_id(true);
-            pp_audit('account.founded', $email, 'founding administrator created at first run', ['id' => $_SESSION['uid'], 'name' => $name]);
-            redirect('index.php');
-        }
+        // No accounts exist and this is a public form: refuse. The founding
+        // administrator is created on the server (tools/setup-admin.php),
+        // never by whichever visitor arrives first.
+        $error = 'No accounts exist yet. The founding administrator is created on the server: php tools/setup-admin.php';
     } else {
         $email = (string) ($_POST['email'] ?? '');
         if (pp_login_blocked($email)) {
@@ -76,23 +68,20 @@ if (current_user()) {
   <img class="mast" src="<?= e(site_asset('logo-primary.svg')) ?>" alt="<?= e(setting('site_title', 'The Prairie Dispatch')) ?>">
   <div class="pp-horizon"></div>
   <div class="panel">
-    <h2><?= $firstRun ? 'Start the paper' : 'Newsroom sign-in' ?></h2>
+    <h2>Newsroom sign-in</h2>
     <?php if ($firstRun): ?>
-    <p style="font-size:15px;margin:0 0 4px">No accounts exist yet. This form creates the founding administrator.</p>
+    <p style="font-size:15px;margin:0 0 4px">No accounts exist yet. The founding administrator is created on the
+    server console — <span class="mono">php tools/setup-admin.php</span> — never from this page.</p>
     <?php endif; ?>
     <?php if ($error): ?><div class="flash flash--error"><?= e($error) ?></div>
     <?php elseif (isset($_GET['expired'])): ?><div class="flash">That session ended — sign in again to continue.</div><?php endif; ?>
     <form method="post">
       <?= csrf_field() ?>
-      <?php if ($firstRun): ?>
-      <label for="name">Your name</label>
-      <input type="text" id="name" name="name" required autocomplete="name">
-      <?php endif; ?>
       <label for="email">Email</label>
       <input type="email" id="email" name="email" required autocomplete="username">
       <label for="password">Passphrase</label>
-      <input type="password" id="password" name="password" required autocomplete="<?= $firstRun ? 'new-password' : 'current-password' ?>">
-      <p style="margin-top:18px"><button class="btn" type="submit"><?= $firstRun ? 'Create the account' : 'Sign in' ?></button></p>
+      <input type="password" id="password" name="password" required autocomplete="current-password">
+      <p style="margin-top:18px"><button class="btn" type="submit">Sign in</button></p>
     </form>
   </div>
 </div>

@@ -4,8 +4,19 @@ Options -Indexes
 <IfModule mod_rewrite.c>
 RewriteEngine On
 
-# Application internals are never served directly.
-RewriteRule ^(app|data)/ - [F,L]
+# Application internals are never served directly: code, runtime data,
+# server-side tools and tests, vendored dependencies, and runbooks. The
+# cron/ scripts stay reachable BY DESIGN — each one 403s without the
+# site's cron secret (web-cron support for hosts without a crontab).
+RewriteRule ^(app|data|tools|tests|vendor|docs)(/|$) - [F,L]
+# Dotfiles and dot-directories (.git, .htaccess, …), except the ACME
+# challenge path certbot needs.
+RewriteRule ^\.well-known/acme-challenge/ - [L]
+RewriteRule (^|/)\. - [F,L]
+# Database dumps, shell scripts, backups and markdown never leave the box.
+RewriteRule \.(sqlite[0-9]*|sql|sh|md|bak|dist|lock)$ - [F,L]
+# Nothing in uploads/ ever executes.
+RewriteRule ^uploads/.+\.(php|phtml|phar)$ - [F,L]
 
 # Pretty URLs.
 RewriteRule ^story/([a-z0-9-]+)/?$ article.php?slug=$1 [L,QSA]
@@ -29,7 +40,7 @@ RewriteRule ^about/?$ about.php [L]
 RewriteRule ^newsletter(/.*)?$ newsletter.php?path=$1 [L,QSA]
 </IfModule>
 
-<FilesMatch "^(config\.php|config\.example\.php)$">
+<FilesMatch "^(config\.php|config\.example\.php|composer\.json|composer\.lock|router\.php)$">
   Require all denied
 </FilesMatch>
 

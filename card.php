@@ -8,6 +8,8 @@
  */
 require __DIR__ . '/app/bootstrap.php';
 
+pp_robots_header();
+
 const CARD_W = 1200;
 const CARD_H = 630;
 

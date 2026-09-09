@@ -32,6 +32,12 @@ $allowedStatuses = $editor
 $error = '';
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     csrf_check();
+    // The write policy runs against the post's PERSISTED state: an author
+    // cannot change a story an editor has published or scheduled — not by
+    // editing it, and not by demoting it back to draft on the way through.
+    if ($post && ($denied = pp_post_write_denied($user, $post))) {
+        $error = $denied;
+    }
     $title    = trim((string) ($_POST['title'] ?? ''));
     $lede     = trim((string) ($_POST['lede'] ?? ''));
     $body     = sanitize_html((string) ($_POST['body'] ?? ''));
@@ -41,7 +47,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
     $publishedAt = trim((string) ($_POST['published_at'] ?? ''));
 
-    if ($title === '') {
+    if ($error !== '') {
+        // Refused above — fall through to re-render with the reason.
+    } elseif ($title === '') {
         $error = 'The story needs a headline before it can be saved.';
     } else {
         if ($publishedAt !== '') {
@@ -106,11 +114,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         if ($post) {
             $fields['slug'] = unique_post_slug($title, (int) $post['id']);
-            $set = implode(', ', array_map(fn ($k) => "$k = ?", array_keys($fields)));
-            db()->prepare("UPDATE posts SET $set WHERE id = ?")
-                ->execute([...array_values($fields), $post['id']]);
-            $id = (int) $post['id'];
-            pp_post_snapshot($id, 'edit', $user['name']);
+            // Authors' writes are conditional on the story STILL being in a
+            // state they may write to — the check and the write are one
+            // statement, so an editor publishing mid-edit wins the race and
+            // the stale save lands nowhere. Editors write unconditionally.
+            $wrote = pp_guarded_post_update((int) $post['id'], $fields,
+                $editor ? null : ['draft', 'in_review']);
+            if ($wrote) {
+                $id = (int) $post['id'];
+                pp_post_snapshot($id, 'edit', $user['name']);
+            } else {
+                $error = 'Not saved: an editor published or scheduled this story while you were editing. '
+                       . 'Reload to see the live version — the text below is your unsaved copy.';
+            }
         } else {
             $fields['slug'] = unique_post_slug($title);
             $fields['author_id'] = (int) $user['id'];
@@ -121,32 +137,37 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $id = pp_last_id('posts');
             pp_post_snapshot($id, 'create', $user['name']);
         }
-        set_post_tags($id, (string) ($_POST['tags'] ?? ''));
 
-        // Syndication: editors pick sites; authors' stories default to this
-        // site. On the hub no paper is "this site" — an unassigned story
-        // stays unmapped and shows as running nowhere on the network desk.
-        if ($editor && isset($_POST['sites'])) {
-            $picked = array_map('intval', (array) $_POST['sites']);
-            set_post_sites($id, $picked ?: (pp_is_hub() ? [] : [current_site_id()]));
-        } elseif (!pp_is_hub() && !site_ids_for_post($id)) {
-            set_post_sites($id, [current_site_id()]);
+        // Dependent writes (tags, site mapping, agent queue) only after a
+        // write that actually landed — a refused save must change nothing.
+        if ($error === '') {
+            set_post_tags($id, (string) ($_POST['tags'] ?? ''));
+
+            // Syndication: editors pick sites; authors' stories default to this
+            // site. On the hub no paper is "this site" — an unassigned story
+            // stays unmapped and shows as running nowhere on the network desk.
+            if ($editor && isset($_POST['sites'])) {
+                $picked = array_map('intval', (array) $_POST['sites']);
+                set_post_sites($id, $picked ?: (pp_is_hub() ? [] : [current_site_id()]));
+            } elseif (!pp_is_hub() && !site_ids_for_post($id)) {
+                set_post_sites($id, [current_site_id()]);
+            }
+
+            // The agent desk's auto-queue fires on the transition to published —
+            // per-kind checkboxes in the hub's Settings, all off by default.
+            if ($status === 'published' && (($post['status'] ?? '') !== 'published')) {
+                require_once dirname(__DIR__) . '/app/agents.php';
+                pp_agent_auto_enqueue($id);
+            }
+
+            flash_set(match ($status) {
+                'published' => 'Published. The story is live.',
+                'scheduled' => 'Scheduled. It goes live at the set time (the cron job flips it).',
+                'in_review' => 'Submitted. An editor will pick it up from the review queue.',
+                default     => 'Draft saved.',
+            });
+            redirect('post-edit.php?id=' . $id);
         }
-
-        // The agent desk's auto-queue fires on the transition to published —
-        // per-kind checkboxes in the hub's Settings, all off by default.
-        if ($status === 'published' && (($post['status'] ?? '') !== 'published')) {
-            require_once dirname(__DIR__) . '/app/agents.php';
-            pp_agent_auto_enqueue($id);
-        }
-
-        flash_set(match ($status) {
-            'published' => 'Published. The story is live.',
-            'scheduled' => 'Scheduled. It goes live at the set time (the cron job flips it).',
-            'in_review' => 'Submitted. An editor will pick it up from the review queue.',
-            default     => 'Draft saved.',
-        });
-        redirect('post-edit.php?id=' . $id);
     }
 
     // Re-show what was typed on error.

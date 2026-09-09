@@ -24,18 +24,31 @@ if (!$post || !can_edit_post($user, $post)) {
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'restore') {
     csrf_check();
-    db()->prepare('UPDATE posts SET title = ?, lede = ?, body = ?, meta_description = ?, correction = ?, image = ?, image_caption = ?, updated_at = ? WHERE id = ?')
-        ->execute([
-            (string) $rev['title'],
-            (string) ($rev['lede'] ?? ''),
-            (string) ($rev['body'] ?? ''),
-            (string) $rev['meta_description'],
-            (string) ($rev['correction'] ?? ''),
-            (string) $rev['image'],
-            (string) $rev['image_caption'],
-            now(),
-            (int) $post['id'],
-        ]);
+    // Restoring rewrites the story's live text, so it obeys the same write
+    // policy as any other edit: an author may reshape their own draft, but
+    // once a story is published or scheduled, putting an old version back
+    // is an editor's call — this was the F02 approval bypass.
+    if ($denied = pp_post_write_denied($user, $post, 'restore')) {
+        http_response_code(403);
+        exit(e($denied));
+    }
+    // The revision body is sanitized on the way back in: history rows
+    // written before the parser-based sanitizer may carry markup the old
+    // regex let through, and a restore must not resurrect it.
+    $wrote = pp_guarded_post_update((int) $post['id'], [
+        'title'            => (string) $rev['title'],
+        'lede'             => (string) ($rev['lede'] ?? ''),
+        'body'             => sanitize_html((string) ($rev['body'] ?? '')),
+        'meta_description' => (string) $rev['meta_description'],
+        'correction'       => (string) ($rev['correction'] ?? ''),
+        'image'            => (string) $rev['image'],
+        'image_caption'    => (string) $rev['image_caption'],
+        'updated_at'       => now(),
+    ], is_editor($user) ? null : ['draft', 'in_review']);
+    if (!$wrote) {
+        flash_set('Not restored: an editor published or scheduled this story while you had the revision open.', true);
+        redirect('post-edit.php?id=' . (int) $post['id']);
+    }
     pp_post_snapshot((int) $post['id'], 'restore', $user['name']);
     pp_audit('story.restored', mb_substr((string) $rev['title'], 0, 120),
              'story #' . (int) $post['id'] . ' put back to the ' . $rev['created_at'] . ' revision');

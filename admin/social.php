@@ -285,13 +285,13 @@ flash_show();
 <script>
 (function () {
   'use strict';
-  var CSRF = <?= json_encode(csrf_token()) ?>;
+  var CSRF = <?= pp_json_for_html(csrf_token()) ?>;
   var POST_ID = <?= (int) $selected['id'] ?>;
-  var ARTICLE_URL = <?= json_encode($publicUrl) ?>;
-  var COVER = <?= json_encode((string) ($selected['image'] ?? '')) ?>;
-  var HEADLINE = <?= json_encode((string) $selected['title']) ?>;
-  var PAPER = <?= json_encode($paperName) ?>;
-  var PALETTE = <?= json_encode($palette) ?>;
+  var ARTICLE_URL = <?= pp_json_for_html($publicUrl) ?>;
+  var COVER = <?= pp_json_for_html((string) ($selected['image'] ?? '')) ?>;
+  var HEADLINE = <?= pp_json_for_html((string) $selected['title']) ?>;
+  var PAPER = <?= pp_json_for_html($paperName) ?>;
+  var PALETTE = <?= pp_json_for_html($palette) ?>;
   // The same platform dimensions the CivicWest desk uses.
   var SPECS = {
     x:         { w: 1200, h: 675,  label: '1200×675 · 16:9' },
