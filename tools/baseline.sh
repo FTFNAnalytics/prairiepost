@@ -63,8 +63,11 @@ foreach ($pdo->query("SELECT id, slug FROM sites ORDER BY id") as $site) {
     $t = $pdo->prepare("SELECT svalue FROM settings WHERE site_id = ? AND skey = ?");
     $t->execute([(int) $site["id"], "site_title"]);
     $title = (string) ($t->fetchColumn() ?: "");
-    $s = $pdo->prepare("SELECT p.slug FROM posts p JOIN post_sites ps ON ps.post_id = p.id AND ps.site_id = ? WHERE p.status = ? ORDER BY p.id LIMIT 1");
-    $s->execute([(int) $site["id"], "published"]);
+    // Sample a real story: wire LINK posts answer /story/… with a 302 to
+    // the source outlet by design, which is not what the smoke contract
+    // (200 + own masthead) is probing.
+    $s = $pdo->prepare("SELECT p.slug FROM posts p JOIN post_sites ps ON ps.post_id = p.id AND ps.site_id = ? WHERE p.status = ? AND COALESCE(p.post_type, ?) != ? ORDER BY p.id LIMIT 1");
+    $s->execute([(int) $site["id"], "published", "story", "link"]);
     $story = (string) ($s->fetchColumn() ?: "");
     $d = $pdo->prepare("SELECT c.slug FROM categories c JOIN posts p ON p.category_id = c.id JOIN post_sites ps ON ps.post_id = p.id AND ps.site_id = ? LIMIT 1");
     $d->execute([(int) $site["id"]]);
