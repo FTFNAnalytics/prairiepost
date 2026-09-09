@@ -27,20 +27,29 @@
 #
 set -uo pipefail
 
+# Fixture overrides (tools/test-release-flow.sh exercises this script
+# against a synthetic box; production values are the defaults):
+EN_DIR="${PP_UPGRADE_VHOSTS_DIR:-/etc/nginx/sites-enabled}"
+CRON_DIR="${PP_UPGRADE_CRON_DIR:-/etc/cron.d}"
+WWW="${PP_UPGRADE_WWW:-/var/www}"
+FIXTURE="${PP_UPGRADE_FIXTURE:-0}"
+
 REPO="FTFNAnalytics/prairiepost"
 # The branch whose head becomes the new release. Override with PP_BRANCH to
 # pin a deploy to a specific line — e.g. to add one paper on top of exactly
 # what production already runs, without also shipping unreleased work from
 # the control-room branch's head. The default is unchanged.
 BRANCH="${PP_BRANCH:-claude/master-dashboard-control-room-nr3mp4}"
-SHARED_UP="/var/www/prairiepost-shared-uploads"
+SHARED_UP="$WWW/prairiepost-shared-uploads"
 STAMP=$(date +%s)
 
 say()  { echo; echo "== $*"; }
 fail() { echo "FATAL: $*" >&2; exit 1; }
 
-[ "$(id -u)" = "0" ] || fail "run as root"
-command -v nginx >/dev/null || fail "nginx not found"
+if [ "$FIXTURE" != "1" ]; then
+  [ "$(id -u)" = "0" ] || fail "run as root"
+  command -v nginx >/dev/null || fail "nginx not found"
+fi
 
 front_title() { # domain -> prints "<code>|<title>"
   local code title
@@ -55,22 +64,26 @@ front_css() { # domain -> prints the sorted set of /assets/css/*.css the front p
 }
 
 say "Resolve the branch head"
-SHA=$(curl -fsSL "https://api.github.com/repos/$REPO/branches/${BRANCH//\//%2F}" \
-      | php -r '$d=json_decode(stream_get_contents(STDIN),true); echo substr($d["commit"]["sha"]??"",0,12);')
+if [ -n "${PP_UPGRADE_SHA:-}" ]; then
+  SHA="${PP_UPGRADE_SHA:0:12}"   # pinned (fixtures, or a pre-verified deploy)
+else
+  SHA=$(curl -fsSL "https://api.github.com/repos/$REPO/branches/${BRANCH//\//%2F}" \
+        | php -r '$d=json_decode(stream_get_contents(STDIN),true); echo substr($d["commit"]["sha"]??"",0,12);')
+fi
 [ -n "$SHA" ] || fail "couldn't resolve the branch head"
 echo "release: $SHA"
 
 say "Map the papers behind nginx (a release dir may serve several vhosts)"
 declare -A DIR_VHOSTS=()   # OLD dir -> "vhostbase vhostbase..."
 declare -A DIR_DOMAINS=()  # OLD dir -> "domain domain..."
-for link in /etc/nginx/sites-enabled/*; do
+for link in "$EN_DIR"/*; do
   base=$(basename "$link")
   # cies is the Institute — a different application. The hub IS a paper's
   # release (one site row, same code), so it rolls forward with them.
   case "$base" in cies|README|default) continue ;; esac
   VH=$(readlink -f "$link")
   [ -f "$VH" ] || continue
-  OLD=$(grep -Eo 'root[[:space:]]+/var/www/prairiepost-[A-Za-z0-9._-]+' "$VH" | head -1 | awk '{print $2}')
+  OLD=$(grep -Eo "root[[:space:]]+$WWW/prairiepost-[A-Za-z0-9._-]+" "$VH" | head -1 | awk '{print $2}')
   [ -n "$OLD" ] && [ -d "$OLD" ] || { echo "-- $base: no prairiepost root, skipped"; continue; }
   [ -f "$OLD/config.php" ] || { echo "-- $base: no config.php at $OLD, skipped"; continue; }
   DOMAIN=$(grep -Eo 'server_name[[:space:]]+[^;]+' "$VH" | head -1 | awk '{print $2}')
@@ -85,7 +98,9 @@ say "Capture every domain's title BEFORE any change (the tenant baseline)"
 declare -A TITLE_BEFORE=()
 declare -A CSS_BEFORE=()
 declare -A CODE_BEFORE=()
+[ "$FIXTURE" = "1" ] && echo "   (fixture: no TLS stack — the post-migration CLI smoke stands in)"
 for OLD in "${!DIR_DOMAINS[@]}"; do
+  [ "$FIXTURE" = "1" ] && break
   for DOMAIN in ${DIR_DOMAINS[$OLD]}; do
     IFS='|' read -r code title <<< "$(front_title "$DOMAIN")"
     CODE_BEFORE[$DOMAIN]="$code"
@@ -138,9 +153,29 @@ fi
 TPL=$(find "$TMP" -maxdepth 1 -mindepth 1 -type d | head -1)
 [ -f "$TPL/app/bootstrap.php" ] || fail "extracted tree doesn't look like the app"
 
+say "Preflight: candidate provenance, runtime, vendored code, recovery point"
+# The candidate must carry its own migration runner and the pinned
+# sanitizer — a release without them cannot serve or be prepared.
+[ -f "$TPL/tools/migrate.php" ] || fail "candidate has no tools/migrate.php — refusing a release that depends on request-time migration"
+[ -f "$TPL/vendor/ezyang/htmlpurifier/library/HTMLPurifier.php" ] || fail "candidate is missing the vendored sanitizer"
+for ext in dom curl mbstring; do
+  php -m | grep -qi "^$ext$" || fail "PHP extension '$ext' missing on this box (check the FPM pool too)"
+done
+# A verified recovery point before anything changes: last night's backup
+# state must be ok and fresh. PP_UPGRADE_SKIP_BACKUP_CHECK=1 overrides,
+# loudly, for a first install that has no backups yet.
+BSTATE="${PP_BACKUP_DEST:-/var/backups/civis}/state.json"
+if [ "${PP_UPGRADE_SKIP_BACKUP_CHECK:-0}" = "1" ]; then
+  echo "   WARNING: recovery-point check SKIPPED by operator flag"
+elif [ -f "$BSTATE" ] && php -r '$s = json_decode(file_get_contents($argv[1]), true); exit(($s["ok"] ?? false) === true && (time() - (int)($s["finished_epoch"] ?? 0)) < 26*3600 ? 0 : 1);' "$BSTATE"; then
+  echo "   recovery point: $(php -r '$s = json_decode(file_get_contents($argv[1]), true); echo $s["set_id"] ?? "?";' "$BSTATE") (fresh, ok)"
+else
+  fail "no fresh verified backup set ($BSTATE) — make one first (tools/backup.sh); a release without a recovery point is a bet, not a deploy"
+fi
+
 say "Build the shared uploads directory (merging every release's images)"
 mkdir -p "$SHARED_UP"
-for d in /var/www/prairiepost-*/; do
+for d in "$WWW"/prairiepost-*/; do
   d=${d%/}
   [ "$d" = "$SHARED_UP" ] && continue
   if [ -d "$d/uploads" ] && [ ! -L "$d/uploads" ]; then
@@ -159,7 +194,7 @@ declare -a ALL_CRON_BACKUPS=()
 for OLD in "${!DIR_VHOSTS[@]}"; do
   vhosts=(${DIR_VHOSTS[$OLD]})
   if [ "${#vhosts[@]}" -eq 1 ]; then LABEL="${vhosts[0]}"; else LABEL="shared"; fi
-  NEW="/var/www/prairiepost-$SHA-$LABEL"
+  NEW="$WWW/prairiepost-$SHA-$LABEL"
   if [ "$OLD" = "$NEW" ]; then
     echo "-- ${vhosts[*]}: already on $SHA"
     continue
@@ -203,7 +238,7 @@ WRAP
 
   ok=1
   for base in "${vhosts[@]}"; do
-    VH=$(readlink -f "/etc/nginx/sites-enabled/$base")
+    VH=$(readlink -f "$EN_DIR/$base")
     cp "$VH" "$VH.bak.$STAMP"
     ALL_VHOST_BACKUPS+=("$VH")
     sed -i "s|root[[:space:]]\+$OLD;|root $NEW;|" "$VH"
@@ -211,7 +246,7 @@ WRAP
   done
   [ "$ok" = "1" ] || continue
 
-  for cf in /etc/cron.d/*; do
+  for cf in "$CRON_DIR"/*; do
     [ -f "$cf" ] || continue
     if grep -q "$OLD" "$cf"; then
       cp "$cf" "$cf.bak.$STAMP"
@@ -227,20 +262,95 @@ done
 
 [ "${#DIR_NEW[@]}" -gt 0 ] || { echo; echo "Nothing to upgrade."; exit 0; }
 
+say "Quiesce scheduled writers, then migrate each logical schema ONCE"
+# The cron files were rewritten to the new release above but nginx has not
+# reloaded: old code still serves. Pausing the cron files (cron.d ignores
+# dotted names) stops scheduled writers for the window; any web-cron
+# request against the NEW code meets the readiness gate and exits before
+# business writes. OLD-code in-flight writers are covered by the
+# compatibility contract instead: see docs/MIGRATION-COMPAT.md — a
+# migration that old code cannot safely write through requires the
+# full-stop procedure there, not this script.
+PAUSED=()
+for OLD in "${!DIR_CRONS[@]}"; do
+  for cf in ${DIR_CRONS[$OLD]:-}; do
+    if [ -f "$cf" ]; then
+      mv "$cf" "$cf.paused"
+      PAUSED+=("$cf")
+      echo "   paused: $(basename "$cf")"
+    fi
+  done
+done
+resume_crons() {
+  for cf in "${PAUSED[@]}"; do
+    [ -f "$cf.paused" ] && mv "$cf.paused" "$cf" && echo "   resumed: $(basename "$cf")"
+  done
+}
+
+# One migration per LOGICAL database/schema, however many release groups
+# share it — identity is the configured driver+endpoint+database+schema,
+# and the runner's own per-schema lock makes an accidental second run a
+# clean no-op rather than a hazard.
+declare -A MIGRATED=()
+for OLD in "${!DIR_NEW[@]}"; do
+  NEWDIR="${DIR_NEW[$OLD]}"
+  IDENT=$( (cd "$NEWDIR" && php -r '$c = require "config.php"; $d = $c["db"] ?? []; $x = $d["driver"] ?? "sqlite";
+    if ($x === "pgsql") { $p = $d["pgsql"]; echo "pgsql|", $p["host"] ?? "", "|", $p["port"] ?? 5432, "|", $p["name"] ?? "", "|", $p["schema"] ?? "prairiedispatch"; }
+    elseif ($x === "mysql") { $m = $d["mysql"]; echo "mysql|", $m["socket"] ?? ($m["host"] ?? ""), "|", $m["name"] ?? ""; }
+    else { echo "sqlite|", $d["sqlite_path"] ?? ""; }' 2>/dev/null) )
+  [ -n "$IDENT" ] || { resume_crons; fail "cannot read the database identity from $NEWDIR/config.php"; }
+  if [ -n "${MIGRATED[$IDENT]:-}" ]; then
+    echo "   schema already migrated this run ($(basename "$NEWDIR") shares it)"
+    continue
+  fi
+  echo "   migrating the schema behind $(basename "$NEWDIR")"
+  if ! (cd "$NEWDIR" && php tools/migrate.php --apply); then
+    echo "MIGRATION FAILED — rolling every vhost and cron file back; nothing was reloaded." >&2
+    for VH in "${ALL_VHOST_BACKUPS[@]}"; do cp "$VH.bak.$STAMP" "$VH"; done
+    for cf in "${PAUSED[@]}"; do rm -f "$cf.paused"; done
+    for cf in "${ALL_CRON_BACKUPS[@]}"; do cp "$cf.bak.$STAMP" "$cf"; done
+    fail "the schema migration failed; the box still serves the old release. Diagnose with: (cd $NEWDIR && php tools/migrate.php --status)"
+  fi
+  MIGRATED[$IDENT]=1
+done
+
 say "nginx config test + reload"
-if ! nginx -t; then
+if [ "$FIXTURE" = "1" ]; then
+  echo "   (fixture: nginx test/reload skipped)"
+elif ! nginx -t; then
   for VH in "${ALL_VHOST_BACKUPS[@]}"; do cp "$VH.bak.$STAMP" "$VH"; done
   for cf in "${ALL_CRON_BACKUPS[@]}"; do cp "$cf.bak.$STAMP" "$cf"; done
   nginx -t
   fail "nginx test failed — every vhost and cron file restored, nothing changed"
 fi
-systemctl reload nginx
-sleep 2
+if [ "$FIXTURE" != "1" ]; then
+  systemctl reload nginx
+  sleep 2
+fi
 
 say "Verify every domain serves 200 AND its own masthead (the baseline title)"
 RESTORED=0
 for OLD in "${!DIR_NEW[@]}"; do
   group_ok=1
+  if [ "$FIXTURE" = "1" ]; then
+    # No TLS stack in a fixture: the post-migration smoke is a CLI boot of
+    # the candidate against its real config — the readiness gate plus the
+    # tenant resolution ARE the candidate behaving.
+    if SLUG=$( (cd "${DIR_NEW[$OLD]}" && php -r 'require "app/bootstrap.php"; db(); echo current_site()["slug"];') 2>&1 ); then
+      echo "PASS (fixture) $(basename "${DIR_NEW[$OLD]}") boots ready as tenant '$SLUG'"
+    else
+      echo "FAIL (fixture) $(basename "${DIR_NEW[$OLD]}"): $SLUG"
+      group_ok=0
+    fi
+    if [ "$group_ok" = "0" ]; then
+      for base in ${DIR_VHOSTS[$OLD]}; do
+        VH=$(readlink -f "$EN_DIR/$base")
+        cp "$VH.bak.$STAMP" "$VH"
+      done
+      RESTORED=1
+    fi
+    continue
+  fi
   for DOMAIN in ${DIR_DOMAINS[$OLD]}; do
     IFS='|' read -r code title <<< "$(front_title "$DOMAIN")"
     expected="${TITLE_BEFORE[$DOMAIN]}"
@@ -280,7 +390,7 @@ for OLD in "${!DIR_NEW[@]}"; do
   if [ "$group_ok" = "0" ]; then
     echo "     restoring release group ($OLD): vhosts and cron files"
     for base in ${DIR_VHOSTS[$OLD]}; do
-      VH=$(readlink -f "/etc/nginx/sites-enabled/$base")
+      VH=$(readlink -f "$EN_DIR/$base")
       cp "$VH.bak.$STAMP" "$VH"
     done
     for cf in ${DIR_CRONS[$OLD]:-}; do
@@ -290,14 +400,20 @@ for OLD in "${!DIR_NEW[@]}"; do
   fi
 done
 if [ "$RESTORED" = "1" ]; then
-  nginx -t && systemctl reload nginx
+  [ "$FIXTURE" = "1" ] || { nginx -t && systemctl reload nginx; }
+  # Restored groups got their OLD cron files back from .bak above; clear
+  # any paused copies so nothing runs twice.
+  for cf in "${PAUSED[@]}"; do rm -f "$cf.paused"; done
   echo "WARN: at least one release group was restored — send this output back for a look."
+else
+  say "Resume scheduled writers"
+  resume_crons
 fi
 
 say "Fallback: the hub's uploads, if it was skipped above (no config.php)"
-HUBVH=$(readlink -f /etc/nginx/sites-enabled/civismedia 2>/dev/null || true)
+HUBVH=$(readlink -f "$EN_DIR/civismedia" 2>/dev/null || true)
 if [ -n "$HUBVH" ] && [ -f "$HUBVH" ]; then
-  HUBROOT=$(grep -Eo 'root[[:space:]]+/var/www/prairiepost-[A-Za-z0-9._-]+' "$HUBVH" | head -1 | awk '{print $2}')
+  HUBROOT=$(grep -Eo "root[[:space:]]+$WWW/prairiepost-[A-Za-z0-9._-]+" "$HUBVH" | head -1 | awk '{print $2}')
   if [ -n "$HUBROOT" ] && [ -d "$HUBROOT/uploads" ] && [ ! -L "$HUBROOT/uploads" ]; then
     cp -an "$HUBROOT/uploads/." "$SHARED_UP/" 2>/dev/null
     rm -rf "$HUBROOT/uploads"
