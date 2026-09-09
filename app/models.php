@@ -821,9 +821,14 @@ function pp_audit(string $action, string $target = '', string $detail = '', ?arr
 {
     try {
         $user = $asUser ?? (function_exists('current_user') ? current_user() : null);
+        // Site 0 is the global sentinel: an action taken before any site row
+        // exists (founding the first admin on a fresh install) still audits.
+        $siteId = function_exists('pp_current_site_or_null')
+            ? (int) (pp_current_site_or_null()['id'] ?? 0)
+            : current_site_id();
         db()->prepare('INSERT INTO audit_log (site_id, user_id, user_name, action, target, detail, ip, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)')
             ->execute([
-                current_site_id(),
+                $siteId,
                 (int) ($user['id'] ?? 0),
                 mb_substr((string) ($user['name'] ?? ''), 0, 120),
                 mb_substr($action, 0, 60),
@@ -995,8 +1000,13 @@ function pp_post_public_url(array $post): string
  * gone or its state moved on, and the caller must not proceed with
  * dependent writes (tags, sites, snapshots).
  *
- * (Row counts: Postgres and SQLite count matched rows even when the new
- * values equal the old, so an identical re-save still reports true.)
+ * Row counts: Postgres and SQLite count MATCHED rows even when the new
+ * values equal the old, and the MySQL connection sets
+ * PDO::MYSQL_ATTR_FOUND_ROWS so it does too — an identical re-save of an
+ * allowed draft reports true on every engine instead of masquerading as
+ * a conflict. A false return therefore always means the row is gone or
+ * its state moved on; pp_guarded_update_failure() names which, for the
+ * error message only — the atomic UPDATE above stays the enforcement.
  */
 function pp_guarded_post_update(int $postId, array $fields, ?array $requireStatus): bool
 {
@@ -1014,6 +1024,19 @@ function pp_guarded_post_update(int $postId, array $fields, ?array $requireStatu
     $stmt = db()->prepare($sql);
     $stmt->execute($params);
     return $stmt->rowCount() > 0;
+}
+
+/**
+ * Why did a guarded update land nowhere? 'missing' (the post is gone) or
+ * 'state' (it exists but its current status refused the write). This is a
+ * fresh read AFTER the atomic refusal, used only to phrase the message —
+ * never to decide whether a write succeeded.
+ */
+function pp_guarded_update_failure(int $postId): string
+{
+    $stmt = db()->prepare('SELECT 1 FROM posts WHERE id = ?');
+    $stmt->execute([$postId]);
+    return $stmt->fetch() === false ? 'missing' : 'state';
 }
 
 /**

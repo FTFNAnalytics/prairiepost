@@ -124,8 +124,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $id = (int) $post['id'];
                 pp_post_snapshot($id, 'edit', $user['name']);
             } else {
-                $error = 'Not saved: an editor published or scheduled this story while you were editing. '
-                       . 'Reload to see the live version — the text below is your unsaved copy.';
+                $error = pp_guarded_update_failure((int) $post['id']) === 'missing'
+                    ? 'Not saved: this story was deleted while you were editing. The text below is your unsaved copy.'
+                    : 'Not saved: an editor published or scheduled this story while you were editing. '
+                    . 'Reload to see the live version — the text below is your unsaved copy.';
             }
         } else {
             $fields['slug'] = unique_post_slug($title);

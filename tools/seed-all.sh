@@ -47,6 +47,14 @@ return ['db' => ['driver' => 'sqlite', 'sqlite_path' => '$TARGET'],
         'site_url' => '', 'timezone' => 'America/Toronto', 'debug' => false];
 PHP
 
+# Explicit preparation: nothing installs on first request any more. The
+# runner creates and stamps the schema; seed-core lays down the founding
+# site's base content exactly as the old first boot did.
+PP_CONFIG="$WORK/config.php" php "$ROOT/tools/migrate.php" --apply >/dev/null \
+  || { echo "FAIL: schema preparation (tools/migrate.php --apply) failed"; exit 1; }
+PP_CONFIG="$WORK/config.php" php "$ROOT/tools/seed-core.php" >/dev/null \
+  || { echo "FAIL: base seed (tools/seed-core.php) failed"; exit 1; }
+
 FAILED=0
 for slug in $ORDER $EXTRA; do
   [ -d "$ROOT/assets/sites/$slug" ] || { echo "-- $slug: no pack directory, skipped from the loop"; continue; }

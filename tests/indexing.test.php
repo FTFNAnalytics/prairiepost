@@ -9,12 +9,12 @@ if (PHP_SAPI !== 'cli') {
 }
 
 $root = dirname(__DIR__);
-$work = sys_get_temp_dir() . '/pp-indexing-' . bin2hex(random_bytes(4));
-mkdir($work);
-$dbfile = $work . '/t.sqlite';
-$config = $work . '/config.php';
-file_put_contents($config, "<?php\nreturn ['db' => ['driver' => 'sqlite', 'sqlite_path' => '$dbfile'],\n"
-    . " 'site_slug' => 'prairiedispatch', 'hub_slug' => 'civismedia', 'site_url' => '', 'timezone' => 'America/Toronto', 'debug' => false];\n");
+require __DIR__ . '/lib/fixture.php';
+$fx = pp_fixture_create('indexing');
+pp_fixture_prepare($fx);            // migrate --apply + seed-core, explicitly
+$work = $fx['work'];
+$config = $fx['config'];
+$dbfile = $fx['sqlite_path'] ?? '';
 
 putenv('PP_CONFIG=' . $config);
 require $root . '/app/bootstrap.php';
@@ -33,12 +33,11 @@ $pid = (int) trim((string) shell_exec(
     . escapeshellarg(PHP_BINARY) . ' -S 127.0.0.1:' . $port . ' router.php >' . escapeshellarg("$work/server.log") . ' 2>&1 & echo $!'
 ));
 usleep(700000);
-register_shutdown_function(function () use ($pid, $work) {
+register_shutdown_function(function () use ($pid, $fx) {
     if ($pid) {
         @posix_kill($pid, 15);
     }
-    array_map('unlink', glob("$work/*") ?: []);
-    @rmdir($work);
+    pp_fixture_destroy($fx);
 });
 
 $fails = 0;

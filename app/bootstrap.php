@@ -66,25 +66,46 @@ function pp_config(string $key, $default = null)
     return $GLOBALS['pp_config'][$key] ?? $default;
 }
 
-/** Lazily connected PDO handle; installs or migrates the schema on first use. */
-function db(): PDO
+/** The configured database driver name (sqlite when unset or unknown). */
+function pp_db_driver(): string
 {
-    static $pdo = null;
-    if ($pdo !== null) {
-        return $pdo;
-    }
+    $driver = $GLOBALS['pp_config']['db']['driver'] ?? 'sqlite';
+    return in_array($driver, ['mysql', 'pgsql', 'sqlite'], true) ? $driver : 'sqlite';
+}
 
-    $cfg = $GLOBALS['pp_config']['db'];
-    $driver = $cfg['driver'] ?? 'sqlite';
+/**
+ * Connect to the configured database — and do NOTHING else. No schema
+ * creation, no installation, no seeding, no migration: connecting is not
+ * permission to change anything (F12). Maintenance tools use this handle
+ * directly; ordinary code goes through db(), which adds the readiness gate.
+ *
+ * $overlay merges over the configured connection settings — the migration
+ * runner uses it to reach a direct (non-pooled) maintenance endpoint.
+ */
+function pp_db_connect(array $overlay = []): PDO
+{
+    $cfg = array_replace_recursive($GLOBALS['pp_config']['db'] ?? [], $overlay);
+    $driver = pp_db_driver();
 
     if ($driver === 'mysql') {
         $m = $cfg['mysql'];
         $dsn = sprintf('mysql:host=%s;dbname=%s;charset=%s', $m['host'], $m['name'], $m['charset'] ?? 'utf8mb4');
-        $pdo = new PDO($dsn, $m['user'], $m['pass'], [
+        if (!empty($m['port'])) {
+            $dsn .= ';port=' . (int) $m['port'];
+        }
+        if (!empty($m['socket'])) {
+            $dsn = sprintf('mysql:unix_socket=%s;dbname=%s;charset=%s', $m['socket'], $m['name'], $m['charset'] ?? 'utf8mb4');
+        }
+        return new PDO($dsn, $m['user'], $m['pass'], [
             PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
             PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+            // Report MATCHED rows, not changed rows, so an identical re-save
+            // counts like it does on Postgres and SQLite — the conditional
+            // authorization writes (pp_guarded_post_update) depend on it.
+            PDO::MYSQL_ATTR_FOUND_ROWS => true,
         ]);
-    } elseif ($driver === 'pgsql') {
+    }
+    if ($driver === 'pgsql') {
         $p = $cfg['pgsql'];
         $dsn = sprintf(
             'pgsql:host=%s;port=%d;dbname=%s;sslmode=%s',
@@ -101,51 +122,98 @@ function db(): PDO
             // on both the session (5432) and transaction (6543) pooler.
             PDO::ATTR_EMULATE_PREPARES => true,
         ]);
-        // The app lives in its own Postgres schema so it can share a database
-        // with other applications without table-name collisions. Created on
-        // first connect; every unqualified table name resolves here.
-        $schema = pp_pg_schema();
-        $pdo->exec('CREATE SCHEMA IF NOT EXISTS "' . $schema . '"');
-        $pdo->exec('SET search_path TO "' . $schema . '"');
-    } else {
-        $driver = 'sqlite';
-        $path = $cfg['sqlite_path'] ?? PP_ROOT . '/data/prairiedispatch.sqlite';
-        if (!is_dir(dirname($path))) {
-            mkdir(dirname($path), 0775, true);
-        }
-        $pdo = new PDO('sqlite:' . $path, null, null, [
-            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-            PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
-        ]);
-        $pdo->exec('PRAGMA foreign_keys = ON');
-        $pdo->exec('PRAGMA journal_mode = WAL');
+        // The app lives in its own Postgres schema. Setting the search path
+        // is a session property, not DDL — the schema itself is created by
+        // the migration runner, never by a request.
+        $pdo->exec('SET search_path TO "' . pp_pg_schema() . '"');
+        return $pdo;
     }
-
-    if (!pp_schema_installed($pdo, $driver)) {
-        require_once PP_ROOT . '/app/seed.php';
-        // First boot is all-or-nothing where the engine allows it (Postgres
-        // and SQLite run DDL transactionally; MySQL auto-commits DDL). A
-        // crash mid-install/seed leaves nothing behind to clean up.
-        $atomic = $driver !== 'mysql';
-        if ($atomic) {
-            $pdo->beginTransaction();
-        }
-        try {
-            pp_install($pdo, $driver);
-            pp_seed($pdo);
-            if ($atomic) {
-                $pdo->commit();
-            }
-        } catch (Throwable $e) {
-            if ($atomic && $pdo->inTransaction()) {
-                $pdo->rollBack();
-            }
-            throw $e;
-        }
-    } else {
-        pp_migrate($pdo, $driver);
+    $path = $cfg['sqlite_path'] ?? PP_ROOT . '/data/prairiedispatch.sqlite';
+    if (!is_dir(dirname($path))) {
+        mkdir(dirname($path), 0775, true);
     }
+    $pdo = new PDO('sqlite:' . $path, null, null, [
+        PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+        PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+    ]);
+    $pdo->exec('PRAGMA foreign_keys = ON');
+    $pdo->exec('PRAGMA journal_mode = WAL');
+    $pdo->exec('PRAGMA busy_timeout = 10000');
+    return $pdo;
+}
 
+/** For sqlite, the configured database file path (empty for other drivers). */
+function pp_sqlite_path(): string
+{
+    if (pp_db_driver() !== 'sqlite') {
+        return '';
+    }
+    return (string) ($GLOBALS['pp_config']['db']['sqlite_path'] ?? PP_ROOT . '/data/prairiedispatch.sqlite');
+}
+
+/**
+ * Refuse to serve: the schema this process needs is not in a state it can
+ * safely use. Web requests get a controlled, non-cacheable 503 with no
+ * branding (the broken schema cannot be read for settings) and no
+ * internals; CLI jobs stop non-zero before any business write. The
+ * operator detail goes to the error log, never to the client.
+ */
+function pp_db_unavailable(string $publicReason, string $operatorDetail): never
+{
+    error_log('prairiepost unavailable: ' . $operatorDetail
+        . ' — inspect with `php tools/migrate.php --status`, prepare with `php tools/migrate.php --apply`.');
+    if (PHP_SAPI === 'cli') {
+        fwrite(STDERR, "UNAVAILABLE: $operatorDetail\n"
+            . "Inspect: php tools/migrate.php --status   Prepare: php tools/migrate.php --apply\n");
+        exit(2);
+    }
+    http_response_code(503);
+    header('Content-Type: text/html; charset=utf-8');
+    header('Cache-Control: no-store, max-age=0');
+    header('Retry-After: 120');
+    echo '<!DOCTYPE html><html lang="en"><head><meta charset="utf-8">'
+       . '<meta name="viewport" content="width=device-width, initial-scale=1">'
+       . '<meta name="robots" content="noindex, nofollow"><title>Temporarily unavailable</title></head>'
+       . '<body style="font-family:system-ui,sans-serif;max-width:36em;margin:15vh auto;padding:0 1em">'
+       . '<h1>Temporarily unavailable</h1>'
+       . '<p>' . htmlspecialchars($publicReason, ENT_QUOTES) . ' Please try again in a few minutes.</p>'
+       . '</body></html>';
+    exit;
+}
+
+/**
+ * Lazily connected PDO handle for ORDINARY work — web, admin, cron, CLI
+ * business jobs. Connects, then verifies once per process that the schema
+ * is present and at exactly the version this code was built for; anything
+ * else (absent, behind, ahead, or mid-migration) refuses to serve rather
+ * than installing, migrating, or guessing. Schema changes happen only
+ * through tools/migrate.php.
+ */
+function db(): PDO
+{
+    static $pdo = null;
+    if ($pdo !== null) {
+        return $pdo;
+    }
+    // A missing SQLite file is reported without creating it — merely asking
+    // for a handle must not manufacture an empty database.
+    $sqlitePath = pp_sqlite_path();
+    if ($sqlitePath !== '' && !is_file($sqlitePath)) {
+        pp_db_unavailable('This site is being set up.', "database file does not exist: $sqlitePath");
+    }
+    try {
+        $candidate = pp_db_connect();
+    } catch (PDOException $e) {
+        pp_db_unavailable('The site cannot reach its database.', 'connection failed: ' . $e->getMessage());
+    }
+    $status = pp_schema_status($candidate, pp_db_driver());
+    if ($status['state'] !== 'ready') {
+        pp_db_unavailable('This site is being updated.', sprintf(
+            'schema %s (stored version %s, this code needs %d)',
+            $status['state'], $status['version'] === null ? 'unknown' : (string) $status['version'], PP_SCHEMA_VERSION
+        ));
+    }
+    $pdo = $candidate;
     return $pdo;
 }
 
@@ -194,39 +262,61 @@ function pp_domain_site_slug(): ?string
     if ($host === '' || !preg_match('/^[a-z0-9.-]+$/', $host)) {
         return null;
     }
-    try {
-        $stmt = db()->prepare('SELECT site_slug FROM domains WHERE hostname = ?');
-        $stmt->execute([$host]);
-        $slug = $stmt->fetchColumn();
-    } catch (PDOException) {
-        return null;
-    }
+    // No try/catch here any more: db() has already verified the schema is
+    // at this code's version, so `domains` exists. Swallowing an error at
+    // this point would resolve the WRONG tenant on a broken schema — the
+    // failure must surface, not fall through to the config default.
+    $stmt = db()->prepare('SELECT site_slug FROM domains WHERE hostname = ?');
+    $stmt->execute([$host]);
+    $slug = $stmt->fetchColumn();
     return $slug !== false && $slug !== '' ? (string) $slug : null;
 }
 
 /**
  * The site this deployment serves. Resolution order: the PP_SITE
  * environment override, then the domains table on the request hostname,
- * then the config 'site_slug'. Joining an existing shared database creates
- * the site row (and its default settings) on first request — no manual
- * setup step.
+ * then the config 'site_slug'. A slug with no site row REFUSES to serve —
+ * an ordinary request never creates a site (that was request-time
+ * seeding); papers join the network through tools/seed-launch.php, which
+ * provisions the row explicitly.
  */
 function current_site(): array
 {
-    static $site = null;
-    if ($site !== null) {
-        return $site;
+    $site = pp_current_site_or_null();
+    if ($site === null) {
+        $slug = pp_current_site_slug();
+        pp_db_unavailable('This site is not provisioned here.',
+            "no site row for tenant slug '$slug' — provision it with PP_SITE=$slug php tools/seed-launch.php");
     }
+    return $site;
+}
+
+/** The tenant slug this process resolves to, before any row lookup. */
+function pp_current_site_slug(): string
+{
     // PP_SITE overrides everything for CLI runs (cron on a multi-site host,
     // where HTTP_HOST-based mapping has no host to look at).
-    $slug = slugify((string) (getenv('PP_SITE') ?: pp_domain_site_slug() ?: pp_config('site_slug', 'prairiedispatch')));
-    $stmt = db()->prepare('SELECT * FROM sites WHERE slug = ?');
-    $stmt->execute([$slug]);
-    $site = $stmt->fetch();
-    if (!$site) {
-        require_once PP_ROOT . '/app/seed.php';
-        $site = pp_create_site(db(), $slug);
+    return slugify((string) (getenv('PP_SITE') ?: pp_domain_site_slug() ?: pp_config('site_slug', 'prairiedispatch')));
+}
+
+/**
+ * The current site row, or null when the resolved tenant has no row —
+ * for callers that legitimately act OUTSIDE any one paper (the audit
+ * log's global entries, provisioning tools on a not-yet-seeded install).
+ * Ordinary page/tool flow uses current_site(), which refuses instead.
+ */
+function pp_current_site_or_null(): ?array
+{
+    static $site = null;
+    static $looked = false;
+    if ($looked) {
+        return $site;
     }
+    $stmt = db()->prepare('SELECT * FROM sites WHERE slug = ?');
+    $stmt->execute([pp_current_site_slug()]);
+    $row = $stmt->fetch();
+    $site = $row === false ? null : $row;
+    $looked = true;
     return $site;
 }
 

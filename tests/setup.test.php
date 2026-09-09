@@ -10,12 +10,12 @@ if (PHP_SAPI !== 'cli') {
 }
 
 $root = dirname(__DIR__);
-$work = sys_get_temp_dir() . '/pp-setup-' . bin2hex(random_bytes(4));
-mkdir($work);
-$dbfile = $work . '/t.sqlite';
-$config = $work . '/config.php';
-file_put_contents($config, "<?php\nreturn ['db' => ['driver' => 'sqlite', 'sqlite_path' => '$dbfile'],\n"
-    . " 'site_slug' => 'prairiedispatch', 'hub_slug' => 'civismedia', 'site_url' => '', 'timezone' => 'America/Toronto', 'debug' => false];\n");
+require __DIR__ . '/lib/fixture.php';
+$fx = pp_fixture_create('setup');
+pp_fixture_prepare($fx);            // migrate --apply + seed-core, explicitly
+$work = $fx['work'];
+$config = $fx['config'];
+$dbfile = $fx['sqlite_path'] ?? '';
 
 putenv('PP_CONFIG=' . $config);
 require $root . '/app/bootstrap.php';
@@ -40,14 +40,11 @@ $pid = (int) trim((string) shell_exec(
     . escapeshellarg(PHP_BINARY) . ' -S 127.0.0.1:' . $port . ' router.php >' . escapeshellarg("$work/server.log") . ' 2>&1 & echo $!'
 ));
 usleep(700000);
-register_shutdown_function(function () use ($pid, $work) {
+register_shutdown_function(function () use ($pid, $fx) {
     if ($pid) {
         @posix_kill($pid, 15);
     }
-    array_map('unlink', glob("$work/race/*") ?: []);
-    @rmdir("$work/race");
-    array_map('unlink', array_filter(glob("$work/*") ?: [], 'is_file'));
-    @rmdir($work);
+    pp_fixture_destroy($fx);
 });
 
 $jar = "$work/jar";
@@ -111,14 +108,13 @@ ok($e4 === 0, 'tools/reset-password.php still works for existing accounts');
 
 /* --- Simultaneous provisioning: exactly one founder --------------------------- */
 
-$work2 = "$work/race";
-mkdir($work2);
-$db2 = "$work2/t.sqlite";
-$cfg2 = "$work2/config.php";
-file_put_contents($cfg2, "<?php\nreturn ['db' => ['driver' => 'sqlite', 'sqlite_path' => '$db2'],\n"
-    . " 'site_slug' => 'prairiedispatch', 'hub_slug' => 'civismedia', 'site_url' => '', 'timezone' => 'America/Toronto', 'debug' => false];\n");
-// Prime the schema once so both racers contend only on the users table.
-exec('PP_CONFIG=' . escapeshellarg($cfg2) . ' ' . escapeshellarg(PHP_BINARY) . ' -r ' . escapeshellarg('require "' . $root . '/app/bootstrap.php"; db();'));
+// A second fixture on the SAME engine, prepared but unseeded, so both
+// racers contend only on the users table (on Postgres this exercises the
+// LOCK TABLE strategy across two genuinely independent processes).
+$fx2 = pp_fixture_create('setuprace');
+pp_fixture_prepare($fx2, false);
+register_shutdown_function(fn () => pp_fixture_destroy($fx2));
+$cfg2 = $fx2['config'];
 
 $procs = [];
 foreach ([['Racer One', 'one@race.test'], ['Racer Two', 'two@race.test']] as $i => [$n, $eaddr]) {
@@ -134,7 +130,7 @@ foreach ($procs as $i => $p) {
     stream_get_contents($pipes[$i][1]);
     $codes[] = proc_close($p);
 }
-$pdo2 = new PDO('sqlite:' . $db2);
+$pdo2 = pp_fixture_connect($fx2);
 $n = (int) $pdo2->query('SELECT COUNT(*) FROM users')->fetchColumn();
 ok($n === 1, "simultaneous provisioning founds exactly one account (got $n)");
 sort($codes);

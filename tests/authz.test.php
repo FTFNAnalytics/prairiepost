@@ -11,12 +11,11 @@ if (PHP_SAPI !== 'cli') {
 }
 
 $root = dirname(__DIR__);
-$work = sys_get_temp_dir() . '/pp-authz-' . bin2hex(random_bytes(4));
-mkdir($work);
-$dbfile = $work . '/t.sqlite';
-$config = $work . '/config.php';
-file_put_contents($config, "<?php\nreturn ['db' => ['driver' => 'sqlite', 'sqlite_path' => '$dbfile'],\n"
-    . " 'site_slug' => 'prairiedispatch', 'hub_slug' => 'civismedia', 'site_url' => '', 'timezone' => 'America/Toronto', 'debug' => false];\n");
+require __DIR__ . '/lib/fixture.php';
+$fx = pp_fixture_create('authz');
+pp_fixture_prepare($fx);            // migrate --apply + seed-core, explicitly
+$work = $fx['work'];
+$config = $fx['config'];
 
 $fails = 0;
 function ok(bool $cond, string $label): void
@@ -32,7 +31,7 @@ function ok(bool $cond, string $label): void
 putenv('PP_CONFIG=' . $config);
 define('PP_TEST_BOOT', 1);
 require $root . '/app/bootstrap.php';
-$pdo = db(); // installs + seeds the throwaway database
+$pdo = db(); // readiness-gated handle onto the prepared fixture
 
 $mkUser = function (string $name, string $role) use ($pdo): array {
     $email = strtolower($role) . '-' . strtolower(str_replace(' ', '', $name)) . '@test.local';
@@ -80,12 +79,11 @@ $cmd = 'PP_CONFIG=' . escapeshellarg($config) . ' ' . escapeshellarg(PHP_BINARY)
      . ' -S 127.0.0.1:' . $port . ' router.php >' . escapeshellarg("$work/server.log") . ' 2>&1 & echo $!';
 $serverPid = (int) trim((string) shell_exec('cd ' . escapeshellarg($root) . ' && ' . $cmd));
 usleep(700000);
-register_shutdown_function(function () use ($serverPid, $work) {
+register_shutdown_function(function () use ($serverPid, $fx) {
     if ($serverPid) {
         @posix_kill($serverPid, 15);
     }
-    array_map('unlink', glob("$work/*") ?: []);
-    @rmdir($work);
+    pp_fixture_destroy($fx);
 });
 
 function http(string $method, string $url, array $fields, string $jar, string $base): array
@@ -228,7 +226,7 @@ ok(str_contains($body, 'not saved') && str_contains($row($pRace2['id'])['body'],
 // second connection publishes between the first connection's read and its
 // conditional write — zero rows may match.
 $pRace3 = $mkPost('draft', (int) $author1['id'], 'RACE3BODY');
-$pdo2 = new PDO('sqlite:' . $dbfile, null, null, [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]);
+$pdo2 = pp_fixture_connect($fx);   // a second, independent connection to the same engine
 $pdo2->exec("UPDATE posts SET status = 'scheduled', published_at = '2030-01-01 06:00:00' WHERE id = " . (int) $pRace3['id']);
 $wrote = pp_guarded_post_update((int) $pRace3['id'], ['title' => 'GUARD should refuse'], ['draft', 'in_review']);
 ok($wrote === false && $row($pRace3['id'])['title'] !== 'GUARD should refuse',

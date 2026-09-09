@@ -23,7 +23,18 @@ if (PHP_SAPI !== 'cli') {
 require dirname(__DIR__) . '/app/bootstrap.php';
 require_once PP_ROOT . '/app/seed.php';   // pp_seed_last_id(), pp_site_default_settings()
 
-$site = current_site();
+// Joining sites self-provision HERE — explicitly, in the seeder — never on
+// an ordinary request. The schema must already be prepared
+// (tools/migrate.php --apply); db() refuses otherwise.
+$slug = slugify((string) (getenv('PP_SITE') ?: pp_config('site_slug', 'prairiedispatch')));
+$check = db()->prepare('SELECT * FROM sites WHERE slug = ?');
+$check->execute([$slug]);
+$site = $check->fetch();
+if (!$site) {
+    $site = pp_create_site(db(), $slug);
+    echo "  site created: {$slug} (site #{$site['id']})\n";
+}
+putenv('PP_SITE=' . $slug);   // current_site() and setting() resolve to it
 $siteId = (int) $site['id'];
 $slug = $site['slug'];
 $file = PP_ROOT . '/assets/sites/' . $slug . '/launch.php';

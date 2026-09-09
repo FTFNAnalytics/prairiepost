@@ -9,12 +9,11 @@ if (PHP_SAPI !== 'cli') {
     exit(1);
 }
 
-$work = sys_get_temp_dir() . '/pp-cleanup-' . bin2hex(random_bytes(4));
-mkdir($work);
-$dbfile = $work . '/t.sqlite';
-$config = $work . '/config.php';
-file_put_contents($config, "<?php\nreturn ['db' => ['driver' => 'sqlite', 'sqlite_path' => '$dbfile'],\n"
-    . " 'site_slug' => 'prairiedispatch', 'hub_slug' => 'civismedia', 'site_url' => '', 'timezone' => 'America/Toronto', 'debug' => false];\n");
+require __DIR__ . '/lib/fixture.php';
+$fx = pp_fixture_create('cleanup');
+pp_fixture_prepare($fx);            // migrate --apply + seed-core, explicitly
+$work = $fx['work'];
+$config = $fx['config'];
 
 $root = dirname(__DIR__);
 $php = escapeshellarg(PHP_BINARY);
@@ -34,7 +33,7 @@ function ok(bool $cond, string $label): void
     }
 }
 
-// Boot the app once (installs + seeds the throwaway database), then plant
+// Boot the app once (the fixture is already prepared), then plant
 // a deliberately dirty historical body the way pre-fix saves stored it.
 [$out, $exit] = $run('-r ' . escapeshellarg(
     'require ' . var_export($root . '/app/bootstrap.php', true) . ';
@@ -85,7 +84,6 @@ ok(str_contains($after, 'ORIGINAL-RECOVERABLE'), 'the pre-rewrite original is re
 ok(!str_contains($again, "#$dirtyId"), 'second run finds the story already clean');
 
 // Cleanup the disposable workspace.
-array_map('unlink', glob("$work/*") ?: []);
-@rmdir($work);
+pp_fixture_destroy($fx);
 
 exit($fails ? 1 : 0);
