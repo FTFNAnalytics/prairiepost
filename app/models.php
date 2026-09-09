@@ -1001,12 +1001,12 @@ function pp_post_public_url(array $post): string
  * dependent writes (tags, sites, snapshots).
  *
  * Row counts: Postgres and SQLite count MATCHED rows even when the new
- * values equal the old, and the MySQL connection sets
- * PDO::MYSQL_ATTR_FOUND_ROWS so it does too — an identical re-save of an
- * allowed draft reports true on every engine instead of masquerading as
- * a conflict. A false return therefore always means the row is gone or
- * its state moved on; pp_guarded_update_failure() names which, for the
+ * values equal the old, so a false return means the row is gone or its
+ * state moved on; pp_guarded_update_failure() names which, for the
  * error message only — the atomic UPDATE above stays the enforcement.
+ * On the legacy MySQL driver rowCount() reports CHANGED rows, so an
+ * identical re-save misreports as a conflict there — a known defect,
+ * deferred outside this build (production runs Postgres).
  */
 function pp_guarded_post_update(int $postId, array $fields, ?array $requireStatus): bool
 {

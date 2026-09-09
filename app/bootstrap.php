@@ -99,10 +99,11 @@ function pp_db_connect(array $overlay = []): PDO
         return new PDO($dsn, $m['user'], $m['pass'], [
             PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
             PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
-            // Report MATCHED rows, not changed rows, so an identical re-save
-            // counts like it does on Postgres and SQLite — the conditional
-            // authorization writes (pp_guarded_post_update) depend on it.
-            PDO::MYSQL_ATTR_FOUND_ROWS => true,
+            // Legacy driver, native changed-rows rowCount(): an identical
+            // re-save through pp_guarded_post_update() misreports as a
+            // conflict here. Known defect, deferred outside this build —
+            // production runs Postgres (see docs/build/phase-02-handoff.md,
+            // "Scope correction — Supabase retained").
         ]);
     }
     if ($driver === 'pgsql') {

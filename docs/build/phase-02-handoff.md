@@ -15,10 +15,11 @@ the correction is HERE.
   which remains unmerged and untouched (its own base was the audited
   release head `3328704…`). No Phase 1 audit corrections had arrived
   during this work; none are incorporated beyond Phase 1 as pushed.
-- Head SHA: the tip of this branch (the commit adding this document);
-  implementation commits, in order: `2bf4c6b` (steps 1–3), `77305f3`
-  (step 4), `19009a3` (steps 5–6), `af77977` (step 7), then step 8 and
-  this handoff.
+- Head SHA: the tip of this branch (the commit adding the scope
+  correction below); implementation commits, in order: `2bf4c6b`
+  (steps 1–3), `77305f3` (step 4), `19009a3` (steps 5–6), `af77977`
+  (step 7), then step 8, this handoff (`66cb26a`), and the scope
+  correction (final section of this document).
 - PR: none opened (not requested).
 
 ## 5–7. What changed
@@ -135,15 +136,20 @@ a live sequence probe, machine-readable results.
   builds through an engine-aware facility (`PP_TEST_DB=sqlite|pgsql|
   mysql` + connection env), asserts the ACTUAL PDO driver and server
   version into its output, owns a unique schema/database/file identity,
-  and destroys only its own. CI gained real PostgreSQL 16 and MariaDB
-  service jobs running the full suite.
-- **MySQL unchanged-save conflict** → the MySQL connection sets
-  `PDO::MYSQL_ATTR_FOUND_ROWS` (matched-rows semantics); every
-  `rowCount()` consumer audited (two DELETEs, one always-changing claim
-  — all safe); `pp_guarded_update_failure()` distinguishes missing from
-  state-refused for MESSAGES only (the atomic update stays the
-  enforcement); tests/guarded.test.php proves the allowed unchanged
-  save, the refusals, and the two-connection race on all three engines.
+  and destroys only its own. CI gained a real PostgreSQL 16 service job
+  running the full suite — the engine production actually runs. (A
+  MariaDB job existed briefly and was withdrawn by the scope
+  correction; the mysql fixture path remains runnable on demand and
+  gates nothing.)
+- **MySQL unchanged-save conflict** → NOT fixed here; deferred outside
+  this build by the scope correction (production runs Postgres). The
+  `rowCount()` consumer audit stands (two DELETEs, one always-changing
+  claim — all safe on every engine); `pp_guarded_update_failure()`
+  distinguishes missing from state-refused for MESSAGES only (the
+  atomic update stays the enforcement); tests/guarded.test.php proves
+  the allowed unchanged save on Postgres and SQLite, the refusals, and
+  the two-connection race on all engines, and documents the deferred
+  legacy defect with an explicit SKIP on mysql.
 - **Apache/nginx never exercised** → `tools/test-server-enforcement.sh`
   runs REAL nginx+FPM (a make-vhost.sh block AND a patched legacy block)
   and REAL Apache+FPM through the committed `.htaccess`: 81 checks. And
@@ -180,7 +186,7 @@ PostgreSQL 16.13, MariaDB 10.11.14, nginx and Apache 2.4 from Ubuntu
     php tests/run.php
     PP_TEST_DB=pgsql PP_TEST_PG_HOST=… PP_TEST_PG_PORT=… \
       PP_TEST_PG_DB=… PP_TEST_PG_USER=… [PP_TEST_PG_PASS=…] php tests/run.php
-    PP_TEST_DB=mysql PP_TEST_MY_SOCKET=… (or HOST/PORT/USER/PASS) php tests/run.php
+    PP_TEST_DB=mysql PP_TEST_MY_SOCKET=… (or HOST/PORT/USER/PASS) php tests/run.php   # optional, legacy — not a gate
 
     # harnesses (slow, real seeds/renders/servers)
     bash tools/seed-all.sh /tmp/net.sqlite
@@ -302,7 +308,7 @@ Rollback and forward repair: docs/MIGRATION-COMPAT.md.
 | --- | --- |
 | SQLite suites | RUN — passing (3.45.1) |
 | PostgreSQL suites | RUN — passing (16.13, disposable local server; CI job added) |
-| MySQL/MariaDB suites | RUN — passing (10.11.14; backup/restore suites SKIP by design — the backup job dumps pgsql/sqlite only) |
+| MySQL/MariaDB suites | RUN — passing as optional legacy coverage (10.11.14; guarded's unchanged-save check SKIPs there as the deferred defect; backup/restore suites SKIP by design). NOT a CI gate or acceptance requirement — see the scope correction |
 | Apache/nginx enforcement | RUN — passing (81 checks, real servers, disposable fixtures) |
 | Transport fixture limits (Phase 1) | CARRIED — live bad-certificate TLS and live IPv6-literal fetches remain fixture-limited exactly as documented in the Phase 1 handoff |
 | GitHub default branch | STILL the obsolete `claude/prairie-post-news-site-hiffgl`; repository-admin flip to the release branch remains a manual action |
@@ -328,9 +334,11 @@ truthful about every failure, rotated whole; the restore drill refuses
 corrupt/hostile/non-fresh targets and verifies EXACTLY, and a full
 isolated exercise — source destroyed, recovery from the encrypted
 off-site copy into fresh PostgreSQL — passes including every Phase 1
-security behavior. Database tests genuinely run on SQLite, PostgreSQL
-16 and MariaDB (drivers asserted in evidence; CI service jobs added);
-the MySQL unchanged-save defect is fixed with matched-rows semantics;
+security behavior. Database tests genuinely run on SQLite and on real
+PostgreSQL 16 — the engine production (Supabase) actually runs — with
+drivers asserted in evidence and a PostgreSQL CI service job added; the
+legacy MySQL driver's unchanged-save defect is documented and deferred
+outside this build (not a blocker for acceptance);
 real nginx and Apache enforce the path rules (81 checks), and existing
 live vhosts receive them via an injected shared snippet on the next
 roll. Render comparisons use separate per-tree fixtures with two new
@@ -340,3 +348,86 @@ Reviewer focus: the migration runner's crash/resume semantics
 (tools/migrate.php + tests/migrate.test.php), the adoption validator,
 the restore drill's refusal paths, and the quiesce/compatibility story
 in docs/MIGRATION-COMPAT.md.
+
+## Scope correction — Supabase retained
+
+An amendment received after the `66cb26a` push withdrew the MySQL
+requirements (the save fix, MySQL migration machinery as a requirement,
+and mandatory MySQL CI coverage) and directed that production remain on
+the existing Supabase integration. This section records the correction.
+
+**Revision record.** Base: `9ab9c4f1fb83ffee100ed2abeb025c0438d88b3c`
+(Phase 1 tip, untouched throughout). Pre-correction checkpoint:
+`66cb26ab08a895cbdcb7ee84564faeae876226ce` (pushed, clean tree — the
+recoverable checkpoint). Head: the commit adding this section.
+
+**No provider move occurred.** Nothing in Phase 2 was deployed, no live
+system, credential, or configuration was touched, and no work repointed
+production anywhere. The application uses Supabase solely as its managed
+PostgreSQL database over PDO (`pgsql` driver, own schema via
+`search_path`, pooler-aware connection settings); the codebase contains
+no Supabase Auth, Storage, Realtime, or Edge Functions integration, so
+there was nothing beyond the database connection to preserve or break.
+Uploads live on the VPS filesystem and are covered by the backup tars —
+Supabase Storage object recovery is not applicable. `supabase/` contains
+only `schema.sql` (no pre-existing migration workflow existed to reuse;
+the journaled runner is therefore the single history, not a competitor).
+No hidden fallback exists: `pp_db_connect()` connects only to the
+configured driver, and every failure surfaces as a refusal
+(`pp_db_unavailable()` — 503/exit 2), never a silent switch to SQLite
+or anything else.
+
+**Classification of the Phase 2 work:**
+
+- KEPT (the substance of the phase, all Supabase/Postgres-relevant):
+  the journaled migration runner and removal of request-time DDL, the
+  readiness gate, adoption validation, PG advisory locking with pooler
+  proof, the runtime/maintenance privilege split and its live-server
+  test, engine-real PostgreSQL test fixtures and the PostgreSQL CI job,
+  fresh-vs-upgrade schema parity (`schema-sql.php --check`, v20), the
+  integrity report and additive indexes, two-fixture render baselines
+  with classes 6/7, complete backups + manifest + retention + truthful
+  off-site failures, the isolated restore drill, the release-procedure
+  integration and MIGRATION-COMPAT contract, and the real Apache/nginx
+  enforcement checks.
+- KEPT WITH EXPLANATION: `tools/migrate.php`'s mysql arm and the
+  optional mysql test fixture path. The kept no-request-time-DDL rule
+  removed the legacy driver's only (automatic) migration path; deleting
+  the runner's mysql arm would strand any pre-existing legacy MySQL
+  install with no migration path at all. It runs only when explicitly
+  pointed at a MySQL database and gates nothing.
+- UNDONE (introduced solely for the withdrawn requirements): the
+  mandatory MariaDB CI job (removed from php-ci.yml); the
+  `PDO::MYSQL_ATTR_FOUND_ROWS` save fix (reverted in
+  `app/bootstrap.php` — legacy MySQL returns to its pre-existing
+  changed-rows behavior; docblocks and tests/guarded.test.php updated
+  to document rather than gate it).
+- NOT PERFORMED / NOT APPLICABLE: no provider migration to reverse; no
+  production database, schema, bucket, user, or backup was created or
+  deleted anywhere. The disposable local PostgreSQL/MariaDB servers
+  used for testing are session-scoped fixtures, not hosting.
+
+**The legacy MySQL issue, deferred.** On the mysql driver an identical
+re-save through `pp_guarded_post_update()` misreports as a conflict
+(changed-rows `rowCount()`). It is recorded in the driver arm, the
+model docblock, and an explicit SKIP in tests/guarded.test.php. It is
+NOT a blocker for Supabase acceptance and is outside this build.
+
+**Verification after the correction** (results in the section below if
+amended, otherwise as reported to the owner): full suite on SQLite and
+on a live PostgreSQL 16 server — all passing; optional mysql run
+passing with the documented SKIP; `schema-sql.php --check` clean;
+rendered output re-verified byte-identical against the Phase 1 tip
+`9ab9c4f`; no Phase 1 protection touched by the correction (the diff is
+the mysql connection attribute, one test, one docblock, the CI job, and
+documentation).
+
+**Remaining limitations:** unchanged from §33, plus: Supabase-specific
+managed-service checks (PITR/managed-backup coverage, dashboard-side
+policies, pooler configuration on the live project) are NOT RUN — no
+isolated Supabase environment is available from this sandbox; the
+database-level behavior is proven on plain PostgreSQL 16, which is the
+same engine but not the managed platform. Identify the live project's
+managed backup/PITR coverage during the operator adoption step; the
+application-level backup set remains the recovery dependency for
+config, uploads, vhosts, cron, and release identity either way.

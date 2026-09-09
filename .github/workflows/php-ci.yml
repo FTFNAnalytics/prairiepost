@@ -10,10 +10,12 @@ permissions:
   contents: read
 
 jobs:
-  # The full suite on each advertised database engine. sqlite is the
-  # default; the pgsql and mysql jobs run the SAME suites against real
-  # servers — every DB-backed test asserts its actual PDO driver and
-  # server version, so a mislabeled run cannot pass.
+  # The full suite on PostgreSQL — the engine production actually runs
+  # (the shared Supabase database). sqlite remains the dev/test default;
+  # every DB-backed test asserts its actual PDO driver and server
+  # version, so a mislabeled run cannot pass. The legacy mysql driver is
+  # not a CI gate; its suites remain runnable on demand via
+  # PP_TEST_DB=mysql.
   test-postgres:
     runs-on: ubuntu-latest
     services:
@@ -41,32 +43,6 @@ jobs:
           PP_TEST_PG_DB: pp_test
           PP_TEST_PG_USER: pptest
           PP_TEST_PG_PASS: pptest
-        run: php tests/run.php
-
-  test-mysql:
-    runs-on: ubuntu-latest
-    services:
-      mariadb:
-        image: mariadb:10.11
-        env:
-          MARIADB_ROOT_PASSWORD: pptest
-        ports: ['3306:3306']
-        options: >-
-          --health-cmd "healthcheck.sh --connect --innodb_initialized"
-          --health-interval 5s --health-timeout 5s --health-retries 10
-    steps:
-      - uses: actions/checkout@v4
-      - name: Install test runtime
-        run: |
-          sudo apt-get update
-          sudo apt-get install --yes php-cli php-sqlite3 php-mysql php-mbstring php-xml php-curl php-gd
-      - name: Run the suite on MySQL/MariaDB
-        env:
-          PP_TEST_DB: mysql
-          PP_TEST_MY_HOST: 127.0.0.1
-          PP_TEST_MY_PORT: '3306'
-          PP_TEST_MY_USER: root
-          PP_TEST_MY_PASS: pptest
         run: php tests/run.php
 
   test:
