@@ -117,6 +117,11 @@ if (is_readable($stateFile)) {
     } elseif ($age !== null && $age > 26 * 3600) {
         $problems[] = 'no backup in ' . round($age / 3600) . 'h';
     }
+    // ok:true means a LOCAL set published; a failed off-site transfer must
+    // not hide behind it.
+    if (!empty($state['ok']) && str_contains((string) ($state['offsite'] ?? ''), 'FAILED')) {
+        $problems[] = 'backup off-site transfer FAILED — the only copies are on this box';
+    }
 }
 // No state file = backups not set up yet; the dashboard says so quietly.
 

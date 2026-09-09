@@ -6,12 +6,15 @@
 #
 #   bash tools/test-baseline-classes.sh
 #
-# Scenarios, each in a disposable worktree of HEAD compared against HEAD:
+# Scenarios, each in a disposable worktree of HEAD (compared against HEAD,
+# or smoke-only where marked):
 #   identical tree            -> 0
 #   template attribute change -> 10  (a render difference, nothing else)
 #   induced HTTP 500          -> 3   (smoke failure, [render] can't excuse)
-#   broken launch pack        -> 2   (seed failure)
+#   broken launch pack        -> 2   (seed failure, smoke mode)
 #   invalid comparison ref    -> 4
+#   throwing migration step   -> 6   (head fixture migration failure)
+#   content-eating step       -> 7   (fixture divergence)
 #
 set -uo pipefail
 cd "$(dirname "$0")/.."
@@ -26,7 +29,11 @@ run_case() { # name expected_rc mutate_fn ref
   git worktree add --detach "$wt" "$HEADSHA" >/dev/null 2>&1 || { echo "worktree failed"; exit 1; }
   "$mutate" "$wt"
   local rc=0
-  (cd "$wt" && bash tools/baseline.sh "$ref" >/dev/null 2>&1) || rc=$?
+  if [ "$ref" = "SMOKE" ]; then
+    (cd "$wt" && bash tools/baseline.sh >/dev/null 2>&1) || rc=$?
+  else
+    (cd "$wt" && bash tools/baseline.sh "$ref" >/dev/null 2>&1) || rc=$?
+  fi
   if [ "$rc" = "$want" ]; then
     echo "ok   $name -> exit $rc"
   else
@@ -77,7 +84,10 @@ echo "== baseline.sh classification (each line seeds + renders the network; minu
 run_case "identical tree"        0  no_change
 run_case "render difference"     10 render_change
 run_case "induced HTTP 500"      3  induce_500
-run_case "broken launch pack"    2  break_seed
+# With separate fixtures a comparison seeds from the REF side; a broken
+# pack in the head tree surfaces in SMOKE mode (and in CI's independent
+# mandatory seed step).
+run_case "broken launch pack"    2  break_seed "SMOKE"
 run_case "invalid ref"           4  no_change "refs/heads/does-not-exist-$$"
 run_case "migration failure"     6  break_migration
 run_case "content-eating step"   7  content_eating_migration

@@ -1,192 +1,64 @@
 #!/usr/bin/env bash
 #
-# Set up nightly backups for the Civis Media network — run once, as root.
+# Install nightly backups for the Civis Media network — run once, as root,
+# from a RELEASE directory. Thin by design: the actual job is the
+# repo-versioned tools/backup.sh in the release tree, so backup logic
+# rolls forward with releases instead of living as a hand-frozen copy in
+# /usr/local/bin (the Phase-2 replacement for the old generated job).
 #
-#   curl -fsSL <raw url> | bash
+#   bash tools/vps/setup-backups.sh
 #
 # Installs:
-#   /usr/local/bin/civis-backup.sh   the nightly job (root, 700)
-#   /etc/cron.d/civis-backup         03:17 daily
-#   /var/backups/civis/{daily,weekly}  rotation: 7 daily + 4 weekly
-#   /var/backups/civis/state.json    what the hub dashboard reads (no secrets)
+#   /etc/cron.d/civis-backup        03:17 nightly:
+#                                   PP_BACKUP_DEST=/var/backups/civis
+#                                   bash <THIS RELEASE>/tools/backup.sh
+#   /var/backups/civis/             sets/<set-id>/… (0700), state.json (0644)
 #
-# What gets backed up, every night:
-#   - the shared Postgres database (pg_dump of the app's schema, custom format)
-#   - /var/www/prairiepost-shared-uploads (every photo on all nine sites)
-#   - box state: vhosts, cron files, each release's config.php (mode 600 tar)
+# Off-site: create /etc/civis-backup-offsite (root, 700, executable) and a
+# key at /root/civis-backup.key (0600) — the cron line picks both up when
+# present at INSTALL time; rerun this installer after adding them. The
+# off-site hook receives ONE argument: the encrypted set archive.
 #
-# The database password is read from the hub's generated config at RUN time
-# and handed to pg_dump via the environment — it is never written into this
-# script, the job script, argv, or any log. Only the hub's config is ever
-# evaluated, grep-guarded for the literal civismedia slug, same as every
-# other tool here.
-#
-# Off-site copies: if an executable exists at /etc/civis-backup-offsite it
-# is called after a successful backup with the night's files as arguments —
-# drop in a two-line rclone/rsync script whenever an off-site target exists.
-# Local rotation runs either way.
+# What one set contains and how restores work: header of tools/backup.sh
+# and tools/restore-drill.sh.
 #
 set -uo pipefail
 fail() { echo "FATAL: $*" >&2; exit 1; }
-
 [ "$(id -u)" = "0" ] || fail "run as root"
 
-say() { echo; echo "== $* =="; }
+HERE=$(cd "$(dirname "$0")/../.." && pwd)
+[ -f "$HERE/tools/backup.sh" ] || fail "run me from a release tree carrying tools/backup.sh"
 
-say "Resolving the hub's release and config"
-VH=$(readlink -f /etc/nginx/sites-enabled/civismedia 2>/dev/null) || fail "no civismedia vhost enabled"
-ROOT=$(grep -Eo 'root[[:space:]]+/var/www/prairiepost-[A-Za-z0-9._-]+' "$VH" | head -1 | awk '{print $2}')
-[ -n "$ROOT" ] && [ -d "$ROOT" ] || fail "couldn't resolve the hub release from the vhost"
-CFG="$ROOT/config.php"
-[ -f "$CFG" ] || fail "no config.php at $ROOT"
-# Both shapes of the hub config are legitimate: the original single file,
-# and — since the hub joined the release roll — a two-line wrapper whose
-# real configuration is app/config.site.php. Identity is checked in the
-# file that carries it; evaluation still goes through config.php, which
-# in the wrapped shape requires the real file itself.
+# The release identity check, in the file that carries it (config wrapper
+# shape aware — the Phase-1 lesson).
+CFG="$HERE/config.php"
 GUARD="$CFG"
-[ -f "$ROOT/app/config.site.php" ] && GUARD="$ROOT/app/config.site.php"
-grep -q "'site_slug' => 'civismedia'" "$GUARD" || fail "$GUARD isn't the hub's config — not touching it"
-echo "hub config: $CFG (identity checked in $GUARD)"
+[ -f "$HERE/app/config.site.php" ] && GUARD="$HERE/app/config.site.php"
+[ -f "$GUARD" ] || fail "no configuration found in $HERE — is this a live release?"
 
-DRIVER=$(php -r '$c = require $argv[1]; echo $c["db"]["driver"] ?? "";' "$CFG")
-[ "$DRIVER" = "pgsql" ] || fail "db driver is '$DRIVER' — this backup job is built for the shared Postgres database"
+DEST=/var/backups/civis
+mkdir -p "$DEST/sets"
+chmod 750 "$DEST"
 
-say "Checking pg_dump against the server's Postgres version"
-SERVER_MAJOR=$(php -r '
-$c = require $argv[1]; $p = $c["db"]["pgsql"];
-try {
-  $pdo = new PDO(sprintf("pgsql:host=%s;port=%d;dbname=%s;sslmode=%s", $p["host"], (int)($p["port"] ?? 5432), $p["name"] ?? "postgres", $p["sslmode"] ?? "require"), $p["user"], $p["pass"], [PDO::ATTR_TIMEOUT => 10]);
-  echo (int) explode(".", (string) $pdo->query("SHOW server_version")->fetchColumn())[0];
-} catch (Throwable $e) { fwrite(STDERR, $e->getMessage() . "\n"); exit(1); }
-' "$CFG") || fail "couldn't reach the database to read its version"
-echo "server: Postgres $SERVER_MAJOR"
-
-CLIENT_MAJOR=0
-command -v pg_dump >/dev/null && CLIENT_MAJOR=$(pg_dump --version | grep -Eo '[0-9]+' | head -1)
-if [ "${CLIENT_MAJOR:-0}" -lt "$SERVER_MAJOR" ]; then
-  echo "pg_dump ${CLIENT_MAJOR:-absent} < server $SERVER_MAJOR — installing postgresql-client-$SERVER_MAJOR"
-  export DEBIAN_FRONTEND=noninteractive
-  apt-get install -y "postgresql-client-$SERVER_MAJOR" 2>/dev/null || {
-    echo "not in Ubuntu's repos — adding the PostgreSQL apt repository (pgdg)"
-    apt-get install -y curl ca-certificates gnupg lsb-release >/dev/null
-    install -d /usr/share/postgresql-common/pgdg
-    curl -fsSL https://www.postgresql.org/media/keys/ACCC4CF8.asc -o /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc
-    echo "deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] https://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" \
-      > /etc/apt/sources.list.d/pgdg.list
-    apt-get update -qq
-    apt-get install -y "postgresql-client-$SERVER_MAJOR" || fail "couldn't install postgresql-client-$SERVER_MAJOR"
-  }
-fi
-# Prefer the exact-major binary if the default is older.
-PGDUMP=$(command -v "/usr/lib/postgresql/$SERVER_MAJOR/bin/pg_dump" || command -v pg_dump)
-echo "using: $PGDUMP ($("$PGDUMP" --version))"
-
-say "Installing the nightly job"
-install -d -m 755 /var/backups/civis /var/backups/civis/daily /var/backups/civis/weekly /var/log/civis
-
-cat > /usr/local/bin/civis-backup.sh <<'EOS'
-#!/usr/bin/env bash
-# Civis Media nightly backup — installed by setup-backups.sh. Runs as root.
-set -uo pipefail
-DIR=/var/backups/civis
-STAMP=$(date +%F)
-STATE_TMP=$(mktemp)
-finish() { # ok reason db_bytes up_bytes
-  # finished_epoch is what readers should trust — the box's clock and the
-  # app's timezone (America/Edmonton) don't have to agree for it to work.
-  printf '{"ok": %s, "finished_at": "%s", "finished_epoch": %s, "reason": "%s", "db_bytes": %s, "uploads_bytes": %s}\n' \
-    "$1" "$(date '+%F %T')" "$(date +%s)" "$2" "${3:-0}" "${4:-0}" > "$STATE_TMP"
-  chmod 644 "$STATE_TMP" && mv "$STATE_TMP" "$DIR/state.json"
-  [ "$1" = "true" ] || exit 1
-}
-
-VH=$(readlink -f /etc/nginx/sites-enabled/civismedia 2>/dev/null) || finish false "no civismedia vhost"
-ROOT=$(grep -Eo 'root[[:space:]]+/var/www/prairiepost-[A-Za-z0-9._-]+' "$VH" | head -1 | awk '{print $2}')
-CFG="$ROOT/config.php"
-[ -f "$CFG" ] || finish false "no hub config at $ROOT"
-# The identity guard reads the file that actually CARRIES the identity.
-# Since the hub joined the release roll, upgrade-papers.sh writes
-# config.php as a two-line wrapper and the real configuration lives in
-# app/config.site.php — the same both-shapes rule that script follows.
-# Grepping the wrapper for the site_slug literal failed every backup
-# from the night the hub was first rolled (2026-08-30) until this fix.
-# Evaluation still goes through $CFG: the wrapper requires the real
-# file, so the db read below is identical in either shape.
-GUARD="$CFG"
-[ -f "$ROOT/app/config.site.php" ] && GUARD="$ROOT/app/config.site.php"
-grep -q "'site_slug' => 'civismedia'" "$GUARD" || finish false "config guard failed"
-
-# Read connection fields; the password rides the environment into pg_dump only.
-IFS=$'\t' read -r PGH PGP PGDB PGU PGPASS PGSCHEMA < <(php -r '
-$c = require $argv[1]; $p = $c["db"]["pgsql"];
-echo implode("\t", [$p["host"], (string)($p["port"] ?? 5432), $p["name"] ?? "postgres", $p["user"], $p["pass"], $p["schema"] ?? "prairiedispatch"]), "\n";
-' "$CFG") || finish false "couldn't read db config"
-[ -n "${PGH:-}" ] && [ -n "${PGU:-}" ] || finish false "db config came back empty"
-
-PGDUMP_BIN=%%PGDUMP%%
-DBFILE="$DIR/daily/db-$STAMP.dump"
-if ! PGPASSWORD="$PGPASS" "$PGDUMP_BIN" -h "$PGH" -p "$PGP" -U "$PGU" -d "$PGDB" \
-     --schema="$PGSCHEMA" -Fc --no-owner -f "$DBFILE" 2>>/var/log/civis/backup.log; then
-  finish false "pg_dump failed — see backup.log"
-fi
-chmod 600 "$DBFILE"
-DB_BYTES=$(stat -c%s "$DBFILE")
-
-UP_BYTES=0
-if [ -d /var/www/prairiepost-shared-uploads ]; then
-  UPFILE="$DIR/daily/uploads-$STAMP.tar.gz"
-  tar -czf "$UPFILE" -C /var/www prairiepost-shared-uploads 2>>/var/log/civis/backup.log \
-    || finish false "uploads tar failed" "$DB_BYTES"
-  UP_BYTES=$(stat -c%s "$UPFILE")
-fi
-
-# Box state: vhosts, crons, configs. Credential-bearing → 600.
-BOXFILE="$DIR/daily/box-$STAMP.tar.gz"
-tar -czf "$BOXFILE" /etc/nginx/sites-available /etc/nginx/snippets /etc/nginx/conf.d /etc/cron.d \
-    /var/www/prairiepost-*/config.php 2>/dev/null || true
-chmod 600 "$BOXFILE" 2>/dev/null || true
-
-# Sundays graduate to the weekly shelf.
-if [ "$(date +%u)" = "7" ]; then
-  cp -f "$DBFILE" "$DIR/weekly/" 2>/dev/null || true
-  [ -n "${UPFILE:-}" ] && cp -f "$UPFILE" "$DIR/weekly/" 2>/dev/null || true
-fi
-
-# Rotation: 7 nights on the daily shelf, 4 Sundays on the weekly one.
-find "$DIR/daily"  -type f -mtime +7  -delete 2>/dev/null || true
-find "$DIR/weekly" -type f -mtime +28 -delete 2>/dev/null || true
-
-# Off-site hook: anything executable at this path gets the night's files.
-if [ -x /etc/civis-backup-offsite ]; then
-  /etc/civis-backup-offsite "$DBFILE" "${UPFILE:-}" "$BOXFILE" >>/var/log/civis/backup.log 2>&1 \
-    || echo "WARN offsite hook failed $(date '+%F %T')" >> /var/log/civis/backup.log
-fi
-
-finish true "" "$DB_BYTES" "$UP_BYTES"
-EOS
-sed -i "s|%%PGDUMP%%|$PGDUMP|" /usr/local/bin/civis-backup.sh
-chmod 700 /usr/local/bin/civis-backup.sh
-echo "installed /usr/local/bin/civis-backup.sh"
-
-cat > /etc/cron.d/civis-backup <<'CRON'
-# Civis Media nightly backup — installed by setup-backups.sh
-17 3 * * * root /usr/local/bin/civis-backup.sh >> /var/log/civis/backup.log 2>&1
-CRON
-chmod 644 /etc/cron.d/civis-backup
-echo "installed /etc/cron.d/civis-backup (03:17 nightly)"
-
-say "Running the first backup now (also proves the credentials work)"
-if /usr/local/bin/civis-backup.sh; then
-  echo "PASS — tonight and every night at 03:17 from here on"
-  ls -lh /var/backups/civis/daily/ | tail -4
-  cat /var/backups/civis/state.json
+ENVLINE="PP_BACKUP_DEST=$DEST"
+if [ -x /etc/civis-backup-offsite ] && [ -f /root/civis-backup.key ]; then
+  ENVLINE="$ENVLINE PP_BACKUP_KEY_FILE=/root/civis-backup.key PP_OFFSITE_CMD=/etc/civis-backup-offsite"
+  echo "off-site hook + key found: transfers will run (encrypted)"
 else
-  echo "FAILED — read /var/log/civis/backup.log, fix, re-run /usr/local/bin/civis-backup.sh"
-  exit 1
+  echo "no off-site hook (/etc/civis-backup-offsite + /root/civis-backup.key): local-only;"
+  echo "state.json will keep saying off-site recovery is UNVERIFIED until you add them."
 fi
+
+cat > /etc/cron.d/civis-backup <<EOF
+# Installed by tools/vps/setup-backups.sh from $HERE
+17 3 * * * root $ENVLINE bash $HERE/tools/backup.sh >> /var/log/civis/backup.log 2>&1
+EOF
+chmod 644 /etc/cron.d/civis-backup
+mkdir -p /var/log/civis
 
 echo
-echo "Next: rehearse the restore once —"
-echo "  curl -fsSL <raw url of restore-drill.sh> | bash"
-echo "A backup that's never been restored is a hope, not a backup."
+echo "PASS — nightly at 03:17 from the release at $HERE."
+echo "Run one now:  $ENVLINE bash $HERE/tools/backup.sh"
+echo "NOTE: upgrade-papers.sh repoints cron files at the new release on every"
+echo "roll, so the job follows releases; rerun this installer only to change"
+echo "the off-site configuration."
