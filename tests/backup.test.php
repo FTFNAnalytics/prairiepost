@@ -12,6 +12,10 @@ if (PHP_SAPI !== 'cli') {
 
 $root = dirname(__DIR__);
 require __DIR__ . '/lib/fixture.php';
+if (pp_fixture_engine() === 'mysql') {
+    echo "SKIP: the backup job dumps pgsql (production) and sqlite (fixtures); mysql installs use their own dump tooling\n";
+    exit(0);
+}
 $fx = pp_fixture_create('backup');
 pp_fixture_prepare($fx);   // a real little database to dump
 
@@ -34,7 +38,20 @@ function layout(array $fx, array $opts = []): string
     }
     file_put_contents("$b/uploads/2026/pic.jpg", 'photo-bytes-' . $b);
     symlink("$b/uploads", "$b/rel-aaa111-shared/uploads");
-    $site = "<?php\nreturn ['db' => ['driver' => 'sqlite', 'sqlite_path' => '" . ($opts['db'] ?? $fx['sqlite_path']) . "'],\n"
+    if (isset($opts['db'])) {
+        // A deliberately broken database target (the dump-failure scenario).
+        $dbArr = "['driver' => 'sqlite', 'sqlite_path' => '{$opts['db']}']";
+    } elseif ($fx['engine'] === 'pgsql') {
+        // The pg engine exercises the REAL pg_dump path against the fixture schema.
+        $p = $fx['pg'];
+        $dbArr = var_export(['driver' => 'pgsql', 'pgsql' => [
+            'host' => $p['host'], 'port' => $p['port'], 'name' => $p['name'],
+            'user' => $p['user'], 'pass' => $p['pass'], 'sslmode' => 'disable', 'schema' => $fx['schema'],
+        ]], true);
+    } else {
+        $dbArr = "['driver' => 'sqlite', 'sqlite_path' => '{$fx['sqlite_path']}']";
+    }
+    $site = "<?php\nreturn ['db' => $dbArr,\n"
         . " 'site_slug' => 'civismedia', 'hub_slug' => 'civismedia', 'site_url' => '', 'timezone' => 'America/Toronto', 'debug' => false];\n";
     $wrapper = "<?php\n\$c = require __DIR__ . '/app/config.site.php';\nreturn \$c;\n";
     foreach (['rel-aaa111-shared', 'rel-bbb222-civismedia'] as $rel) {
