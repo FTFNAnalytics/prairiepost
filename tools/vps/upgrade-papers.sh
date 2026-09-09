@@ -243,6 +243,16 @@ WRAP
     ALL_VHOST_BACKUPS+=("$VH")
     sed -i "s|root[[:space:]]\+$OLD;|root $NEW;|" "$VH"
     grep -q "root $NEW;" "$VH" || { cp "$VH.bak.$STAMP" "$VH"; echo "   $base: vhost rewrite failed, restored"; ok=0; }
+    # Existing blocks predate the Phase 1/2 path protections: a template
+    # only guards NEW sites, so live blocks get the shared deny snippet
+    # injected right after their root line (idempotent by marker).
+    SNIPPET_DIR="${PP_UPGRADE_SNIPPET_DIR:-/etc/nginx/snippets}"
+    if [ -f "$TPL/tools/vps/pp-deny.conf" ] && ! grep -qF -e 'tools|tests' -e 'prairiepost-deny' "$VH"; then
+      mkdir -p "$SNIPPET_DIR"
+      cp "$TPL/tools/vps/pp-deny.conf" "$SNIPPET_DIR/prairiepost-deny.conf"
+      sed -i "s|root $NEW;|root $NEW;\n    include $SNIPPET_DIR/prairiepost-deny.conf;|" "$VH"
+      echo "   $base: legacy block — shared deny snippet injected"
+    fi
   done
   [ "$ok" = "1" ] || continue
 

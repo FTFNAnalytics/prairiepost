@@ -56,6 +56,7 @@ run_upgrade() { # box-dir -> rc
   PP_UPGRADE_VHOSTS_DIR="$1/vhosts" \
   PP_UPGRADE_CRON_DIR="$1/cron" \
   PP_UPGRADE_WWW="$1/www" \
+  PP_UPGRADE_SNIPPET_DIR="$1/snippets" \
   PP_UPGRADE_SHA="${HEADSHA:0:12}" \
   PP_RELEASE_TARBALL="$TARBALL" \
   PP_BACKUP_DEST="$1/backups" \
@@ -74,6 +75,7 @@ ok "crons resumed after verification"         "echo \"\$OUT1\" | grep -q 'resume
 ok "cron file exists unpaused and repointed"  "[ -f $B1/cron/pp-fetch ] && [ ! -f $B1/cron/pp-fetch.paused ] && grep -q ${HEADSHA:0:12} $B1/cron/pp-fetch"
 ok "the shared schema migrated exactly once"  "[ \$(echo \"\$OUT1\" | grep -c 'migrating the schema') = 1 ]"
 ok "the second group reused the migration"    "echo \"\$OUT1\" | grep -q 'already migrated this run'"
+ok "legacy vhosts got the deny snippet injected" "grep -q prairiepost-deny $B1/vhosts/kitchenerchronicle && [ -f $B1/snippets/prairiepost-deny.conf ]"
 ok "both vhosts repointed to the new release" "grep -q ${HEADSHA:0:12} $B1/vhosts/kitchenerchronicle && grep -q ${HEADSHA:0:12} $B1/vhosts/civismedia"
 ok "both groups boot ready as their tenants"  "[ \$(echo \"\$OUT1\" | grep -c 'PASS (fixture)') = 2 ]"
 J=$(php -r '$p = new PDO("sqlite:" . $argv[1]); echo implode(",", $p->query("SELECT version || \":\" || status FROM schema_migrations ORDER BY version")->fetchAll(PDO::FETCH_COLUMN));' "$B1/data/net.sqlite")
