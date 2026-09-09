@@ -5,7 +5,7 @@
  */
 
 define('PP_ROOT', dirname(__DIR__));
-define('PP_SCHEMA_VERSION', 19);
+define('PP_SCHEMA_VERSION', 20);
 
 // PP_CONFIG lets the committed harness (tools/seed-all.sh, baseline.sh)
 // point a CLI run at a throwaway config without touching the checkout's
@@ -136,9 +136,18 @@ function pp_db_connect(array $overlay = []): PDO
         PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
         PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
     ]);
-    $pdo->exec('PRAGMA foreign_keys = ON');
-    $pdo->exec('PRAGMA journal_mode = WAL');
+    // busy_timeout FIRST: the WAL switch itself takes the write lock, and
+    // two processes opening a brand-new file together would otherwise race
+    // it with no patience at all.
     $pdo->exec('PRAGMA busy_timeout = 10000');
+    $pdo->exec('PRAGMA foreign_keys = ON');
+    try {
+        $pdo->exec('PRAGMA journal_mode = WAL');
+    } catch (PDOException) {
+        // The mode is a persistent property of the FILE: if a concurrent
+        // writer holds the lock right now, whoever set it first already
+        // made it WAL, and this connection works fine either way.
+    }
     return $pdo;
 }
 

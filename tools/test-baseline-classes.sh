@@ -37,6 +37,31 @@ run_case() { # name expected_rc mutate_fn ref
 }
 
 no_change() { :; }
+break_migration() {
+  # A head tree one schema version ahead whose new step THROWS: the base
+  # fixture seeds fine, the head copy's migration fails → class 6. Real
+  # divergence, no injection switches.
+  sed -i "s/define('PP_SCHEMA_VERSION', [0-9]*);/define('PP_SCHEMA_VERSION', 99);/" "$1/app/bootstrap.php"
+  php -r '
+    $f = $argv[1] . "/app/db.php";
+    $s = file_get_contents($f);
+    $step = "        99 => function (PDO \$pdo, string \$driver): void {\n            throw new RuntimeException(\"induced migration failure for classification test\");\n        },\n\n    ];";
+    $pos = strrpos($s, "    ];");
+    file_put_contents($f, substr($s, 0, $pos) . $step . substr($s, $pos + strlen("    ];")));' "$1"
+  grep -q 'induced migration failure' "$1/app/db.php" || { echo "FATAL: migration mutation did not land"; exit 1; }
+}
+content_eating_migration() {
+  # A head tree whose new step silently DELETES content: preparation
+  # "succeeds" but the fixtures stop being equivalent → class 7.
+  sed -i "s/define('PP_SCHEMA_VERSION', [0-9]*);/define('PP_SCHEMA_VERSION', 99);/" "$1/app/bootstrap.php"
+  php -r '
+    $f = $argv[1] . "/app/db.php";
+    $s = file_get_contents($f);
+    $step = "        99 => function (PDO \$pdo, string \$driver): void {\n            \$pdo->exec(\"DELETE FROM posts WHERE id IN (SELECT id FROM posts LIMIT 1)\");\n            \$pdo->exec(\"UPDATE settings SET svalue = \x2799\x27 WHERE site_id = 0 AND skey = \x27schema_version\x27\");\n        },\n\n    ];";
+    $pos = strrpos($s, "    ];");
+    file_put_contents($f, substr($s, 0, $pos) . $step . substr($s, $pos + strlen("    ];")));' "$1"
+  grep -q 'DELETE FROM posts WHERE id IN' "$1/app/db.php" || { echo "FATAL: divergence mutation did not land"; exit 1; }
+}
 render_change() { # a real, visible-but-harmless markup change on the article page
   sed -i 's/<article class="article wrap">/<article class="article wrap" data-baseline-probe="1">/' "$1/article.php"
   grep -q 'baseline-probe' "$1/article.php" || { echo "FATAL: render mutation did not land — fix the anchor before trusting this harness"; exit 1; }
@@ -49,11 +74,13 @@ break_seed() {
 }
 
 echo "== baseline.sh classification (each line seeds + renders the network; minutes, not seconds)"
-run_case "identical tree"     0  no_change
-run_case "render difference"  10 render_change
-run_case "induced HTTP 500"   3  induce_500
-run_case "broken launch pack" 2  break_seed
-run_case "invalid ref"        4  no_change "refs/heads/does-not-exist-$$"
+run_case "identical tree"        0  no_change
+run_case "render difference"     10 render_change
+run_case "induced HTTP 500"      3  induce_500
+run_case "broken launch pack"    2  break_seed
+run_case "invalid ref"           4  no_change "refs/heads/does-not-exist-$$"
+run_case "migration failure"     6  break_migration
+run_case "content-eating step"   7  content_eating_migration
 
 if [ "$FAILS" = "1" ]; then
   echo "CLASSIFICATION BROKEN — the CI gate cannot be trusted until this passes."

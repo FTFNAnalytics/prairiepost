@@ -305,7 +305,12 @@ if ($status['state'] === 'ahead') {
 
 // Create-on-apply for a missing sqlite file happens here, deliberately.
 if ($pdo === null) {
-    $pdo = pp_db_connect();
+    try {
+        $pdo = pp_db_connect();
+    } catch (PDOException $e) {
+        fwrite(STDERR, 'connection failed: ' . $e->getMessage() . "\n");
+        exit(2);
+    }
     $status = pp_schema_status($pdo, $driver);
 }
 

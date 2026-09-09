@@ -49,6 +49,7 @@ ok($rc === 0 && str_contains($out, 'ready'), 'status reads ready after install')
 ok($rc === 0 && str_contains($out, 'nothing pending'), 'a second apply is a no-op');
 
 $pdo = pp_fixture_connect($fx);
+$targetVersion = (int) $pdo->query("SELECT svalue FROM settings WHERE site_id = 0 AND skey = 'schema_version'")->fetchColumn();
 $j = $pdo->query('SELECT version, status FROM schema_migrations ORDER BY version')->fetchAll();
 ok(count($j) === 1 && $j[0]['status'] === 'installed', 'journal holds exactly one installed baseline');
 
@@ -73,8 +74,11 @@ ok($rc === 5 && str_contains($out, 'REFUSED to adopt'), "an inconsistent version
 
 /* --- Behind: a populated older database upgrades and keeps its data --------- */
 
-// Make this database an honest v18: media_orders is already gone; roll the
-// stored version back to the last version whose catalog it now matches.
+// Make this database an honest v18: media_orders is already gone; the v20
+// indexes must go too, or re-running step 20 would collide with them.
+foreach (['idx_post_tags_tag', 'idx_news_items_source', 'idx_audit_log_site'] as $ix) {
+    try { $pdo->exec("DROP INDEX $ix" . ($engine === 'mysql' ? ' ON ' . ['idx_post_tags_tag' => 'post_tags', 'idx_news_items_source' => 'news_items', 'idx_audit_log_site' => 'audit_log'][$ix] : '')); } catch (Throwable) {}
+}
 $pdo->prepare("UPDATE settings SET svalue = '18' WHERE site_id = 0 AND skey = 'schema_version'")->execute();
 $pdo->prepare('INSERT INTO posts (title, slug, body, status, author_id, created_at, updated_at) VALUES (?,?,?,?,?,?,?)')
     ->execute(['Upgrade survivor', 'upgrade-survivor-' . bin2hex(random_bytes(3)), '<p>x</p>', 'published', 1, date('Y-m-d H:i:s'), date('Y-m-d H:i:s')]);
@@ -90,7 +94,9 @@ $pdo2 = pp_fixture_connect($fx);
 ok((int) $pdo2->query("SELECT COUNT(*) FROM posts WHERE title = 'Upgrade survivor'")->fetchColumn() === 1,
     'populated data survives the upgrade');
 $jr = $pdo2->query("SELECT version, status FROM schema_migrations ORDER BY version")->fetchAll();
-ok(end($jr)['version'] == 19 && end($jr)['status'] === 'applied', 'the step is journaled applied');
+ok(end($jr)['status'] === 'applied', 'the final step is journaled applied');
+[$out, $rc] = mig($fx, '--status');
+ok($rc === 0, 'and the upgraded database is ready');
 
 /* --- Ahead ------------------------------------------------------------------- */
 
@@ -99,7 +105,7 @@ $pdo2->prepare("UPDATE settings SET svalue = '99' WHERE site_id = 0 AND skey = '
 ok($rc === 6, 'a newer-than-code schema classifies as ahead');
 [$out, $rc] = mig($fx, '--apply');
 ok($rc === 6 && (int) $pdo2->query('SELECT COUNT(*) FROM posts')->fetchColumn() > 0, 'apply refuses to touch an ahead schema');
-$pdo2->prepare("UPDATE settings SET svalue = '19' WHERE site_id = 0 AND skey = 'schema_version'")->execute();
+$pdo2->prepare("UPDATE settings SET svalue = ? WHERE site_id = 0 AND skey = 'schema_version'")->execute([(string) $targetVersion]);
 
 /* --- GENUINE step failure: a conflicting object, then repair ----------------- */
 
@@ -111,6 +117,9 @@ $p2 = pp_fixture_connect($fx2);
 // Roll it back to v18 honestly, then squat the name step 19 wants with a
 // WRONG-shape table — the step fails for real, no fault switches.
 $p2->exec('DROP TABLE media_orders');
+foreach (['idx_post_tags_tag' => 'post_tags', 'idx_news_items_source' => 'news_items', 'idx_audit_log_site' => 'audit_log'] as $ix => $tbl) {
+    try { $p2->exec("DROP INDEX $ix" . ($engine === 'mysql' ? " ON $tbl" : '')); } catch (Throwable) {}
+}
 $p2->prepare("UPDATE settings SET svalue = '18' WHERE site_id = 0 AND skey = 'schema_version'")->execute();
 $p2->exec('DELETE FROM schema_migrations');
 $p2->exec('INSERT INTO schema_migrations (version, name, checksum, status, started_at, finished_at) '

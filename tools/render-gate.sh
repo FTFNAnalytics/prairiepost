@@ -32,9 +32,11 @@ case "$rc" in
     echo "If the change is deliberate, add [render] to the PR title."
     exit 1
     ;;
-  2)  echo "GATE FAIL: the full-network seed failed. [render] cannot excuse this." ; exit 1 ;;
+  2)  echo "GATE FAIL: this tree's fixture seed/preparation failed. [render] cannot excuse this." ; exit 1 ;;
   3)  echo "GATE FAIL: this tree fails the smoke contract (server error, empty page, or wrong masthead). [render] cannot excuse this." ; exit 1 ;;
   4)  echo "GATE FAIL: the comparison ref is invalid or itself broken — fix the comparison, don't declare around it." ; exit 1 ;;
   5)  echo "GATE FAIL: no pages could be derived from the seeded database." ; exit 1 ;;
+  6)  echo "GATE FAIL: MIGRATING the head fixture failed — a schema problem, never a visual one. [render] cannot excuse this." ; exit 1 ;;
+  7)  echo "GATE FAIL: fixture divergence — the fixtures stopped being equivalent, or a tree wrote into the other's database. [render] cannot excuse this." ; exit 1 ;;
   *)  echo "GATE FAIL: baseline exited $rc (unclassified) — treated as a genuine failure." ; exit 1 ;;
 esac

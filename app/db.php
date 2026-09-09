@@ -515,6 +515,10 @@ function pp_schema_ddl(string $driver): array
         // Parity note: migration step 18 creates this; the fresh DDL was
         // missing it — caught by the fresh-vs-upgraded catalog comparison.
         'CREATE INDEX idx_social_shares_post ON social_shares (post_id)',
+        // v20 (integrity pass): supporting indexes for real lookups that had none.
+        'CREATE INDEX idx_post_tags_tag ON post_tags (tag_id)',
+        'CREATE INDEX idx_news_items_source ON news_items (source_id)',
+        'CREATE INDEX idx_audit_log_site ON audit_log (site_id, id)',
         'CREATE INDEX idx_agent_tasks ON agent_tasks (status, created_at)',
         'CREATE INDEX idx_agent_tasks_post ON agent_tasks (post_id, kind)',
         'CREATE UNIQUE INDEX uq_metrics_site_day ON site_metrics_daily (site_id, day)',
@@ -1371,5 +1375,17 @@ function pp_migrations(): array
             $pdo->exec('CREATE INDEX idx_media_orders_request ON media_orders (request_id, state)');
             $pdo->exec("UPDATE settings SET svalue = '19' WHERE site_id = 0 AND skey = 'schema_version'");
         },
+        20 => function (PDO $pdo, string $driver): void {
+            // Integrity pass (Phase 2): supporting indexes for lookups the
+            // read-only report found uncovered — tag pages read post_tags by
+            // tag, the wire reads news_items by source, and the audit screen
+            // filters by site. Additive only; no constraint changes (those
+            // stay an owner decision — see tools/integrity-report.php).
+            $pdo->exec('CREATE INDEX idx_post_tags_tag ON post_tags (tag_id)');
+            $pdo->exec('CREATE INDEX idx_news_items_source ON news_items (source_id)');
+            $pdo->exec('CREATE INDEX idx_audit_log_site ON audit_log (site_id, id)');
+            $pdo->exec("UPDATE settings SET svalue = '20' WHERE site_id = 0 AND skey = 'schema_version'");
+        },
+
     ];
 }

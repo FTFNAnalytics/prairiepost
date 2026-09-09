@@ -51,7 +51,8 @@ ok($exit === 1 && str_contains($out, '[render]'), 'undeclared render change fail
 ok($exit === 0, 'declared render change passes');
 
 // …and the declaration excuses NOTHING else.
-foreach ([2 => 'seed failure', 3 => 'smoke failure', 4 => 'comparison infrastructure', 5 => 'no pages', 42 => 'unclassified'] as $rc => $label) {
+foreach ([2 => 'seed failure', 3 => 'smoke failure', 4 => 'comparison infrastructure', 5 => 'no pages',
+          6 => 'head fixture migration failure', 7 => 'fixture divergence', 42 => 'unclassified'] as $rc => $label) {
     [$exit] = gate($rc, 'Break everything [render]');
     ok($exit === 1, "[render] cannot excuse: $label (rc=$rc)");
 }

@@ -81,11 +81,12 @@ pp_fixture_prepare($fx);
 ok($code === 200, 'a prepared database serves 200');
 
 $pdo = pp_fixture_connect($fx);
+$readyVersion = (string) $pdo->query("SELECT svalue FROM settings WHERE site_id = 0 AND skey = 'schema_version'")->fetchColumn();
 $pdo->prepare("UPDATE settings SET svalue = '18' WHERE site_id = 0 AND skey = 'schema_version'")->execute();
 $expect503('behind schema');
 $pdo->prepare("UPDATE settings SET svalue = '99' WHERE site_id = 0 AND skey = 'schema_version'")->execute();
 $expect503('ahead schema');
-$pdo->prepare("UPDATE settings SET svalue = '19' WHERE site_id = 0 AND skey = 'schema_version'")->execute();
+$pdo->prepare("UPDATE settings SET svalue = ? WHERE site_id = 0 AND skey = 'schema_version'")->execute([$readyVersion]);
 
 // Partial: a journal row stuck in 'started'.
 $pdo->exec("INSERT INTO schema_migrations (version, name, checksum, status, started_at) VALUES (77, 'stuck', '', 'started', '2026-01-01 00:00:00')");
