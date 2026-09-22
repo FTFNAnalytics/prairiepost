@@ -1,0 +1,123 @@
+/* The Burrard Brief — design system (burrard template).
+   Foundation build: a complete, restrained modern-digest identity that
+   the brand package will re-skin. Voice: quick, plain, numbered.
+   Families named here are declared by /assets/css/fonts.css (self-hosted
+   — the network rule: name a face only where a loaded sheet declares it). */
+
+@import url('/assets/css/fonts.css');
+
+body.t-burrard {
+  --bb-ink:     #182430;
+  --bb-paper:   #F5F8FA;
+  --bb-surface: #FFFFFF;
+  --bb-accent:  #0E5A8A;
+  --bb-signal:  #E8630A;
+  --bb-muted:   #5C6B77;
+  --bb-line:    #D9E2E9;
+  background: var(--bb-paper);
+  color: var(--bb-ink);
+  font-family: 'Inter', -apple-system, 'Segoe UI', Arial, sans-serif;
+}
+.t-burrard .bb-wrap { max-width: 1060px; margin: 0 auto; padding: 0 20px; }
+.t-burrard a { color: inherit; }
+.t-burrard .bb-mono { font-family: 'IBM Plex Mono', ui-monospace, 'Courier New', monospace; }
+
+/* Utility strip */
+.t-burrard .bb-util { background: var(--bb-ink); color: #C8D4DD; font-size: 12px; }
+.t-burrard .bb-util .in { max-width: 1060px; margin: 0 auto; padding: 7px 20px; display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+.t-burrard .bb-util a { color: #fff; text-decoration: none; }
+.t-burrard .bb-util a:hover { color: var(--bb-signal); }
+.t-burrard .bb-util .sep { opacity: .4; margin: 0 6px; }
+
+/* Masthead */
+.t-burrard .bb-mast { background: var(--bb-surface); border-bottom: 3px solid var(--bb-ink); }
+.t-burrard .bb-mast .in { max-width: 1060px; margin: 0 auto; padding: 22px 20px 16px; display: flex; align-items: center; justify-content: space-between; gap: 18px; flex-wrap: wrap; }
+.t-burrard .bb-lock { display: flex; align-items: center; gap: 14px; text-decoration: none; }
+.t-burrard .bb-lock .the { display: block; font-size: 15px; font-weight: 500; letter-spacing: .04em; color: var(--bb-muted); }
+.t-burrard .bb-lock .name { display: block; font-size: 34px; font-weight: 800; letter-spacing: -.02em; line-height: 1; }
+.t-burrard .bb-lock .name em { font-style: normal; color: var(--bb-accent); }
+.t-burrard .bb-tag { font-size: 13px; color: var(--bb-muted); }
+
+/* Section nav */
+.t-burrard .bb-nav { background: var(--bb-surface); border-bottom: 1px solid var(--bb-line); }
+.t-burrard .bb-nav .in { max-width: 1060px; margin: 0 auto; padding: 0 20px; display: flex; gap: 2px; overflow-x: auto; }
+.t-burrard .bb-nav a { padding: 10px 12px; font-size: 13px; font-weight: 600; text-decoration: none; white-space: nowrap; border-bottom: 3px solid transparent; }
+.t-burrard .bb-nav a:hover { border-bottom-color: var(--bb-line); }
+.t-burrard .bb-nav a[aria-current="page"] { border-bottom-color: var(--bb-signal); color: var(--bb-accent); }
+
+/* Front: lead + the numbered brief */
+.t-burrard .bb-front { display: grid; grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); gap: 34px; padding: 30px 0 40px; }
+.t-burrard .bb-lead h1 { font-size: 34px; line-height: 1.12; letter-spacing: -.015em; margin: 10px 0; }
+.t-burrard .bb-lead h1 a { text-decoration: none; }
+.t-burrard .bb-lead h1 a:hover { color: var(--bb-accent); }
+.t-burrard .bb-lead .standfirst { font-size: 17px; line-height: 1.55; color: var(--bb-muted); }
+.t-burrard .bb-lead img { width: 100%; height: auto; border-radius: 4px; }
+.t-burrard .bb-kick { font-size: 11px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--bb-signal); }
+.t-burrard .bb-byline { font-size: 12px; color: var(--bb-muted); }
+
+.t-burrard .bb-brief { background: var(--bb-surface); border: 1px solid var(--bb-line); border-top: 3px solid var(--bb-accent); border-radius: 4px; padding: 18px 20px; }
+.t-burrard .bb-brief h2 { font-size: 13px; letter-spacing: .12em; text-transform: uppercase; margin: 0 0 4px; }
+.t-burrard .bb-brief ol { list-style: none; margin: 0; padding: 0; counter-reset: brief; }
+.t-burrard .bb-brief li { counter-increment: brief; display: flex; gap: 12px; padding: 11px 0; border-top: 1px solid var(--bb-line); }
+.t-burrard .bb-brief li:first-child { border-top: 0; }
+.t-burrard .bb-brief li::before { content: counter(brief, decimal-leading-zero); font-family: 'IBM Plex Mono', ui-monospace, monospace; font-size: 13px; color: var(--bb-accent); padding-top: 2px; }
+.t-burrard .bb-brief li a { font-size: 15px; font-weight: 600; line-height: 1.35; text-decoration: none; }
+.t-burrard .bb-brief li a:hover { color: var(--bb-accent); }
+.t-burrard .bb-brief .when { display: block; font-size: 11px; color: var(--bb-muted); margin-top: 2px; }
+
+/* Desk bands */
+.t-burrard .bb-desks { border-top: 1px solid var(--bb-line); padding: 26px 0 10px; }
+.t-burrard .bb-deskband { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 26px; margin-bottom: 26px; }
+.t-burrard .bb-deskhead { display: flex; align-items: baseline; justify-content: space-between; border-bottom: 2px solid var(--bb-ink); padding-bottom: 6px; margin-bottom: 12px; }
+.t-burrard .bb-deskhead h2 { font-size: 15px; margin: 0; }
+.t-burrard .bb-deskhead a { font-size: 12px; color: var(--bb-accent); text-decoration: none; }
+.t-burrard .bb-card h3 { font-size: 15px; line-height: 1.35; margin: 0 0 4px; }
+.t-burrard .bb-card h3 a { text-decoration: none; }
+.t-burrard .bb-card h3 a:hover { color: var(--bb-accent); }
+.t-burrard .bb-card { padding: 10px 0; border-top: 1px solid var(--bb-line); }
+.t-burrard .bb-card:first-of-type { border-top: 0; padding-top: 0; }
+
+/* Article */
+.t-burrard .bb-article { max-width: 720px; margin: 0 auto; padding: 30px 20px 40px; }
+.t-burrard .bb-article h1 { font-size: 34px; line-height: 1.15; letter-spacing: -.015em; margin: 10px 0 12px; }
+.t-burrard .bb-article .standfirst { font-size: 18px; line-height: 1.55; color: var(--bb-muted); margin: 0 0 14px; }
+.t-burrard .bb-article .body { font-size: 17px; line-height: 1.7; }
+.t-burrard .bb-article .body p { margin: 0 0 1.1em; }
+.t-burrard .bb-article .body blockquote { border-left: 3px solid var(--bb-signal); margin: 1.4em 0; padding: 2px 0 2px 16px; color: var(--bb-muted); }
+.t-burrard .bb-article img { max-width: 100%; height: auto; border-radius: 4px; }
+.t-burrard .bb-related { border-top: 2px solid var(--bb-ink); margin-top: 30px; padding-top: 12px; }
+.t-burrard .bb-related h2 { font-size: 13px; letter-spacing: .12em; text-transform: uppercase; }
+
+/* Section */
+.t-burrard .bb-section { padding: 26px 0 40px; }
+.t-burrard .bb-sechead { border-bottom: 3px solid var(--bb-ink); padding-bottom: 10px; margin-bottom: 6px; }
+.t-burrard .bb-sechead h1 { font-size: 26px; margin: 0 0 4px; }
+.t-burrard .bb-sechead p { margin: 0; font-size: 14px; color: var(--bb-muted); }
+.t-burrard .bb-row { display: flex; gap: 16px; padding: 14px 0; border-bottom: 1px solid var(--bb-line); }
+.t-burrard .bb-row h3 { font-size: 17px; line-height: 1.35; margin: 0 0 4px; }
+.t-burrard .bb-row h3 a { text-decoration: none; }
+.t-burrard .bb-row h3 a:hover { color: var(--bb-accent); }
+.t-burrard .bb-row p { margin: 0; font-size: 14px; color: var(--bb-muted); }
+.t-burrard .bb-more { padding: 18px 0; }
+.t-burrard .bb-btn { display: inline-block; background: var(--bb-accent); color: #fff; font-size: 13px; font-weight: 600; padding: 9px 16px; border-radius: 3px; text-decoration: none; }
+.t-burrard .bb-btn:hover { background: var(--bb-ink); }
+
+/* Empty state */
+.t-burrard .bb-empty { background: var(--bb-surface); border: 1px dashed var(--bb-line); border-radius: 4px; padding: 34px 24px; text-align: center; color: var(--bb-muted); font-size: 15px; }
+
+/* Footer */
+.t-burrard .bb-foot { background: var(--bb-ink); color: #C8D4DD; margin-top: 30px; }
+.t-burrard .bb-foot .in { max-width: 1060px; margin: 0 auto; padding: 30px 20px; display: grid; grid-template-columns: minmax(0, 2fr) repeat(3, minmax(0, 1fr)); gap: 26px; }
+.t-burrard .bb-foot .name { font-size: 22px; font-weight: 800; color: #fff; }
+.t-burrard .bb-foot h4 { font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: #8FA3B1; margin: 0 0 8px; }
+.t-burrard .bb-foot a { display: block; color: #E4ECF1; font-size: 13px; text-decoration: none; padding: 3px 0; }
+.t-burrard .bb-foot a:hover { color: var(--bb-signal); }
+.t-burrard .bb-foot .base { border-top: 1px solid #2A3947; font-size: 12px; }
+.t-burrard .bb-foot .base .in { display: flex; justify-content: space-between; gap: 12px; padding: 12px 20px; flex-wrap: wrap; }
+
+@media (max-width: 860px) {
+  .t-burrard .bb-front { grid-template-columns: 1fr; }
+  .t-burrard .bb-deskband { grid-template-columns: 1fr; }
+  .t-burrard .bb-foot .in { grid-template-columns: 1fr; }
+  .t-burrard .bb-lock .name { font-size: 28px; }
+}

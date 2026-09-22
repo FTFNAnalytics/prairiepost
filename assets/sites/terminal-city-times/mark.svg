@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 42 42" width="42" height="42">
+  <!-- Terminal City Times — foundation placeholder mark: a railway
+       station roundel (the end of steel). Brand package replaces. -->
+  <circle cx="21" cy="21" r="19" fill="#8C2F1B"/>
+  <circle cx="21" cy="21" r="14.5" fill="none" stroke="#F4EFE4" stroke-width="2"/>
+  <rect x="6" y="17.5" width="30" height="7" rx="1" fill="#F4EFE4"/>
+  <rect x="9" y="19.5" width="24" height="3" fill="#8C2F1B"/>
+  <circle cx="21" cy="21" r="2" fill="#B08A3C"/>
+</svg>

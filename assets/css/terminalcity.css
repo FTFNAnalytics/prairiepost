@@ -1,0 +1,123 @@
+/* Terminal City Times — design system (terminalcity template).
+   Foundation build: a railway-era heritage broadsheet — cream stock,
+   brick red and aged gold, Newsreader serif under Archivo Narrow caps —
+   for the brand package to re-skin. Families named here are declared by
+   /assets/css/fonts.css. */
+
+@import url('/assets/css/fonts.css');
+
+body.t-terminalcity {
+  --tc-ink:    #262220;
+  --tc-paper:  #F4EFE4;
+  --tc-surface:#FBF8F0;
+  --tc-accent: #8C2F1B;
+  --tc-gold:   #B08A3C;
+  --tc-muted:  #77706A;
+  --tc-line:   #E3DCCB;
+  background: var(--tc-paper);
+  color: var(--tc-ink);
+  font-family: 'Newsreader', Georgia, 'Times New Roman', serif;
+}
+.t-terminalcity .tc-wrap { max-width: 1080px; margin: 0 auto; padding: 0 20px; }
+.t-terminalcity a { color: inherit; }
+.t-terminalcity .tc-caps { font-family: 'Archivo Narrow', 'Arial Narrow', Arial, sans-serif; letter-spacing: .1em; text-transform: uppercase; }
+
+/* Utility strip */
+.t-terminalcity .tc-util { border-bottom: 1px solid var(--tc-line); font-size: 12px; color: var(--tc-muted); }
+.t-terminalcity .tc-util .in { max-width: 1080px; margin: 0 auto; padding: 6px 20px; display: flex; justify-content: space-between; gap: 14px; flex-wrap: wrap; font-family: 'Archivo Narrow', Arial, sans-serif; letter-spacing: .04em; }
+.t-terminalcity .tc-util a { text-decoration: none; }
+.t-terminalcity .tc-util a:hover { color: var(--tc-accent); }
+.t-terminalcity .tc-util .sep { opacity: .45; margin: 0 6px; }
+
+/* Centred heritage masthead between double rules */
+.t-terminalcity .tc-mast { text-align: center; padding: 24px 20px 12px; }
+.t-terminalcity .tc-lock { display: inline-flex; flex-direction: column; align-items: center; gap: 8px; text-decoration: none; }
+.t-terminalcity .tc-lock .name { font-family: 'Newsreader', Georgia, serif; font-weight: 700; font-size: 46px; letter-spacing: .04em; line-height: 1; }
+.t-terminalcity .tc-lock .name .tct { color: var(--tc-accent); }
+.t-terminalcity .tc-tag { display: block; margin-top: 6px; font-size: 12px; letter-spacing: .22em; text-transform: uppercase; color: var(--tc-muted); font-family: 'Archivo Narrow', Arial, sans-serif; }
+.t-terminalcity .tc-rules { max-width: 1080px; margin: 10px auto 0; border-top: 1px solid var(--tc-ink); border-bottom: 3px double var(--tc-ink); height: 5px; }
+
+/* Nav */
+.t-terminalcity .tc-nav { border-bottom: 1px solid var(--tc-line); background: var(--tc-surface); }
+.t-terminalcity .tc-nav .in { max-width: 1080px; margin: 0 auto; padding: 0 20px; display: flex; justify-content: center; gap: 2px; overflow-x: auto; font-family: 'Archivo Narrow', Arial, sans-serif; }
+.t-terminalcity .tc-nav a { padding: 9px 14px; font-size: 14px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; text-decoration: none; white-space: nowrap; }
+.t-terminalcity .tc-nav a:hover { color: var(--tc-accent); }
+.t-terminalcity .tc-nav a[aria-current="page"] { color: var(--tc-accent); border-bottom: 2px solid var(--tc-gold); }
+
+/* Front */
+.t-terminalcity .tc-front { display: grid; grid-template-columns: minmax(0, 8fr) minmax(0, 4fr); gap: 36px; padding: 28px 0 36px; }
+.t-terminalcity .tc-kick { font-size: 12px; font-weight: 600; letter-spacing: .16em; text-transform: uppercase; color: var(--tc-accent); font-family: 'Archivo Narrow', Arial, sans-serif; }
+.t-terminalcity .tc-lead h1 { font-size: 42px; line-height: 1.08; margin: 8px 0 10px; font-weight: 700; }
+.t-terminalcity .tc-lead h1 a { text-decoration: none; }
+.t-terminalcity .tc-lead h1 a:hover { color: var(--tc-accent); }
+.t-terminalcity .tc-lead .standfirst { font-size: 19px; line-height: 1.5; color: var(--tc-muted); font-style: italic; }
+.t-terminalcity .tc-lead img { width: 100%; height: auto; }
+.t-terminalcity .tc-byline { font-size: 12px; color: var(--tc-muted); font-family: 'Archivo Narrow', Arial, sans-serif; letter-spacing: .05em; }
+
+/* The departure board (latest rail) */
+.t-terminalcity .tc-board { background: var(--tc-surface); border: 1px solid var(--tc-line); padding: 16px 18px; }
+.t-terminalcity .tc-board h2 { font-size: 13px; letter-spacing: .18em; text-transform: uppercase; margin: 0 0 2px; font-family: 'Archivo Narrow', Arial, sans-serif; border-bottom: 2px solid var(--tc-ink); padding-bottom: 6px; }
+.t-terminalcity .tc-board .item { padding: 10px 0; border-bottom: 1px dotted var(--tc-line); }
+.t-terminalcity .tc-board .item:last-child { border-bottom: 0; }
+.t-terminalcity .tc-board .item h3 { font-size: 16px; line-height: 1.35; margin: 2px 0 0; font-weight: 600; }
+.t-terminalcity .tc-board .item h3 a { text-decoration: none; }
+.t-terminalcity .tc-board .item h3 a:hover { color: var(--tc-accent); }
+
+/* Desk bands */
+.t-terminalcity .tc-desks { border-top: 3px double var(--tc-ink); padding: 24px 0 8px; }
+.t-terminalcity .tc-deskband { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 30px; margin-bottom: 24px; }
+.t-terminalcity .tc-deskhead { display: flex; align-items: baseline; justify-content: space-between; border-bottom: 1px solid var(--tc-ink); padding-bottom: 5px; margin-bottom: 10px; }
+.t-terminalcity .tc-deskhead h2 { font-size: 14px; margin: 0; letter-spacing: .14em; text-transform: uppercase; font-family: 'Archivo Narrow', Arial, sans-serif; }
+.t-terminalcity .tc-deskhead a { font-size: 12px; color: var(--tc-accent); text-decoration: none; font-family: 'Archivo Narrow', Arial, sans-serif; }
+.t-terminalcity .tc-card { padding: 9px 0; border-top: 1px dotted var(--tc-line); }
+.t-terminalcity .tc-card:first-of-type { border-top: 0; padding-top: 0; }
+.t-terminalcity .tc-card h3 { font-size: 17px; line-height: 1.32; margin: 0; font-weight: 600; }
+.t-terminalcity .tc-card h3 a { text-decoration: none; }
+.t-terminalcity .tc-card h3 a:hover { color: var(--tc-accent); }
+
+/* Article */
+.t-terminalcity .tc-article { max-width: 700px; margin: 0 auto; padding: 28px 20px 40px; }
+.t-terminalcity .tc-article h1 { font-size: 38px; line-height: 1.1; margin: 8px 0 12px; }
+.t-terminalcity .tc-article .standfirst { font-size: 20px; line-height: 1.5; color: var(--tc-muted); font-style: italic; margin: 0 0 14px; }
+.t-terminalcity .tc-article .body { font-size: 18px; line-height: 1.72; }
+.t-terminalcity .tc-article .body p { margin: 0 0 1.1em; }
+.t-terminalcity .tc-article .body p:first-child::first-letter { font-size: 3.1em; line-height: .9; float: left; padding: 4px 8px 0 0; color: var(--tc-accent); font-weight: 700; }
+.t-terminalcity .tc-article .body blockquote { border-left: 3px solid var(--tc-gold); margin: 1.4em 0; padding: 2px 0 2px 16px; color: var(--tc-muted); }
+.t-terminalcity .tc-article img { max-width: 100%; height: auto; }
+.t-terminalcity .tc-related { border-top: 3px double var(--tc-ink); margin-top: 30px; padding-top: 12px; }
+.t-terminalcity .tc-related h2 { font-size: 13px; letter-spacing: .16em; text-transform: uppercase; font-family: 'Archivo Narrow', Arial, sans-serif; }
+
+/* Section */
+.t-terminalcity .tc-section { padding: 26px 0 40px; }
+.t-terminalcity .tc-sechead { border-bottom: 3px double var(--tc-ink); padding-bottom: 10px; margin-bottom: 4px; }
+.t-terminalcity .tc-sechead h1 { font-size: 30px; margin: 0 0 4px; letter-spacing: .05em; }
+.t-terminalcity .tc-sechead p { margin: 0; font-size: 15px; color: var(--tc-muted); font-style: italic; }
+.t-terminalcity .tc-row { padding: 15px 0; border-bottom: 1px dotted var(--tc-line); }
+.t-terminalcity .tc-row h3 { font-size: 20px; line-height: 1.28; margin: 0 0 5px; }
+.t-terminalcity .tc-row h3 a { text-decoration: none; }
+.t-terminalcity .tc-row h3 a:hover { color: var(--tc-accent); }
+.t-terminalcity .tc-row p { margin: 0 0 4px; font-size: 15px; color: var(--tc-muted); }
+.t-terminalcity .tc-more { padding: 18px 0; }
+.t-terminalcity .tc-btn { display: inline-block; background: var(--tc-accent); color: #FBF8F0; font-size: 13px; letter-spacing: .1em; text-transform: uppercase; padding: 9px 18px; text-decoration: none; font-family: 'Archivo Narrow', Arial, sans-serif; }
+.t-terminalcity .tc-btn:hover { background: var(--tc-ink); }
+
+/* Empty state */
+.t-terminalcity .tc-empty { background: var(--tc-surface); border: 1px solid var(--tc-line); padding: 34px 24px; text-align: center; color: var(--tc-muted); font-size: 16px; font-style: italic; }
+
+/* Footer */
+.t-terminalcity .tc-foot { background: var(--tc-ink); color: #CFC8BC; margin-top: 30px; }
+.t-terminalcity .tc-foot .in { max-width: 1080px; margin: 0 auto; padding: 30px 20px; display: grid; grid-template-columns: minmax(0, 2fr) repeat(3, minmax(0, 1fr)); gap: 26px; }
+.t-terminalcity .tc-foot .name { font-family: 'Newsreader', Georgia, serif; font-size: 24px; font-weight: 700; color: #FBF8F0; }
+.t-terminalcity .tc-foot h4 { font-size: 11px; letter-spacing: .16em; text-transform: uppercase; color: #9A9184; margin: 0 0 8px; font-family: 'Archivo Narrow', Arial, sans-serif; }
+.t-terminalcity .tc-foot a { display: block; color: #EAE4D8; font-size: 13px; text-decoration: none; padding: 3px 0; font-family: 'Archivo Narrow', Arial, sans-serif; letter-spacing: .04em; }
+.t-terminalcity .tc-foot a:hover { color: var(--tc-gold); }
+.t-terminalcity .tc-foot .base { border-top: 1px solid #3C3631; font-size: 12px; }
+.t-terminalcity .tc-foot .base .in { display: flex; justify-content: space-between; gap: 12px; padding: 12px 20px; flex-wrap: wrap; font-family: 'Archivo Narrow', Arial, sans-serif; }
+
+@media (max-width: 860px) {
+  .t-terminalcity .tc-front { grid-template-columns: 1fr; }
+  .t-terminalcity .tc-deskband { grid-template-columns: 1fr; }
+  .t-terminalcity .tc-foot .in { grid-template-columns: 1fr; }
+  .t-terminalcity .tc-lock .name { font-size: 30px; }
+  .t-terminalcity .tc-lead h1 { font-size: 30px; }
+}

@@ -1,0 +1,122 @@
+/* Cariboo Compass — design system (cariboo template).
+   Foundation build: spruce green and brass over warm paper; Archivo
+   display over Newsreader text — a northern-interior regional with a
+   compass motif. The brand package re-skins this. Families named here
+   are declared by /assets/css/fonts.css. */
+
+@import url('/assets/css/fonts.css');
+
+body.t-cariboo {
+  --cc-ink:    #20261F;
+  --cc-paper:  #F5F3EC;
+  --cc-surface:#FFFFFF;
+  --cc-accent: #2F4A33;
+  --cc-brass:  #A87C2F;
+  --cc-muted:  #6F7568;
+  --cc-line:   #E0DDD0;
+  background: var(--cc-paper);
+  color: var(--cc-ink);
+  font-family: 'Newsreader', Georgia, 'Times New Roman', serif;
+}
+.t-cariboo .cc-wrap { max-width: 1040px; margin: 0 auto; padding: 0 20px; }
+.t-cariboo a { color: inherit; }
+.t-cariboo h1, .t-cariboo h2, .t-cariboo h3, .t-cariboo .cc-ui { font-family: 'Archivo', -apple-system, 'Segoe UI', Arial, sans-serif; }
+
+/* Utility strip */
+.t-cariboo .cc-util { background: var(--cc-accent); color: #D9E2D6; font-size: 12px; }
+.t-cariboo .cc-util .in { max-width: 1040px; margin: 0 auto; padding: 7px 20px; display: flex; justify-content: space-between; gap: 14px; flex-wrap: wrap; font-family: 'Archivo', sans-serif; }
+.t-cariboo .cc-util a { color: #fff; text-decoration: none; }
+.t-cariboo .cc-util a:hover { color: var(--cc-brass); }
+.t-cariboo .cc-util .sep { opacity: .45; margin: 0 6px; }
+
+/* Masthead */
+.t-cariboo .cc-mast { background: var(--cc-surface); border-bottom: 4px solid var(--cc-accent); }
+.t-cariboo .cc-mast .in { max-width: 1040px; margin: 0 auto; padding: 22px 20px 16px; display: flex; align-items: center; justify-content: space-between; gap: 18px; flex-wrap: wrap; }
+.t-cariboo .cc-lock { display: flex; align-items: center; gap: 14px; text-decoration: none; }
+.t-cariboo .cc-lock .name { font-family: 'Archivo', sans-serif; font-size: 32px; font-weight: 800; letter-spacing: -.01em; line-height: 1.02; text-transform: uppercase; }
+.t-cariboo .cc-lock .name .co { color: var(--cc-accent); display: block; }
+.t-cariboo .cc-tag { font-size: 13px; color: var(--cc-muted); font-family: 'Archivo', sans-serif; }
+
+/* Nav with compass ticks */
+.t-cariboo .cc-nav { background: var(--cc-surface); border-bottom: 1px solid var(--cc-line); }
+.t-cariboo .cc-nav .in { max-width: 1040px; margin: 0 auto; padding: 0 20px; display: flex; gap: 2px; overflow-x: auto; font-family: 'Archivo', sans-serif; }
+.t-cariboo .cc-nav a { padding: 10px 13px; font-size: 13px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; text-decoration: none; white-space: nowrap; border-bottom: 3px solid transparent; }
+.t-cariboo .cc-nav a:hover { border-bottom-color: var(--cc-line); }
+.t-cariboo .cc-nav a[aria-current="page"] { border-bottom-color: var(--cc-brass); color: var(--cc-accent); }
+
+/* Front */
+.t-cariboo .cc-front { display: grid; grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); gap: 34px; padding: 30px 0 36px; }
+.t-cariboo .cc-kick { font-size: 11px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--cc-brass); font-family: 'Archivo', sans-serif; }
+.t-cariboo .cc-lead h1 { font-size: 36px; line-height: 1.1; margin: 8px 0 10px; font-weight: 800; }
+.t-cariboo .cc-lead h1 a { text-decoration: none; }
+.t-cariboo .cc-lead h1 a:hover { color: var(--cc-accent); }
+.t-cariboo .cc-lead .standfirst { font-size: 18px; line-height: 1.55; color: var(--cc-muted); }
+.t-cariboo .cc-lead img { width: 100%; height: auto; border-radius: 3px; }
+.t-cariboo .cc-byline { font-size: 12px; color: var(--cc-muted); font-family: 'Archivo', sans-serif; }
+
+.t-cariboo .cc-bearings { background: var(--cc-surface); border: 1px solid var(--cc-line); border-top: 4px solid var(--cc-brass); border-radius: 3px; padding: 18px 20px; }
+.t-cariboo .cc-bearings h2 { font-size: 13px; letter-spacing: .14em; text-transform: uppercase; margin: 0 0 6px; }
+.t-cariboo .cc-bearings .item { padding: 11px 0; border-top: 1px solid var(--cc-line); }
+.t-cariboo .cc-bearings .item:first-of-type { border-top: 0; }
+.t-cariboo .cc-bearings .item h3 { font-size: 16px; line-height: 1.35; margin: 2px 0 0; font-family: 'Newsreader', serif; font-weight: 600; }
+.t-cariboo .cc-bearings .item h3 a { text-decoration: none; }
+.t-cariboo .cc-bearings .item h3 a:hover { color: var(--cc-accent); }
+
+/* Desk bands */
+.t-cariboo .cc-desks { border-top: 1px solid var(--cc-line); padding: 24px 0 8px; }
+.t-cariboo .cc-deskband { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 28px; margin-bottom: 24px; }
+.t-cariboo .cc-deskhead { display: flex; align-items: baseline; justify-content: space-between; border-bottom: 2px solid var(--cc-accent); padding-bottom: 5px; margin-bottom: 10px; }
+.t-cariboo .cc-deskhead h2 { font-size: 14px; margin: 0; letter-spacing: .08em; text-transform: uppercase; }
+.t-cariboo .cc-deskhead h2::before { content: '\25B8'; color: var(--cc-brass); margin-right: 6px; }
+.t-cariboo .cc-deskhead a { font-size: 12px; color: var(--cc-accent); text-decoration: none; font-family: 'Archivo', sans-serif; }
+.t-cariboo .cc-card { padding: 9px 0; border-top: 1px solid var(--cc-line); }
+.t-cariboo .cc-card:first-of-type { border-top: 0; padding-top: 0; }
+.t-cariboo .cc-card h3 { font-size: 16px; line-height: 1.35; margin: 0; font-family: 'Newsreader', serif; font-weight: 600; }
+.t-cariboo .cc-card h3 a { text-decoration: none; }
+.t-cariboo .cc-card h3 a:hover { color: var(--cc-accent); }
+
+/* Article */
+.t-cariboo .cc-article { max-width: 700px; margin: 0 auto; padding: 30px 20px 40px; }
+.t-cariboo .cc-article h1 { font-size: 34px; line-height: 1.12; margin: 8px 0 12px; font-weight: 800; }
+.t-cariboo .cc-article .standfirst { font-size: 19px; line-height: 1.55; color: var(--cc-muted); margin: 0 0 14px; }
+.t-cariboo .cc-article .body { font-size: 18px; line-height: 1.72; }
+.t-cariboo .cc-article .body p { margin: 0 0 1.1em; }
+.t-cariboo .cc-article .body blockquote { border-left: 3px solid var(--cc-brass); margin: 1.4em 0; padding: 2px 0 2px 16px; color: var(--cc-muted); }
+.t-cariboo .cc-article img { max-width: 100%; height: auto; border-radius: 3px; }
+.t-cariboo .cc-related { border-top: 2px solid var(--cc-accent); margin-top: 30px; padding-top: 12px; }
+.t-cariboo .cc-related h2 { font-size: 13px; letter-spacing: .14em; text-transform: uppercase; }
+
+/* Section */
+.t-cariboo .cc-section { padding: 26px 0 40px; }
+.t-cariboo .cc-sechead { border-bottom: 2px solid var(--cc-accent); padding-bottom: 10px; margin-bottom: 4px; }
+.t-cariboo .cc-sechead h1 { font-size: 28px; margin: 0 0 4px; text-transform: uppercase; letter-spacing: .03em; }
+.t-cariboo .cc-sechead p { margin: 0; font-size: 15px; color: var(--cc-muted); }
+.t-cariboo .cc-row { padding: 15px 0; border-bottom: 1px solid var(--cc-line); }
+.t-cariboo .cc-row h3 { font-size: 19px; line-height: 1.3; margin: 0 0 5px; font-family: 'Newsreader', serif; font-weight: 700; }
+.t-cariboo .cc-row h3 a { text-decoration: none; }
+.t-cariboo .cc-row h3 a:hover { color: var(--cc-accent); }
+.t-cariboo .cc-row p { margin: 0 0 4px; font-size: 15px; color: var(--cc-muted); }
+.t-cariboo .cc-more { padding: 18px 0; }
+.t-cariboo .cc-btn { display: inline-block; background: var(--cc-accent); color: #fff; font-size: 13px; font-weight: 700; padding: 9px 16px; border-radius: 3px; text-decoration: none; font-family: 'Archivo', sans-serif; }
+.t-cariboo .cc-btn:hover { background: var(--cc-brass); }
+
+/* Empty state */
+.t-cariboo .cc-empty { background: var(--cc-surface); border: 1px dashed var(--cc-line); border-radius: 3px; padding: 34px 24px; text-align: center; color: var(--cc-muted); font-size: 16px; }
+
+/* Footer */
+.t-cariboo .cc-foot { background: var(--cc-ink); color: #C9CFC4; margin-top: 30px; }
+.t-cariboo .cc-foot .in { max-width: 1040px; margin: 0 auto; padding: 30px 20px; display: grid; grid-template-columns: minmax(0, 2fr) repeat(3, minmax(0, 1fr)); gap: 26px; }
+.t-cariboo .cc-foot .name { font-family: 'Archivo', sans-serif; font-size: 20px; font-weight: 800; text-transform: uppercase; color: #fff; }
+.t-cariboo .cc-foot h4 { font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: #8E9788; margin: 0 0 8px; font-family: 'Archivo', sans-serif; }
+.t-cariboo .cc-foot a { display: block; color: #E7EAE2; font-size: 13px; text-decoration: none; padding: 3px 0; font-family: 'Archivo', sans-serif; }
+.t-cariboo .cc-foot a:hover { color: var(--cc-brass); }
+.t-cariboo .cc-foot .base { border-top: 1px solid #363E33; font-size: 12px; }
+.t-cariboo .cc-foot .base .in { display: flex; justify-content: space-between; gap: 12px; padding: 12px 20px; flex-wrap: wrap; font-family: 'Archivo', sans-serif; }
+
+@media (max-width: 860px) {
+  .t-cariboo .cc-front { grid-template-columns: 1fr; }
+  .t-cariboo .cc-deskband { grid-template-columns: 1fr; }
+  .t-cariboo .cc-foot .in { grid-template-columns: 1fr; }
+  .t-cariboo .cc-lock .name { font-size: 26px; }
+  .t-cariboo .cc-lead h1 { font-size: 28px; }
+}

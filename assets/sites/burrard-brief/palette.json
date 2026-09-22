@@ -1,0 +1,31 @@
+{
+  "palette": {
+    "ink":     "#182430",
+    "paper":   "#F5F8FA",
+    "surface": "#FFFFFF",
+    "accent":  "#0E5A8A",
+    "signal":  "#E8630A",
+    "muted":   "#5C6B77",
+    "line":    "#D9E2E9"
+  },
+  "desks": {
+    "local-news": "#0E5A8A",
+    "city-hall":  "#0E5A8A",
+    "transit":    "#0E5A8A",
+    "business":   "#0E5A8A",
+    "culture":    "#0E5A8A",
+    "opinion":    "#0E5A8A"
+  },
+  "desk_labels": {
+    "local-news": "The City",
+    "city-hall":  "City Hall",
+    "transit":    "Transit",
+    "business":   "Business",
+    "culture":    "Culture",
+    "opinion":    "Opinion"
+  },
+  "chrome": {
+    "template": "burrard",
+    "nav": ["local-news", "city-hall", "transit", "business", "culture", "opinion"]
+  }
+}

@@ -1,0 +1,23 @@
+{
+  "palette": {
+    "ink":     "#1C2233",
+    "paper":   "#F6F5F1",
+    "surface": "#FFFFFF",
+    "accent":  "#1B2A4A",
+    "crest":   "#A6192E",
+    "muted":   "#676D7C",
+    "line":    "#E0DFD8"
+  },
+  "desks": {
+    "local-news":  "#1B2A4A",
+    "city-hall":   "#1B2A4A",
+    "development": "#1B2A4A",
+    "education":   "#1B2A4A",
+    "sports":      "#1B2A4A",
+    "opinion":     "#1B2A4A"
+  },
+  "chrome": {
+    "template": "surrey",
+    "nav": ["local-news", "city-hall", "development", "education", "sports", "opinion"]
+  }
+}

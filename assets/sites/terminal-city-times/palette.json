@@ -1,0 +1,23 @@
+{
+  "palette": {
+    "ink":     "#262220",
+    "paper":   "#F4EFE4",
+    "surface": "#FBF8F0",
+    "accent":  "#8C2F1B",
+    "gold":    "#B08A3C",
+    "muted":   "#77706A",
+    "line":    "#E3DCCB"
+  },
+  "desks": {
+    "city-hall":  "#8C2F1B",
+    "local-news": "#8C2F1B",
+    "business":   "#8C2F1B",
+    "arts":       "#8C2F1B",
+    "sports":     "#8C2F1B",
+    "opinion":    "#8C2F1B"
+  },
+  "chrome": {
+    "template": "terminalcity",
+    "nav": ["local-news", "city-hall", "business", "arts", "sports", "opinion"]
+  }
+}

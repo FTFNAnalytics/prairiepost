@@ -1,0 +1,26 @@
+{
+  "palette": {
+    "ink":     "#20261F",
+    "paper":   "#F5F3EC",
+    "surface": "#FFFFFF",
+    "accent":  "#2F4A33",
+    "brass":   "#A87C2F",
+    "muted":   "#6F7568",
+    "line":    "#E0DDD0"
+  },
+  "desks": {
+    "local-news": "#2F4A33",
+    "resources":  "#2F4A33",
+    "business":   "#2F4A33",
+    "outdoors":   "#2F4A33",
+    "sports":     "#2F4A33"
+  },
+  "desk_labels": {
+    "local-news": "The Interior",
+    "resources":  "Resources"
+  },
+  "chrome": {
+    "template": "cariboo",
+    "nav": ["local-news", "resources", "business", "outdoors", "sports"]
+  }
+}
