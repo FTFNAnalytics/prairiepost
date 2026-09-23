@@ -1,8 +1,8 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40" width="40" height="40">
-  <!-- The Burrard Brief — foundation placeholder mark (brand package replaces). -->
-  <rect width="40" height="40" rx="8" fill="#0E5A8A"/>
-  <rect x="9" y="11" width="22" height="3.5" rx="1.75" fill="#F5F8FA"/>
-  <rect x="9" y="18.5" width="17" height="3.5" rx="1.75" fill="#F5F8FA"/>
-  <rect x="9" y="26" width="12" height="3.5" rx="1.75" fill="#F5F8FA"/>
-  <circle cx="28" cy="27.75" r="2.6" fill="#E8630A"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 76" width="120" height="76">
+  <!-- The Burrard Brief - the North Shore over Burrard Inlet (brand package, Sep 2026). -->
+  <path d="M52 52 L80 20 L112 52 Z" fill="#2D5A3D"/>
+  <path d="M6 52 L40 10 L54 27 L62 19 L90 52 Z" fill="#0A2540"/>
+  <path d="M40 14 L46.4 21.6 L43.4 20.4 L40 24 L36.6 20.6 L33.6 21.8 Z" fill="#F3F2F2"/>
+  <path d="M2 56 C22 48 40 50 60 56 C80 62 98 58 118 52 L118 58 C98 64 80 68 60 62 C40 56 22 56 2 62 Z" fill="#1A7A8C" stroke="#F3F2F2" stroke-width="2.4" paint-order="stroke"/>
+  <path d="M10 66 C28 60 44 62 62 67 C80 72 96 69 112 63 C98 72 80 76 62 72 C44 68 28 66 10 68 Z" fill="#4E9FAD"/>
 </svg>
