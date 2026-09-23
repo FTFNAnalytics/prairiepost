@@ -1,7 +1,8 @@
 # Claude notes — the Prairie Dispatch network
 
-One codebase serves the whole network (ten papers as of the Sudbury
-Standard). Each paper is a tenant mapping in the server-only config, a
+One codebase serves the whole network (eighteen tenants — seventeen
+papers and the CivisMedia hub — as of the Surrey Standard). Each paper
+is a tenant mapping in the server-only config, a
 row in the shared database, a front template in `app/views/`, assets in
 `assets/sites/<slug>/`, a launch pack (`launch.php`) applied by
 `tools/seed-launch.php`, and a `DEPLOY-<NAME>.md` runbook.
@@ -209,101 +210,67 @@ agent. Never give the news agent a shell command or the VPS agent a
 filing step — each such mix has produced a stopped run or an agent
 holding a capability it should not have.
 
-## Current operational state (as of the Kitchener Chronicle launch)
+## Current operational state (as of the Surrey Standard launch, 23 Sep 2026)
 
-- **Release in production: `1b8195bc533d`**, at
-  `/var/www/prairiepost-1b8195bc533d-shared`, serving all FIFTEEN papers
-  as one release group. Schema version 16. (The Aug 25 card-art release:
-  every Chronicle story card carries art via the kc_art() desk-mapped
-  fallback — template-level, so agent filings and photo-less rows get
-  sketches without database writes.)
-  kitchenerchronicle.com (site #16, slug `kitchener-chronicle`, template
-  `kitchener`) launched Aug 25 — the network's first ZERO-hard-stop
-  launch, end to end under the no-config machinery. Its Ontario desk is
-  the paper's one shared-desk addition (green civic treatment); it
-  declares NO wire desk, so any future Hermes filing lands as a draft.
-  TLS to Nov 23 2026. mississaugamonitor.com (site #15, slug
-  `mississauga-monitor`, template `monitor`) launched Aug 25 as the
-  first config-edit-free launch; Hermes-ready (`wire_desks = live`,
-  automated byline "Monitor Newsroom Automation"); TLS to Nov 22 2026.
-  Live hostname inventory: 30 direct content endpoints + 4 redirect-only
-  aliases (bare grandeprairiegazette.ca, www.edmontonecho.com,
-  www.kermodechronicle.ca, www.thepacificpost.com).
-- **Every typeface is self-hosted.** All families are vendored in
-  /assets/fonts/ and declared either in the paper's own stylesheet
-  (Monitor, Turtle Island, Bleuet Blanc) or via
-  `@import url('/assets/css/fonts.css')` (the eleven sheets that once
-  imported from fonts.googleapis.com). No page loads any external
-  resource; the six papers renamed on Aug 24 paint Source Serif 4
-  again. The verify rule, phrased at the right layer: every family a
-  page names is declared by @font-face in a stylesheet the page loads,
-  with all src urls local.
-- **The upgrade fetch has fallbacks**: PP_RELEASE_TARBALL for a
-  pre-staged tarball (used Aug 25 when the VPS could not reach
-  codeload.github.com while api.github.com answered), then codeload,
-  then a shallow git clone verified against the API-reported head.
-- **Hermes ingest is live and closed.** `/ingest.php` answers 401
-  network-wide without a valid token (`/api/ingest` becomes the pretty
-  route with the front-controller conversion). Two tokens exist, each
-  stored root-only under `/root/hermes-tokens/` and each for exactly
-  one agent; `tools/make-agent.php revoke` is the kill switch:
-  `hermes-quebec` (bleuet-blanc / actualites,le-fil) and
-  `hermes-mississauga` (mississauga-monitor /
-  live,city-hall,transit,development — filings to `live` publish
-  immediately with the automated-report treatment, the other desks
-  land as drafts behind the publish gate).
-  Bleuet Blanc is wire-ready: `wire_desks = le-fil`, automated byline
-  « La veille automatisée ». A deployment-verification DRAFT
-  (`verification-du-deploiement-hermes`, post id 212) sits invisible in
-  bleuet's admin awaiting newsroom rejection — reject it, don't publish.
-- **Tenant resolution is database-first.** All 22 paper hostnames have
-  `domains` rows and resolve from them (`tools/resolve-host.php` says
-  `db` for every one); the config selector remains as a do-nothing
-  fallback until its arms are retired. A new paper's launch is now
-  config-edit-free: DNS, generated nginx block, cert, seed.
-- **A catch-all `default_server` is live** on both ports and both
-  address families, returning 444 behind the self-signed
-  `reject.invalid` certificate at `/etc/nginx/reject/`. Unknown
-  hostnames and bare-IP probes no longer fall through to Brampton/the
-  Institute. It is the only block allowed to say `default_server`.
-  All thirteen paper blocks are dual-family symmetric (Brampton,
-  Kelowna and Turtle Island were repaired in this pass).
-- One soft spot from the pass: nginx's combined log format does not
-  record the Host header, so bare-IP monitoring could only be ruled out
-  indirectly. If some external uptime check goes red after this date,
-  point it at a named paper hostname — the bare IP now answers 444.
-- The **CivisMedia hub** runs from its own release,
-  `/var/www/prairiepost-d298039b1d40`, and is deliberately left behind by
-  every paper upgrade. The Institute (`cies`, `/var/www/cies-v0.17`) is
-  an unrelated site on the same box — never touch it.
-- The thirteen papers: prairiedispatch.ca, edmontonecho.com,
-  thepacificpost.com, kelownacurrent.ca, kermodechronicle.ca,
-  grandeprairiegazette.ca, bramptonbulletin.com, westernwire.ca,
-  tricitiestorch.ca, sudburystandard.ca, turtleislandtimes.ca,
-  pickeringpost.ca, bleuetblanc.ca — twenty-two hostnames with the `www`
-  variants. Discover the live set from the enabled nginx blocks rather
-  than from this list.
-- **bleuetblanc.ca** (site #14, slug `bleuet-blanc`, tenant key equal to
-  the slug) is the network's first French-language paper, launched with
-  its 25-story demonstration package — all slugs `bb-`-prefixed, zero
-  collisions on seed. Its ten desks are new to the network
-  (`culture-qc`, `sports-qc`, `le-fil`, …). TLS expiry Nov 22 2026.
-- **`php8.3-intl` is now installed on the box** (a one-time exception to
-  the service-action rule, authorized for the French launch). The i18n
-  layer degrades to English dates without it, so an English masthead
-  dateline on a French paper is the symptom to check first.
-- **turtleislandtimes.ca** and **pickeringpost.ca** both launched with
-  **zero stories** by design: identity, desks and sources only, editorial
-  from the newsroom. Their front pages carry the empty state until the
-  desk files. That is the intended state, not an unfinished deployment.
-- Every paper uses the network-wide fetch cron. No paper has a dedicated
-  one.
-- **No paper has its newsletter enabled.** All are pending owner mail
-  setup (mailboxes, SMTP identity, mailing address, SPF, DKIM, test
-  send).
-- Pre-edit config backups live in `/root/`, one per launch, mode 0600.
-- Merged feature branches and `deploy/torch-on-3fd4f13` are stale now
-  that the network is on `8a037f365b77`.
+- **Release in production: `11eade554d44`** (branch head
+  `11eade554d447b225da55e7ff1ea7e6174308d83`), serving BOTH release
+  groups: the seventeen papers from
+  `/var/www/prairiepost-11eade554d44-shared` and the CivisMedia hub
+  from `/var/www/prairiepost-11eade554d44-civismedia`. **The hub is no
+  longer left behind** — since the `3328704` era both groups roll
+  together; `upgrade-papers.sh` upgrades every prairiepost group and
+  migrates their shared schema exactly once. Never write a brief that
+  forbids touching the hub release again (that stale rule aborted the
+  first Phase-2 roll).
+- **Schema version 20, journaled.** `schema_migrations` shows adopted
+  at 19 (catalog-validated) and step 20 applied. There is NO
+  first-request migration any more: `tools/migrate.php` is the only
+  mutator, the app refuses (503/exit 2) on a non-ready schema, and the
+  roll migrates before any traffic switch.
+- **The Phase 1+2 hardening is live**: HTML Purifier sanitizer,
+  editorial authorization, SSRF-safe transport, CLI-only first admin,
+  per-site opt-in indexing (every page noindex until enabled — none
+  enabled yet), internal-path denial on every vhost (vhost.template
+  for new blocks; `/etc/nginx/snippets/prairiepost-deny.conf` injected
+  into legacy blocks; the snippet deliberately carries NO dotfile/ACME
+  locations — blocks own those, duplicates are an nginx emerg).
+- **Backups are the Phase 2 system.** Nightly cron invokes the
+  RELEASE's own `tools/backup.sh` (repointed automatically by each
+  roll); complete manifest-backed sets under `/var/backups/civis`
+  (first good set `20260923-182915-7b8a6801`). Discovery is scoped to
+  `/var/www/prairiepost-*` roots. Off-site transfer is NOT configured
+  and is reported unverified — an owner step (hook + key). Pre-Phase-2
+  config bridges: `/root/pre-p2-config-20260923/`, root-only.
+- **The box hosts FOREIGN tenants**: the Institute
+  (`/var/www/cies-*`) and **Calgary Dispatch**
+  (`/srv/calgarydispatch/…`, its own vhost). They are separate
+  applications with their own recovery stories — network tooling
+  ignores them by root-prefix, and briefs must never require anything
+  of them. One shared-fate caveat: any tenant's broken vhost fails the
+  global `nginx -t`.
+- **surreystandard.ca is live** (site #18, slug `surrey-standard`,
+  template `surrey`): the network's fourth ZERO-story launch —
+  identity, desks (`education` was new network-wide), sources; brand
+  package applied (leaf-S monogram, Playfair via its own @font-face,
+  navy/lime). TLS to Dec 22 2026. Deployment was config-edit-free.
+- **Three BC tenants are in the tree but dormant** (no DNS, no vhost,
+  not seeded): `burrard-brief`, `cariboo-compass`,
+  `terminal-city-times`. Each has a runbook (DEPLOY-BURRARD/CARIBOO/
+  TERMINALCITY.md) awaiting its brand package and launch order.
+- **Deploys are pinned**: the VPS agent resolves the release branch
+  head via the API, requires the exact full SHA from the brief, and
+  fetches `upgrade-papers.sh` at that SHA. Rolls are preceded by a
+  fresh verified backup (the preflight enforces it).
+- `sanitize-content.php` dry run on production: 289 posts scanned,
+  6 would be rewritten, 0 flagged. `--apply` awaits owner
+  authorization.
+- Known benign gap: `prairiedispatch.ca /api/ingest` answers 404 (its
+  legacy block predates the pretty route; `/ingest.php` answers 401
+  correctly). Fix belongs to a per-block routes pass, not a hand edit.
+- Hermes tokens: unchanged (`hermes-quebec`, `hermes-mississauga`,
+  root-only under `/root/hermes-tokens/`). No token exists for Surrey
+  or any newer paper. No paper has its newsletter enabled.
+
 
 ## Known debt, in the order it should be paid
 
