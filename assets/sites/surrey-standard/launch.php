@@ -29,13 +29,13 @@ return [
     ],
 
     'settings' => [
-        'site_title'         => 'Surrey Standard',
-        'tagline'            => 'South of the Fraser, on the record',
-        'meta_description'   => 'Surrey Standard is the paper of record south of the Fraser — council, growth, schools and the daily life of British Columbia\'s fastest-growing city.',
-        'footer_line'        => 'The paper of record south of the Fraser. Independent, and free to read.',
+        'site_title'         => 'The Surrey Standard',
+        'tagline'            => 'News that matters. Stories that connect.',
+        'meta_description'   => 'The Surrey Standard is the paper of record south of the Fraser — council, growth, schools and the daily life of British Columbia\'s fastest-growing city.',
+        'footer_line'        => 'Independent local journalism for a stronger, more connected Surrey.',
         'contact_email'      => 'tips@surreystandard.ca',
-        'newsletter_heading' => 'The Morning Standard',
-        'newsletter_copy'    => 'What Surrey decided, approved and built yesterday — in your inbox every weekday morning.',
+        'newsletter_heading' => 'Stay in the Know',
+        'newsletter_copy'    => 'The latest Surrey news delivered to your inbox every weekday — what the city decided, approved and built, before your first coffee.',
         'weather_line'       => '16°C|Bear Creek',
         'regions'            => json_encode([
             'surrey' => 'Surrey',

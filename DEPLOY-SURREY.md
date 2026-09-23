@@ -42,8 +42,8 @@ Pre-seed expectation table (verify only what exists):
 
 | Value | Where it comes from | Pre-seed state |
 | --- | --- | --- |
-| Template class `t-surrey`, surrey.css, placeholder flag mark | Release tree | Present before the seed |
-| Title "Surrey Standard", tagline "South of the Fraser, on the record" | This pack's settings | Absent until this seed |
+| Template class `t-surrey`, surrey.css (navy/lime brand, Playfair headlines), leaf-S monogram | Release tree | Present before the seed |
+| Title "The Surrey Standard", tagline "News that matters. Stories that connect." | This pack's settings | Absent until this seed |
 | Desks in the nav | Shared `categories` + chrome.nav | `education` may print "desk added"; the rest exist network-wide — read the real list with `categories_all()` from `$REL`, assert no absences |
 | Stories | This pack | NONE — by design, before AND after |
 
@@ -51,16 +51,23 @@ Idempotent: a re-run prints "exists, skipped" and changes nothing.
 
 ## Step 5 — Verify (served bytes, two-failure hard stop)
 
-1. `https://surreystandard.ca/` → 200, `<title>` contains "Surrey
+1. `https://surreystandard.ca/` → 200, `<title>` contains "The Surrey
    Standard", body class `t-surrey`, `/assets/css/surrey.css` linked.
 2. Front page shows the EMPTY STATE ("The first edition is being set")
    — that is a PASS.
-3. Nav: Front Page + six desks (Local News, City Hall, Development,
-   Education, Sports, Opinion).
+3. Nav: Front Page + six desks (Surrey News, City Hall, Development,
+   Education, Sports, Opinion — `desk_labels` renames local-news to
+   "Surrey News"; the desk page itself stays `/desk/local-news`). Nav
+   renders uppercase via CSS `text-transform`; the SERVED bytes are
+   mixed case — grep "City Hall", not "CITY HALL".
 4. `/desk/education` → 200 with the desk description.
-5. `noindex` present on every page (indexing off) — a PASS.
-6. `/api/ingest` → 401 without a token; `/admin/` → login page.
-7. Spot-check two sister papers still serve their own mastheads.
+5. Typography at the right layer: surrey.css must contain @font-face
+   rules naming playfair-display-latin.woff2 (parse rules, don't count
+   comment mentions), and the woff2 files must be in the release under
+   /assets/fonts/.
+6. `noindex` present on every page (indexing off) — a PASS.
+7. `/api/ingest` → 401 without a token; `/admin/` → login page.
+8. Spot-check two sister papers still serve their own mastheads.
 
 ## Step 6 — Close out
 

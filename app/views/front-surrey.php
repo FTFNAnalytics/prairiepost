@@ -23,7 +23,7 @@ $ssSeen = array_merge($ssSeen, array_column($ssRail, 'id'));
       <?php endif; ?>
     </div>
     <aside class="ss-rail">
-      <h2>The Latest</h2>
+      <h2>Latest News</h2>
       <?php foreach ($ssRail as $p): ?>
       <div class="item">
         <span class="ss-kick"><?= e(pp_desk_label((string) $p['category_slug'], (string) $p['category_name'])) ?></span>

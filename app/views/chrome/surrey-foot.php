@@ -1,12 +1,13 @@
 <?php
-/* Surrey Standard — footer chrome (foundation build). Closes <main> and
+/* The Surrey Standard — footer chrome (brand build). Closes <main> and
    the document. */
 ?>
 </main>
 <footer class="ss-foot">
   <div class="in">
     <div>
-      <div class="name">Surrey Standard</div>
+      <img src="<?= e(site_asset('mark-reversed.svg')) ?>" alt="" width="30" height="38" style="margin-bottom:8px">
+      <div class="name">The Surrey Standard</div>
       <p style="font-size:13px;line-height:1.6"><?= e(setting('footer_line', setting('tagline'))) ?></p>
     </div>
     <div>
@@ -24,7 +25,7 @@
     </div>
     <div>
       <h4>Follow</h4>
-      <a href="<?= e(url('newsletter/')) ?>"><?= e(setting('newsletter_heading', 'The Morning Standard')) ?></a>
+      <a href="<?= e(url('newsletter/')) ?>"><?= e(setting('newsletter_heading', 'Stay in the Know')) ?></a>
       <a href="<?= e(url('feed/')) ?>">RSS</a>
     </div>
   </div>

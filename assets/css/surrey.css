@@ -1,117 +1,145 @@
-/* Surrey Standard — design system (surrey template).
-   Foundation build: a classic civic broadsheet — centred serif masthead,
-   double rules, crest-red kickers — for the brand package to re-skin.
-   Families named here are declared by /assets/css/fonts.css. */
+/* The Surrey Standard — design system (surrey template).
+   Brand build, Sep 2026: deep navy #0A2540 and bright lime #C2D82E over
+   white and light gray, gold #D4AF37 as the rare flourish; Playfair
+   Display headlines over an Inter body ("bold, elegant, authoritative"
+   / "clean, readable"). The leaf-S monogram lives in this site's
+   mark.svg (the S is the Playfair 700 glyph as a path).
+   Playfair is declared HERE because this sheet names it (the network
+   rule); Inter arrives via the shared fonts.css import. */
 
 @import url('/assets/css/fonts.css');
 
+@font-face {
+  font-family: 'Playfair Display';
+  font-style: normal;
+  font-weight: 400 900;
+  font-display: swap;
+  src: url('/assets/fonts/playfair-display-latin.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Playfair Display';
+  font-style: italic;
+  font-weight: 400 900;
+  font-display: swap;
+  src: url('/assets/fonts/playfair-display-italic-latin.woff2') format('woff2');
+}
+
 body.t-surrey {
-  --ss-ink:    #1C2233;
-  --ss-paper:  #F6F5F1;
+  --ss-ink:    #2D2D2D;
+  --ss-paper:  #F5F5F5;
   --ss-surface:#FFFFFF;
-  --ss-accent: #1B2A4A;
-  --ss-crest:  #A6192E;
-  --ss-muted:  #676D7C;
-  --ss-line:   #E0DFD8;
+  --ss-navy:   #0A2540;
+  --ss-lime:   #C2D82E;
+  --ss-gold:   #D4AF37;
+  --ss-muted:  #6A737B;
+  --ss-line:   #E2E4E7;
   background: var(--ss-paper);
   color: var(--ss-ink);
-  font-family: 'Source Sans 3', -apple-system, 'Segoe UI', Arial, sans-serif;
+  font-family: 'Inter', -apple-system, 'Segoe UI', Arial, sans-serif;
 }
-.t-surrey .ss-wrap { max-width: 1080px; margin: 0 auto; padding: 0 20px; }
+.t-surrey .ss-wrap { max-width: 1120px; margin: 0 auto; padding: 0 20px; }
 .t-surrey a { color: inherit; }
-.t-surrey h1, .t-surrey h2, .t-surrey h3 { font-family: 'Source Serif 4', Georgia, 'Times New Roman', serif; }
+.t-surrey h1, .t-surrey h2, .t-surrey h3 { font-family: 'Playfair Display', Georgia, 'Times New Roman', serif; }
 
-/* Utility strip */
-.t-surrey .ss-util { border-bottom: 1px solid var(--ss-line); font-size: 12px; color: var(--ss-muted); background: var(--ss-surface); }
-.t-surrey .ss-util .in { max-width: 1080px; margin: 0 auto; padding: 6px 20px; display: flex; justify-content: space-between; gap: 14px; flex-wrap: wrap; }
-.t-surrey .ss-util a { text-decoration: none; }
-.t-surrey .ss-util a:hover { color: var(--ss-crest); }
+/* Utility strip — light, above the navy masthead */
+.t-surrey .ss-util { background: var(--ss-surface); border-bottom: 1px solid var(--ss-line); font-size: 12px; color: var(--ss-muted); }
+.t-surrey .ss-util .in { max-width: 1120px; margin: 0 auto; padding: 6px 20px; display: flex; justify-content: space-between; gap: 14px; flex-wrap: wrap; }
+.t-surrey .ss-util a { text-decoration: none; font-weight: 500; }
+.t-surrey .ss-util a:hover { color: var(--ss-navy); }
 .t-surrey .ss-util .sep { opacity: .45; margin: 0 6px; }
 
-/* Centred masthead over double rule */
-.t-surrey .ss-mast { background: var(--ss-surface); text-align: center; padding: 26px 20px 14px; }
-.t-surrey .ss-lock { display: inline-flex; align-items: center; gap: 16px; text-decoration: none; }
-.t-surrey .ss-lock .name { font-family: 'Source Serif 4', Georgia, serif; font-size: 44px; font-weight: 700; letter-spacing: .01em; line-height: 1; }
-.t-surrey .ss-lock .name .std { color: var(--ss-crest); }
-.t-surrey .ss-tag { display: block; margin-top: 8px; font-size: 13px; letter-spacing: .14em; text-transform: uppercase; color: var(--ss-muted); }
+/* Navy masthead band: lockup left, tagline right, nav below */
+.t-surrey .ss-mast { background: var(--ss-navy); color: #fff; }
+.t-surrey .ss-mast .top { max-width: 1120px; margin: 0 auto; padding: 18px 20px 12px; display: flex; align-items: center; justify-content: space-between; gap: 18px; flex-wrap: wrap; }
+.t-surrey .ss-lock { display: flex; align-items: center; gap: 14px; text-decoration: none; color: #fff; }
+.t-surrey .ss-lock img { display: block; }
+.t-surrey .ss-lock .name { font-family: 'Playfair Display', Georgia, serif; font-size: 34px; font-weight: 700; letter-spacing: .01em; line-height: 1; }
+.t-surrey .ss-lock .name .the { font-style: italic; font-weight: 400; margin-right: 6px; }
+.t-surrey .ss-tag { font-size: 12px; letter-spacing: .12em; text-transform: uppercase; color: var(--ss-lime); font-weight: 600; }
+.t-surrey .ss-nav { border-top: 1px solid rgba(255,255,255,.14); }
+.t-surrey .ss-nav .in { max-width: 1120px; margin: 0 auto; padding: 0 20px; display: flex; gap: 2px; overflow-x: auto; }
+.t-surrey .ss-nav a { padding: 11px 13px; font-size: 12px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; text-decoration: none; white-space: nowrap; color: #E7EBF1; border-bottom: 3px solid transparent; }
+.t-surrey .ss-nav a:hover { color: #fff; border-bottom-color: rgba(194,216,46,.45); }
+.t-surrey .ss-nav a[aria-current="page"] { color: var(--ss-lime); border-bottom-color: var(--ss-lime); }
 
-/* Nav under a double rule */
-.t-surrey .ss-nav { background: var(--ss-surface); border-top: 3px double var(--ss-ink); border-bottom: 1px solid var(--ss-ink); }
-.t-surrey .ss-nav .in { max-width: 1080px; margin: 0 auto; padding: 0 20px; display: flex; justify-content: center; gap: 4px; overflow-x: auto; }
-.t-surrey .ss-nav a { padding: 9px 13px; font-size: 13px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; text-decoration: none; white-space: nowrap; }
-.t-surrey .ss-nav a:hover { color: var(--ss-crest); }
-.t-surrey .ss-nav a[aria-current="page"] { color: var(--ss-crest); }
+/* Kickers as lime pills (the mockups' LOCAL NEWS badge) */
+.t-surrey .ss-kick { display: inline-block; background: var(--ss-lime); color: var(--ss-navy); font-size: 11px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; padding: 3px 9px; border-radius: 2px; }
 
 /* Front */
 .t-surrey .ss-front { display: grid; grid-template-columns: minmax(0, 8fr) minmax(0, 4fr); gap: 34px; padding: 30px 0 36px; }
-.t-surrey .ss-kick { font-size: 11px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--ss-crest); }
-.t-surrey .ss-lead h1 { font-size: 40px; line-height: 1.1; margin: 8px 0 10px; font-weight: 700; }
+.t-surrey .ss-lead h1 { font-size: 40px; line-height: 1.12; margin: 12px 0 10px; font-weight: 700; color: var(--ss-navy); }
 .t-surrey .ss-lead h1 a { text-decoration: none; }
-.t-surrey .ss-lead h1 a:hover { color: var(--ss-accent); }
-.t-surrey .ss-lead .standfirst { font-size: 18px; line-height: 1.55; color: var(--ss-muted); font-family: 'Source Serif 4', Georgia, serif; }
-.t-surrey .ss-lead img { width: 100%; height: auto; }
+.t-surrey .ss-lead h1 a:hover { text-decoration: underline; text-decoration-color: var(--ss-lime); text-decoration-thickness: 3px; }
+.t-surrey .ss-lead .standfirst { font-size: 18px; line-height: 1.6; color: var(--ss-muted); }
+.t-surrey .ss-lead img { width: 100%; height: auto; border-radius: 4px; }
 .t-surrey .ss-byline { font-size: 12px; color: var(--ss-muted); }
 
-.t-surrey .ss-rail h2 { font-size: 14px; letter-spacing: .12em; text-transform: uppercase; border-bottom: 2px solid var(--ss-ink); padding-bottom: 6px; margin: 0 0 4px; font-family: 'Source Sans 3', sans-serif; }
+.t-surrey .ss-rail { background: var(--ss-surface); border: 1px solid var(--ss-line); border-top: 4px solid var(--ss-lime); border-radius: 4px; padding: 16px 18px; align-self: start; }
+.t-surrey .ss-rail h2 { font-size: 15px; margin: 0 0 4px; color: var(--ss-navy); border-bottom: 2px solid var(--ss-navy); padding-bottom: 7px; }
 .t-surrey .ss-rail .item { padding: 11px 0; border-bottom: 1px solid var(--ss-line); }
-.t-surrey .ss-rail .item h3 { font-size: 16px; line-height: 1.35; margin: 0 0 3px; }
+.t-surrey .ss-rail .item:last-child { border-bottom: 0; }
+.t-surrey .ss-rail .item .ss-kick { font-size: 10px; padding: 2px 7px; }
+.t-surrey .ss-rail .item h3 { font-size: 16px; line-height: 1.35; margin: 5px 0 0; }
 .t-surrey .ss-rail .item h3 a { text-decoration: none; }
-.t-surrey .ss-rail .item h3 a:hover { color: var(--ss-crest); }
+.t-surrey .ss-rail .item h3 a:hover { color: var(--ss-navy); text-decoration: underline; text-decoration-color: var(--ss-lime); }
 
 /* Desk bands */
-.t-surrey .ss-desks { border-top: 3px double var(--ss-ink); padding: 24px 0 8px; }
-.t-surrey .ss-deskband { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 30px; margin-bottom: 24px; }
-.t-surrey .ss-deskhead { display: flex; align-items: baseline; justify-content: space-between; border-bottom: 2px solid var(--ss-accent); padding-bottom: 5px; margin-bottom: 10px; }
-.t-surrey .ss-deskhead h2 { font-size: 15px; margin: 0; letter-spacing: .06em; text-transform: uppercase; font-family: 'Source Sans 3', sans-serif; }
-.t-surrey .ss-deskhead a { font-size: 12px; color: var(--ss-crest); text-decoration: none; }
+.t-surrey .ss-desks { border-top: 1px solid var(--ss-line); padding: 26px 0 8px; }
+.t-surrey .ss-deskband { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 26px; margin-bottom: 26px; }
+.t-surrey .ss-deskband section { background: var(--ss-surface); border: 1px solid var(--ss-line); border-radius: 4px; padding: 14px 16px; }
+.t-surrey .ss-deskhead { display: flex; align-items: baseline; justify-content: space-between; border-bottom: 2px solid var(--ss-navy); padding-bottom: 6px; margin-bottom: 8px; }
+.t-surrey .ss-deskhead h2 { font-size: 16px; margin: 0; color: var(--ss-navy); }
+.t-surrey .ss-deskhead a { font-size: 12px; font-weight: 600; color: var(--ss-navy); text-decoration: none; }
+.t-surrey .ss-deskhead a:hover { text-decoration: underline; text-decoration-color: var(--ss-lime); text-decoration-thickness: 2px; }
 .t-surrey .ss-card { padding: 9px 0; border-top: 1px solid var(--ss-line); }
-.t-surrey .ss-card:first-of-type { border-top: 0; padding-top: 0; }
+.t-surrey .ss-card:first-of-type { border-top: 0; padding-top: 4px; }
 .t-surrey .ss-card h3 { font-size: 16px; line-height: 1.35; margin: 0; }
 .t-surrey .ss-card h3 a { text-decoration: none; }
-.t-surrey .ss-card h3 a:hover { color: var(--ss-crest); }
+.t-surrey .ss-card h3 a:hover { color: var(--ss-navy); text-decoration: underline; text-decoration-color: var(--ss-lime); }
 
 /* Article */
-.t-surrey .ss-article { max-width: 700px; margin: 0 auto; padding: 30px 20px 40px; }
-.t-surrey .ss-article h1 { font-size: 38px; line-height: 1.12; margin: 8px 0 12px; }
-.t-surrey .ss-article .standfirst { font-size: 19px; line-height: 1.55; color: var(--ss-muted); font-family: 'Source Serif 4', Georgia, serif; margin: 0 0 14px; }
-.t-surrey .ss-article .body { font-size: 17px; line-height: 1.75; font-family: 'Source Serif 4', Georgia, serif; }
-.t-surrey .ss-article .body p { margin: 0 0 1.1em; }
-.t-surrey .ss-article .body blockquote { border-left: 3px solid var(--ss-crest); margin: 1.4em 0; padding: 2px 0 2px 16px; color: var(--ss-muted); }
-.t-surrey .ss-article img { max-width: 100%; height: auto; }
-.t-surrey .ss-related { border-top: 3px double var(--ss-ink); margin-top: 30px; padding-top: 12px; }
-.t-surrey .ss-related h2 { font-size: 13px; letter-spacing: .12em; text-transform: uppercase; font-family: 'Source Sans 3', sans-serif; }
+.t-surrey .ss-article { max-width: 720px; margin: 0 auto; padding: 30px 20px 40px; }
+.t-surrey .ss-article h1 { font-size: 38px; line-height: 1.14; margin: 12px 0 12px; color: var(--ss-navy); }
+.t-surrey .ss-article .standfirst { font-size: 19px; line-height: 1.6; color: var(--ss-muted); margin: 0 0 14px; }
+.t-surrey .ss-article .body { font-size: 17px; line-height: 1.75; }
+.t-surrey .ss-article .body p { margin: 0 0 1.15em; }
+.t-surrey .ss-article .body blockquote { border-left: 4px solid var(--ss-lime); background: var(--ss-surface); margin: 1.4em 0; padding: 12px 16px; color: #3E6B35; font-weight: 500; }
+.t-surrey .ss-article .body blockquote cite { display: block; margin-top: 6px; font-style: normal; font-size: 13px; color: var(--ss-muted); }
+.t-surrey .ss-article img { max-width: 100%; height: auto; border-radius: 4px; }
+.t-surrey .ss-related { border-top: 3px solid var(--ss-navy); margin-top: 30px; padding-top: 12px; }
+.t-surrey .ss-related h2 { font-size: 18px; color: var(--ss-navy); }
 
 /* Section */
 .t-surrey .ss-section { padding: 26px 0 40px; }
-.t-surrey .ss-sechead { border-bottom: 3px double var(--ss-ink); padding-bottom: 10px; margin-bottom: 4px; }
-.t-surrey .ss-sechead h1 { font-size: 30px; margin: 0 0 4px; }
+.t-surrey .ss-sechead { border-bottom: 3px solid var(--ss-navy); padding-bottom: 10px; margin-bottom: 4px; }
+.t-surrey .ss-sechead h1 { font-size: 32px; margin: 0 0 4px; color: var(--ss-navy); }
 .t-surrey .ss-sechead p { margin: 0; font-size: 14px; color: var(--ss-muted); }
-.t-surrey .ss-row { padding: 15px 0; border-bottom: 1px solid var(--ss-line); }
-.t-surrey .ss-row h3 { font-size: 19px; line-height: 1.3; margin: 0 0 5px; }
+.t-surrey .ss-row { padding: 16px 0; border-bottom: 1px solid var(--ss-line); }
+.t-surrey .ss-row h3 { font-size: 21px; line-height: 1.3; margin: 0 0 5px; }
 .t-surrey .ss-row h3 a { text-decoration: none; }
-.t-surrey .ss-row h3 a:hover { color: var(--ss-crest); }
+.t-surrey .ss-row h3 a:hover { color: var(--ss-navy); text-decoration: underline; text-decoration-color: var(--ss-lime); text-decoration-thickness: 3px; }
 .t-surrey .ss-row p { margin: 0 0 4px; font-size: 15px; color: var(--ss-muted); }
 .t-surrey .ss-more { padding: 18px 0; }
-.t-surrey .ss-btn { display: inline-block; background: var(--ss-accent); color: #fff; font-size: 13px; font-weight: 600; padding: 9px 18px; text-decoration: none; }
-.t-surrey .ss-btn:hover { background: var(--ss-crest); }
+.t-surrey .ss-btn { display: inline-block; background: var(--ss-navy); color: #fff; font-size: 13px; font-weight: 600; padding: 10px 18px; border-radius: 4px; text-decoration: none; }
+.t-surrey .ss-btn:hover { background: var(--ss-lime); color: var(--ss-navy); }
 
 /* Empty state */
-.t-surrey .ss-empty { background: var(--ss-surface); border: 1px solid var(--ss-line); padding: 34px 24px; text-align: center; color: var(--ss-muted); font-size: 15px; }
+.t-surrey .ss-empty { background: var(--ss-surface); border: 1px solid var(--ss-line); border-radius: 4px; padding: 36px 24px; text-align: center; color: var(--ss-muted); font-size: 15px; }
 
-/* Footer */
-.t-surrey .ss-foot { background: var(--ss-accent); color: #C9D2E2; margin-top: 30px; }
-.t-surrey .ss-foot .in { max-width: 1080px; margin: 0 auto; padding: 30px 20px; display: grid; grid-template-columns: minmax(0, 2fr) repeat(3, minmax(0, 1fr)); gap: 26px; }
-.t-surrey .ss-foot .name { font-family: 'Source Serif 4', Georgia, serif; font-size: 24px; font-weight: 700; color: #fff; }
-.t-surrey .ss-foot h4 { font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: #93A2BE; margin: 0 0 8px; }
-.t-surrey .ss-foot a { display: block; color: #E6EAF2; font-size: 13px; text-decoration: none; padding: 3px 0; }
-.t-surrey .ss-foot a:hover { color: #fff; text-decoration: underline; }
-.t-surrey .ss-foot .base { border-top: 1px solid #2E4066; font-size: 12px; }
+/* Footer — navy with the reversed monogram */
+.t-surrey .ss-foot { background: var(--ss-navy); color: #B9C4D4; margin-top: 30px; }
+.t-surrey .ss-foot .in { max-width: 1120px; margin: 0 auto; padding: 32px 20px; display: grid; grid-template-columns: minmax(0, 2fr) repeat(3, minmax(0, 1fr)); gap: 26px; }
+.t-surrey .ss-foot .name { font-family: 'Playfair Display', Georgia, serif; font-size: 24px; font-weight: 700; color: #fff; }
+.t-surrey .ss-foot h4 { font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--ss-lime); margin: 0 0 8px; }
+.t-surrey .ss-foot a { display: block; color: #E4E9F0; font-size: 13px; text-decoration: none; padding: 3px 0; }
+.t-surrey .ss-foot a:hover { color: var(--ss-lime); }
+.t-surrey .ss-foot .base { border-top: 1px solid rgba(255,255,255,.14); font-size: 12px; }
 .t-surrey .ss-foot .base .in { display: flex; justify-content: space-between; gap: 12px; padding: 12px 20px; flex-wrap: wrap; }
 
-@media (max-width: 860px) {
+@media (max-width: 880px) {
   .t-surrey .ss-front { grid-template-columns: 1fr; }
   .t-surrey .ss-deskband { grid-template-columns: 1fr; }
   .t-surrey .ss-foot .in { grid-template-columns: 1fr; }
-  .t-surrey .ss-lock .name { font-size: 32px; }
+  .t-surrey .ss-lock .name { font-size: 26px; }
   .t-surrey .ss-lead h1 { font-size: 30px; }
 }

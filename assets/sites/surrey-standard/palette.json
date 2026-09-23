@@ -1,20 +1,24 @@
 {
   "palette": {
-    "ink":     "#1C2233",
-    "paper":   "#F6F5F1",
+    "ink":     "#2D2D2D",
+    "paper":   "#F5F5F5",
     "surface": "#FFFFFF",
-    "accent":  "#1B2A4A",
-    "crest":   "#A6192E",
-    "muted":   "#676D7C",
-    "line":    "#E0DFD8"
+    "accent":  "#0A2540",
+    "lime":    "#C2D82E",
+    "gold":    "#D4AF37",
+    "muted":   "#6A737B",
+    "line":    "#E2E4E7"
   },
   "desks": {
-    "local-news":  "#1B2A4A",
-    "city-hall":   "#1B2A4A",
-    "development": "#1B2A4A",
-    "education":   "#1B2A4A",
-    "sports":      "#1B2A4A",
-    "opinion":     "#1B2A4A"
+    "local-news":  "#0A2540",
+    "city-hall":   "#0A2540",
+    "development": "#0A2540",
+    "education":   "#0A2540",
+    "sports":      "#0A2540",
+    "opinion":     "#0A2540"
+  },
+  "desk_labels": {
+    "local-news": "Surrey News"
   },
   "chrome": {
     "template": "surrey",
