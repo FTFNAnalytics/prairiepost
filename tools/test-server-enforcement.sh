@@ -137,11 +137,17 @@ http {
   include $W/vh-new.conf;
   # A LEGACY block: pre-Phase-1 rules only, PLUS the snippet the upgrade
   # roll injects into existing sites — this is what live papers become.
+  # Crucially it carries its OWN ACME and dotfile locations, as every
+  # production block does: the 4163fe0 roll was rejected by nginx over
+  # duplicate locations when the snippet ALSO carried them, so this
+  # nginx -t is the regression test that the snippet stays collision-free.
   server {
     listen 127.0.0.1:8891;
     server_name legacy.test;
     root $W/rel;
     index index.php;
+    location ^~ /.well-known/acme-challenge/ { try_files \$uri =404; }
+    location ~ /\. { deny all; }
     include $W/snippets/prairiepost-deny.conf;
     location ~ ^/(app|data)/ { deny all; }
     location / { try_files \$uri /router.php\$is_args\$args; }
@@ -163,6 +169,8 @@ http {
     server_name broken.test;
     root $W/broken;
     index index.php;
+    location ^~ /.well-known/acme-challenge/ { try_files \$uri =404; }
+    location ~ /\. { deny all; }
     include $W/snippets/prairiepost-deny.conf;
     location / { try_files \$uri /router.php\$is_args\$args; }
     location = /router.php {

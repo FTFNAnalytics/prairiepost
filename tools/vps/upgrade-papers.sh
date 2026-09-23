@@ -80,7 +80,9 @@ for link in "$EN_DIR"/*; do
   base=$(basename "$link")
   # cies is the Institute — a different application. The hub IS a paper's
   # release (one site row, same code), so it rolls forward with them.
-  case "$base" in cies|README|default) continue ;; esac
+  # .bak.* and .paused files are this script's own artifacts from earlier
+  # runs — never vhosts.
+  case "$base" in cies|README|default|*.bak.*|*.paused) continue ;; esac
   VH=$(readlink -f "$link")
   [ -f "$VH" ] || continue
   OLD=$(grep -Eo "root[[:space:]]+$WWW/prairiepost-[A-Za-z0-9._-]+" "$VH" | head -1 | awk '{print $2}')
@@ -258,6 +260,10 @@ WRAP
 
   for cf in "$CRON_DIR"/*; do
     [ -f "$cf" ] || continue
+    # cron.d ignores files with a dot in the name, so a dotted basename
+    # is never an active job — it is a .bak.* or .paused artifact from
+    # an earlier run and must not be rewritten or paused again.
+    case "$(basename "$cf")" in *.*) continue ;; esac
     if grep -q "$OLD" "$cf"; then
       cp "$cf" "$cf.bak.$STAMP"
       ALL_CRON_BACKUPS+=("$cf")
@@ -330,6 +336,10 @@ if [ "$FIXTURE" = "1" ]; then
 elif ! nginx -t; then
   for VH in "${ALL_VHOST_BACKUPS[@]}"; do cp "$VH.bak.$STAMP" "$VH"; done
   for cf in "${ALL_CRON_BACKUPS[@]}"; do cp "$cf.bak.$STAMP" "$cf"; done
+  # The pause pass renamed the (already rewritten) active files to
+  # FILE.paused; the originals are back from .bak above, so the dotted
+  # copies are pure residue — remove them or they linger forever.
+  for cf in "${PAUSED[@]}"; do rm -f "$cf.paused"; done
   nginx -t
   fail "nginx test failed — every vhost and cron file restored, nothing changed"
 fi

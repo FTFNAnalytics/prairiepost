@@ -49,6 +49,10 @@ CFG
   printf 'server {\n  root %s; # shared\n  server_name kitchenerchronicle.test;\n}\n' "$BOX/www/prairiepost-oldsha11-shared" > "$BOX/vhosts/kitchenerchronicle"
   printf 'server {\n  root %s;\n  server_name civismedia.test;\n}\n' "$BOX/www/prairiepost-oldsha11-civismedia" > "$BOX/vhosts/civismedia"
   printf '17 3 * * * root php %s/cron/fetch-news.php\n' "$BOX/www/prairiepost-oldsha11-shared" > "$BOX/cron/pp-fetch"
+  # A historical backup artifact from an "earlier run": references the old
+  # release but MUST be ignored (cron.d never runs dotted names, and the
+  # 4163fe0 roll wrongly rewrote and paused such files).
+  printf '17 3 * * * root php %s/cron/fetch-news.php\n' "$BOX/www/prairiepost-oldsha11-shared" > "$BOX/cron/pp-fetch.bak.20250101"
   php -r 'echo json_encode(["ok" => true, "set_id" => "fixture-set", "finished_epoch" => time(), "finished_at" => date("Y-m-d H:i:s")]);' > "$BOX/backups/state.json"
 }
 run_upgrade() { # box-dir -> rc
@@ -73,6 +77,7 @@ ok "preflight saw the recovery point"         "echo \"\$OUT1\" | grep -q 'recove
 ok "crons paused for the window"              "echo \"\$OUT1\" | grep -q 'paused: pp-fetch'"
 ok "crons resumed after verification"         "echo \"\$OUT1\" | grep -q 'resumed: pp-fetch'"
 ok "cron file exists unpaused and repointed"  "[ -f $B1/cron/pp-fetch ] && [ ! -f $B1/cron/pp-fetch.paused ] && grep -q ${HEADSHA:0:12} $B1/cron/pp-fetch"
+ok "historical .bak cron ignored entirely"    "grep -q oldsha11 $B1/cron/pp-fetch.bak.20250101 && ! grep -q ${HEADSHA:0:12} $B1/cron/pp-fetch.bak.20250101 && [ ! -f $B1/cron/pp-fetch.bak.20250101.paused ]"
 ok "the shared schema migrated exactly once"  "[ \$(echo \"\$OUT1\" | grep -c 'migrating the schema') = 1 ]"
 ok "the second group reused the migration"    "echo \"\$OUT1\" | grep -q 'already migrated this run'"
 ok "legacy vhosts got the deny snippet injected" "grep -q prairiepost-deny $B1/vhosts/kitchenerchronicle && [ -f $B1/snippets/prairiepost-deny.conf ]"
