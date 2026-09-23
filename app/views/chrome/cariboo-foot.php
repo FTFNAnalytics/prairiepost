@@ -1,13 +1,14 @@
 <?php
-/* Cariboo Compass — footer chrome (foundation build). Closes <main> and
-   the document. */
+/* The Cariboo Compass — footer chrome (brand build). Closes <main> and
+   the document. Deep green, the gold rose, the brand sheet's base line. */
 ?>
 </main>
 <footer class="cc-foot">
   <div class="in">
     <div>
-      <div class="name">Cariboo Compass</div>
-      <p style="font-size:13px;line-height:1.6;font-family:'Archivo',sans-serif"><?= e(setting('footer_line', setting('tagline'))) ?></p>
+      <img src="<?= e(site_asset('mark-reversed.svg')) ?>" alt="" width="54" height="54" style="margin-bottom:8px">
+      <div class="name">The Cariboo <span class="gold">Compass</span></div>
+      <p style="font-size:13px;line-height:1.6"><?= e(setting('footer_line', setting('tagline'))) ?></p>
     </div>
     <div>
       <h4>Sections</h4>
@@ -17,7 +18,7 @@
     </div>
     <div>
       <h4>The newsroom</h4>
-      <?php if (setting('contact_email') !== ''): ?><a href="mailto:<?= e(setting('contact_email')) ?>">Send a tip</a><?php endif; ?>
+      <?php if (setting('contact_email') !== ''): ?><a href="mailto:<?= e(setting('contact_email')) ?>">News tips</a><?php endif; ?>
       <a href="<?= e(url('corrections')) ?>">Corrections</a>
       <a href="<?= e(url('search')) ?>">Search the archive</a>
       <a href="/admin/">Newsroom sign-in</a>
@@ -29,8 +30,8 @@
     </div>
   </div>
   <div class="base">
-    <div class="in">
-      <span>&copy; <?= e(date('Y')) ?> <?= e($siteTitle) ?> &middot; Prince George, British Columbia</span>
+    <div class="in2">
+      <span>&copy; <?= e(date('Y')) ?> <?= e($siteTitle) ?> &middot; Local news. Real impact.</span>
       <span>Corrections run at the top of the story, dated.</span>
     </div>
   </div>

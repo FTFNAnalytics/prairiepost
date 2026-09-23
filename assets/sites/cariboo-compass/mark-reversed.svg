@@ -1,10 +1,27 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 46 46" width="46" height="46">
-  <!-- Cariboo Compass — reversed placeholder mark for dark grounds. -->
-  <rect width="46" height="46" rx="23" fill="#F5F3EC"/>
-  <circle cx="23" cy="23" r="16.5" fill="none" stroke="#2F4A33" stroke-width="1.6"/>
-  <path d="M23 8.5 L26 20 L23 23 L20 20 Z" fill="#A87C2F"/>
-  <path d="M23 37.5 L20 26 L23 23 L26 26 Z" fill="#2F4A33"/>
-  <path d="M8.5 23 L20 20 L23 23 L20 26 Z" fill="#2F4A33" opacity=".55"/>
-  <path d="M37.5 23 L26 26 L23 23 L26 20 Z" fill="#2F4A33" opacity=".55"/>
-  <circle cx="23" cy="23" r="2.2" fill="#A87C2F"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="120" height="120">
+  <!-- The Cariboo Compass - the rose under the peaks (brand package, Sep 2026). -->
+  <circle cx="60" cy="68" r="42" fill="none" stroke="#C9A227" stroke-width="4.5"/>
+  <path d="M102 61 L109 68 L102 75 L95 68 Z" fill="#C9A227"/>
+  <path d="M18 61 L25 68 L18 75 L11 68 Z" fill="#C9A227"/>
+  <path d="M60 103 L67 110 L60 117 L53 110 Z" fill="#C9A227"/>
+  <path d="M28 34 L46 10 L54 19 L62 8 L92 34 Z" fill="#C9A227" stroke="#1A3C34" stroke-width="5" paint-order="stroke"/>
+  <path d="M46 14 L51.5 21 L48.5 19.6 L46 23 L43 19.8 L40.5 21.2 Z" fill="#1A3C34"/>
+  <path d="M62 12 L68.5 19.5 L65 18 L62 21.6 L58.6 18.4 L55.8 19.8 Z" fill="#1A3C34"/>
+  <path d="M60.0 30.0 L67.5 55.8 L60 68 Z" fill="#E3C666"/>
+  <path d="M60.0 30.0 L52.5 55.8 L60 68 Z" fill="#C9A227"/>
+  <path d="M75.6 52.4 L68.7 66.7 L60 68 Z" fill="#E3C666"/>
+  <path d="M75.6 52.4 L61.3 59.3 L60 68 Z" fill="#C9A227"/>
+  <path d="M98.0 68.0 L72.2 75.5 L60 68 Z" fill="#E3C666"/>
+  <path d="M98.0 68.0 L72.2 60.5 L60 68 Z" fill="#C9A227"/>
+  <path d="M75.6 83.6 L61.3 76.7 L60 68 Z" fill="#E3C666"/>
+  <path d="M75.6 83.6 L68.7 69.3 L60 68 Z" fill="#C9A227"/>
+  <path d="M60.0 106.0 L52.5 80.2 L60 68 Z" fill="#E3C666"/>
+  <path d="M60.0 106.0 L67.5 80.2 L60 68 Z" fill="#C9A227"/>
+  <path d="M44.4 83.6 L51.3 69.3 L60 68 Z" fill="#E3C666"/>
+  <path d="M44.4 83.6 L58.7 76.7 L60 68 Z" fill="#C9A227"/>
+  <path d="M22.0 68.0 L47.8 60.5 L60 68 Z" fill="#E3C666"/>
+  <path d="M22.0 68.0 L47.8 75.5 L60 68 Z" fill="#C9A227"/>
+  <path d="M44.4 52.4 L58.7 59.3 L60 68 Z" fill="#E3C666"/>
+  <path d="M44.4 52.4 L51.3 66.7 L60 68 Z" fill="#C9A227"/>
+  <circle cx="60" cy="68" r="4.4" fill="#C9A227" stroke="#E3C666" stroke-width="2"/>
 </svg>

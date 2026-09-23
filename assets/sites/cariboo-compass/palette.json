@@ -1,26 +1,28 @@
 {
   "palette": {
-    "ink":     "#20261F",
-    "paper":   "#F5F3EC",
+    "ink":     "#1C2526",
+    "paper":   "#F5F0E6",
     "surface": "#FFFFFF",
-    "accent":  "#2F4A33",
-    "brass":   "#A87C2F",
-    "muted":   "#6F7568",
-    "line":    "#E0DDD0"
+    "accent":  "#1A3C34",
+    "gold":    "#C9A227",
+    "lake":    "#2E5A88",
+    "muted":   "#5C6660",
+    "line":    "#E3DCC9"
   },
   "desks": {
-    "local-news": "#2F4A33",
-    "resources":  "#2F4A33",
-    "business":   "#2F4A33",
-    "outdoors":   "#2F4A33",
-    "sports":     "#2F4A33"
+    "local-news":  "#1A3C34",
+    "communities": "#1A3C34",
+    "business":    "#1A3C34",
+    "environment": "#C9A227",
+    "education":   "#1A3C34",
+    "opinion":     "#1A3C34"
   },
   "desk_labels": {
-    "local-news": "The Interior",
-    "resources":  "Resources"
+    "local-news": "News",
+    "business": "Business"
   },
   "chrome": {
     "template": "cariboo",
-    "nav": ["local-news", "resources", "business", "outdoors", "sports"]
+    "nav": ["local-news", "communities", "business", "environment", "education", "opinion"]
   }
 }

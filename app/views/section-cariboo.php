@@ -1,4 +1,4 @@
-<?php /* Cariboo Compass — section front (foundation build; $cat, $posts,
+<?php /* The Cariboo Compass — section front (brand build; $cat, $posts,
          $page, $pages resolved by section.php). */ ?>
 <div class="cc-wrap cc-section">
   <header class="cc-sechead">
@@ -7,6 +7,7 @@
   </header>
   <?php foreach ($posts as $p): ?>
   <div class="cc-row">
+    <span class="cc-kick<?= ($p['category_slug'] ?? '') === 'environment' ? ' cc-kick--gold' : '' ?>" style="font-size:10px;padding:2px 8px"><?= e(pp_desk_label((string) $p['category_slug'], (string) $p['category_name'])) ?></span>
     <h3><a href="<?= e(url('story/' . $p['slug'])) ?>"><?= e($p['title']) ?></a></h3>
     <?php if ($p['lede']): ?><p><?= e($p['lede']) ?></p><?php endif; ?>
     <p class="cc-byline"><?= dateline($p) ?></p>
