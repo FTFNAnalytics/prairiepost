@@ -44,6 +44,12 @@ DEST="${PP_BACKUP_DEST:?PP_BACKUP_DEST is required}"
 VHOSTS_DIR="${PP_BACKUP_VHOSTS_DIR:-/etc/nginx/sites-enabled}"
 CRON_DIR="${PP_BACKUP_CRON_DIR:-/etc/cron.d}"
 HUB_NAME="${PP_BACKUP_HUB_NAME:-civismedia}"
+# Only roots under this prefix are network releases. Anything else behind
+# nginx on the same box (the Institute, other projects) is a DIFFERENT
+# application with its own recovery story — requiring its config here
+# fails the whole network backup over a foreign tenant, which is exactly
+# what the 0d68fc9 Calgary Dispatch abort was.
+ROOT_PREFIX="${PP_BACKUP_ROOT_PREFIX:-/var/www/prairiepost-}"
 KEEP_DAILY="${PP_BACKUP_KEEP_DAILY:-7}"
 KEEP_WEEKLY="${PP_BACKUP_KEEP_WEEKLY:-4}"
 REPO_ROOT=$(cd "$(dirname "$0")/.." && pwd)
@@ -120,6 +126,10 @@ for link in "$VHOSTS_DIR"/*; do
   # Strip inline comments BEFORE reading the root (lesson: commented roots).
   ROOT=$(sed 's/#.*//' "$VH" | grep -Eo 'root[[:space:]]+/[^;[:space:]]+' | head -1 | awk '{print $2}')
   [ -n "$ROOT" ] && [ -d "$ROOT" ] || continue
+  case "$ROOT" in
+    "$ROOT_PREFIX"*) ;;
+    *) echo "-- $base: root $ROOT is not a network release, out of scope"; continue ;;
+  esac
   ROOTS["$ROOT"]=1
   [ "$base" = "$HUB_NAME" ] && HUB_CFG="$ROOT/config.php"
 done

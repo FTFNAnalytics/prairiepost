@@ -111,6 +111,7 @@ chmod($key, 0600);
 exec('PP_BACKUP_DEST=' . escapeshellarg("$b/dest")
     . ' PP_BACKUP_VHOSTS_DIR=' . escapeshellarg("$b/vhosts")
     . ' PP_BACKUP_CRON_DIR=' . escapeshellarg("$b/cron")
+    . ' PP_BACKUP_ROOT_PREFIX=' . escapeshellarg("$b/rel-")
     . ' PP_BACKUP_KEY_FILE=' . escapeshellarg($key)
     . ' PP_OFFSITE_CMD=' . escapeshellarg("cp -t $b/offsite")
     . ' bash ' . escapeshellarg("$root/tools/backup.sh") . ' 2>&1', $bo, $brc);

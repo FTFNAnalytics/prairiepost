@@ -62,6 +62,11 @@ function layout(array $fx, array $opts = []): string
     }
     file_put_contents("$b/vhosts/kitchenerchronicle", "server {\n  root $b/rel-aaa111-shared; # shared release\n}\n");
     file_put_contents("$b/vhosts/civismedia", "server {\n  root $b/rel-bbb222-civismedia;\n}\n");
+    // A FOREIGN application behind the same nginx (no config.php, not a
+    // network release): must be skipped, never fail the run (the
+    // production Calgary Dispatch abort).
+    mkdir("$b/foreign/build", 0755, true);
+    file_put_contents("$b/vhosts/calgarydispatch", "server {\n  root $b/foreign/build;\n}\n");
     file_put_contents("$b/cron/civis-backup", "17 3 * * * root true\n");
     if (!empty($opts['no_uploads'])) {
         unlink("$b/rel-aaa111-shared/uploads");
@@ -75,6 +80,7 @@ function runBackup(string $b, string $extraEnv = ''): array
     exec('PP_BACKUP_DEST=' . escapeshellarg("$b/dest")
         . ' PP_BACKUP_VHOSTS_DIR=' . escapeshellarg("$b/vhosts")
         . ' PP_BACKUP_CRON_DIR=' . escapeshellarg("$b/cron")
+        . ' PP_BACKUP_ROOT_PREFIX=' . escapeshellarg("$b/rel-")
         . " $extraEnv bash " . escapeshellarg("$root/tools/backup.sh") . ' 2>&1', $out, $rc);
     return [implode("\n", $out), $rc];
 }
@@ -98,6 +104,10 @@ ok(!isset($st['components']['ok']), 'component map is clean');
 $set = sets($b)[0] ?? '';
 $setDir = "$b/dest/sets/$set";
 ok(is_file("$setDir/config/rel-bbb222-civismedia/config.site.php"), 'the UNDERLYING config.site.php is in the set (the F07 gap)');
+ok(!is_dir("$setDir/config/build")
+    && strpos((string) @file_get_contents("$setDir/releases.txt"), 'foreign') === false
+    && strpos($out, 'calgarydispatch') !== false,
+    'a foreign vhost on the same box is reported out of scope, never a failure');
 ok(is_file("$setDir/config/rel-bbb222-civismedia/config.php"), 'alongside the wrapper');
 ok(is_file("$setDir/uploads.tar.gz") && is_file("$setDir/db.dump") && is_file("$setDir/manifest.json"), 'db, uploads and manifest present');
 $perm = substr(sprintf('%o', fileperms($setDir)), -3);
