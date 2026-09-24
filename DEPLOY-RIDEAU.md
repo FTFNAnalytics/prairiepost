@@ -1,9 +1,11 @@
 # Taking rideaureview.ca live — deployment runbook (brand-complete launch)
 
 The Rideau Review (slug `rideau-review`, template `rideau`) launches
-with its brand package applied but **zero stories by design** — the
-front page carries its empty state until the newsroom files, and that
-is the intended result of this runbook. Identity: the lock-and-leaf
+with its brand package applied and **six inaugural service stories** —
+signed launch notes about the paper itself (mission, desk methods, how
+to reach the newsroom), one per desk, no invented local news. The
+front page fills at seed time, and that is the intended result of this
+runbook. Identity: the lock-and-leaf
 mark before the crimson nameplate on warm paper; Playfair Display
 nameplate, Libre Baskerville headlines, Source Sans 3 interface;
 Rideau crimson `#6B1C28` (deliberately not Globe scarlet); one crimson
@@ -53,16 +55,19 @@ Pre-seed expectation table (verify only what exists):
 | Template class `t-rideau`, rideau.css (crimson/warm-paper brand), lock-and-leaf SVGs | Release tree | Present before the seed |
 | Title "The Rideau Review", tagline "The capital, closely read." | This pack's settings | Absent until this seed — the tagline reads the network default before it |
 | Desks in the nav | Shared `categories` + chrome.nav | `gatineau` and `corridor` should print "desk added" on first seed; `local-news`, `politics`, `culture`, `opinion` exist network-wide already — read the real list with `categories_all()` from `$REL`, assert no absences |
-| Stories | This pack | NONE — by design, before AND after |
+| Stories | This pack | Absent before this seed; SIX after — the pack's launch notes, slugs prefixed `rideau-` |
 
-Idempotent: a re-run prints "exists, skipped" and changes nothing.
+Idempotent: re-running adds only what is missing — on a database whose
+pack predates the stories, a re-run adds exactly the six launch notes
+and touches nothing else.
 
 ## Step 5 — Verify (served bytes, two-failure hard stop)
 
 1. `https://rideaureview.ca/` → 200, `<title>` contains "The Rideau
    Review", body class `t-rideau`, `/assets/css/rideau.css` linked.
-2. Front page shows the EMPTY STATE ("The Review is between
-   editions") — that is a PASS.
+2. Front page shows the six inaugural stories, hero "We report the
+   record. Then we review it." — the empty state is NOT expected any
+   more.
 3. Nav: Home + six desks + Search. `desk_labels` renames `local-news`
    to "Ottawa" and `corridor` to "The Corridor"; the desk pages stay
    `/desk/local-news` and `/desk/corridor`. The nameplate renders

@@ -1,9 +1,11 @@
 # Taking burrardbrief.ca live — deployment runbook (brand-complete launch)
 
 The Burrard Brief (slug `burrard-brief`, template `burrard`) launches
-with its brand package applied but **zero stories by design** — the
-front page carries its empty state until the newsroom files, and that
-is the intended result of this runbook. Identity: the North Shore
+with its brand package applied and **six inaugural service stories** —
+signed launch notes about the paper itself (mission, desk methods, how
+to reach the newsroom), one per desk, no invented local news. The
+front page fills at seed time, and that is the intended result of this
+runbook. Identity: the North Shore
 mountains over Burrard Inlet, one serif (Source Serif 4), Inlet Teal
 interactive, Forest Green reserved for Opinion, "The Morning Brief" as
 the product.
@@ -50,16 +52,19 @@ Pre-seed expectation table (verify only what exists):
 | Template class `t-burrard`, burrard.css (serif/teal brand), mountain-mark SVGs, img/ scene art | Release tree | Present before the seed |
 | Title "The Burrard Brief", tagline "Vancouver & Lower Mainland news, briefly." | This pack's settings | Absent until this seed |
 | Desks in the nav | Shared `categories` + chrome.nav | `housing` and `environment` may print "desk added"; the rest exist network-wide — read the real list with `categories_all()` from `$REL`, assert no absences |
-| Stories | This pack | NONE — by design, before AND after |
+| Stories | This pack | Absent before this seed; SIX after — the pack's launch notes, slugs prefixed `burrard-` |
 
-Idempotent: a re-run prints "exists, skipped" and changes nothing.
+Idempotent: re-running adds only what is missing — on a database whose
+pack predates the stories, a re-run adds exactly the six launch notes
+and touches nothing else.
 
 ## Step 5 — Verify (served bytes, two-failure hard stop)
 
 1. `https://burrardbrief.ca/` → 200, `<title>` contains "The Burrard
    Brief", body class `t-burrard`, `/assets/css/burrard.css` linked.
-2. Front page shows the EMPTY STATE ("The first brief is being
-   written") — that is a PASS.
+2. Front page shows the six inaugural stories, hero "Why briefly? The
+   case for a four-minute paper" — the empty state is NOT expected any
+   more.
 3. Nav: Home + six desks (The City, Housing, City Hall, Transit,
    Environment, Opinion — `desk_labels` renames local-news to "The
    City"; the desk page stays `/desk/local-news`). Nav renders

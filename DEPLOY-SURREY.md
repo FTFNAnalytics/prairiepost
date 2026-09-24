@@ -1,10 +1,12 @@
 # Taking surreystandard.ca live — deployment runbook (foundation launch)
 
-Surrey Standard (slug `surrey-standard`, template `surrey`) is a
-FOUNDATION launch: identity, desks and wire sources, **zero stories by
-design** — the front page carries its empty state until the newsroom
-files, and that is the intended result of this runbook. The brand
-package lands later as an ordinary release upgrade; no re-seed needed.
+Surrey Standard (slug `surrey-standard`, template `surrey`) launched
+as a FOUNDATION (identity, desks and wire sources); the brand package
+landed as an ordinary release upgrade. Since Sep 2026 the pack also
+carries **six inaugural service stories** — signed launch notes about
+the paper itself (mission, desk methods, how to reach the newsroom),
+one per desk, no invented local news. On the already-live site they
+arrive by re-running the seeder from a release that carries them.
 
 Config-edit-free flow (tenant resolution is database-first): DNS,
 generated nginx block, cert, seed.
@@ -45,16 +47,19 @@ Pre-seed expectation table (verify only what exists):
 | Template class `t-surrey`, surrey.css (navy/lime brand, Playfair headlines), leaf-S monogram | Release tree | Present before the seed |
 | Title "The Surrey Standard", tagline "News that matters. Stories that connect." | This pack's settings | Absent until this seed |
 | Desks in the nav | Shared `categories` + chrome.nav | `education` may print "desk added"; the rest exist network-wide — read the real list with `categories_all()` from `$REL`, assert no absences |
-| Stories | This pack | NONE — by design, before AND after |
+| Stories | This pack | SIX after seeding — the pack's launch notes, slugs prefixed `surrey-` |
 
-Idempotent: a re-run prints "exists, skipped" and changes nothing.
+Idempotent: re-running adds only what is missing — on a database whose
+pack predated the stories, a re-run adds exactly the six launch notes
+and touches nothing else.
 
 ## Step 5 — Verify (served bytes, two-failure hard stop)
 
 1. `https://surreystandard.ca/` → 200, `<title>` contains "The Surrey
    Standard", body class `t-surrey`, `/assets/css/surrey.css` linked.
-2. Front page shows the EMPTY STATE ("The first edition is being set")
-   — that is a PASS.
+2. Front page shows the six inaugural stories, hero "Welcome to The
+   Surrey Standard" — the empty state is NOT expected once the
+   story-carrying pack has been seeded.
 3. Nav: Front Page + six desks (Surrey News, City Hall, Development,
    Education, Sports, Opinion — `desk_labels` renames local-news to
    "Surrey News"; the desk page itself stays `/desk/local-news`). Nav

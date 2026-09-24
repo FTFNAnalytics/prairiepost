@@ -1,9 +1,11 @@
 # Taking cariboocompass.ca live — deployment runbook (brand-complete launch)
 
 The Cariboo Compass (slug `cariboo-compass`, template `cariboo`)
-launches with its brand package applied but **zero stories by design**
-— the front page carries its empty state until the newsroom files, and
-that is the intended result of this runbook. Identity: the gold
+launched with its brand package applied. Since Sep 2026 the pack also
+carries **six inaugural service stories** — signed launch notes about
+the paper itself (mission, desk methods, how to reach the newsroom),
+one per desk, no invented local news. On the already-live site they
+arrive by re-running the seeder from a release that carries them. Identity: the gold
 compass rose under the peaks on Deep Forest Green; serif headlines
 over a sans body; Compass Gold accents, Lake Blue links.
 
@@ -46,16 +48,19 @@ Pre-seed expectation table (verify only what exists):
 | Template class `t-cariboo`, cariboo.css (green/gold brand), compass-rose SVGs | Release tree | Present before the seed |
 | Title "The Cariboo Compass", tagline "Cariboo News. Community First." | This pack's settings | Absent until this seed |
 | Desks in the nav | Shared `categories` + chrome.nav | `communities` may print "desk added"; `environment` and `education` exist only if Burrard/Surrey seeded them first — read the real list with `categories_all()` from `$REL`, assert no absences |
-| Stories | This pack | NONE — by design, before AND after |
+| Stories | This pack | SIX after seeding — the pack's launch notes, slugs prefixed `cariboo-` |
 
-Idempotent: a re-run prints "exists, skipped" and changes nothing.
+Idempotent: re-running adds only what is missing — on a database whose
+pack predated the stories, a re-run adds exactly the six launch notes
+and touches nothing else.
 
 ## Step 5 — Verify (served bytes, two-failure hard stop)
 
 1. `https://cariboocompass.ca/` → 200, `<title>` contains "The Cariboo
    Compass", body class `t-cariboo`, `/assets/css/cariboo.css` linked.
-2. Front page shows the EMPTY STATE ("The Compass is finding its first
-   bearing") — that is a PASS.
+2. Front page shows the six inaugural stories, hero "Welcome aboard
+   The Cariboo Compass" — the empty state is NOT expected once the
+   story-carrying pack has been seeded.
 3. Nav: Home + six desks (News, Communities, Business, Environment,
    Education, Opinion — `desk_labels` renames local-news to "News";
    the desk page stays `/desk/local-news`). Nav renders uppercase via
