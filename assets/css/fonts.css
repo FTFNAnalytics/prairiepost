@@ -140,3 +140,24 @@
   font-display: swap;
   src: url('/assets/fonts/inter-italic-latin.woff2') format('woff2');
 }
+@font-face {
+  font-family: 'Libre Baskerville';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/assets/fonts/libre-baskerville-latin.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Libre Baskerville';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url('/assets/fonts/libre-baskerville-700-latin.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Libre Baskerville';
+  font-style: italic;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/assets/fonts/libre-baskerville-italic-latin.woff2') format('woff2');
+}

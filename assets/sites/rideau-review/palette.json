@@ -1,0 +1,28 @@
+{
+  "palette": {
+    "ink":     "#111111",
+    "text":    "#1A1A1A",
+    "paper":   "#FBF9F6",
+    "wash":    "#F1ECE4",
+    "crimson": "#6B1C28",
+    "crimsondark": "#4E121B",
+    "muted":   "#5C5C5C",
+    "line":    "#D6D6D6"
+  },
+  "desks": {
+    "local-news": "#6B1C28",
+    "gatineau":   "#6B1C28",
+    "corridor":   "#6B1C28",
+    "politics":   "#6B1C28",
+    "culture":    "#6B1C28",
+    "opinion":    "#6B1C28"
+  },
+  "desk_labels": {
+    "local-news": "Ottawa",
+    "corridor": "The Corridor"
+  },
+  "chrome": {
+    "template": "rideau",
+    "nav": ["local-news", "gatineau", "corridor", "politics", "culture", "opinion"]
+  }
+}
