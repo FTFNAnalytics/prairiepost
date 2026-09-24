@@ -160,8 +160,14 @@ say "Preflight: candidate provenance, runtime, vendored code, recovery point"
 # sanitizer — a release without them cannot serve or be prepared.
 [ -f "$TPL/tools/migrate.php" ] || fail "candidate has no tools/migrate.php — refusing a release that depends on request-time migration"
 [ -f "$TPL/vendor/ezyang/htmlpurifier/library/HTMLPurifier.php" ] || fail "candidate is missing the vendored sanitizer"
+# Ask PHP itself, never `php -m | grep -q`: under pipefail, grep -q
+# exiting on its match can hand php a SIGPIPE and fail the pipeline for
+# an extension that IS loaded — nondeterministically, which burned a
+# production roll twice on 24 Sep 2026 (dom on one attempt, curl on the
+# retry) before the two-failure stop caught it.
 for ext in dom curl mbstring; do
-  php -m | grep -qi "^$ext$" || fail "PHP extension '$ext' missing on this box (check the FPM pool too)"
+  php -r 'exit(extension_loaded($argv[1]) ? 0 : 1);' "$ext" \
+    || fail "PHP extension '$ext' missing on this box (check the FPM pool too)"
 done
 # A verified recovery point before anything changes: last night's backup
 # state must be ok and fresh. PP_UPGRADE_SKIP_BACKUP_CHECK=1 overrides,
