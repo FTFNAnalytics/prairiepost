@@ -1,0 +1,97 @@
+{
+  "contract_version": "2026-08-27",
+  "generated_for": "bootstrap-only",
+  "runtime_source_of_truth": "GET /api/v1/pantheon/properties",
+  "properties": [
+    {
+      "slug": "bleuet-blanc",
+      "name": "Le Bleuet Blanc",
+      "canonical_url": "https://bleuetblanc.ca",
+      "status": "live"
+    },
+    {
+      "slug": "brampton-bulletin",
+      "name": "Brampton Bulletin",
+      "canonical_url": "https://bramptonbulletin.com",
+      "status": "live"
+    },
+    {
+      "slug": "edmonton-echo",
+      "name": "Edmonton Echo",
+      "canonical_url": "https://edmontonecho.com",
+      "status": "live"
+    },
+    {
+      "slug": "grande-prairie-gazette",
+      "name": "Grande Prairie Gazette",
+      "canonical_url": "https://grandeprairiegazette.ca",
+      "status": "live"
+    },
+    {
+      "slug": "kelowna-current",
+      "name": "Kelowna Current",
+      "canonical_url": "https://kelownacurrent.ca",
+      "status": "live"
+    },
+    {
+      "slug": "kermode-chronicle",
+      "name": "Kermode Chronicle",
+      "canonical_url": "https://kermodechronicle.ca",
+      "status": "live"
+    },
+    {
+      "slug": "kitchener-chronicle",
+      "name": "Kitchener Chronicle",
+      "canonical_url": "https://kitchenerchronicle.com",
+      "status": "live"
+    },
+    {
+      "slug": "mississauga-monitor",
+      "name": "Mississauga Monitor",
+      "canonical_url": "https://mississaugamonitor.com",
+      "status": "live"
+    },
+    {
+      "slug": "pacific-post",
+      "name": "The Pacific Post",
+      "canonical_url": "https://thepacificpost.com",
+      "status": "live"
+    },
+    {
+      "slug": "pickering-post",
+      "name": "Pickering Post",
+      "canonical_url": "https://pickeringpost.ca",
+      "status": "live"
+    },
+    {
+      "slug": "prairiedispatch",
+      "name": "The Prairie Dispatch",
+      "canonical_url": "https://prairiedispatch.ca",
+      "status": "live"
+    },
+    {
+      "slug": "sudbury-standard",
+      "name": "Sudbury Standard",
+      "canonical_url": "https://sudburystandard.ca",
+      "status": "live"
+    },
+    {
+      "slug": "tri-cities-torch",
+      "name": "Tri Cities Torch",
+      "canonical_url": "https://tricitiestorch.ca",
+      "status": "live"
+    },
+    {
+      "slug": "turtle-island-times",
+      "name": "Turtle Island Times",
+      "canonical_url": "https://turtleislandtimes.ca",
+      "status": "live"
+    },
+    {
+      "slug": "westernwire",
+      "name": "Western Wire",
+      "canonical_url": "https://westernwire.ca",
+      "status": "live"
+    }
+  ]
+}
