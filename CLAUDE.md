@@ -1,7 +1,7 @@
 # Claude notes — the Prairie Dispatch network
 
-One codebase serves the whole network (eighteen tenants — seventeen
-papers and the CivisMedia hub — as of the Surrey Standard). Each paper
+One codebase serves the whole network (twenty-one live tenants —
+twenty papers and the CivisMedia hub — as of the Rideau Review). Each paper
 is a tenant mapping in the server-only config, a
 row in the shared database, a front template in `app/views/`, assets in
 `assets/sites/<slug>/`, a launch pack (`launch.php`) applied by
@@ -220,10 +220,11 @@ holding a capability it should not have.
   group and migrates their shared schema exactly once. Never write a
   brief that forbids touching the hub release (that stale rule aborted
   the first Phase-2 roll).
-- **Twenty live domains pass the masthead guard**: the seventeen
+- **Twenty-one live domains pass the masthead guard**: the seventeen
   original papers plus surreystandard.ca (site #18),
-  cariboocompass.ca (#19) and burrardbrief.ca, plus the hub. TLS on
-  the three newest runs to Dec 22-23 2026.
+  cariboocompass.ca (#19), burrardbrief.ca and rideaureview.ca
+  (site #21), plus the hub. TLS on the four newest runs to
+  Dec 22-24 2026.
 - **The upgrader's extension preflight asks PHP directly**
   (`extension_loaded()` via `php -r`). The old `php -m | grep -q`
   pipeline under `set -o pipefail` failed nondeterministically via
@@ -236,17 +237,15 @@ holding a capability it should not have.
   the paper itself, true by construction. This is the pattern for
   filling a new front page WITHOUT growing debt item 1 (invented
   editorial about real cities): no fabricated events, votes, figures
-  or human bylines, links internal only. The Rideau pack carries the
-  same six, unseeded.
-- **rideaureview.ca is built but DORMANT — DNS gate open.** The full
-  brand package (lock-and-leaf mark, Rideau crimson, Playfair/Libre
-  Baskerville/Source Sans 3) and DEPLOY-RIDEAU.md shipped in the live
-  release; the launch was correctly skipped because the apex A record
-  still points at registrar parking `2.57.91.91` instead of the VPS
-  `168.231.74.70` (`www` is a CNAME to the apex, so one record fixes
-  both). Its launch is launch-only from the live release — no roll
-  needed. New desks `gatineau` and `corridor` will print "desk added"
-  on its first seed.
+  or human bylines, links internal only.
+- **rideaureview.ca is LIVE (25 Sep)** — launch-only from the live
+  release once the registrar A record moved from parking to the VPS:
+  vhost generated (both families, bare socket path), certbot first
+  attempt, seed created site #21 with desks `gatineau` and `corridor`
+  new network-wide and the six-story inaugural edition. The pack's
+  third wire source (the CBC national feed) printed no "source added"
+  line because the URL was already in the shared sources table —
+  seeder dedupe by design, not a defect.
 - **Schema version 20, journaled.** `tools/migrate.php` is the only
   mutator, the app refuses (503/exit 2) on a non-ready schema, and
   the roll migrates before any traffic switch.
