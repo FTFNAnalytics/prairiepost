@@ -210,60 +210,75 @@ agent. Never give the news agent a shell command or the VPS agent a
 filing step — each such mix has produced a stopped run or an agent
 holding a capability it should not have.
 
-## Current operational state (as of the Surrey Standard launch, 23 Sep 2026)
+## Current operational state (as of the inaugural-editions roll, 25 Sep 2026)
 
-- **Release in production: `11eade554d44`** (branch head
-  `11eade554d447b225da55e7ff1ea7e6174308d83`), serving BOTH release
-  groups: the seventeen papers from
-  `/var/www/prairiepost-11eade554d44-shared` and the CivisMedia hub
-  from `/var/www/prairiepost-11eade554d44-civismedia`. **The hub is no
-  longer left behind** — since the `3328704` era both groups roll
-  together; `upgrade-papers.sh` upgrades every prairiepost group and
-  migrates their shared schema exactly once. Never write a brief that
-  forbids touching the hub release again (that stale rule aborted the
-  first Phase-2 roll).
-- **Schema version 20, journaled.** `schema_migrations` shows adopted
-  at 19 (catalog-validated) and step 20 applied. There is NO
-  first-request migration any more: `tools/migrate.php` is the only
-  mutator, the app refuses (503/exit 2) on a non-ready schema, and the
-  roll migrates before any traffic switch.
+- **Release in production: `8b91a9f4bb73`** (branch head
+  `8b91a9f4bb7310685f3a82fb225cb66fea727907`), serving BOTH release
+  groups: `/var/www/prairiepost-8b91a9f4bb73-shared` (the papers) and
+  `/var/www/prairiepost-8b91a9f4bb73-civismedia` (the hub). Both
+  groups roll together; `upgrade-papers.sh` upgrades every prairiepost
+  group and migrates their shared schema exactly once. Never write a
+  brief that forbids touching the hub release (that stale rule aborted
+  the first Phase-2 roll).
+- **Twenty live domains pass the masthead guard**: the seventeen
+  original papers plus surreystandard.ca (site #18),
+  cariboocompass.ca (#19) and burrardbrief.ca, plus the hub. TLS on
+  the three newest runs to Dec 22-23 2026.
+- **The upgrader's extension preflight asks PHP directly**
+  (`extension_loaded()` via `php -r`). The old `php -m | grep -q`
+  pipeline under `set -o pipefail` failed nondeterministically via
+  SIGPIPE and aborted a healthy roll twice on 24 Sep (dom, then curl
+  on the retry) — never reintroduce a grep -q pipeline into a
+  pipefail preflight.
+- **Inaugural editions are seeded.** Surrey, Cariboo and Burrard each
+  carry exactly six launch notes — signed editorial-board mission
+  piece plus one desk-method/service note per desk, every story ABOUT
+  the paper itself, true by construction. This is the pattern for
+  filling a new front page WITHOUT growing debt item 1 (invented
+  editorial about real cities): no fabricated events, votes, figures
+  or human bylines, links internal only. The Rideau pack carries the
+  same six, unseeded.
+- **rideaureview.ca is built but DORMANT — DNS gate open.** The full
+  brand package (lock-and-leaf mark, Rideau crimson, Playfair/Libre
+  Baskerville/Source Sans 3) and DEPLOY-RIDEAU.md shipped in the live
+  release; the launch was correctly skipped because the apex A record
+  still points at registrar parking `2.57.91.91` instead of the VPS
+  `168.231.74.70` (`www` is a CNAME to the apex, so one record fixes
+  both). Its launch is launch-only from the live release — no roll
+  needed. New desks `gatineau` and `corridor` will print "desk added"
+  on its first seed.
+- **Schema version 20, journaled.** `tools/migrate.php` is the only
+  mutator, the app refuses (503/exit 2) on a non-ready schema, and
+  the roll migrates before any traffic switch.
 - **The Phase 1+2 hardening is live**: HTML Purifier sanitizer,
   editorial authorization, SSRF-safe transport, CLI-only first admin,
   per-site opt-in indexing (every page noindex until enabled — none
   enabled yet), internal-path denial on every vhost (vhost.template
-  for new blocks; `/etc/nginx/snippets/prairiepost-deny.conf` injected
-  into legacy blocks; the snippet deliberately carries NO dotfile/ACME
+  for new blocks; `/etc/nginx/snippets/prairiepost-deny.conf` in
+  legacy blocks; the snippet deliberately carries NO dotfile/ACME
   locations — blocks own those, duplicates are an nginx emerg).
-- **Backups are the Phase 2 system.** Nightly cron invokes the
-  RELEASE's own `tools/backup.sh` (repointed automatically by each
-  roll); complete manifest-backed sets under `/var/backups/civis`
-  (first good set `20260923-182915-7b8a6801`). Discovery is scoped to
-  `/var/www/prairiepost-*` roots. Off-site transfer is NOT configured
-  and is reported unverified — an owner step (hook + key). Pre-Phase-2
-  config bridges: `/root/pre-p2-config-20260923/`, root-only.
+- **Backups**: nightly cron invokes the RELEASE's own
+  `tools/backup.sh` (repointed by each roll); manifest-backed sets
+  under `/var/backups/civis` (latest verified
+  `20260925-031702-404fd26a`); discovery scoped to
+  `/var/www/prairiepost-*` roots, so foreign tenants read as
+  out-of-scope by design. Off-site transfer is NOT configured — an
+  owner step (hook + key).
 - **The box hosts FOREIGN tenants**: the Institute
-  (`/var/www/cies-*`) and **Calgary Dispatch**
-  (`/srv/calgarydispatch/…`, its own vhost). They are separate
-  applications with their own recovery stories — network tooling
-  ignores them by root-prefix, and briefs must never require anything
-  of them. One shared-fate caveat: any tenant's broken vhost fails the
-  global `nginx -t`.
-- **surreystandard.ca is live** (site #18, slug `surrey-standard`,
-  template `surrey`): the network's fourth ZERO-story launch —
-  identity, desks (`education` was new network-wide), sources; brand
-  package applied (leaf-S monogram, Playfair via its own @font-face,
-  navy/lime). TLS to Dec 22 2026. Deployment was config-edit-free.
-- **Three BC tenants are in the tree but dormant** (no DNS, no vhost,
-  not seeded): `burrard-brief`, `cariboo-compass`,
-  `terminal-city-times`. Each has a runbook (DEPLOY-BURRARD/CARIBOO/
-  TERMINALCITY.md) awaiting its brand package and launch order.
+  (`/var/www/cies-*`) and Calgary Dispatch (`/srv/calgarydispatch/…`,
+  its own vhost). Network tooling ignores them by root-prefix and
+  briefs must never require anything of them. Shared-fate caveat: any
+  tenant's broken vhost fails the global `nginx -t`.
+- **One tenant remains dormant in the tree**: `terminal-city-times`
+  (foundation only, DEPLOY-TERMINALCITY.md, awaiting its brand
+  package). The wider slate (Steeltown, Red River, Winnipeg, Rideau
+  siblings, Atlantic papers) awaits packages.
 - **Deploys are pinned**: the VPS agent resolves the release branch
   head via the API, requires the exact full SHA from the brief, and
   fetches `upgrade-papers.sh` at that SHA. Rolls are preceded by a
-  fresh verified backup (the preflight enforces it).
-- `sanitize-content.php` dry run on production: 289 posts scanned,
-  6 would be rewritten, 0 flagged. `--apply` awaits owner
-  authorization.
+  fresh verified backup (the preflight enforces it, 26-hour window).
+  Launch-only work discovers `$REL` from the enabled nginx blocks and
+  needs no pin.
 - Known benign gap: `prairiedispatch.ca /api/ingest` answers 404 (its
   legacy block predates the pretty route; `/ingest.php` answers 401
   correctly). Fix belongs to a per-block routes pass, not a hand edit.
