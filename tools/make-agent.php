@@ -61,7 +61,10 @@ switch ($cmd) {
                 exit("Unknown site '{$s}' — sites are created at launch, and a token only scopes to what exists.\n");
             }
         }
-        $desks = array_filter(array_map('slugify', explode(',', (string) ($opt['desks'] ?? ''))));
+        // Trim-and-filter BEFORE slugify: slugify('') returns its 'story'
+        // fallback, which turned an omitted --desks into a lookup for a
+        // desk named 'story' and refused the token.
+        $desks = array_map('slugify', array_filter(array_map('trim', explode(',', (string) ($opt['desks'] ?? '')))));
         $selD = $pdo->prepare('SELECT 1 FROM categories WHERE slug = ?');
         foreach ($desks as $d) {
             $selD->execute([$d]);

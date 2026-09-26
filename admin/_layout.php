@@ -71,6 +71,7 @@ function admin_header(string $title, string $active = '', string $actions = ''):
         $items['users'] = ['users.php', 'Accounts'];
         $items['settings'] = ['settings.php', 'Settings'];
         if ($hub) {
+            $items['apikeys'] = ['api-keys.php', 'API keys'];
             $items['audit'] = ['audit.php', 'Audit'];
             $items['ops'] = ['ops.php', 'Ops'];
         }

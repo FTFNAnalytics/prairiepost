@@ -22,8 +22,11 @@
  * Request:  Authorization: Bearer <token>
  *           JSON body:
  *           {site, desk, title, lede, body,
+ *            image?, image_caption?, image_credit?,
  *            dateline?, tags?, suggested_slug?, external_id?,
  *            sources?: [{url, title?, retrieved_at?}]}
+ *           `image` is an https URL the server fetches itself, or an
+ *           /uploads/… path returned by POST /api/ingest-media.
  * Response: 201 {ok, id, slug, status}
  *           200 {ok, duplicate: true, id, slug} on an exact re-file
  *           4xx {ok: false, error} — the reason, never a coercion
@@ -123,15 +126,23 @@ if (mb_strlen($externalId) > 120) {
     pp_hermes_out(422, ['ok' => false, 'error' => 'external_id is at most 120 characters']);
 }
 
-// Optional image: a URL the server fetches ITSELF, so it goes through the
-// public-address guard first — the token holder writes the request but must
-// not be able to point it inward. A fetch or format failure never sinks the
-// filing; the story lands without a picture and the response says why.
+// Optional image, two forms. An `/uploads/…` path is one this install
+// minted itself — /api/ingest-media returns exactly this shape, and the
+// strict pattern plus the file-exists check mean an agent can only name
+// a stored upload, never traverse to anything else. A URL the server
+// fetches ITSELF goes through the public-address guard first — the
+// token holder writes the request but must not be able to point it
+// inward. A fetch or format failure never sinks the filing; the story
+// lands without a picture and the response says why.
 $imageUrl = trim((string) ($in['image'] ?? ''));
 $imageCaption = mb_substr(trim(strip_tags((string) ($in['image_caption'] ?? ''))), 0, 255);
 $imageCredit = mb_substr(trim(strip_tags((string) ($in['image_credit'] ?? ''))), 0, 120);
-if ($imageUrl !== '' && (strlen($imageUrl) > 600 || !preg_match('#^https?://#i', $imageUrl))) {
-    pp_hermes_out(422, ['ok' => false, 'error' => 'image must be an http(s) URL, at most 600 characters']);
+$imageIsUpload = (bool) preg_match('#^/uploads/\d{4}/\d{2}/[a-z0-9][a-z0-9-]*\.(jpg|jpeg|png|webp|gif)$#', $imageUrl);
+if ($imageIsUpload && !is_file(PP_ROOT . $imageUrl)) {
+    pp_hermes_out(422, ['ok' => false, 'error' => 'image names an /uploads/ path that does not exist — upload it first via /api/ingest-media']);
+}
+if ($imageUrl !== '' && !$imageIsUpload && (strlen($imageUrl) > 600 || !preg_match('#^https?://#i', $imageUrl))) {
+    pp_hermes_out(422, ['ok' => false, 'error' => 'image must be an http(s) URL, or an /uploads/ path returned by /api/ingest-media']);
 }
 
 $sources = [];
@@ -200,7 +211,9 @@ $now = now();
 
 $imagePath = '';
 $imageNote = '';
-if ($imageUrl !== '') {
+if ($imageIsUpload) {
+    $imagePath = $imageUrl;   // validated above: this install's own stored upload
+} elseif ($imageUrl !== '') {
     if (!pp_url_is_public($imageUrl)) {
         $imageNote = 'skipped — the image URL does not resolve to a public address';
     } else {
