@@ -210,12 +210,12 @@ agent. Never give the news agent a shell command or the VPS agent a
 filing step — each such mix has produced a stopped run or an agent
 holding a capability it should not have.
 
-## Current operational state (as of the inaugural-editions roll, 25 Sep 2026)
+## Current operational state (as of the agent-ingest-v2 roll, 27 Sep 2026)
 
-- **Release in production: `8b91a9f4bb73`** (branch head
-  `8b91a9f4bb7310685f3a82fb225cb66fea727907`), serving BOTH release
-  groups: `/var/www/prairiepost-8b91a9f4bb73-shared` (the papers) and
-  `/var/www/prairiepost-8b91a9f4bb73-civismedia` (the hub). Both
+- **Release in production: `a6806695ec66`** (branch head
+  `a6806695ec663b0645b54815fad3c56a81bc20bb`), serving BOTH release
+  groups: `/var/www/prairiepost-a6806695ec66-shared` (the papers) and
+  `/var/www/prairiepost-a6806695ec66-civismedia` (the hub). Both
   groups roll together; `upgrade-papers.sh` upgrades every prairiepost
   group and migrates their shared schema exactly once. Never write a
   brief that forbids touching the hub release (that stale rule aborted
@@ -259,7 +259,7 @@ holding a capability it should not have.
 - **Backups**: nightly cron invokes the RELEASE's own
   `tools/backup.sh` (repointed by each roll); manifest-backed sets
   under `/var/backups/civis` (latest verified
-  `20260925-031702-404fd26a`); discovery scoped to
+  `20260927-231438-955d1de8`); discovery scoped to
   `/var/www/prairiepost-*` roots, so foreign tenants read as
   out-of-scope by design. Off-site transfer is NOT configured — an
   owner step (hook + key).
@@ -278,9 +278,25 @@ holding a capability it should not have.
   fresh verified backup (the preflight enforces it, 26-hour window).
   Launch-only work discovers `$REL` from the enabled nginx blocks and
   needs no pin.
-- Known benign gap: `prairiedispatch.ca /api/ingest` answers 404 (its
-  legacy block predates the pretty route; `/ingest.php` answers 401
-  correctly). Fix belongs to a per-block routes pass, not a hand edit.
+- **Agent ingest v2 is live (27 Sep).** Hub admins mint, revoke and
+  re-enable the ingest bearer keys on `/admin/api-keys.php` (same
+  `ingest_agents` table and sha256-at-rest as `tools/make-agent.php`;
+  raw key shown exactly once; every action audited). The same key
+  uploads featured graphics via `POST /api/ingest-media` (multipart or
+  raw body, sniffed AND decoded, 8 MB cap, server-named file under
+  /uploads) and files stories via `POST /api/ingest` referencing the
+  returned path — everything lands as a DRAFT; keys carry no publish
+  power (`wire_desks` stays the per-paper editorial exception). The
+  27 Sep routes pass added both /api routes to the 14 legacy nginx
+  blocks (root-only backups at /root/nginx-routes-pass-20260927T231803Z/);
+  the 7 generated blocks route through router.php and needed nothing.
+  All 21 domains fail closed with JSON 401 — the old prairiedispatch
+  /api/ingest 404 gap is CLOSED. Grande Prairie's apex is a redirect
+  alias; its canonical endpoint host is www.grandeprairiegazette.ca.
+  Contract for agent authors: `docs/api-ingest.md`. Residue from the
+  live proof: draft post #315 (`routes-check-agent-ingest-v2-draft`)
+  sits unpublished in Surrey's newsroom and one 16x16 test PNG under
+  /uploads/2026/09/ — delete via the admin UI at leisure, never SQL.
 - Hermes tokens: unchanged (`hermes-quebec`, `hermes-mississauga`,
   root-only under `/root/hermes-tokens/`). No token exists for Surrey
   or any newer paper. No paper has its newsletter enabled.
