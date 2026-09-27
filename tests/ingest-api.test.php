@@ -140,6 +140,9 @@ ok($code === 201 && ($j['status'] ?? '') === 'draft', "story with uploaded image
 $row = $pdo->prepare('SELECT image, image_caption, status FROM posts WHERE id = ?');
 $row->execute([(int) ($j['id'] ?? 0)]);
 $p = $row->fetch();
+// Under WAL an open cursor pins this connection to a read snapshot —
+// close it so later reads on $pdo can see the servers' newer writes.
+$row->closeCursor();
 ok($p && $p['image'] === $rawPath && $p['image_caption'] === 'The caption' && $p['status'] === 'draft',
    'the draft row carries the uploaded path and caption');
 
@@ -185,9 +188,9 @@ $csrf = $m[1] ?? $csrf;
 ok($code === 200 && preg_match('/hermes_[0-9a-f]{56}/', $page, $tm) === 1,
    "minting shows the raw key exactly once (got $code)");
 $minted = $tm[0] ?? '';
-// A fresh connection for reads after the servers write: a long-lived
-// sqlite handle can serve a stale snapshot of rows another process
-// committed after it opened.
+// A fresh connection for reads after the servers write: under WAL, any
+// cursor left open pins the long-lived handle to a read snapshot, so a
+// clean connection is the robust way to see other processes' commits.
 $freshDb = function () use ($config, $pdo): PDO {
     $cfg = require $config;
     if (($cfg['db']['driver'] ?? '') !== 'sqlite') {
