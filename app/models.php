@@ -1126,3 +1126,18 @@ function pp_ops_latest(): array
     }
     return $latest;
 }
+
+/**
+ * The public URL of a story on a given site, for API responses that
+ * hand a published address to a caller outside any one paper's request
+ * context (the ingest lane). Built from the domains table — the first
+ * hostname mapped to the site — and falling back to a relative path
+ * when the site has no domain yet (pre-launch fixtures).
+ */
+function pp_story_public_url(string $siteSlug, string $storySlug): string
+{
+    $stmt = db()->prepare('SELECT hostname FROM domains WHERE site_slug = ? ORDER BY id LIMIT 1');
+    $stmt->execute([$siteSlug]);
+    $host = (string) ($stmt->fetchColumn() ?: '');
+    return ($host !== '' ? 'https://' . $host : '') . '/story/' . $storySlug;
+}

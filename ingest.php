@@ -23,10 +23,17 @@
  *           JSON body:
  *           {site, desk, title, lede, body,
  *            image?, image_caption?, image_credit?,
+ *            publish_on_image?,
  *            dateline?, tags?, suggested_slug?, external_id?,
  *            sources?: [{url, title?, retrieved_at?}]}
  *           `image` is an https URL the server fetches itself, or an
  *           /uploads/… path returned by POST /api/ingest-media.
+ *           `publish_on_image` (true) is the filing agent's "ready"
+ *           checkbox: the copy is approved and the story publishes the
+ *           moment it has a featured image — immediately when this
+ *           filing carries one, otherwise when a second agent attaches
+ *           one through POST /api/ingest-publish. Flagged stories
+ *           waiting for art are listed by GET /api/ingest-queue.
  * Response: 201 {ok, id, slug, status}
  *           200 {ok, duplicate: true, id, slug} on an exact re-file
  *           4xx {ok: false, error} — the reason, never a coercion
@@ -202,10 +209,15 @@ for ($n = 2; ; $n++) {
     $slug = $base . '-' . $n;
 }
 
-/* --- Status: draft behind the newsroom's gate; wire desks go live --------- */
+/* --- Status: draft behind the newsroom's gate; wire desks go live.
+   The publish_on_image flag is the filer's "ready" checkbox: approved
+   copy that goes live as soon as it has a featured image — now, when
+   this filing brought one, or later through /api/ingest-publish. ------ */
 $wireDesks = array_filter(array_map('trim', explode(',', pp_hermes_setting($siteId, 'wire_desks'))));
 $isWire = in_array($deskSlug, $wireDesks, true);
+$readyOnImage = !empty($in['publish_on_image']);
 $status = $isWire ? 'published' : 'draft';
+$awaitingImage = 0;   // resolved below, once the image outcome is known
 $byline = pp_hermes_setting($siteId, 'automated_byline', 'Automated report');
 $now = now();
 
@@ -230,16 +242,27 @@ if ($imageIsUpload) {
     }
 }
 
+// The ready flag resolves only NOW, when the image outcome is known: a
+// filing that brought usable art publishes at once; one still waiting
+// stays a draft that /api/ingest-publish may flip when the art arrives.
+if ($readyOnImage && $status !== 'published') {
+    if ($imagePath !== '') {
+        $status = 'published';
+    } else {
+        $awaitingImage = 1;
+    }
+}
+
 $pdo = db();
 $pdo->prepare('INSERT INTO posts
     (title, slug, category_id, byline, dateline, lede, body,
-     meta_description, post_type, origin, status,
+     meta_description, post_type, origin, status, awaiting_image,
      image, image_caption, image_credit,
      filed_by, content_hash, published_at, created_at, updated_at)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)')
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)')
     ->execute([
         $title, $slug, (int) $desk['id'], $byline, $dateline, $lede, $body,
-        excerpt($lede, 155), 'story', 'hermes', $status,
+        excerpt($lede, 155), 'story', 'hermes', $status, $awaitingImage,
         $imagePath, $imagePath !== '' ? $imageCaption : '', $imagePath !== '' ? $imageCredit : '',
         $agent['name'], $hash, $status === 'published' ? $now : null, $now, $now,
     ]);
@@ -275,10 +298,18 @@ $pdo->prepare('UPDATE ingest_agents SET last_used_at = ? WHERE id = ?')->execute
 $pdo->prepare('INSERT INTO audit_log (site_id, user_id, user_name, action, target, detail, ip, created_at)
     VALUES (?, 0, ?, ?, ?, ?, ?, ?)')
     ->execute([$siteId, 'hermes:' . $agent['name'], 'ingest', $slug,
-        $isWire ? 'wire desk, published' : 'filed as draft',
+        $status === 'published'
+            ? ($isWire ? 'wire desk, published' : 'ready flag + image, published')
+            : ($awaitingImage ? 'filed as draft, awaiting image (publishes on attach)' : 'filed as draft'),
         (string) ($_SERVER['REMOTE_ADDR'] ?? ''), $now]);
 
 $out = ['ok' => true, 'id' => $postId, 'slug' => $slug, 'status' => $status];
+if ($awaitingImage === 1) {
+    $out['awaiting_image'] = true;
+}
+if ($status === 'published') {
+    $out['url'] = pp_story_public_url($siteSlug, $slug);
+}
 if ($imageUrl !== '') {
     $out['image'] = $imagePath !== '' ? $imagePath : $imageNote;
 }

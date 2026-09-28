@@ -28,7 +28,11 @@ One folder per story:
 matter keys: `site`, `desk`, `title`, `lede` (required); `dateline`,
 `tags`, `slug`, `external_id`, `image` (filename, when the folder holds
 several), `image_caption`, `image_credit`, repeated `source:` lines
-(`url | title`). A `story.json` with the same fields plus `"body"` works
+(`url | title`), and `ready: yes` — the approval checkbox: the story
+publishes as soon as it has a featured image (immediately when the
+bundle carries one, otherwise when the image agent attaches one; see
+`docs/agent-workflow.md`). Without `ready:`, everything stays a draft
+for the newsroom, as before. A `story.json` with the same fields plus `"body"` works
 too. A body that starts with `<` is sent as HTML; anything else becomes
 escaped paragraphs. The server sanitizes every filing regardless.
 

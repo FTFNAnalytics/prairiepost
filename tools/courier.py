@@ -47,7 +47,7 @@ from pathlib import Path
 IMAGE_EXT = {".jpg": "image/jpeg", ".jpeg": "image/jpeg", ".png": "image/png",
              ".webp": "image/webp", ".gif": "image/gif"}
 FRONT_KEYS = {"site", "desk", "title", "lede", "dateline", "tags", "slug",
-              "external_id", "image", "image_caption", "image_credit"}
+              "external_id", "image", "image_caption", "image_credit", "ready"}
 REQUIRED = ("site", "desk", "title", "lede")
 RETRY_DELAYS = (2, 4, 8)
 
@@ -156,6 +156,12 @@ def load_bundle(bundle: Path):
         "body": body_to_html(body),
         "external_id": str(meta.get("external_id", "")).strip() or bundle.name,
     }
+    # `ready: yes` is the approval checkbox: the copy is cleared to
+    # publish as soon as the story has a featured image — with this
+    # filing when the bundle carries one, or later when the image agent
+    # attaches one through /api/ingest-publish.
+    if str(meta.get("ready", "")).strip().lower() in ("yes", "true", "1"):
+        payload["publish_on_image"] = True
     for src, dst in (("dateline", "dateline"), ("tags", "tags"), ("slug", "suggested_slug"),
                      ("image_caption", "image_caption"), ("image_credit", "image_credit")):
         if str(meta.get(src, "")).strip():
@@ -246,7 +252,8 @@ def process(bundle: Path, base: str, key: str, args) -> str:
     if code == 200 and j.get("duplicate"):
         print(f"  {bundle.name}: already filed earlier (server dedupe) — slug {j.get('slug')}")
     elif code == 201:
-        print(f"  {bundle.name}: filed as {j.get('status')} — slug {j.get('slug')} (id {j.get('id')})")
+        note = " — publishes when its image arrives" if j.get("awaiting_image") else ""
+        print(f"  {bundle.name}: filed as {j.get('status')}{note} — slug {j.get('slug')} (id {j.get('id')})")
     else:
         print(f"  {bundle.name}: FAILED filing — {j.get('error', 'HTTP %s' % code)}")
         return "failed"

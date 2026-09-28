@@ -96,7 +96,7 @@ flash_show();
 ?>
 
 <h1 class="pagetitle">Agent API keys</h1>
-<p class="pagesub">Each key lets one uploading agent file <strong>drafts</strong> to the papers it is scoped to — stories through <code>POST /api/ingest</code>, featured images through <code>POST /api/ingest-media</code>. The database keeps only a hash: a key is shown once, here, when it is minted. Revocation takes effect on the key's next request.</p>
+<p class="pagesub">Each key lets one uploading agent file <strong>drafts</strong> to the papers it is scoped to — stories through <code>POST /api/ingest</code>, featured images through <code>POST /api/ingest-media</code>. One exception, chosen per story by the filer, never by the key: a filing flagged <code>publish_on_image</code> publishes the moment its featured image arrives through <code>POST /api/ingest-publish</code> (the two-agent workflow — <code>docs/agent-workflow.md</code>). The database keeps only a hash: a key is shown once, here, when it is minted. Revocation takes effect on the key's next request.</p>
 
 <?php if ($freshToken !== null): ?>
 <div class="panel" style="border-color:#0a7d33">

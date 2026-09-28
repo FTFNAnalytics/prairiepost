@@ -118,7 +118,7 @@ flash_show();
         <div class="mono" style="color:#5A6A5C"><?= e($p['byline']) ?><?= $p['dateline'] ? ' · ' . e(mb_strtoupper($p['dateline'])) : '' ?></div>
       </td>
       <td><?php if ($p['category_name']): ?><span class="deskdot" style="background:<?= e($p['category_color']) ?>"></span><?= e($p['category_name']) ?><?php endif; ?></td>
-      <td><span class="chip chip--<?= e($p['status']) ?>"><?= e(str_replace('_', ' ', $p['status'])) ?></span></td>
+      <td><span class="chip chip--<?= e($p['status']) ?>"><?= e(str_replace('_', ' ', $p['status'])) ?></span><?php if (!empty($p['awaiting_image']) && $p['status'] === 'draft'): ?> <span class="chip" title="Filed publish-on-image: publishes the moment its featured image arrives via the ingest API">awaiting image</span><?php endif; ?></td>
       <td class="mono"><?= e(fmt_date($p['published_at'] ?: $p['updated_at'], 'M j, Y g:i a')) ?></td>
       <td style="white-space:nowrap">
         <?php if ($editor && $p['status'] === 'published' && $p['placement'] !== 'hero'): ?>

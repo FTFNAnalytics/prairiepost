@@ -75,10 +75,12 @@ ok($rc === 5 && str_contains($out, 'REFUSED to adopt'), "an inconsistent version
 /* --- Behind: a populated older database upgrades and keeps its data --------- */
 
 // Make this database an honest v18: media_orders is already gone; the v20
-// indexes must go too, or re-running step 20 would collide with them.
+// indexes and step 21's posts column must go too, or re-running those
+// steps would collide with their own leftovers.
 foreach (['idx_post_tags_tag', 'idx_news_items_source', 'idx_audit_log_site'] as $ix) {
     try { $pdo->exec("DROP INDEX $ix" . ($engine === 'mysql' ? ' ON ' . ['idx_post_tags_tag' => 'post_tags', 'idx_news_items_source' => 'news_items', 'idx_audit_log_site' => 'audit_log'][$ix] : '')); } catch (Throwable) {}
 }
+$pdo->exec('ALTER TABLE posts DROP COLUMN awaiting_image');
 $pdo->prepare("UPDATE settings SET svalue = '18' WHERE site_id = 0 AND skey = 'schema_version'")->execute();
 $pdo->prepare('INSERT INTO posts (title, slug, body, status, author_id, created_at, updated_at) VALUES (?,?,?,?,?,?,?)')
     ->execute(['Upgrade survivor', 'upgrade-survivor-' . bin2hex(random_bytes(3)), '<p>x</p>', 'published', 1, date('Y-m-d H:i:s'), date('Y-m-d H:i:s')]);
@@ -120,6 +122,7 @@ $p2->exec('DROP TABLE media_orders');
 foreach (['idx_post_tags_tag' => 'post_tags', 'idx_news_items_source' => 'news_items', 'idx_audit_log_site' => 'audit_log'] as $ix => $tbl) {
     try { $p2->exec("DROP INDEX $ix" . ($engine === 'mysql' ? " ON $tbl" : '')); } catch (Throwable) {}
 }
+$p2->exec('ALTER TABLE posts DROP COLUMN awaiting_image');
 $p2->prepare("UPDATE settings SET svalue = '18' WHERE site_id = 0 AND skey = 'schema_version'")->execute();
 $p2->exec('DELETE FROM schema_migrations');
 $p2->exec('INSERT INTO schema_migrations (version, name, checksum, status, started_at, finished_at) '

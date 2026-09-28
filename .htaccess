@@ -31,9 +31,12 @@ RewriteRule ^contact/?$ contact.php [L,QSA]
 # The monitoring ingest API. Apache drops the Authorization header for
 # FastCGI unless it's re-exported — the E= flag carries the bearer through.
 RewriteRule ^api/monitor/?$ monitor-ingest.php [L,QSA,E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
-# The Hermes story and featured-image ingest APIs (bearer, drafts only).
+# The Hermes ingest APIs (bearer): stories, featured images, the
+# publish-on-image queue and its attach-and-publish call.
 RewriteRule ^api/ingest/?$ ingest.php [L,QSA,E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
 RewriteRule ^api/ingest-media/?$ ingest-media.php [L,QSA,E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
+RewriteRule ^api/ingest-queue/?$ ingest-queue.php [L,QSA,E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
+RewriteRule ^api/ingest-publish/?$ ingest-publish.php [L,QSA,E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
 # Pantheon media gateway. The script itself returns 404 outside the Civis hub.
 RewriteRule ^api/media/?$ media-gateway.php [L,QSA,E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
 RewriteRule ^ad/?$ ad.php [L,QSA]

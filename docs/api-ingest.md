@@ -69,6 +69,42 @@ vhost will ever execute PHP.
   `200 {"ok":true,"duplicate":true,…}` instead of creating a copy.
 - Rate limit: at most 60 filings per key per hour by default (the
   paper's `ingest_hourly_limit` setting).
+- `"publish_on_image": true` is the filing agent's **ready checkbox**:
+  this copy is approved and publishes the moment the story has a
+  featured image. With an `image` in the same filing it publishes
+  immediately (the response carries `url`); without one it lands as a
+  draft with `"awaiting_image": true` and waits in the queue below.
+
+## 3. The image agent's queue: `GET /api/ingest-queue`
+
+Lists the stories flagged `publish_on_image` that are still waiting
+for art, for the papers this key is scoped to — id, slug, site, desk,
+title, lede, dateline, oldest first. This is the ingest surface's only
+read, and it reads only pipeline state these keys created.
+
+    curl https://<paper-domain>/api/ingest-queue \
+      -H "Authorization: Bearer $KEY"
+
+    → 200 {"ok":true,"stories":[{"id":123,"slug":"…","site":"…",
+           "desk":"…","title":"…","lede":"…",…}]}
+
+## 4. Attach the art and publish: `POST /api/ingest-publish`
+
+    curl -X POST https://<paper-domain>/api/ingest-publish \
+      -H "Authorization: Bearer $KEY" \
+      -H "Content-Type: application/json" \
+      -d '{"story":"<slug-or-id>",
+           "image":"/uploads/2026/09/…png",
+           "image_caption":"…","image_credit":"…"}'
+
+    → 200 {"ok":true,"id":123,"slug":"…","status":"published",
+           "url":"https://<canonical-domain>/story/…","image":"…"}
+
+Attaching and publishing happen in ONE guarded write, and only on a
+story that was filed with `publish_on_image` and is still waiting —
+anything else answers 409, so an ordinary newsroom draft can never be
+published from this lane. The `url` in the response is the published
+address, ready for the social posts that follow.
 
 ## Responses you must handle
 
@@ -78,6 +114,7 @@ vhost will ever execute PHP.
 | 200 + `duplicate` | This exact story was already filed; nothing new was created. |
 | 401 | Missing, unknown or revoked key. |
 | 403 | The key is not scoped to that site or desk. |
+| 409 | `/api/ingest-publish` only: the story is not waiting (already published, unflagged, or changed state mid-request). Fetch the queue again. |
 | 422 | The payload broke a rule; `error` says which. Fix and resend. |
 | 429 | Hourly rate limit; wait and resend. |
 
@@ -85,9 +122,10 @@ vhost will ever execute PHP.
 
 - Routes live in three homes: `router.php`, `.htaccess`, and each
   paper's nginx block. A new paper's block comes from
-  `tools/vps/make-vhost.sh`; legacy blocks need `/api/ingest` and
-  `/api/ingest-media` added in a routes pass. `/ingest.php` and
-  `/ingest-media.php` answer everywhere regardless.
+  `tools/vps/make-vhost.sh`; legacy blocks need `/api/ingest`,
+  `/api/ingest-media`, `/api/ingest-queue` and `/api/ingest-publish`
+  added in a routes pass. The bare `.php` endpoints answer everywhere
+  regardless.
 - Key management UI: hub `/admin/api-keys.php` (admins). CLI
   equivalent: `php tools/make-agent.php` from a release directory.
 - Every filing and upload writes an `audit_log` row naming the key.

@@ -144,6 +144,7 @@ function pp_schema_ddl(string $driver): array
             origin VARCHAR(20) NOT NULL DEFAULT '',
             canonical_site_id INTEGER,
             status VARCHAR(20) NOT NULL DEFAULT 'draft',
+            awaiting_image INTEGER NOT NULL DEFAULT 0,
             review_note TEXT,
             is_featured INTEGER NOT NULL DEFAULT 0,
             placement VARCHAR(20) NOT NULL DEFAULT '',
@@ -1385,6 +1386,15 @@ function pp_migrations(): array
             $pdo->exec('CREATE INDEX idx_news_items_source ON news_items (source_id)');
             $pdo->exec('CREATE INDEX idx_audit_log_site ON audit_log (site_id, id)');
             $pdo->exec("UPDATE settings SET svalue = '20' WHERE site_id = 0 AND skey = 'schema_version'");
+        },
+
+        21 => function (PDO $pdo, string $driver): void {
+            // The publish-on-image lane: a filing agent may flag a story so
+            // it publishes the moment its featured image arrives through
+            // /api/ingest-publish. The flag lives on the row, never on the
+            // token — no image, no publish; no flag, no publish.
+            $pdo->exec('ALTER TABLE posts ADD COLUMN awaiting_image INTEGER NOT NULL DEFAULT 0');
+            $pdo->exec("UPDATE settings SET svalue = '21' WHERE site_id = 0 AND skey = 'schema_version'");
         },
 
     ];
