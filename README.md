@@ -237,3 +237,13 @@ design/     the original brand package
 supabase/   schema.sql — the shared network database schema
 uploads/    reader-visible images (PHP execution disabled)
 ```
+
+## Pantheon integration
+
+The proposed server-to-server gateway for editorial pitches, sponsored posts
+and display-ad requests is documented in
+[`docs/integrations/pantheon-submissions-v1.md`](docs/integrations/pantheon-submissions-v1.md).
+It includes the v1 JSON Schema and the bootstrap catalogue for all fifteen
+newspaper properties. External requests remain review records until a Civis
+administrator explicitly links them to the existing newsroom or network-ad
+workflow.
