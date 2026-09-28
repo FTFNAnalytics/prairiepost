@@ -210,12 +210,12 @@ agent. Never give the news agent a shell command or the VPS agent a
 filing step — each such mix has produced a stopped run or an agent
 holding a capability it should not have.
 
-## Current operational state (as of the agent-ingest-v2 roll, 27 Sep 2026)
+## Current operational state (as of the publish-on-image roll, 28 Sep 2026)
 
-- **Release in production: `a6806695ec66`** (branch head
-  `a6806695ec663b0645b54815fad3c56a81bc20bb`), serving BOTH release
-  groups: `/var/www/prairiepost-a6806695ec66-shared` (the papers) and
-  `/var/www/prairiepost-a6806695ec66-civismedia` (the hub). Both
+- **Release in production: `26d517199489`** (branch head
+  `26d517199489e7957984d8c08e3e0e23b10d610b`), serving BOTH release
+  groups: `/var/www/prairiepost-26d517199489-shared` (the papers) and
+  `/var/www/prairiepost-26d517199489-civismedia` (the hub). Both
   groups roll together; `upgrade-papers.sh` upgrades every prairiepost
   group and migrates their shared schema exactly once. Never write a
   brief that forbids touching the hub release (that stale rule aborted
@@ -246,7 +246,8 @@ holding a capability it should not have.
   third wire source (the CBC national feed) printed no "source added"
   line because the URL was already in the shared sources table —
   seeder dedupe by design, not a defect.
-- **Schema version 20, journaled.** `tools/migrate.php` is the only
+- **Schema version 21, journaled** (step 21: `posts.awaiting_image`,
+  the publish-on-image flag). `tools/migrate.php` is the only
   mutator, the app refuses (503/exit 2) on a non-ready schema, and
   the roll migrates before any traffic switch.
 - **The Phase 1+2 hardening is live**: HTML Purifier sanitizer,
@@ -259,7 +260,7 @@ holding a capability it should not have.
 - **Backups**: nightly cron invokes the RELEASE's own
   `tools/backup.sh` (repointed by each roll); manifest-backed sets
   under `/var/backups/civis` (latest verified
-  `20260927-231438-955d1de8`); discovery scoped to
+  `20260928-020136-d5e9b139`); discovery scoped to
   `/var/www/prairiepost-*` roots, so foreign tenants read as
   out-of-scope by design. Off-site transfer is NOT configured — an
   owner step (hook + key).
@@ -293,10 +294,26 @@ holding a capability it should not have.
   All 21 domains fail closed with JSON 401 — the old prairiedispatch
   /api/ingest 404 gap is CLOSED. Grande Prairie's apex is a redirect
   alias; its canonical endpoint host is www.grandeprairiegazette.ca.
-  Contract for agent authors: `docs/api-ingest.md`. Residue from the
-  live proof: draft post #315 (`routes-check-agent-ingest-v2-draft`)
-  sits unpublished in Surrey's newsroom and one 16x16 test PNG under
-  /uploads/2026/09/ — delete via the admin UI at leisure, never SQL.
+  Contract for agent authors: `docs/api-ingest.md`.
+- **The publish-on-image lane is live (28 Sep).** A filing flagged
+  `publish_on_image` (Courier: `ready: yes`) waits as a draft with an
+  "awaiting image" chip in its admin list; GET /api/ingest-queue is
+  the image agent's worklist (the ingest surface's ONLY read, over
+  pipeline state these tokens created); POST /api/ingest-publish
+  attaches the featured image and publishes in one guarded write,
+  returning the canonical URL for the social posts. No flag, no
+  publish — newsroom drafts 409 from this lane. The flag lives on the
+  ROW, never on the key. Operating guide for the two agents:
+  `docs/agent-workflow.md`. The 28 Sep mini routes pass added both
+  routes to the same 14 legacy blocks (backups at
+  /root/nginx-mini-routes-20260928T020338Z); all 21 domains fail
+  closed 401 on both.
+- **Test residue awaiting owner cleanup (admin UI, never SQL):** on
+  Surrey — draft #315 (`routes-check-agent-ingest-v2-draft`), and
+  story #316 (`routes-check-publish-on-image-test`) which the 28 Sep
+  live proof PUBLISHED through the lane and is publicly visible until
+  an editor unpublishes or deletes it; plus two tiny test PNGs under
+  /uploads/2026/09/.
 - Hermes tokens: unchanged (`hermes-quebec`, `hermes-mississauga`,
   root-only under `/root/hermes-tokens/`). No token exists for Surrey
   or any newer paper. No paper has its newsletter enabled.
