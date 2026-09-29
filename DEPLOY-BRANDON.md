@@ -1,4 +1,4 @@
-# Taking brandonbulletin.ca live — deployment runbook (brand-complete launch)
+# Taking brandonbulletin.com live — deployment runbook (brand-complete launch)
 
 The Brandon Bulletin (slug `brandon-bulletin`, template `brandon`)
 launches with its brand build applied and **six inaugural service
@@ -12,9 +12,9 @@ Manitoba.
 
 ## Owner gates BEFORE any launch order
 
-1. **Confirm the REGISTERED domain.** The pack assumes
-   `brandonbulletin.ca` (the Burrard lesson: sheet and registration
-   can differ). Fix the pack first if they do.
+1. **The registered domain is CONFIRMED: `brandonbulletin.com`** —
+   owner-confirmed 29 Sep; the .ca was never registered, making this
+   the network's one non-.ca masthead. Do not "correct" it to .ca.
 2. DNS: apex and www A records → the VPS.
 
 ## Step 0 — Discover and pin
@@ -28,14 +28,14 @@ Manitoba.
 
 ## Step 1 — DNS
 
-`brandonbulletin.ca` and `www.brandonbulletin.ca` → the VPS; verify
+`brandonbulletin.com` and `www.brandonbulletin.com` → the VPS; verify
 from the box with `dig @1.1.1.1` (the local resolver may hold a
 negative-cache answer from before the records existed).
 
 ## Step 2 — Generate the nginx block (never copy one)
 
     bash "$REL/tools/vps/make-vhost.sh" "$REL" "$SOCKET" \
-      brandonbulletin.ca www.brandonbulletin.ca
+      brandonbulletin.com www.brandonbulletin.com
 
 `$SOCKET` is the BARE fpm socket path (`/run/php/php8.3-fpm.sock`) —
 the generator adds `unix:` itself. Both address families; no
@@ -63,7 +63,7 @@ Idempotent: re-running adds only what is missing.
 
 ## Step 5 — Verify (served bytes, two-failure hard stop)
 
-1. `https://brandonbulletin.ca/` → 200, `<title>` contains "The
+1. `https://brandonbulletin.com/` → 200, `<title>` contains "The
    Brandon Bulletin", body class `t-brandon`,
    `/assets/css/brandon.css` linked.
 2. Front page shows the six inaugural stories; the hero is the

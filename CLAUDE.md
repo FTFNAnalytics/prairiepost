@@ -291,7 +291,7 @@ holding a capability it should not have.
   place.", desks Local News/Sports/Community/Opinion, six inaugural
   notes, DEPLOY-BRANDON.md) — Brandon and Southwest Manitoba, the
   THIRD Manitoba masthead beside the Bulletin (province) and the
-  Register (the valley); pack assumes brandonbulletin.ca.
+  Register (the valley); domain CONFIRMED as brandonbulletin.com (a .COM — the one non-.ca on the network; the .ca was never registered).
   `portage-press` fills the WINNIPEG slot (29 Sep, from the owner's
   package: Polar Night Blue #041E42 / red #AC162C / dark-gray body,
   Inter + Playfair pull quotes declared in portage.css, the P-pin

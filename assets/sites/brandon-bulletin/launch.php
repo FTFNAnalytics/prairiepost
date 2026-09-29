@@ -28,7 +28,7 @@
 return [
 
     /* CONFIRM THE REGISTERED DOMAIN before launch (the Burrard lesson). */
-    'domains' => ['brandonbulletin.ca', 'www.brandonbulletin.ca'],
+    'domains' => ['brandonbulletin.com', 'www.brandonbulletin.com'],
 
     'desks' => [
         ['name' => 'Local News', 'slug' => 'local-news', 'color' => '#E6BF2E', 'description' => 'Brandon and Southwest Manitoba, reported from here — with heart, on the record.'],
@@ -42,7 +42,7 @@ return [
         'tagline'            => 'News with heart. Rooted in place.',
         'meta_description'   => 'The Brandon Bulletin is an independent digital newsroom for Brandon and Southwest Manitoba. Trusted. Local. Rooted in the Prairie.',
         'footer_line'        => 'Independent news for Brandon and Southwest Manitoba. Trusted. Local. Rooted in the Prairie.',
-        'contact_email'      => 'tips@brandonbulletin.ca',
+        'contact_email'      => 'tips@brandonbulletin.com',
         'newsletter_heading' => 'The Wheat City Brief',
         'newsletter_copy'    => 'Brandon and the southwest\'s news every weekday morning — what happened, what it means, and what to watch, before the day gets going.',
         'weather_line'       => '4°C|Sunny',
@@ -66,7 +66,7 @@ return [
             'desk'      => 'opinion',
             'byline'    => 'The Editorial Board',
             'lede'      => 'The Brandon Bulletin opens under two short sentences that are easy to print and hard to live up to. Here is what they commit this newsroom to.',
-            'body'      => '<p>The wheat on our masthead grows out of an open book, and that is the whole idea: a paper that belongs to this place, and a record anyone can check. The Bulletin\'s beat is Brandon and the southwest — the Wheat City\'s halls and rinks, and the towns around it that make the region more than a dot an hour off the Trans-Canada.</p><p>"With heart" does not mean soft. It means the coverage starts from the people it affects and stays until the follow-through, not just the announcement. "Rooted in place" means the newsroom answers to its readers here, and to nobody else.</p><p>Hold us to three things. Tips sent to <a href="mailto:tips@brandonbulletin.ca">tips@brandonbulletin.ca</a> are read — all of them. When we get something wrong, the correction runs at the top of the story, dated. And opinion, including this page, is always signed and always labelled.</p>',
+            'body'      => '<p>The wheat on our masthead grows out of an open book, and that is the whole idea: a paper that belongs to this place, and a record anyone can check. The Bulletin\'s beat is Brandon and the southwest — the Wheat City\'s halls and rinks, and the towns around it that make the region more than a dot an hour off the Trans-Canada.</p><p>"With heart" does not mean soft. It means the coverage starts from the people it affects and stays until the follow-through, not just the announcement. "Rooted in place" means the newsroom answers to its readers here, and to nobody else.</p><p>Hold us to three things. Tips sent to <a href="mailto:tips@brandonbulletin.com">tips@brandonbulletin.com</a> are read — all of them. When we get something wrong, the correction runs at the top of the story, dated. And opinion, including this page, is always signed and always labelled.</p>',
             'featured'  => 1,
             'published' => '2026-09-28 17:00:00',
             'tags'      => 'From the Bulletin',
@@ -87,7 +87,7 @@ return [
             'desk'      => 'community',
             'byline'    => 'The Newsroom',
             'lede'      => 'Brandon, Souris, Virden, Killarney and every town between: the Community desk opens by asking the people who live here to point it at what matters.',
-            'body'      => '<p>A regional paper fails quietly by covering only its biggest town. This desk exists to keep that from happening in the southwest — its beat runs to every community with a hall, a rink and a decision to make, and its first act is an invitation.</p><p>What should we be at? Whose work holds your town together? What is changing that nobody outside it has noticed? Send it to <a href="mailto:tips@brandonbulletin.ca">tips@brandonbulletin.ca</a>. If you need to stay unnamed, say so, and we will talk about what protecting that means before anything runs.</p><p>The desk\'s promise in return: when we come to your town, we come to listen first.</p>',
+            'body'      => '<p>A regional paper fails quietly by covering only its biggest town. This desk exists to keep that from happening in the southwest — its beat runs to every community with a hall, a rink and a decision to make, and its first act is an invitation.</p><p>What should we be at? Whose work holds your town together? What is changing that nobody outside it has noticed? Send it to <a href="mailto:tips@brandonbulletin.com">tips@brandonbulletin.com</a>. If you need to stay unnamed, say so, and we will talk about what protecting that means before anything runs.</p><p>The desk\'s promise in return: when we come to your town, we come to listen first.</p>',
             'published' => '2026-09-28 16:20:00',
             'tags'      => 'From the Bulletin',
         ],
@@ -97,7 +97,7 @@ return [
             'desk'      => 'sports',
             'byline'    => 'The Newsroom',
             'lede'      => 'The Sports desk covers the southwest\'s own leagues, rinks and school teams first — and it is asking them to get in touch from day one.',
-            'body'      => '<p>Brandon\'s sports story is bigger than any one team, and the southwest\'s is bigger than Brandon\'s. This desk starts local — the results, the seasons, and the volunteers who flood the rinks in November — and covers the bigger stages as a southwest story rather than a syndicated one.</p><p>Leagues, clubs and schools across the region: send schedules, results and contacts to <a href="mailto:tips@brandonbulletin.ca">tips@brandonbulletin.ca</a> and the desk will follow. Community sport only works as a beat if the community wires it up, and this note is the invitation.</p>',
+            'body'      => '<p>Brandon\'s sports story is bigger than any one team, and the southwest\'s is bigger than Brandon\'s. This desk starts local — the results, the seasons, and the volunteers who flood the rinks in November — and covers the bigger stages as a southwest story rather than a syndicated one.</p><p>Leagues, clubs and schools across the region: send schedules, results and contacts to <a href="mailto:tips@brandonbulletin.com">tips@brandonbulletin.com</a> and the desk will follow. Community sport only works as a beat if the community wires it up, and this note is the invitation.</p>',
             'published' => '2026-09-28 16:00:00',
             'tags'      => 'From the Bulletin',
         ],
@@ -107,7 +107,7 @@ return [
             'desk'      => 'local-news',
             'byline'    => 'The Newsroom',
             'lede'      => 'The Bulletin\'s standing service page, published on day one: how tips reach us, how corrections run, and what we will never do with either.',
-            'body'      => '<p>Tips: <a href="mailto:tips@brandonbulletin.ca">tips@brandonbulletin.ca</a>. Everything sent there is read by the newsroom. Say if you need to stay unnamed, and we will discuss what protecting that looks like before anything is published. We do not print what we cannot verify, which means the best tips come with something we can check — a document, a date, a name we may contact.</p><p>Corrections: when we get something wrong, the correction runs at the top of the story, dated, and stays there. Requests go to the same address with "Correction" in the subject line; ones that check out run promptly and without argument.</p><p>What we will never do: sell, share or act on a tip for any purpose except reporting it out.</p>',
+            'body'      => '<p>Tips: <a href="mailto:tips@brandonbulletin.com">tips@brandonbulletin.com</a>. Everything sent there is read by the newsroom. Say if you need to stay unnamed, and we will discuss what protecting that looks like before anything is published. We do not print what we cannot verify, which means the best tips come with something we can check — a document, a date, a name we may contact.</p><p>Corrections: when we get something wrong, the correction runs at the top of the story, dated, and stays there. Requests go to the same address with "Correction" in the subject line; ones that check out run promptly and without argument.</p><p>What we will never do: sell, share or act on a tip for any purpose except reporting it out.</p>',
             'published' => '2026-09-28 15:40:00',
             'tags'      => 'From the Bulletin',
         ],
