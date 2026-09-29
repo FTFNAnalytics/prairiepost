@@ -1,7 +1,8 @@
 # Claude notes — the Prairie Dispatch network
 
-One codebase serves the whole network (twenty-one live tenants —
-twenty papers and the CivisMedia hub — as of the Rideau Review). Each paper
+One codebase serves the whole network (twenty-four live tenants —
+twenty-three papers and the CivisMedia hub — as of the Manitoba
+three). Each paper
 is a tenant mapping in the server-only config, a
 row in the shared database, a front template in `app/views/`, assets in
 `assets/sites/<slug>/`, a launch pack (`launch.php`) applied by
@@ -210,21 +211,37 @@ agent. Never give the news agent a shell command or the VPS agent a
 filing step — each such mix has produced a stopped run or an agent
 holding a capability it should not have.
 
-## Current operational state (as of the publish-on-image roll, 28 Sep 2026)
+## Current operational state (as of the Manitoba-three roll, 29 Sep 2026)
 
-- **Release in production: `26d517199489`** (branch head
-  `26d517199489e7957984d8c08e3e0e23b10d610b`), serving BOTH release
-  groups: `/var/www/prairiepost-26d517199489-shared` (the papers) and
-  `/var/www/prairiepost-26d517199489-civismedia` (the hub). Both
+- **Release in production: `62131795c639`** (branch commit
+  `62131795c6393bfa6737d350a4125e2278db2721`), serving BOTH release
+  groups: `/var/www/prairiepost-62131795c639-shared` (the papers) and
+  `/var/www/prairiepost-62131795c639-civismedia` (the hub). NOTE: the
+  branch HEAD is one commit ahead (`77dce66`, the Brandon .com domain
+  fix) and is NOT yet in production — Brandon's launch therefore
+  requires a roll first, never a launch-only run from this release,
+  whose tree still carries the wrong .ca pack. Both
   groups roll together; `upgrade-papers.sh` upgrades every prairiepost
   group and migrates their shared schema exactly once. Never write a
   brief that forbids touching the hub release (that stale rule aborted
   the first Phase-2 roll).
-- **Twenty-one live domains pass the masthead guard**: the seventeen
+- **Twenty-four live domains pass the masthead guard**: the seventeen
   original papers plus surreystandard.ca (site #18),
-  cariboocompass.ca (#19), burrardbrief.ca and rideaureview.ca
-  (site #21), plus the hub. TLS on the four newest runs to
-  Dec 22-24 2026.
+  cariboocompass.ca (#19), burrardbrief.ca, rideaureview.ca (#21),
+  and the Manitoba three launched 29 Sep — bisonbulletin.ca (#22),
+  portagepress.ca (#23) and redriverregister.ca (#24) — plus the hub.
+  TLS on the Manitoba three runs to Dec 28 2026.
+- **The Manitoba three are LIVE (29 Sep)**, launched in one run from
+  release 62131795c639 behind per-paper DNS gates: Bison
+  (province-wide), Portage (Winnipeg), Register (the valley). Each
+  seeded its six-story inaugural edition and opens with its no-art
+  editorial hero — no empty states. Portage's first seed created the
+  `arts` desk network-wide ("desk added: Arts"); no other new desks.
+  Certbot first attempt on all three; both address families
+  everywhere; all three fail closed 401 on /api/ingest and
+  /api/ingest-media. The agent's probe corrections were all
+  read-side (log-indent counts, display-label case, tenant-specific
+  hero markup) — no production write was replayed.
 - **The upgrader's extension preflight asks PHP directly**
   (`extension_loaded()` via `php -r`). The old `php -m | grep -q`
   pipeline under `set -o pipefail` failed nondeterministically via
@@ -260,7 +277,7 @@ holding a capability it should not have.
 - **Backups**: nightly cron invokes the RELEASE's own
   `tools/backup.sh` (repointed by each roll); manifest-backed sets
   under `/var/backups/civis` (latest verified
-  `20260928-020136-d5e9b139`); discovery scoped to
+  `20260929-075915-81b61e1d`); discovery scoped to
   `/var/www/prairiepost-*` roots, so foreign tenants read as
   out-of-scope by design. Off-site transfer is NOT configured — an
   owner step (hook + key).
@@ -284,14 +301,7 @@ holding a capability it should not have.
   "Manitoba News" subtitle settled its footprint as PROVINCE-WIDE, so
   the Winnipeg city title is still to be named. It awaits the
   confirmed registered domain (pack assumes bisonbulletin.ca) and DNS.
-  `brandon-bulletin` is BRAND-COMPLETE too (29 Sep, from the owner's
-  package: Brandon Gold #E6BF2E / Light Wheat on white, the
-  wheat-over-open-book badge traced two-color, serif BRANDON /
-  letterspaced gold BULLETIN nameplate, "News with heart. Rooted in
-  place.", desks Local News/Sports/Community/Opinion, six inaugural
-  notes, DEPLOY-BRANDON.md) — Brandon and Southwest Manitoba, the
-  THIRD Manitoba masthead beside the Bulletin (province) and the
-  Register (the valley); domain CONFIRMED as brandonbulletin.com (a .COM — the one non-.ca on the network; the .ca was never registered).
+
   `portage-press` fills the WINNIPEG slot (29 Sep, from the owner's
   package: Polar Night Blue #041E42 / red #AC162C / dark-gray body,
   Inter + Playfair pull quotes declared in portage.css, the P-pin
@@ -325,8 +335,9 @@ holding a capability it should not have.
   27 Sep routes pass added both /api routes to the 14 legacy nginx
   blocks (root-only backups at /root/nginx-routes-pass-20260927T231803Z/);
   the 7 generated blocks route through router.php and needed nothing.
-  All 21 domains fail closed with JSON 401 — the old prairiedispatch
-  /api/ingest 404 gap is CLOSED. Grande Prairie's apex is a redirect
+  All 24 domains fail closed with JSON 401 (the three Manitoba
+  blocks are generated and route through router.php) — the old
+  prairiedispatch /api/ingest 404 gap is CLOSED. Grande Prairie's apex is a redirect
   alias; its canonical endpoint host is www.grandeprairiegazette.ca.
   Contract for agent authors: `docs/api-ingest.md`.
 - **The publish-on-image lane is live (28 Sep).** A filing flagged
@@ -340,7 +351,7 @@ holding a capability it should not have.
   ROW, never on the key. Operating guide for the two agents:
   `docs/agent-workflow.md`. The 28 Sep mini routes pass added both
   routes to the same 14 legacy blocks (backups at
-  /root/nginx-mini-routes-20260928T020338Z); all 21 domains fail
+  /root/nginx-mini-routes-20260928T020338Z); all 24 domains fail
   closed 401 on both.
 - **Test residue awaiting owner cleanup (admin UI, never SQL):** on
   Surrey — draft #315 (`routes-check-agent-ingest-v2-draft`), and
