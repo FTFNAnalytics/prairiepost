@@ -1,0 +1,188 @@
+/* Portage Press — design system (portage template, brand build Sep 2026).
+   From the owner's brand guidelines: Polar Night Blue #041E42 for the
+   header band, headlines and footer; accent red #AC162C for links,
+   category labels, the BREAKING chip and the primary CTA (navy outline
+   is the secondary CTA); body text Dark Gray #4B5563 at 16px/1.6.
+   Primary type Inter; Playfair Display for pull quotes and editorial
+   accents ONLY — declared here per lesson 9 (fonts.css does not carry
+   Playfair). Layout per the package's site mockup: navy masthead with
+   the red-underline nav, photo hero with the red chip and overlay
+   headline, the navy Weather panel, the MOST READ numbered rail, and
+   the blue "Stay in the know." subscribe panel. The P-pin mark is
+   traced two-color from the package's icon sheet. */
+@import url('/assets/css/fonts.css');
+
+@font-face {
+  font-family: 'Playfair Display';
+  font-style: normal;
+  font-weight: 400 900;
+  font-display: swap;
+  src: url('/assets/fonts/playfair-display-latin.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Playfair Display';
+  font-style: italic;
+  font-weight: 400 900;
+  font-display: swap;
+  src: url('/assets/fonts/playfair-display-italic-latin.woff2') format('woff2');
+}
+
+.t-portage {
+  --ptg-navy: #041E42;
+  --ptg-red: #AC162C;
+  --ptg-blue: #1A56C4;
+  --ptg-body: #4B5563;
+  --ptg-ink: #111827;
+  --ptg-line: #E2E5EA;
+  --ptg-sans: 'Inter', 'Helvetica Neue', Arial, sans-serif;
+  --ptg-serif: 'Playfair Display', Georgia, serif;
+  --ptg-max: 1180px;
+}
+
+body.t-portage {
+  margin: 0;
+  background: #FFFFFF;
+  color: var(--ptg-body);
+  font-family: var(--ptg-sans);
+  font-size: 16px;
+  line-height: 1.6;
+}
+.t-portage a { color: inherit; text-decoration: none; }
+.t-portage img { max-width: 100%; display: block; }
+.t-portage .ptg-wrap { width: min(var(--ptg-max), calc(100% - 40px)); margin: 0 auto; }
+.t-portage h1, .t-portage h2, .t-portage h3 { color: var(--ptg-navy); }
+
+/* ---- navy masthead ---- */
+.ptg-bar { background: var(--ptg-navy); color: #fff; }
+.ptg-bar .in {
+  width: min(var(--ptg-max), calc(100% - 40px));
+  margin: 0 auto;
+  display: flex; align-items: center; gap: 18px;
+  min-height: 72px; flex-wrap: wrap; padding: 10px 0;
+}
+.ptg-lock { display: flex; align-items: center; gap: 12px; }
+.ptg-lock .pin { width: 40px; height: 56px; }
+.ptg-name { line-height: 1.05; }
+.ptg-name .top { display: flex; align-items: center; gap: 7px; font-weight: 800; font-size: 26px; letter-spacing: -0.01em; color: #fff; }
+.ptg-name .top .red { color: #E8556B; }
+.ptg-name .top img { width: 15px; height: 16px; }
+.ptg-name .sub { display: block; margin-top: 3px; font-weight: 600; font-size: 9.5px; letter-spacing: .2em; color: #93A3BC; text-transform: uppercase; }
+.ptg-nav { margin-left: auto; display: flex; align-items: center; gap: 2px 20px; flex-wrap: wrap; font-weight: 600; font-size: 14.5px; }
+.ptg-nav a { color: #fff; padding: 8px 0; border-bottom: 3px solid transparent; opacity: .92; }
+.ptg-nav a:hover { opacity: 1; }
+.ptg-nav a[aria-current="page"] { border-bottom-color: var(--ptg-red); opacity: 1; }
+
+/* ---- utility strip ---- */
+.ptg-util { background: #F4F6F9; border-bottom: 1px solid var(--ptg-line); font-size: 12.5px; color: #6B7280; }
+.ptg-util .in { width: min(var(--ptg-max), calc(100% - 40px)); margin: 0 auto; display: flex; justify-content: space-between; gap: 16px; padding: 6px 0; }
+.ptg-util a { color: #6B7280; }
+.ptg-util a:hover { color: var(--ptg-red); }
+.ptg-util .sep { margin: 0 7px; color: var(--ptg-line); }
+
+/* ---- buttons: red primary, navy outline secondary ---- */
+.ptg-btn { display: inline-block; background: var(--ptg-red); color: #fff; font-weight: 700; font-size: 13.5px; padding: 11px 20px; border-radius: 3px; letter-spacing: .03em; }
+.ptg-btn:hover { filter: brightness(.92); }
+.ptg-btn--outline { background: transparent; color: var(--ptg-navy); border: 2px solid var(--ptg-navy); }
+.ptg-btn--outline:hover { background: var(--ptg-navy); color: #fff; filter: none; }
+
+/* ---- home layout ---- */
+.ptg-home { display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 26px; padding: 24px 0 46px; }
+.ptg-side { display: flex; flex-direction: column; gap: 20px; }
+
+/* ---- hero ---- */
+.ptg-hero { position: relative; }
+.ptg-hero img { width: 100%; height: 400px; object-fit: cover; }
+.ptg-hero .ov {
+  position: absolute; inset: 0;
+  background: linear-gradient(0deg, rgba(2,10,24,.82) 0%, rgba(2,10,24,.25) 55%, rgba(2,10,24,.05) 100%);
+  display: flex; flex-direction: column; justify-content: flex-end; gap: 10px; padding: 26px 28px;
+}
+.ptg-chip { display: inline-block; align-self: flex-start; background: var(--ptg-red); color: #fff; font-weight: 700; font-size: 11.5px; letter-spacing: .08em; text-transform: uppercase; padding: 5px 10px; border-radius: 2px; }
+.ptg-hero h1 { margin: 0; max-width: 680px; color: #fff; font-weight: 800; font-size: clamp(26px, 3.4vw, 42px); line-height: 1.12; letter-spacing: -0.015em; }
+.ptg-hero h1 a { color: #fff; }
+.ptg-hero .meta { color: #C9D4E4; font-size: 13px; }
+.ptg-hero--noart { background: var(--ptg-navy); overflow: hidden; position: relative; }
+.ptg-hero--noart .wm { position: absolute; right: -20px; bottom: -50px; width: 260px; opacity: .16; }
+.ptg-hero--noart .pad { position: relative; padding: 44px 28px; display: flex; flex-direction: column; gap: 12px; }
+.ptg-hero--noart .pad .ptg-btn { align-self: flex-start; }
+
+/* ---- section labels and cards ---- */
+.ptg-kick { color: var(--ptg-red); font-weight: 700; font-size: 11.5px; letter-spacing: .09em; text-transform: uppercase; }
+.ptg-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 22px; margin-top: 22px; }
+.ptg-card { display: flex; flex-direction: column; gap: 8px; }
+.ptg-card img { width: 100%; height: 155px; object-fit: cover; }
+.ptg-card h3 { margin: 0; font-weight: 700; font-size: 17px; line-height: 1.3; }
+.ptg-card h3 a:hover { color: var(--ptg-red); }
+.ptg-card .meta { color: #6B7280; font-size: 12.5px; margin-top: auto; }
+
+/* ---- rail: weather, most read, subscribe ---- */
+.ptg-weather { background: var(--ptg-navy); color: #fff; padding: 18px; }
+.ptg-weather .row { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
+.ptg-weather .temp { font-weight: 800; font-size: 34px; }
+.ptg-weather .place { text-align: right; font-size: 13.5px; color: #C9D4E4; }
+.ptg-weather .cond { color: #C9D4E4; font-size: 13.5px; margin-top: 2px; }
+.ptg-mostread { border: 1px solid var(--ptg-line); padding: 16px 16px 8px; }
+.ptg-mostread .ttl { font-weight: 800; font-size: 15px; letter-spacing: .04em; color: var(--ptg-navy); border-bottom: 3px solid var(--ptg-red); display: inline-block; padding-bottom: 5px; margin-bottom: 6px; text-transform: uppercase; }
+.ptg-mostread a { display: flex; gap: 12px; align-items: flex-start; padding: 10px 0; border-bottom: 1px solid var(--ptg-line); font-weight: 600; font-size: 14px; line-height: 1.35; color: var(--ptg-ink); }
+.ptg-mostread a:last-child { border-bottom: 0; }
+.ptg-mostread a:hover { color: var(--ptg-red); }
+.ptg-mostread .n { flex: none; width: 22px; height: 22px; background: var(--ptg-navy); color: #fff; font-size: 12px; font-weight: 700; display: flex; align-items: center; justify-content: center; border-radius: 3px; margin-top: 1px; }
+.ptg-sub { background: var(--ptg-blue); color: #fff; padding: 20px 18px; }
+.ptg-sub .ttl { font-weight: 800; font-size: 19px; margin-bottom: 6px; }
+.ptg-sub p { margin: 0 0 14px; font-size: 13.5px; color: #DCE6F7; }
+
+/* ---- article ---- */
+.ptg-article { max-width: 760px; margin: 0 auto; padding: 30px 0 60px; }
+.ptg-article h1 { margin: 6px 0 12px; font-weight: 800; font-size: clamp(27px, 3.7vw, 42px); line-height: 1.12; letter-spacing: -0.015em; }
+.ptg-article .lede { font-size: 18.5px; color: #374151; margin: 0 0 14px; line-height: 1.5; }
+.ptg-article .ptg-byline { font-size: 12.5px; color: #6B7280; margin: 0 0 16px; }
+.ptg-article figure { margin: 0 0 18px; }
+.ptg-article figure img { width: 100%; max-height: 470px; object-fit: cover; }
+.ptg-article figcaption { font-size: 12.5px; color: #6B7280; padding-top: 6px; }
+.ptg-article .body p { font-size: 16.5px; margin: 0 0 1.05em; line-height: 1.65; color: var(--ptg-body); }
+.ptg-article .body h2 { font-weight: 800; font-size: 23px; margin: 1.5em 0 .5em; }
+.ptg-article .body a { color: var(--ptg-red); text-decoration: underline; text-underline-offset: 2px; }
+/* The package's pull-quote treatment: Playfair, navy, centered, with
+   the short red rule beneath. */
+.ptg-article .body blockquote {
+  margin: 1.6em 0; padding: 0 8%;
+  font-family: var(--ptg-serif); font-size: 22px; line-height: 1.4;
+  color: var(--ptg-navy); text-align: center;
+}
+.ptg-article .body blockquote::after { content: ""; display: block; width: 54px; height: 3px; background: var(--ptg-red); margin: 16px auto 0; }
+.ptg-related { max-width: 760px; margin: 0 auto; padding-bottom: 50px; }
+
+/* ---- section front ---- */
+.ptg-section { padding: 8px 0 48px; }
+.ptg-secttl { margin: 24px 0 4px; }
+.ptg-secttl h2 { margin: 0; font-weight: 800; font-size: 26px; display: inline-block; border-bottom: 3px solid var(--ptg-red); padding-bottom: 8px; }
+.ptg-row { display: grid; grid-template-columns: minmax(0, 1fr) 175px; gap: 20px; padding: 18px 0; border-bottom: 1px solid var(--ptg-line); align-items: start; }
+.ptg-row.noart { grid-template-columns: 1fr; }
+.ptg-row h3 { margin: 4px 0 8px; font-weight: 700; font-size: 20px; line-height: 1.28; }
+.ptg-row h3 a:hover { color: var(--ptg-red); }
+.ptg-row img { width: 175px; height: 112px; object-fit: cover; }
+.ptg-row p { margin: 0 0 8px; font-size: 14.5px; }
+.ptg-row .meta { color: #6B7280; font-size: 12.5px; }
+.ptg-more { margin-top: 22px; }
+
+/* ---- empty state ---- */
+.ptg-empty { background: #F4F6F9; border: 1px solid var(--ptg-line); padding: 34px 28px; font-size: 17px; line-height: 1.6; color: var(--ptg-ink); }
+.ptg-empty a { color: var(--ptg-red); text-decoration: underline; }
+
+/* ---- navy footer ---- */
+.ptg-foot { background: var(--ptg-navy); color: #AEBBD1; margin-top: 36px; padding: 32px 0 18px; font-size: 14px; }
+.ptg-foot .cols { width: min(var(--ptg-max), calc(100% - 40px)); margin: 0 auto; display: grid; grid-template-columns: 1.5fr 1fr 1fr 1fr; gap: 24px; }
+.ptg-foot .ptg-name .top { font-size: 22px; }
+.ptg-foot h4 { color: #fff; margin: 0 0 8px; font-size: 13px; letter-spacing: .08em; text-transform: uppercase; }
+.ptg-foot a { color: #fff; display: block; margin: 6px 0; }
+.ptg-foot a:hover { color: #E8556B; }
+.ptg-foot p { margin: 6px 0; }
+.ptg-foot .legal { width: min(var(--ptg-max), calc(100% - 40px)); margin: 22px auto 0; border-top: 1px solid #1B3358; padding-top: 12px; font-size: 12px; color: #7C8DA8; display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+
+@media (max-width: 900px) {
+  .ptg-util .in { display: none; }
+  .ptg-nav { margin-left: 0; }
+  .ptg-hero img { height: 290px; }
+  .ptg-home, .ptg-grid, .ptg-foot .cols, .ptg-row { grid-template-columns: 1fr; }
+  .ptg-row img { width: 100%; height: auto; }
+}

@@ -1,0 +1,26 @@
+{
+  "palette": {
+    "navy":  "#041E42",
+    "red":   "#AC162C",
+    "blue":  "#1A56C4",
+    "body":  "#4B5563",
+    "ink":   "#111827",
+    "line":  "#E2E5EA"
+  },
+  "desks": {
+    "local-news": "#AC162C",
+    "sports":     "#AC162C",
+    "politics":   "#AC162C",
+    "business":   "#AC162C",
+    "arts":       "#AC162C",
+    "opinion":    "#AC162C"
+  },
+  "desk_labels": {
+    "local-news": "News",
+    "business": "Business"
+  },
+  "chrome": {
+    "template": "portage",
+    "nav": ["local-news", "sports", "politics", "business", "arts", "opinion"]
+  }
+}

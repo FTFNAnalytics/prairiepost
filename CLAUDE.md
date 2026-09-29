@@ -292,10 +292,20 @@ holding a capability it should not have.
   notes, DEPLOY-BRANDON.md) — Brandon and Southwest Manitoba, the
   THIRD Manitoba masthead beside the Bulletin (province) and the
   Register (the valley); pack assumes brandonbulletin.ca.
+  `portage-press` fills the WINNIPEG slot (29 Sep, from the owner's
+  package: Polar Night Blue #041E42 / red #AC162C / dark-gray body,
+  Inter + Playfair pull quotes declared in portage.css, the P-pin
+  mark traced two-color, "Local News. Winnipeg Matters.", desks
+  News/Sports/Politics/Business/Arts/Opinion — `arts` is NEW
+  network-wide at its first seed — six inaugural notes,
+  DEPLOY-PORTAGE.md; pack assumes portagepress.ca, shown in the
+  package's own mockup). Manitoba is now complete on paper: Bison
+  (province), Portage (Winnipeg), Brandon (southwest), Register (the
+  valley) — all four brand-complete and awaiting owner gates.
   `terminal-city-times` (DEPLOY-TERMINALCITY.md) remains
   foundation-only, awaiting its brand package. Foundations get their six-story inaugural
   editions at brand-build time, never earlier. The wider slate
-  (Steeltown, a Winnipeg title to be named, Rideau siblings, Atlantic
+  (Steeltown, Rideau siblings, Atlantic
   papers) awaits packages.
 - **Deploys are pinned**: the VPS agent resolves the release branch
   head via the API, requires the exact full SHA from the brief, and
