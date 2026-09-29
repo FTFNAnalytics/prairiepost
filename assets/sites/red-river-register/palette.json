@@ -1,7 +1,24 @@
 {
   "palette": {
-    "ink":   "#20242B",
-    "paper": "#F7F6F3"
+    "ink":     "#111111",
+    "text":    "#1A1A1A",
+    "paper":   "#FAF8F2",
+    "wash":    "#F0E9DC",
+    "clay":    "#7E3517",
+    "claydark": "#5C2610",
+    "muted":   "#5C5C5C",
+    "line":    "#D6D6D6"
+  },
+  "desks": {
+    "local-news":  "#7E3517",
+    "communities": "#7E3517",
+    "business":    "#7E3517",
+    "sports":      "#7E3517",
+    "opinion":     "#7E3517"
+  },
+  "desk_labels": {
+    "local-news": "The Valley",
+    "business": "Business"
   },
   "chrome": {
     "template": "redriver",

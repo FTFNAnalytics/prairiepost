@@ -1,7 +1,354 @@
-/* The Red River Register — design system (redriver template). Scaffolded stub: replace with
-   the brand build. Rules to keep from the network's hard lessons:
-   every font-family you NAME must be a face you DECLARE (@font-face in
-   THIS file — another paper's stylesheet loading it does not count),
-   and no inline element may carry block-only properties. */
-body.t-redriver { background: #F7F6F3; color: #20242B; }
-.t-redriver .scaffold-note { padding: 8px 16px; font-size: 13px; opacity: .6; }
+/* The Red River Register — design system (redriver template, brand build
+   Sep 2026). The owner asked for the Rideau Review's design style as the
+   Register's own identity: the same Globe-gravity chassis — centered
+   Playfair nameplate behind its mark, Libre Baskerville headlines over a
+   Source Sans 3 interface, ONE accent rule under the nav, warm paper —
+   retokened in Red River clay #7E3517 (not Rideau crimson) with the
+   ledger-and-meander mark. All three families are self-hosted; Libre
+   Baskerville and Source Sans 3 are declared in fonts.css, Playfair
+   below (declare-where-you-name — lesson 9). */
+@import url('/assets/css/fonts.css');
+
+/* Playfair Display is vendored network-wide but declared per-paper
+   (fonts.css does not carry it) — every stylesheet that NAMES it must
+   declare it, or the nameplate silently paints in a system serif. */
+@font-face {
+  font-family: 'Playfair Display';
+  font-style: normal;
+  font-weight: 400 900;
+  font-display: swap;
+  src: url('/assets/fonts/playfair-display-latin.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Playfair Display';
+  font-style: italic;
+  font-weight: 400 900;
+  font-display: swap;
+  src: url('/assets/fonts/playfair-display-italic-latin.woff2') format('woff2');
+}
+
+.t-redriver {
+  --rg-red: #7E3517;
+  --rg-reddark: #5C2610;
+  --rg-ink: #111111;
+  --rg-text: #1A1A1A;
+  --rg-muted: #5C5C5C;
+  --rg-line: #D6D6D6;
+  --rg-bg: #FAF8F2;
+  --rg-wash: #F0E9DC;
+  --rg-serif: 'Libre Baskerville', Georgia, serif;
+  --rg-display: 'Playfair Display', 'Times New Roman', serif;
+  --rg-sans: 'Source Sans 3', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  --rg-max: 1180px;
+}
+
+body.t-redriver {
+  margin: 0;
+  background: var(--rg-bg);
+  color: var(--rg-text);
+  font-family: var(--rg-sans);
+  font-size: 16px;
+  line-height: 1.5;
+}
+.t-redriver a { color: inherit; text-decoration: none; }
+.t-redriver img { max-width: 100%; display: block; }
+.t-redriver .rg-wrap { width: min(var(--rg-max), calc(100% - 40px)); margin: 0 auto; }
+
+/* ---- utility strip ---- */
+.rg-util {
+  border-bottom: 1px solid var(--rg-line);
+  font-size: 12.5px;
+  color: var(--rg-muted);
+}
+.rg-util .in {
+  width: min(var(--rg-max), calc(100% - 40px));
+  margin: 0 auto;
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 7px 0;
+}
+.rg-util a { color: var(--rg-muted); }
+.rg-util a:hover { color: var(--rg-red); }
+.rg-util .sep { margin: 0 7px; color: var(--rg-line); }
+
+/* ---- masthead ---- */
+.rg-header { background: var(--rg-bg); }
+.rg-top {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  min-height: 76px;
+  gap: 16px;
+}
+.rg-tools { display: flex; align-items: center; gap: 16px; font-size: 13px; color: var(--rg-muted); }
+.rg-tools.right { justify-content: flex-end; }
+.rg-nameplate {
+  font-family: var(--rg-display);
+  font-weight: 700;
+  font-size: clamp(20px, 3.2vw, 36px);
+  letter-spacing: 0.02em;
+  color: var(--rg-red);
+  text-align: center;
+  line-height: 1;
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.28em;
+  text-transform: uppercase;
+}
+.rg-nameplate .lock-mark { width: 0.62em; height: 0.84em; display: block; flex: none; }
+.rg-tag {
+  display: block;
+  text-align: center;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--rg-muted);
+  margin: 6px 0 2px;
+}
+.rg-btn-sub {
+  background: transparent;
+  color: var(--rg-red);
+  border: 1.5px solid var(--rg-red);
+  padding: 9px 12px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  line-height: 1.2;
+  text-align: center;
+  cursor: pointer;
+  display: inline-block;
+}
+.rg-btn-sub:hover { background: var(--rg-red); color: #fff; }
+
+/* ---- nav: active crimson underline, then ONE crimson rule ---- */
+.rg-nav {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 0 22px;
+  padding: 0 0 2px;
+  font-size: 15px;
+  border-top: 1px solid var(--rg-line);
+}
+.rg-nav a { padding: 12px 0 10px; border-bottom: 3px solid transparent; color: var(--rg-ink); }
+.rg-nav a:hover { color: var(--rg-red); }
+.rg-nav a[aria-current="page"] { border-bottom-color: var(--rg-red); font-weight: 600; }
+.rg-rule { border: 0; border-bottom: 3px solid var(--rg-red); height: 0; margin: 0; }
+
+/* ---- front page ---- */
+.rg-home {
+  display: grid;
+  grid-template-columns: minmax(0, 1.55fr) minmax(280px, 0.85fr);
+  gap: 36px;
+  padding: 28px 0 12px;
+}
+.rg-lead {
+  display: grid;
+  grid-template-columns: minmax(200px, 0.9fr) minmax(240px, 1.1fr);
+  gap: 22px;
+  padding-bottom: 22px;
+  margin-bottom: 22px;
+  border-bottom: 1px solid var(--rg-line);
+  align-items: start;
+}
+.rg-lead.noart { grid-template-columns: 1fr; }
+.rg-lead h2 {
+  font-family: var(--rg-serif);
+  font-weight: 700;
+  font-size: clamp(22px, 2.3vw, 30px);
+  line-height: 1.18;
+  letter-spacing: -0.015em;
+  margin: 0 0 10px;
+  color: var(--rg-ink);
+}
+.rg-lead h2 a:hover { text-decoration: underline; text-underline-offset: 3px; }
+.rg-dek { font-size: 16px; color: #333; margin: 0 0 12px; line-height: 1.45; }
+.rg-byline {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--rg-ink);
+  margin: 0 0 14px;
+}
+.rg-meta { display: flex; align-items: center; justify-content: space-between; color: var(--rg-muted); font-size: 13px; }
+.rg-lead img { width: 100%; height: 250px; object-fit: cover; border-radius: 2px; }
+
+.rg-story { padding: 16px 0; border-bottom: 1px solid var(--rg-line); }
+.rg-story h3 { font-family: var(--rg-serif); font-weight: 700; font-size: 20px; line-height: 1.25; margin: 8px 0 12px; }
+.rg-kicker {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--rg-red);
+  margin-bottom: 4px;
+}
+.rg-badge {
+  display: inline-block;
+  background: var(--rg-red);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  padding: 3px 7px;
+  text-transform: uppercase;
+}
+
+/* the lock mark replaces the red pipe beside rail titles */
+.rg-railhead {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--rg-serif);
+  font-size: 22px;
+  font-weight: 700;
+  margin: 0 0 16px;
+  color: var(--rg-ink);
+}
+.rg-railhead::before {
+  content: "";
+  width: 14px;
+  height: 18px;
+  background-color: var(--rg-red);
+  display: inline-block;
+  mask: url('/assets/sites/red-river-register/mark.svg') center / contain no-repeat;
+  -webkit-mask: url('/assets/sites/red-river-register/mark.svg') center / contain no-repeat;
+}
+.rg-railitem { display: grid; grid-template-columns: 1fr 88px; gap: 12px; padding: 14px 0; border-bottom: 1px solid var(--rg-line); }
+.rg-railitem.noart { grid-template-columns: 1fr; }
+.rg-railitem h3 { font-family: var(--rg-serif); font-weight: 700; font-size: 16px; line-height: 1.28; margin: 0 0 8px; }
+.rg-railitem img { width: 88px; height: 66px; object-fit: cover; border-radius: 2px; }
+
+/* ---- "Across the region" desk band ---- */
+.rg-pack { padding: 8px 0 36px; }
+.rg-packtitle {
+  font-family: var(--rg-serif);
+  font-size: 26px;
+  font-weight: 700;
+  margin: 18px 0 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--rg-ink);
+}
+.rg-packtitle::before {
+  content: "";
+  width: 14px;
+  height: 18px;
+  background-color: var(--rg-red);
+  mask: url('/assets/sites/red-river-register/mark.svg') center / contain no-repeat;
+  -webkit-mask: url('/assets/sites/red-river-register/mark.svg') center / contain no-repeat;
+}
+.rg-three { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
+.rg-card { display: block; }
+.rg-card img { width: 100%; height: 170px; object-fit: cover; margin-bottom: 10px; }
+.rg-card h3 { font-family: var(--rg-serif); font-weight: 700; font-size: 18px; line-height: 1.25; margin: 0 0 8px; color: var(--rg-ink); }
+.rg-card p { margin: 0; color: var(--rg-muted); font-size: 14px; }
+.rg-card h3 a:hover { text-decoration: underline; text-underline-offset: 3px; }
+
+/* ---- promo well: the one place solid crimson is allowed ---- */
+.rg-promo { display: grid; grid-template-columns: 1.1fr 1fr; margin: 12px 0 40px; min-height: 150px; }
+.rg-promo-left { background: var(--rg-red); color: #fff; padding: 28px 32px; }
+.rg-promo-left h2 { font-family: var(--rg-display); font-weight: 700; font-size: 36px; line-height: 0.95; margin: 0 0 8px; text-transform: uppercase; }
+.rg-promo-left p { margin: 0; }
+.rg-promo-right { background: var(--rg-wash); padding: 28px 32px; }
+.rg-promo-right .place { font-family: var(--rg-serif); font-size: 22px; margin: 4px 0 8px; }
+.rg-promo-right .tag { color: var(--rg-red); font-weight: 700; font-size: 13px; letter-spacing: 0.04em; text-transform: uppercase; }
+.rg-promo-right p { color: var(--rg-text); font-size: 14px; }
+
+/* ---- article ---- */
+.rg-article { max-width: 720px; margin: 0 auto; padding: 28px 0 64px; }
+.rg-article .rg-seclabel { color: var(--rg-red); font-size: 13px; font-weight: 600; margin-bottom: 8px; }
+.rg-article h1 {
+  font-family: var(--rg-serif);
+  font-weight: 700;
+  font-size: clamp(30px, 4.2vw, 42px);
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+  margin: 0 0 14px;
+  color: var(--rg-ink);
+}
+.rg-article .rg-lede { font-size: 20px; color: #333; margin: 0 0 16px; line-height: 1.5; }
+.rg-article figure { margin: 0 0 18px; }
+.rg-article figure img { width: 100%; max-height: 480px; object-fit: cover; }
+.rg-article figcaption { font-size: 13px; color: var(--rg-muted); padding-top: 6px; }
+.rg-article .body p { font-size: 18px; margin: 0 0 1.05em; line-height: 1.6; }
+.rg-article .body h2 { font-family: var(--rg-serif); font-size: 24px; margin: 1.5em 0 0.5em; }
+.rg-article .body a { color: var(--rg-red); text-decoration: underline; text-underline-offset: 2px; }
+.rg-article .body blockquote {
+  font-family: var(--rg-serif);
+  font-style: italic;
+  font-size: 20px;
+  margin: 1.4em 0;
+  padding-left: 18px;
+  border-left: 3px solid var(--rg-red);
+  color: var(--rg-ink);
+}
+.rg-related { max-width: 720px; margin: 0 auto; padding-bottom: 48px; }
+
+/* ---- section front ---- */
+.rg-section { padding: 28px 0 48px; }
+.rg-section > h1 { font-family: var(--rg-serif); font-weight: 400; font-size: 48px; margin: 8px 0 16px; color: var(--rg-ink); }
+.rg-sectionrule { border: 0; border-bottom: 1px solid var(--rg-line); margin: 0 0 22px; }
+.rg-row { display: grid; grid-template-columns: minmax(0, 1fr) 180px; gap: 20px; padding: 18px 0; border-bottom: 1px solid var(--rg-line); align-items: start; }
+.rg-row.noart { grid-template-columns: 1fr; }
+.rg-row h3 { font-family: var(--rg-serif); font-weight: 700; font-size: 22px; line-height: 1.25; margin: 4px 0 8px; }
+.rg-row img { width: 180px; height: 120px; object-fit: cover; border-radius: 2px; }
+.rg-row p { margin: 0 0 8px; color: #333; font-size: 15px; }
+.rg-more { margin-top: 22px; }
+
+/* ---- empty state ---- */
+.rg-empty {
+  border: 1px solid var(--rg-line);
+  background: #fff;
+  padding: 36px 28px;
+  font-family: var(--rg-serif);
+  font-size: 19px;
+  line-height: 1.6;
+  color: var(--rg-ink);
+}
+.rg-empty a { color: var(--rg-red); text-decoration: underline; text-underline-offset: 2px; }
+
+/* ---- footer ---- */
+.rg-foot { background: var(--rg-ink); color: #cfcfcf; padding: 36px 0 20px; font-size: 14px; margin-top: 32px; }
+.rg-foot .cols {
+  width: min(var(--rg-max), calc(100% - 40px));
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 1.6fr 1fr 1fr 1fr;
+  gap: 24px;
+}
+.rg-foot .rg-nameplate { display: inline-flex; color: #fff; font-size: 26px; margin: 0 0 8px; }
+.rg-foot h4 { color: #fff; margin: 0 0 8px; font-size: 14px; }
+.rg-foot a { color: #fff; display: block; margin: 6px 0; }
+.rg-foot a:hover { color: var(--rg-wash); }
+.rg-foot p { margin: 6px 0; }
+.rg-foot .legal {
+  width: min(var(--rg-max), calc(100% - 40px));
+  margin: 24px auto 0;
+  border-top: 1px solid #333;
+  padding-top: 12px;
+  font-size: 12px;
+  color: #888;
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+@media (max-width: 900px) {
+  .rg-top { min-height: 60px; }
+  .rg-nameplate { font-size: 20px; }
+  .rg-util .in { display: none; }
+  .rg-home, .rg-lead, .rg-three, .rg-promo, .rg-foot .cols, .rg-row { grid-template-columns: 1fr; }
+  .rg-lead img, .rg-row img { height: auto; width: 100%; }
+  .rg-nav { justify-content: flex-start; overflow-x: auto; flex-wrap: nowrap; }
+  .rg-nav a { white-space: nowrap; }
+}

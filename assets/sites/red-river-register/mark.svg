@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 108" role="img" aria-label="The Red River Register">
+  <title>The Red River Register</title>
+  <defs>
+    <mask id="cut">
+      <rect width="80" height="108" fill="#fff"/>
+      <path d="M40 2 C 18 26, 62 44, 40 64 C 24 79, 56 92, 40 106" fill="none" stroke="#000" stroke-width="7" stroke-linecap="round"/>
+    </mask>
+  </defs>
+  <g fill="#7E3517" mask="url(#cut)">
+    <path d="M8 8h28v92H8zM44 8h28v92H44z"/>
+  </g>
+</svg>

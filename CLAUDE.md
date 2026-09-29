@@ -269,15 +269,17 @@ holding a capability it should not have.
   its own vhost). Network tooling ignores them by root-prefix and
   briefs must never require anything of them. Shared-fate caveat: any
   tenant's broken vhost fails the global `nginx -t`.
-- **Three tenants are dormant in the tree** (foundation only, each
-  awaiting its brand package): `terminal-city-times`
-  (DEPLOY-TERMINALCITY.md) and the two Manitoba papers scaffolded
-  29 Sep — `red-river-register` (DEPLOY-REDRIVER.md, working
-  footprint: the valley beyond Winnipeg) and `bison-bulletin`
-  (DEPLOY-BISON.md, footprint to confirm: Winnipeg vs province-wide).
-  Both Manitoba packs assume domains redriverregister.ca /
-  bisonbulletin.ca — CONFIRM the actual registrations before launch
-  (the Burrard lesson). Foundations get their six-story inaugural
+- **Dormant tenants in the tree**: `red-river-register` is
+  BRAND-COMPLETE (29 Sep, owner-directed: the Rideau chassis as the
+  Register's own identity — clay #7E3517, ledger-and-meander mark,
+  "The valley, on the record.", six inaugural notes, revised
+  DEPLOY-REDRIVER.md) and awaits only the owner gates: footprint
+  sign-off (assumed: the valley beyond Winnipeg), CONFIRMED registered
+  domain (pack assumes redriverregister.ca — the Burrard lesson), and
+  DNS. `terminal-city-times` (DEPLOY-TERMINALCITY.md) and
+  `bison-bulletin` (DEPLOY-BISON.md, footprint to confirm: Winnipeg vs
+  province-wide, pack assumes bisonbulletin.ca) remain foundation-only,
+  awaiting brand packages. Foundations get their six-story inaugural
   editions at brand-build time, never earlier. The wider slate
   (Steeltown, a Winnipeg title to be named, Rideau siblings, Atlantic
   papers) awaits packages.
