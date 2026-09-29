@@ -313,10 +313,16 @@ holding a capability it should not have.
   (province), Portage (Winnipeg), Brandon (southwest), Register (the
   valley) — all four brand-complete and awaiting owner gates.
   `terminal-city-times` (DEPLOY-TERMINALCITY.md) remains
-  foundation-only, awaiting its brand package. Foundations get their six-story inaugural
+  foundation-only, awaiting its brand package, and was joined on
+  29 Sep by two more foundations with OWNER-CONFIRMED .ca domains:
+  `steeltown-standard` (Hamilton, steeltownstandard.ca,
+  DEPLOY-STEELTOWN.md) and `toronto-telegraph` (Toronto,
+  torontotelegraph.ca, DEPLOY-TORONTO.md) — both scaffolded by
+  make-paper.php, packs zero-story by design, no new desks (every
+  desk they list exists network-wide since Portage seeded `arts`).
+  Foundations get their six-story inaugural
   editions at brand-build time, never earlier. The wider slate
-  (Steeltown, Rideau siblings, Atlantic
-  papers) awaits packages.
+  (Rideau siblings, Atlantic papers) awaits packages.
 - **Deploys are pinned**: the VPS agent resolves the release branch
   head via the API, requires the exact full SHA from the brief, and
   fetches `upgrade-papers.sh` at that SHA. Rolls are preceded by a

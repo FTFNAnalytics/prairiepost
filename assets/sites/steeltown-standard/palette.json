@@ -1,0 +1,22 @@
+{
+  "palette": {
+    "ink":     "#23211F",
+    "paper":   "#F5F2EC",
+    "surface": "#FBF9F4",
+    "accent":  "#7A3B2E",
+    "steel":   "#44525F",
+    "muted":   "#75706A",
+    "line":    "#E2DCD1"
+  },
+  "desks": {
+    "local-news": "#7A3B2E",
+    "city-hall":  "#7A3B2E",
+    "business":   "#7A3B2E",
+    "sports":     "#7A3B2E",
+    "opinion":    "#7A3B2E"
+  },
+  "chrome": {
+    "template": "steeltown",
+    "nav": ["local-news", "city-hall", "business", "sports", "opinion"]
+  }
+}
