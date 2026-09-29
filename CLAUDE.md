@@ -284,6 +284,14 @@ holding a capability it should not have.
   "Manitoba News" subtitle settled its footprint as PROVINCE-WIDE, so
   the Winnipeg city title is still to be named. It awaits the
   confirmed registered domain (pack assumes bisonbulletin.ca) and DNS.
+  `brandon-bulletin` is BRAND-COMPLETE too (29 Sep, from the owner's
+  package: Brandon Gold #E6BF2E / Light Wheat on white, the
+  wheat-over-open-book badge traced two-color, serif BRANDON /
+  letterspaced gold BULLETIN nameplate, "News with heart. Rooted in
+  place.", desks Local News/Sports/Community/Opinion, six inaugural
+  notes, DEPLOY-BRANDON.md) — Brandon and Southwest Manitoba, the
+  THIRD Manitoba masthead beside the Bulletin (province) and the
+  Register (the valley); pack assumes brandonbulletin.ca.
   `terminal-city-times` (DEPLOY-TERMINALCITY.md) remains
   foundation-only, awaiting its brand package. Foundations get their six-story inaugural
   editions at brand-build time, never earlier. The wider slate

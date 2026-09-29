@@ -1,0 +1,25 @@
+{
+  "palette": {
+    "ink":      "#111111",
+    "white":    "#FFFFFF",
+    "gold":     "#E6BF2E",
+    "golddeep": "#9A7B12",
+    "wheat":    "#F7E5AD",
+    "gray":     "#AAABAB",
+    "line":     "#DDDDDD"
+  },
+  "desks": {
+    "local-news": "#E6BF2E",
+    "sports":     "#E6BF2E",
+    "community":  "#E6BF2E",
+    "opinion":    "#E6BF2E"
+  },
+  "desk_labels": {
+    "local-news": "Local News",
+    "community": "Community"
+  },
+  "chrome": {
+    "template": "brandon",
+    "nav": ["local-news", "sports", "community", "opinion"]
+  }
+}
