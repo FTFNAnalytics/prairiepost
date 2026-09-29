@@ -289,18 +289,23 @@ holding a capability it should not have.
   its own vhost). Network tooling ignores them by root-prefix and
   briefs must never require anything of them. Shared-fate caveat: any
   tenant's broken vhost fails the global `nginx -t`.
-- **Dormant tenants in the tree — three foundations awaiting brand
-  packages**: `terminal-city-times` (DEPLOY-TERMINALCITY.md) remains
-  foundation-only, awaiting its brand package, and was joined on
-  29 Sep by two more foundations with OWNER-CONFIRMED .ca domains:
-  `steeltown-standard` (Hamilton, steeltownstandard.ca,
-  DEPLOY-STEELTOWN.md) and `toronto-telegraph` (Toronto,
-  torontotelegraph.ca, DEPLOY-TORONTO.md) — both scaffolded by
-  make-paper.php, packs zero-story by design, no new desks (every
-  desk they list exists network-wide since Portage seeded `arts`).
-  Foundations get their six-story inaugural
-  editions at brand-build time, never earlier. The wider slate
-  (Rideau siblings, Atlantic papers) awaits packages.
+- **Dormant tenants in the tree**: `steeltown-standard` is
+  BRAND-COMPLETE (29 Sep, from the owner's package: Tiger-Cats gold
+  #FCB525 / Hamilton navy #073674 / crimson #A8353A / camel #E7D2AD,
+  the chain-ring S/I-beam mark traced five-mask from the package,
+  Archivo Narrow condensed headlines + Source Serif 4 body (both
+  already in fonts.css), "Local News. Steeltown Strong.",
+  site_title "Steeltown Standard" — the brand dropped the
+  foundation's "The" — desks per the package mockup Local
+  News/Sports/Community/Opinion, six inaugural notes, revised
+  DEPLOY-STEELTOWN.md) and awaits only DNS to the VPS
+  (domain OWNER-CONFIRMED steeltownstandard.ca). `toronto-telegraph`
+  (Toronto, torontotelegraph.ca OWNER-CONFIRMED, DEPLOY-TORONTO.md)
+  and `terminal-city-times` (DEPLOY-TERMINALCITY.md) remain
+  foundation-only, awaiting their brand packages. Foundations get
+  their six-story inaugural editions at brand-build time, never
+  earlier. The wider slate (Rideau siblings, Atlantic papers)
+  awaits packages.
 - **Deploys are pinned**: the VPS agent resolves the release branch
   head via the API, requires the exact full SHA from the brief, and
   fetches `upgrade-papers.sh` at that SHA. Rolls are preceded by a

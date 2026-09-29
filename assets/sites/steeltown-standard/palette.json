@@ -1,22 +1,23 @@
 {
   "palette": {
-    "ink":     "#23211F",
-    "paper":   "#F5F2EC",
-    "surface": "#FBF9F4",
-    "accent":  "#7A3B2E",
-    "steel":   "#44525F",
-    "muted":   "#75706A",
-    "line":    "#E2DCD1"
+    "ink":     "#231F20",
+    "paper":   "#FFFFFF",
+    "surface": "#E7D2AD",
+    "accent":  "#FCB525",
+    "navy":    "#073674",
+    "crimson": "#A8353A",
+    "steel":   "#4A4A4A",
+    "muted":   "#4A4A4A",
+    "line":    "#E4E2DD"
   },
   "desks": {
-    "local-news": "#7A3B2E",
-    "city-hall":  "#7A3B2E",
-    "business":   "#7A3B2E",
-    "sports":     "#7A3B2E",
-    "opinion":    "#7A3B2E"
+    "local-news": "#073674",
+    "sports":     "#073674",
+    "community":  "#073674",
+    "opinion":    "#073674"
   },
   "chrome": {
     "template": "steeltown",
-    "nav": ["local-news", "city-hall", "business", "sports", "opinion"]
+    "nav": ["local-news", "sports", "community", "opinion"]
   }
 }

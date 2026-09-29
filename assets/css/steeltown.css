@@ -1,7 +1,139 @@
-/* The Steeltown Standard — design system (steeltown template). Scaffolded stub: replace with
-   the brand build. Rules to keep from the network's hard lessons:
-   every font-family you NAME must be a face you DECLARE (@font-face in
-   THIS file — another paper's stylesheet loading it does not count),
-   and no inline element may carry block-only properties. */
-body.t-steeltown { background: #F7F6F3; color: #20242B; }
-.t-steeltown .scaffold-note { padding: 8px 16px; font-size: 13px; opacity: .6; }
+/* Steeltown Standard — design system (steeltown template; brand build,
+   Sep 2026). From the owner's package: Tiger-Cats gold #FCB525 on
+   white with Hamilton navy #073674, black #231F20, accent crimson
+   #A8353A, steel gray #4A4A4A and light camel gold #E7D2AD; the
+   chain-ring S/I-beam mark; a bold condensed uppercase headline face
+   over serif body copy. Archivo Narrow and Source Serif 4 are
+   declared in /assets/css/fonts.css (self-hosted; every family this
+   file names resolves to a face the page loads). */
+@import url('/assets/css/fonts.css');
+
+body.t-steeltown {
+  margin: 0;
+  background: #FFFFFF;
+  color: #231F20;
+  font-family: 'Source Serif 4', Georgia, serif;
+  font-size: 17px;
+  line-height: 1.65;
+}
+.t-steeltown a { color: #073674; text-decoration: none; }
+.t-steeltown a:hover { color: #A8353A; }
+.t-steeltown img { max-width: 100%; height: auto; display: block; }
+.st-wrap { max-width: 1120px; margin: 0 auto; padding: 0 20px; }
+
+/* ---- utility strip ---- */
+.st-util { background: #231F20; color: #E7D2AD; font-family: 'Archivo Narrow', 'Archivo', sans-serif; font-size: 13px; letter-spacing: .04em; }
+.st-util .in { max-width: 1120px; margin: 0 auto; padding: 6px 20px; display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.st-util a { color: #FCB525; }
+.st-util a:hover { color: #FFFFFF; }
+.st-util .sep { margin: 0 8px; color: #4A4A4A; }
+
+/* ---- masthead ---- */
+.st-head { background: #FFFFFF; border-bottom: 4px solid #073674; }
+.st-head .in { max-width: 1120px; margin: 0 auto; padding: 14px 20px; display: flex; align-items: center; gap: 18px; flex-wrap: wrap; }
+.st-lock { display: inline-flex; align-items: center; gap: 12px; }
+.st-lock img { width: 62px; height: 64px; }
+.st-name { display: flex; flex-direction: column; line-height: 1; }
+.st-name .top { font-family: 'Archivo Narrow', 'Archivo', sans-serif; font-weight: 700; font-size: 34px; letter-spacing: .01em; color: #073674; text-transform: uppercase; }
+.st-name .sub { font-family: 'Source Serif 4', Georgia, serif; font-weight: 600; font-size: 17px; letter-spacing: .34em; color: #231F20; text-transform: uppercase; margin-top: 4px; }
+.st-nav { margin-left: auto; display: flex; align-items: center; gap: 20px; flex-wrap: wrap; font-family: 'Archivo Narrow', 'Archivo', sans-serif; font-weight: 700; font-size: 15px; letter-spacing: .06em; text-transform: uppercase; }
+.st-nav a { color: #073674; padding: 4px 0; border-bottom: 3px solid transparent; }
+.st-nav a:hover { color: #A8353A; }
+.st-nav a[aria-current="page"] { border-bottom-color: #FCB525; }
+.st-sub-btn, .st-btn { display: inline-block; background: #FCB525; color: #231F20 !important; font-family: 'Archivo Narrow', 'Archivo', sans-serif; font-weight: 700; font-size: 15px; letter-spacing: .06em; text-transform: uppercase; padding: 10px 22px; border-radius: 3px; }
+.st-sub-btn:hover, .st-btn:hover { background: #073674; color: #FFFFFF !important; }
+
+/* ---- hero ---- */
+.st-hero { position: relative; background: #073674; color: #FFFFFF; overflow: hidden; }
+.st-hero img.bg { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: .55; }
+.st-hero .scrim { position: absolute; inset: 0; background: linear-gradient(90deg, rgba(7,54,116,.94) 0%, rgba(7,54,116,.72) 45%, rgba(7,54,116,.15) 100%); }
+.st-hero .pad { position: relative; max-width: 1120px; margin: 0 auto; padding: 64px 20px 68px; display: flex; flex-direction: column; gap: 16px; }
+.st-hero .pad > * { max-width: 620px; }
+.st-hero .kick { font-family: 'Archivo Narrow', 'Archivo', sans-serif; font-weight: 700; font-size: 14px; letter-spacing: .14em; text-transform: uppercase; color: #FCB525; }
+.st-hero h1 { margin: 0; font-family: 'Archivo Narrow', 'Archivo', sans-serif; font-weight: 700; font-size: 46px; line-height: 1.04; text-transform: uppercase; letter-spacing: .01em; }
+.st-hero h1 a { color: #FFFFFF; }
+.st-hero h1 a:hover { color: #FCB525; }
+.st-hero .meta { font-family: 'Source Serif 4', Georgia, serif; font-size: 17px; line-height: 1.55; color: #E9EDF5; }
+.st-hero .st-btn { align-self: flex-start; }
+.st-hero--noart .wm { position: absolute; right: -40px; bottom: -60px; width: 340px; opacity: .14; }
+
+/* ---- section title ---- */
+.st-ttl { display: flex; align-items: center; gap: 14px; margin: 34px 0 18px; }
+.st-ttl h2 { margin: 0; font-family: 'Archivo Narrow', 'Archivo', sans-serif; font-weight: 700; font-size: 24px; letter-spacing: .05em; text-transform: uppercase; color: #073674; }
+.st-ttl::after { content: ""; flex: 1; height: 3px; background: #FCB525; }
+
+/* ---- card grid ---- */
+.st-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 22px; }
+.st-card { background: #FFFFFF; border: 1px solid #E4E2DD; border-bottom: 3px solid #FCB525; display: flex; flex-direction: column; }
+.st-card > a:first-child { display: block; border-bottom: 3px solid #FCB525; }
+.st-card .txt { padding: 14px 16px 16px; display: flex; flex-direction: column; gap: 6px; }
+.st-card h3 { margin: 0; font-family: 'Archivo Narrow', 'Archivo', sans-serif; font-weight: 700; font-size: 19px; line-height: 1.2; }
+.st-card h3 a { color: #231F20; }
+.st-card h3 a:hover { color: #073674; }
+.st-kick { font-family: 'Archivo Narrow', 'Archivo', sans-serif; font-weight: 700; font-size: 12.5px; letter-spacing: .12em; text-transform: uppercase; color: #B07E14; }
+.st-card .meta, .st-row .meta { font-family: 'Archivo Narrow', 'Archivo', sans-serif; font-size: 13px; color: #4A4A4A; letter-spacing: .03em; }
+.st-card.noart .txt { padding-top: 16px; border-top: 3px solid #FCB525; }
+
+/* ---- story rows (section fronts, more headlines) ---- */
+.st-row { display: grid; grid-template-columns: 1fr 210px; gap: 18px; padding: 18px 0; border-bottom: 1px solid #E4E2DD; align-items: start; }
+.st-row.noart { grid-template-columns: 1fr; }
+.st-row h3 { margin: 4px 0 6px; font-family: 'Archivo Narrow', 'Archivo', sans-serif; font-weight: 700; font-size: 21px; line-height: 1.2; }
+.st-row h3 a { color: #231F20; }
+.st-row h3 a:hover { color: #073674; }
+.st-row p { margin: 0 0 6px; font-size: 15.5px; color: #4A4A4A; }
+.st-row img { border-bottom: 3px solid #FCB525; }
+
+/* ---- subscribe band ---- */
+.st-band { background: #E7D2AD; border-top: 3px solid #FCB525; margin-top: 40px; }
+.st-band .in { max-width: 1120px; margin: 0 auto; padding: 26px 20px; display: flex; align-items: center; justify-content: space-between; gap: 18px; flex-wrap: wrap; }
+.st-band h3 { margin: 0; font-family: 'Archivo Narrow', 'Archivo', sans-serif; font-weight: 700; font-size: 22px; letter-spacing: .04em; text-transform: uppercase; color: #073674; }
+.st-band p { margin: 4px 0 0; font-size: 15px; color: #231F20; max-width: 560px; }
+.st-band .st-btn { background: #073674; color: #FFFFFF !important; }
+.st-band .st-btn:hover { background: #231F20; }
+
+/* ---- article ---- */
+.st-article { max-width: 760px; margin: 30px auto 0; }
+.st-article h1 { margin: 6px 0 12px; font-family: 'Archivo Narrow', 'Archivo', sans-serif; font-weight: 700; font-size: 40px; line-height: 1.06; text-transform: uppercase; letter-spacing: .01em; color: #231F20; }
+.st-article .lede { font-size: 20px; line-height: 1.5; color: #4A4A4A; margin: 0 0 10px; }
+.st-byline { font-family: 'Archivo Narrow', 'Archivo', sans-serif; font-size: 14px; letter-spacing: .05em; color: #4A4A4A; text-transform: uppercase; border-top: 3px solid #FCB525; border-bottom: 1px solid #E4E2DD; padding: 8px 0; margin: 0 0 16px; }
+.st-article .body { font-size: 17.5px; }
+.st-article .body a { border-bottom: 1px solid #FCB525; }
+.st-article .body blockquote { margin: 26px 0; padding: 16px 22px; background: #E7D2AD; border-left: 4px solid #073674; font-family: 'Source Serif 4', Georgia, serif; font-size: 19px; }
+.st-article figure { margin: 18px 0; }
+.st-article figcaption { font-family: 'Archivo Narrow', 'Archivo', sans-serif; font-size: 13px; color: #4A4A4A; padding-top: 6px; }
+.st-related { max-width: 760px; margin: 30px auto 0; }
+
+/* ---- section front ---- */
+.st-section { padding-bottom: 12px; }
+.st-more { margin: 22px 0; }
+
+/* ---- empty state ---- */
+.st-empty { background: #E7D2AD; border-left: 4px solid #FCB525; padding: 18px 20px; font-size: 16px; margin: 26px 0; }
+
+/* ---- footer ---- */
+.st-foot { background: #073674; color: #DDE4EF; margin-top: 46px; border-top: 4px solid #FCB525; }
+.st-foot .cols { max-width: 1120px; margin: 0 auto; padding: 34px 20px 20px; display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 26px; }
+.st-foot .st-name .top { color: #FFFFFF; }
+.st-foot .st-name .sub { color: #FCB525; }
+.st-foot h4 { margin: 0 0 10px; font-family: 'Archivo Narrow', 'Archivo', sans-serif; font-weight: 700; font-size: 14px; letter-spacing: .12em; text-transform: uppercase; color: #FCB525; }
+.st-foot a { display: block; color: #DDE4EF; font-family: 'Archivo Narrow', 'Archivo', sans-serif; font-size: 15px; padding: 3px 0; }
+.st-foot a:hover { color: #FCB525; }
+.st-foot .legal { max-width: 1120px; margin: 0 auto; padding: 14px 20px 24px; border-top: 1px solid rgba(255,255,255,.18); display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; font-family: 'Archivo Narrow', 'Archivo', sans-serif; font-size: 13.5px; letter-spacing: .04em; }
+.st-foot .legal .strong { color: #FCB525; }
+
+/* ---- responsive ---- */
+@media (max-width: 900px) {
+  .st-grid { grid-template-columns: repeat(2, 1fr); }
+  .st-foot .cols { grid-template-columns: 1fr 1fr; }
+  .st-hero h1 { font-size: 36px; }
+}
+@media (max-width: 620px) {
+  .st-grid { grid-template-columns: 1fr; }
+  .st-row { grid-template-columns: 1fr; }
+  .st-row img { order: -1; }
+  .st-foot .cols { grid-template-columns: 1fr; }
+  .st-hero h1 { font-size: 30px; }
+  .st-article h1 { font-size: 30px; }
+  .st-name .top { font-size: 28px; }
+  .st-name .sub { font-size: 14px; letter-spacing: .26em; }
+}
