@@ -276,10 +276,16 @@ holding a capability it should not have.
   DEPLOY-REDRIVER.md) and awaits only the owner gates: footprint
   sign-off (assumed: the valley beyond Winnipeg), CONFIRMED registered
   domain (pack assumes redriverregister.ca — the Burrard lesson), and
-  DNS. `terminal-city-times` (DEPLOY-TERMINALCITY.md) and
-  `bison-bulletin` (DEPLOY-BISON.md, footprint to confirm: Winnipeg vs
-  province-wide, pack assumes bisonbulletin.ca) remain foundation-only,
-  awaiting brand packages. Foundations get their six-story inaugural
+  DNS. `bison-bulletin` is also BRAND-COMPLETE (29 Sep, from the owner's
+  package: bison red #8B0000 on prairie cream, Montserrat + Open Sans
+  newly vendored as variable fonts in fonts.css, the bison mark traced
+  from the package's primary logo, "Manitoba News You Can Trust", six
+  inaugural notes, revised DEPLOY-BISON.md) — the package's own
+  "Manitoba News" subtitle settled its footprint as PROVINCE-WIDE, so
+  the Winnipeg city title is still to be named. It awaits the
+  confirmed registered domain (pack assumes bisonbulletin.ca) and DNS.
+  `terminal-city-times` (DEPLOY-TERMINALCITY.md) remains
+  foundation-only, awaiting its brand package. Foundations get their six-story inaugural
   editions at brand-build time, never earlier. The wider slate
   (Steeltown, a Winnipeg title to be named, Rideau siblings, Atlantic
   papers) awaits packages.
