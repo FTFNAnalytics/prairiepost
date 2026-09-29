@@ -1,0 +1,10 @@
+{
+  "palette": {
+    "ink":   "#20242B",
+    "paper": "#F7F6F3"
+  },
+  "chrome": {
+    "template": "bison",
+    "nav": ["local-news", "city-hall", "communities", "business", "sports", "opinion"]
+  }
+}

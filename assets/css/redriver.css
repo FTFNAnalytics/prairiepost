@@ -1,0 +1,7 @@
+/* The Red River Register — design system (redriver template). Scaffolded stub: replace with
+   the brand build. Rules to keep from the network's hard lessons:
+   every font-family you NAME must be a face you DECLARE (@font-face in
+   THIS file — another paper's stylesheet loading it does not count),
+   and no inline element may carry block-only properties. */
+body.t-redriver { background: #F7F6F3; color: #20242B; }
+.t-redriver .scaffold-note { padding: 8px 16px; font-size: 13px; opacity: .6; }

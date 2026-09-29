@@ -1,0 +1,10 @@
+{
+  "palette": {
+    "ink":   "#20242B",
+    "paper": "#F7F6F3"
+  },
+  "chrome": {
+    "template": "redriver",
+    "nav": ["local-news", "communities", "business", "sports", "opinion"]
+  }
+}

@@ -269,10 +269,18 @@ holding a capability it should not have.
   its own vhost). Network tooling ignores them by root-prefix and
   briefs must never require anything of them. Shared-fate caveat: any
   tenant's broken vhost fails the global `nginx -t`.
-- **One tenant remains dormant in the tree**: `terminal-city-times`
-  (foundation only, DEPLOY-TERMINALCITY.md, awaiting its brand
-  package). The wider slate (Steeltown, Red River, Winnipeg, Rideau
-  siblings, Atlantic papers) awaits packages.
+- **Three tenants are dormant in the tree** (foundation only, each
+  awaiting its brand package): `terminal-city-times`
+  (DEPLOY-TERMINALCITY.md) and the two Manitoba papers scaffolded
+  29 Sep — `red-river-register` (DEPLOY-REDRIVER.md, working
+  footprint: the valley beyond Winnipeg) and `bison-bulletin`
+  (DEPLOY-BISON.md, footprint to confirm: Winnipeg vs province-wide).
+  Both Manitoba packs assume domains redriverregister.ca /
+  bisonbulletin.ca — CONFIRM the actual registrations before launch
+  (the Burrard lesson). Foundations get their six-story inaugural
+  editions at brand-build time, never earlier. The wider slate
+  (Steeltown, a Winnipeg title to be named, Rideau siblings, Atlantic
+  papers) awaits packages.
 - **Deploys are pinned**: the VPS agent resolves the release branch
   head via the API, requires the exact full SHA from the brief, and
   fetches `upgrade-papers.sh` at that SHA. Rolls are preceded by a
