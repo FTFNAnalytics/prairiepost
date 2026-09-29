@@ -1,8 +1,8 @@
 # Claude notes — the Prairie Dispatch network
 
-One codebase serves the whole network (twenty-four live tenants —
-twenty-three papers and the CivisMedia hub — as of the Manitoba
-three). Each paper
+One codebase serves the whole network (twenty-five live tenants —
+twenty-four papers and the CivisMedia hub — as of the Brandon
+Bulletin). Each paper
 is a tenant mapping in the server-only config, a
 row in the shared database, a front template in `app/views/`, assets in
 `assets/sites/<slug>/`, a launch pack (`launch.php`) applied by
@@ -211,37 +211,40 @@ agent. Never give the news agent a shell command or the VPS agent a
 filing step — each such mix has produced a stopped run or an agent
 holding a capability it should not have.
 
-## Current operational state (as of the Manitoba-three roll, 29 Sep 2026)
+## Current operational state (as of the Brandon roll, 29 Sep 2026)
 
-- **Release in production: `62131795c639`** (branch commit
-  `62131795c6393bfa6737d350a4125e2278db2721`), serving BOTH release
-  groups: `/var/www/prairiepost-62131795c639-shared` (the papers) and
-  `/var/www/prairiepost-62131795c639-civismedia` (the hub). NOTE: the
-  branch HEAD is one commit ahead (`77dce66`, the Brandon .com domain
-  fix) and is NOT yet in production — Brandon's launch therefore
-  requires a roll first, never a launch-only run from this release,
-  whose tree still carries the wrong .ca pack. Both
+- **Release in production: `d68a89fa67c4`** (branch commit
+  `d68a89fa67c491ea046a39a2ea4186a61e2464ea`), serving BOTH release
+  groups: `/var/www/prairiepost-d68a89fa67c4-shared` (the papers) and
+  `/var/www/prairiepost-d68a89fa67c4-civismedia` (the hub). The
+  branch HEAD is one commit ahead (`f3991ea`, the Steeltown and
+  Toronto Telegraph foundations) — INERT files that serve nothing
+  until seeded; they ride the next roll, no urgency. Both
   groups roll together; `upgrade-papers.sh` upgrades every prairiepost
   group and migrates their shared schema exactly once. Never write a
   brief that forbids touching the hub release (that stale rule aborted
   the first Phase-2 roll).
-- **Twenty-four live domains pass the masthead guard**: the seventeen
+- **Twenty-five live domains pass the masthead guard**: the seventeen
   original papers plus surreystandard.ca (site #18),
   cariboocompass.ca (#19), burrardbrief.ca, rideaureview.ca (#21),
-  and the Manitoba three launched 29 Sep — bisonbulletin.ca (#22),
-  portagepress.ca (#23) and redriverregister.ca (#24) — plus the hub.
-  TLS on the Manitoba three runs to Dec 28 2026.
-- **The Manitoba three are LIVE (29 Sep)**, launched in one run from
-  release 62131795c639 behind per-paper DNS gates: Bison
-  (province-wide), Portage (Winnipeg), Register (the valley). Each
-  seeded its six-story inaugural edition and opens with its no-art
-  editorial hero — no empty states. Portage's first seed created the
-  `arts` desk network-wide ("desk added: Arts"); no other new desks.
-  Certbot first attempt on all three; both address families
-  everywhere; all three fail closed 401 on /api/ingest and
-  /api/ingest-media. The agent's probe corrections were all
-  read-side (log-indent counts, display-label case, tenant-specific
-  hero markup) — no production write was replayed.
+  and the Manitoba four launched 29 Sep — bisonbulletin.ca (#22),
+  portagepress.ca (#23), redriverregister.ca (#24) and
+  brandonbulletin.com (#25, the network's ONE non-.ca masthead) —
+  plus the hub. TLS on the Manitoba four runs to Dec 28 2026.
+- **Manitoba is COMPLETE and LIVE (29 Sep, two runs)**: Bison
+  (province-wide, #22), Portage (Winnipeg, #23), Register (the
+  valley, #24) launched from release 62131795c639 behind per-paper
+  DNS gates; Brandon (the southwest, #25) followed the same day
+  after a roll to d68a89f, whose tree carries the corrected
+  brandonbulletin.com pack — the first attempt's .ca NXDOMAIN gate
+  had skipped it cleanly, which is the pinned-brief design working.
+  Each paper seeded its six-story inaugural edition and opens with
+  its no-art editorial hero — no empty states. Portage's first seed
+  created the `arts` desk network-wide; Brandon's seed added no
+  desks (all four existed). Certbot first attempt on all four; both
+  address families everywhere; all four fail closed 401 on
+  /api/ingest and /api/ingest-media; no ingest credential exists for
+  any of them.
 - **The upgrader's extension preflight asks PHP directly**
   (`extension_loaded()` via `php -r`). The old `php -m | grep -q`
   pipeline under `set -o pipefail` failed nondeterministically via
@@ -286,33 +289,8 @@ holding a capability it should not have.
   its own vhost). Network tooling ignores them by root-prefix and
   briefs must never require anything of them. Shared-fate caveat: any
   tenant's broken vhost fails the global `nginx -t`.
-- **Dormant tenants in the tree**: `red-river-register` is
-  BRAND-COMPLETE (29 Sep, owner-directed: the Rideau chassis as the
-  Register's own identity — clay #7E3517, ledger-and-meander mark,
-  "The valley, on the record.", six inaugural notes, revised
-  DEPLOY-REDRIVER.md) and awaits only the owner gates: footprint
-  sign-off (assumed: the valley beyond Winnipeg), CONFIRMED registered
-  domain (pack assumes redriverregister.ca — the Burrard lesson), and
-  DNS. `bison-bulletin` is also BRAND-COMPLETE (29 Sep, from the owner's
-  package: bison red #8B0000 on prairie cream, Montserrat + Open Sans
-  newly vendored as variable fonts in fonts.css, the bison mark traced
-  from the package's primary logo, "Manitoba News You Can Trust", six
-  inaugural notes, revised DEPLOY-BISON.md) — the package's own
-  "Manitoba News" subtitle settled its footprint as PROVINCE-WIDE, so
-  the Winnipeg city title is still to be named. It awaits the
-  confirmed registered domain (pack assumes bisonbulletin.ca) and DNS.
-
-  `portage-press` fills the WINNIPEG slot (29 Sep, from the owner's
-  package: Polar Night Blue #041E42 / red #AC162C / dark-gray body,
-  Inter + Playfair pull quotes declared in portage.css, the P-pin
-  mark traced two-color, "Local News. Winnipeg Matters.", desks
-  News/Sports/Politics/Business/Arts/Opinion — `arts` is NEW
-  network-wide at its first seed — six inaugural notes,
-  DEPLOY-PORTAGE.md; pack assumes portagepress.ca, shown in the
-  package's own mockup). Manitoba is now complete on paper: Bison
-  (province), Portage (Winnipeg), Brandon (southwest), Register (the
-  valley) — all four brand-complete and awaiting owner gates.
-  `terminal-city-times` (DEPLOY-TERMINALCITY.md) remains
+- **Dormant tenants in the tree — three foundations awaiting brand
+  packages**: `terminal-city-times` (DEPLOY-TERMINALCITY.md) remains
   foundation-only, awaiting its brand package, and was joined on
   29 Sep by two more foundations with OWNER-CONFIRMED .ca domains:
   `steeltown-standard` (Hamilton, steeltownstandard.ca,
@@ -341,7 +319,7 @@ holding a capability it should not have.
   27 Sep routes pass added both /api routes to the 14 legacy nginx
   blocks (root-only backups at /root/nginx-routes-pass-20260927T231803Z/);
   the 7 generated blocks route through router.php and needed nothing.
-  All 24 domains fail closed with JSON 401 (the three Manitoba
+  All 25 domains fail closed with JSON 401 (the four Manitoba
   blocks are generated and route through router.php) — the old
   prairiedispatch /api/ingest 404 gap is CLOSED. Grande Prairie's apex is a redirect
   alias; its canonical endpoint host is www.grandeprairiegazette.ca.
@@ -357,7 +335,7 @@ holding a capability it should not have.
   ROW, never on the key. Operating guide for the two agents:
   `docs/agent-workflow.md`. The 28 Sep mini routes pass added both
   routes to the same 14 legacy blocks (backups at
-  /root/nginx-mini-routes-20260928T020338Z); all 24 domains fail
+  /root/nginx-mini-routes-20260928T020338Z); all 25 domains fail
   closed 401 on both.
 - **Test residue awaiting owner cleanup (admin UI, never SQL):** on
   Surrey — draft #315 (`routes-check-agent-ingest-v2-draft`), and
