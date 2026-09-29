@@ -1,23 +1,27 @@
 {
   "palette": {
-    "ink":     "#1E2126",
-    "paper":   "#F6F5F1",
-    "surface": "#FCFBF8",
-    "accent":  "#1E3A5F",
-    "signal":  "#B0812F",
-    "muted":   "#72747A",
-    "line":    "#E1E0D8"
+    "ink":       "#1A1A1A",
+    "paper":     "#FFFFFF",
+    "surface":   "#F2F5F9",
+    "accent":    "#00205B",
+    "oxford":    "#0C2340",
+    "cambridge": "#5F8FB1",
+    "muted":     "#4B5563",
+    "line":      "#A8B2C1"
+  },
+  "desk_labels": {
+    "local-news": "City",
+    "business": "Business"
   },
   "desks": {
-    "local-news": "#1E3A5F",
-    "city-hall":  "#1E3A5F",
-    "business":   "#1E3A5F",
-    "arts":       "#1E3A5F",
-    "sports":     "#1E3A5F",
-    "opinion":    "#1E3A5F"
+    "local-news": "#00205B",
+    "sports":     "#00205B",
+    "business":   "#00205B",
+    "culture":    "#00205B",
+    "opinion":    "#00205B"
   },
   "chrome": {
     "template": "telegraph",
-    "nav": ["local-news", "city-hall", "business", "arts", "sports", "opinion"]
+    "nav": ["local-news", "sports", "business", "culture", "opinion"]
   }
 }

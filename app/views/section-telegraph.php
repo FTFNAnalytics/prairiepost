@@ -1,7 +1,26 @@
-<?php /* The Toronto Telegraph — section front (scaffold stub; $cat and $posts are resolved). */ ?>
-<div class="wrap">
-  <h1><?= e(pp_desk_label($cat['slug'], $cat['name'])) ?></h1>
+<?php
+/* Toronto Telegraph — section front (brand build; $cat, $posts,
+   $page, $pages resolved by section.php). The silver-ruled desk
+   title over hairlined story rows. Desk descriptions are shared
+   network-wide, so this template does not print them — the desk name
+   is the page. */ ?>
+<div class="tg-wrap tg-section">
+  <div class="tg-ttl" style="margin-top:26px"><h2><?= e(pp_desk_label($cat['slug'], $cat['name'])) ?></h2></div>
   <?php foreach ($posts as $p): ?>
-  <h3><a href="<?= e(url('story/' . $p['slug'])) ?>"><?= e($p['title']) ?></a></h3>
+  <article class="tg-row<?= $p['image'] ? '' : ' noart' ?>">
+    <div>
+      <span class="tg-chip"><?= e(pp_desk_label((string) $p['category_slug'], (string) $p['category_name'])) ?></span>
+      <h3><a href="<?= e(url('story/' . $p['slug'])) ?>"><?= e($p['title']) ?></a></h3>
+      <?php if ($p['lede']): ?><p><?= e($p['lede']) ?></p><?php endif; ?>
+      <span class="meta"><?= dateline($p) ?></span>
+    </div>
+    <?php if ($p['image']): ?><a href="<?= e(url('story/' . $p['slug'])) ?>"><img src="<?= e($p['image']) ?>" alt=""></a><?php endif; ?>
+  </article>
   <?php endforeach; ?>
+  <?php if (!$posts): ?>
+  <div class="tg-empty" style="margin-top:8px">Nothing on this desk yet — the newsroom is on it.</div>
+  <?php endif; ?>
+  <?php if (($pages ?? 1) > 1 && ($page ?? 1) < $pages): ?>
+  <div class="tg-more"><a class="tg-btn" href="<?= e(url('desk/' . $cat['slug'])) ?>?page=<?= (int) $page + 1 ?>">More <?= e(pp_desk_label($cat['slug'], $cat['name'])) ?></a></div>
+  <?php endif; ?>
 </div>

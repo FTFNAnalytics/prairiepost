@@ -300,9 +300,20 @@ holding a capability it should not have.
   News/Sports/Community/Opinion, six inaugural notes, revised
   DEPLOY-STEELTOWN.md) and awaits only DNS to the VPS
   (domain OWNER-CONFIRMED steeltownstandard.ca). `toronto-telegraph`
-  (Toronto, torontotelegraph.ca OWNER-CONFIRMED, DEPLOY-TORONTO.md)
-  and `terminal-city-times` (DEPLOY-TERMINALCITY.md) remain
-  foundation-only, awaiting their brand packages. Foundations get
+  is BRAND-COMPLETE too (29 Sep, from the owner's package: the
+  double-blue heritage palette — Leafs Navy #00205B, Argos Oxford
+  #0C2340, Argos Cambridge #5F8FB1, soft silver — the
+  maple-leaf-and-telegraph-key roundel traced from the package's app
+  icon, Archivo/Archivo Narrow headlines + Source Serif 4 body,
+  "Toronto's Independent Voice", site_title "Toronto Telegraph" —
+  the "The" dropped — desks per the package mockup
+  City/Sports/Business/Culture/Opinion via desk_labels overrides
+  ("City" for local-news; "Business" for the shared category's
+  "Business & Markets" name), six inaugural notes, revised
+  DEPLOY-TORONTO.md) and awaits only DNS to the VPS (domain
+  OWNER-CONFIRMED torontotelegraph.ca). Only `terminal-city-times`
+  (DEPLOY-TERMINALCITY.md) remains
+  foundation-only, awaiting its brand package. Foundations get
   their six-story inaugural editions at brand-build time, never
   earlier. The wider slate (Rideau siblings, Atlantic papers)
   awaits packages.

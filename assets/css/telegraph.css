@@ -1,7 +1,159 @@
-/* The Toronto Telegraph — design system (telegraph template). Scaffolded stub: replace with
-   the brand build. Rules to keep from the network's hard lessons:
-   every font-family you NAME must be a face you DECLARE (@font-face in
-   THIS file — another paper's stylesheet loading it does not count),
-   and no inline element may carry block-only properties. */
-body.t-telegraph { background: #F7F6F3; color: #20242B; }
-.t-telegraph .scaffold-note { padding: 8px 16px; font-size: 13px; opacity: .6; }
+/* Toronto Telegraph — design system (telegraph template; brand build,
+   Sep 2026). From the owner's package: the double-blue heritage
+   palette — Leafs Navy #00205B, Argos Oxford #0C2340, Argos Cambridge
+   #5F8FB1 — with pure white, charcoal #1A1A1A body text and soft
+   silver #A8B2C1 lines; the maple-leaf-and-telegraph-key roundel;
+   bold modern sans headlines over classic serif body. Archivo,
+   Archivo Narrow and Source Serif 4 are declared in
+   /assets/css/fonts.css (self-hosted; every family this file names
+   resolves to a face the page loads). */
+@import url('/assets/css/fonts.css');
+
+body.t-telegraph {
+  margin: 0;
+  background: #FFFFFF;
+  color: #1A1A1A;
+  font-family: 'Source Serif 4', Georgia, serif;
+  font-size: 17px;
+  line-height: 1.65;
+}
+.t-telegraph a { color: #00205B; text-decoration: none; }
+.t-telegraph a:hover { color: #5F8FB1; }
+.t-telegraph img { max-width: 100%; height: auto; display: block; }
+.tg-wrap { max-width: 1140px; margin: 0 auto; padding: 0 20px; }
+
+/* ---- utility strip ---- */
+.tg-util { background: #0C2340; color: #A8B2C1; font-family: 'Archivo', sans-serif; font-size: 13px; letter-spacing: .04em; }
+.tg-util .in { max-width: 1140px; margin: 0 auto; padding: 6px 20px; display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.tg-util a { color: #FFFFFF; }
+.tg-util a:hover { color: #5F8FB1; }
+.tg-util .sep { margin: 0 8px; color: #5F8FB1; }
+
+/* ---- masthead ---- */
+.tg-head { background: #FFFFFF; border-bottom: 4px solid #00205B; }
+.tg-head .in { max-width: 1140px; margin: 0 auto; padding: 14px 20px; display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+.tg-lock { display: inline-flex; align-items: center; gap: 13px; }
+.tg-lock img { width: 60px; height: 60px; }
+.tg-name { display: flex; flex-direction: column; line-height: .95; }
+.tg-name .top { font-family: 'Archivo Narrow', 'Archivo', sans-serif; font-weight: 700; font-size: 32px; letter-spacing: .02em; color: #00205B; text-transform: uppercase; }
+.tg-name .mid { font-family: 'Archivo Narrow', 'Archivo', sans-serif; font-weight: 700; font-size: 32px; letter-spacing: .02em; color: #5F8FB1; text-transform: uppercase; }
+.tg-name .sub { font-family: 'Archivo', sans-serif; font-weight: 600; font-size: 10.5px; letter-spacing: .3em; color: #1A1A1A; text-transform: uppercase; margin-top: 6px; }
+.tg-nav { margin-left: auto; display: flex; align-items: center; gap: 20px; flex-wrap: wrap; font-family: 'Archivo', sans-serif; font-weight: 600; font-size: 15px; }
+.tg-nav a { color: #1A1A1A; padding: 4px 0; border-bottom: 3px solid transparent; }
+.tg-nav a:hover { color: #00205B; }
+.tg-nav a[aria-current="page"] { color: #00205B; border-bottom-color: #5F8FB1; }
+.tg-sub-btn { display: inline-block; background: #00205B; color: #FFFFFF !important; font-family: 'Archivo', sans-serif; font-weight: 600; font-size: 15px; padding: 10px 22px; border-radius: 4px; }
+.tg-sub-btn:hover { background: #5F8FB1; }
+.tg-btn { display: inline-block; background: #5F8FB1; color: #FFFFFF !important; font-family: 'Archivo', sans-serif; font-weight: 600; font-size: 15px; padding: 11px 22px; border-radius: 4px; }
+.tg-btn:hover { background: #00205B; }
+
+/* ---- hero ---- */
+.tg-hero { position: relative; background: #0C2340; color: #FFFFFF; overflow: hidden; }
+.tg-hero img.bg { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.tg-hero .scrim { position: absolute; inset: 0; background: linear-gradient(90deg, #00205B 28%, rgba(0,32,91,.82) 52%, rgba(0,32,91,.06) 100%); }
+.tg-hero .pad { position: relative; max-width: 1140px; margin: 0 auto; padding: 62px 20px 66px; display: flex; flex-direction: column; gap: 15px; }
+.tg-hero .pad > * { max-width: 600px; }
+.tg-hero .kick { font-family: 'Archivo', sans-serif; font-weight: 700; font-size: 13.5px; letter-spacing: .16em; text-transform: uppercase; color: #5F8FB1; }
+.tg-hero h1 { margin: 0; font-family: 'Archivo', sans-serif; font-weight: 800; font-size: 44px; line-height: 1.05; letter-spacing: .005em; text-transform: uppercase; }
+.tg-hero h1 a { color: #FFFFFF; }
+.tg-hero h1 a:hover { color: #5F8FB1; }
+.tg-hero .meta { font-family: 'Source Serif 4', Georgia, serif; font-size: 17.5px; line-height: 1.55; color: #DDE5F0; }
+.tg-hero .tg-btn { align-self: flex-start; }
+.tg-hero--noart .wm { position: absolute; right: -30px; bottom: -70px; width: 330px; opacity: .16; }
+
+/* ---- section title ---- */
+.tg-ttl { display: flex; align-items: center; gap: 14px; margin: 32px 0 18px; }
+.tg-ttl h2 { margin: 0; font-family: 'Archivo', sans-serif; font-weight: 800; font-size: 23px; color: #1A1A1A; }
+.tg-ttl::after { content: ""; flex: 1; height: 1px; background: #A8B2C1; }
+
+/* ---- two-column home ---- */
+.tg-home { display: grid; grid-template-columns: 1fr 320px; gap: 34px; align-items: start; }
+
+/* ---- featured cards ---- */
+.tg-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+.tg-card { background: #FFFFFF; border: 1px solid #A8B2C1; border-radius: 4px; overflow: hidden; display: flex; flex-direction: column; }
+.tg-card .txt { padding: 13px 15px 15px; display: flex; flex-direction: column; gap: 7px; }
+.tg-card h3 { margin: 0; font-family: 'Archivo', sans-serif; font-weight: 700; font-size: 18px; line-height: 1.22; }
+.tg-card h3 a { color: #1A1A1A; }
+.tg-card h3 a:hover { color: #00205B; }
+.tg-chip { align-self: flex-start; display: inline-block; background: #00205B; color: #FFFFFF; font-family: 'Archivo', sans-serif; font-weight: 700; font-size: 11.5px; letter-spacing: .1em; text-transform: uppercase; padding: 3px 9px; border-radius: 3px; }
+.tg-card .meta, .tg-row .meta, .tg-rail .meta { font-family: 'Archivo', sans-serif; font-size: 13px; color: #4B5563; }
+.tg-card.noart .txt { border-top: 4px solid #5F8FB1; }
+
+/* ---- story rows ---- */
+.tg-row { display: grid; grid-template-columns: 1fr 200px; gap: 18px; padding: 17px 0; border-bottom: 1px solid #DCE1E8; align-items: start; }
+.tg-row.noart { grid-template-columns: 1fr; }
+.tg-row h3 { margin: 5px 0 6px; font-family: 'Archivo', sans-serif; font-weight: 700; font-size: 20px; line-height: 1.22; }
+.tg-row h3 a { color: #1A1A1A; }
+.tg-row h3 a:hover { color: #00205B; }
+.tg-row p { margin: 0 0 6px; font-size: 15.5px; color: #4B5563; }
+.tg-row img { border-radius: 4px; }
+
+/* ---- rail ---- */
+.tg-rail { display: flex; flex-direction: column; gap: 22px; margin-top: 32px; }
+.tg-box { border: 1px solid #A8B2C1; border-radius: 4px; padding: 16px 18px; }
+.tg-box .hd { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 10px; }
+.tg-box .hd h3 { margin: 0; font-family: 'Archivo', sans-serif; font-weight: 800; font-size: 18px; color: #1A1A1A; }
+.tg-box .hd a { font-family: 'Archivo', sans-serif; font-size: 13.5px; color: #5F8FB1; font-weight: 600; }
+.tg-weather .now { display: flex; align-items: baseline; gap: 12px; }
+.tg-weather .temp { font-family: 'Archivo', sans-serif; font-weight: 800; font-size: 38px; color: #00205B; }
+.tg-weather .cond { font-family: 'Archivo', sans-serif; font-size: 15px; color: #4B5563; }
+.tg-trend ol { list-style: none; margin: 0; padding: 0; }
+.tg-trend li { display: flex; gap: 12px; align-items: flex-start; padding: 9px 0; border-bottom: 1px solid #DCE1E8; }
+.tg-trend li:last-child { border-bottom: 0; }
+.tg-trend .n { flex: 0 0 auto; width: 24px; height: 24px; border-radius: 4px; background: #00205B; color: #FFFFFF; font-family: 'Archivo', sans-serif; font-weight: 700; font-size: 13px; display: flex; align-items: center; justify-content: center; margin-top: 2px; }
+.tg-trend a { font-family: 'Archivo', sans-serif; font-weight: 600; font-size: 15px; line-height: 1.35; color: #1A1A1A; }
+.tg-trend a:hover { color: #00205B; }
+.tg-subbox { background: #00205B; border-radius: 4px; color: #FFFFFF; padding: 20px 18px; }
+.tg-subbox h3 { margin: 0 0 6px; font-family: 'Archivo', sans-serif; font-weight: 800; font-size: 19px; }
+.tg-subbox p { margin: 0 0 14px; font-size: 14.5px; line-height: 1.5; color: #DDE5F0; }
+.tg-subbox .tg-btn { background: #5F8FB1; }
+.tg-subbox .tg-btn:hover { background: #FFFFFF; color: #00205B !important; }
+
+/* ---- article ---- */
+.tg-article { max-width: 760px; margin: 30px auto 0; }
+.tg-article h1 { margin: 8px 0 12px; font-family: 'Archivo', sans-serif; font-weight: 800; font-size: 38px; line-height: 1.08; color: #1A1A1A; }
+.tg-article .lede { font-size: 20px; line-height: 1.5; color: #4B5563; margin: 0 0 10px; }
+.tg-byline { font-family: 'Archivo', sans-serif; font-size: 13.5px; letter-spacing: .04em; color: #4B5563; text-transform: uppercase; border-top: 3px solid #00205B; border-bottom: 1px solid #DCE1E8; padding: 8px 0; margin: 0 0 16px; }
+.tg-article .body { font-size: 17.5px; }
+.tg-article .body a { border-bottom: 1px solid #5F8FB1; }
+.tg-article .body blockquote { margin: 26px 0; padding: 16px 22px; border-left: 4px solid #5F8FB1; background: #F2F5F9; font-size: 19px; }
+.tg-article figure { margin: 18px 0; }
+.tg-article figcaption { font-family: 'Archivo', sans-serif; font-size: 13px; color: #4B5563; padding-top: 6px; }
+.tg-related { max-width: 760px; margin: 30px auto 0; }
+
+/* ---- section front ---- */
+.tg-section { padding-bottom: 12px; }
+.tg-more { margin: 22px 0; }
+
+/* ---- empty state ---- */
+.tg-empty { background: #F2F5F9; border-left: 4px solid #00205B; padding: 18px 20px; font-size: 16px; margin: 26px 0; }
+
+/* ---- footer ---- */
+.tg-foot { background: #00205B; color: #C9D2E2; margin-top: 46px; }
+.tg-foot .cols { max-width: 1140px; margin: 0 auto; padding: 34px 20px 20px; display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 26px; }
+.tg-foot .tg-name .top { color: #FFFFFF; }
+.tg-foot .tg-name .mid { color: #5F8FB1; }
+.tg-foot .tg-name .sub { color: #A8B2C1; }
+.tg-foot h4 { margin: 0 0 10px; font-family: 'Archivo', sans-serif; font-weight: 700; font-size: 13.5px; letter-spacing: .12em; text-transform: uppercase; color: #5F8FB1; }
+.tg-foot a { display: block; color: #C9D2E2; font-family: 'Archivo', sans-serif; font-size: 14.5px; padding: 3px 0; }
+.tg-foot a:hover { color: #FFFFFF; }
+.tg-foot .legal { max-width: 1140px; margin: 0 auto; padding: 14px 20px 24px; border-top: 1px solid rgba(255,255,255,.16); display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; font-family: 'Archivo', sans-serif; font-size: 13.5px; }
+.tg-foot .legal .strong { color: #5F8FB1; }
+
+/* ---- responsive ---- */
+@media (max-width: 980px) {
+  .tg-home { grid-template-columns: 1fr; }
+  .tg-grid { grid-template-columns: repeat(2, 1fr); }
+  .tg-foot .cols { grid-template-columns: 1fr 1fr; }
+  .tg-hero h1 { font-size: 34px; }
+}
+@media (max-width: 620px) {
+  .tg-grid { grid-template-columns: 1fr; }
+  .tg-row { grid-template-columns: 1fr; }
+  .tg-row img { order: -1; }
+  .tg-foot .cols { grid-template-columns: 1fr; }
+  .tg-hero h1 { font-size: 28px; }
+  .tg-article h1 { font-size: 28px; }
+  .tg-name .top, .tg-name .mid { font-size: 26px; }
+}
