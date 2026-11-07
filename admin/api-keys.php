@@ -12,7 +12,10 @@
  * Hub only, admins only. Everything an agent files with one of these
  * keys lands as a DRAFT behind each paper's publish gate (a desk listed
  * in a site's wire_desks setting is the one exception, and that is a
- * per-paper editorial setting, not a property of the key).
+ * per-paper editorial setting, not a property of the key). A key minted
+ * "draft-only" (ingest_agents.draft_only) loses even that exception and
+ * the publish_on_image lane: it can file and upload, never publish —
+ * the credential an external evidence feed holds (NEWS1).
  */
 require dirname(__DIR__) . '/app/bootstrap.php';
 require __DIR__ . '/_layout.php';
@@ -63,11 +66,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             flash_set($bad, true);
             redirect('api-keys.php');
         }
+        $draftOnly = !empty($_POST['draft_only']) ? 1 : 0;
         $token = 'hermes_' . bin2hex(random_bytes(28));
-        db()->prepare('INSERT INTO ingest_agents (name, token_hash, sites, desks, enabled, created_at)
-            VALUES (?, ?, ?, ?, 1, ?)')
-            ->execute([$name, hash('sha256', $token), implode(',', $picked), implode(',', $desks), now()]);
-        pp_audit('apikey.created', $name, 'sites: ' . implode(', ', $picked) . ($desks ? ' · desks: ' . implode(', ', $desks) : ''));
+        db()->prepare('INSERT INTO ingest_agents (name, token_hash, sites, desks, enabled, draft_only, created_at)
+            VALUES (?, ?, ?, ?, 1, ?, ?)')
+            ->execute([$name, hash('sha256', $token), implode(',', $picked), implode(',', $desks), $draftOnly, now()]);
+        pp_audit('apikey.created', $name, 'sites: ' . implode(', ', $picked) . ($desks ? ' · desks: ' . implode(', ', $desks) : '')
+            . ($draftOnly ? ' · draft-only' : ''));
         // No redirect on purpose: the raw key exists only in this response.
         $freshToken = $token;
         $freshName = $name;
@@ -96,7 +101,7 @@ flash_show();
 ?>
 
 <h1 class="pagetitle">Agent API keys</h1>
-<p class="pagesub">Each key lets one uploading agent file <strong>drafts</strong> to the papers it is scoped to — stories through <code>POST /api/ingest</code>, featured images through <code>POST /api/ingest-media</code>. One exception, chosen per story by the filer, never by the key: a filing flagged <code>publish_on_image</code> publishes the moment its featured image arrives through <code>POST /api/ingest-publish</code> (the two-agent workflow — <code>docs/agent-workflow.md</code>). The database keeps only a hash: a key is shown once, here, when it is minted. Revocation takes effect on the key's next request.</p>
+<p class="pagesub">Each key lets one uploading agent file <strong>drafts</strong> to the papers it is scoped to — stories through <code>POST /api/ingest</code>, featured images through <code>POST /api/ingest-media</code>. One exception, chosen per story by the filer, never by the key: a filing flagged <code>publish_on_image</code> publishes the moment its featured image arrives through <code>POST /api/ingest-publish</code> (the two-agent workflow — <code>docs/agent-workflow.md</code>). A key minted <strong>draft-only</strong> has no exceptions at all: neither a paper's wire desks nor the ready flag publish for it, and the attach call refuses it — everything it files waits for the newsroom. The database keeps only a hash: a key is shown once, here, when it is minted. Revocation takes effect on the key's next request.</p>
 
 <?php if ($freshToken !== null): ?>
 <div class="panel" style="border-color:#0a7d33">
@@ -115,6 +120,9 @@ flash_show();
       <label>Key name <input type="text" name="name" placeholder="uploader-ottawa" required></label>
       <label>Desks (optional, comma-separated slugs; empty = any desk) <input type="text" name="desks" placeholder="local-news, culture"></label>
     </div>
+    <div class="formrow">
+      <label style="font-weight:400"><input type="checkbox" name="draft_only" value="1"> <strong>Draft-only</strong> — this key can never publish: wire desks and <code>publish_on_image</code> are withheld for it, and <code>/api/ingest-publish</code> refuses it. Required for an external evidence feed.</label>
+    </div>
     <fieldset style="border:0;padding:0;margin:12px 0">
       <legend style="font-weight:600;margin-bottom:6px">Papers this key may file to</legend>
       <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:4px 16px">
@@ -131,12 +139,13 @@ flash_show();
   <h2>Existing keys</h2>
   <?php if (!$keys): ?><p class="pagesub">No keys yet.</p><?php else: ?>
   <table class="tbl">
-    <tr><th>Name</th><th>Papers</th><th>Desks</th><th>Status</th><th>Created</th><th>Last used</th><th></th></tr>
+    <tr><th>Name</th><th>Papers</th><th>Desks</th><th>Publishes</th><th>Status</th><th>Created</th><th>Last used</th><th></th></tr>
     <?php foreach ($keys as $k): ?>
     <tr>
       <td><?= e($k['name']) ?></td>
       <td><?= e(str_replace(',', ', ', (string) $k['sites'])) ?></td>
       <td><?= e($k['desks'] !== '' ? str_replace(',', ', ', (string) $k['desks']) : 'any') ?></td>
+      <td><?= (int) ($k['draft_only'] ?? 0) === 1 ? '<strong>never</strong> (draft-only)' : 'wire desks + ready flag' ?></td>
       <td><?= (int) $k['enabled'] === 1 ? 'active' : '<strong>revoked</strong>' ?></td>
       <td><?= e(substr((string) $k['created_at'], 0, 10)) ?></td>
       <td><?= e($k['last_used_at'] ? substr((string) $k['last_used_at'], 0, 16) : 'never') ?></td>

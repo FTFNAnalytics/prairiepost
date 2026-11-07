@@ -12,11 +12,19 @@
  * must be an /uploads/… path this install minted via
  * POST /api/ingest-media.
  *
+ * A draft-only token (ingest_agents.draft_only = 1) is refused here:
+ * attaching the art IS the act that publishes, and that credential
+ * cannot publish. The answer is 403 with `status: "draft"` and a
+ * `reason`, nothing is written, and the story keeps waiting — for a
+ * token that may publish, or for its newsroom.
+ *
  * Request:  Authorization: Bearer <token>
  *           JSON body: {story, image, image_caption?, image_credit?}
  *           `story` is the slug (or numeric id) from the filing
  *           response or GET /api/ingest-queue.
  * Response: 200 {ok, id, slug, status: "published", url, image}
+ *           403 {ok: false, error, id, slug, status: "draft", reason}
+ *               — a draft-only token; the story is untouched
  *           4xx {ok: false, error} — the reason, never a coercion
  */
 require __DIR__ . '/app/bootstrap.php';
@@ -48,6 +56,7 @@ if (!$agent || (int) $agent['enabled'] !== 1) {
     pp_pub_out(401, ['ok' => false, 'error' => 'unknown or revoked token']);
 }
 $agentSites = array_filter(array_map('trim', explode(',', (string) $agent['sites'])));
+$agentDraftOnly = (int) ($agent['draft_only'] ?? 0) === 1;
 
 /* --- Payload -------------------------------------------------------------- */
 $raw = file_get_contents('php://input', false, null, 0, 64 * 1024);
@@ -92,6 +101,26 @@ if ((int) $post['awaiting_image'] !== 1 || $post['status'] !== 'draft') {
     pp_pub_out(409, ['ok' => false, 'error' => $post['status'] === 'published'
         ? 'that story is already published'
         : 'that story was not filed as publish-on-image — only its newsroom can publish it']);
+}
+
+/* --- Capability: a draft-only token cannot take the publishing step -------- */
+// Checked after the state checks so the answer is true: the story IS a
+// waiting draft, and it stays one. Nothing is written except the audit row.
+if ($agentDraftOnly) {
+    $now = now();
+    $pdo->prepare('INSERT INTO audit_log (site_id, user_id, user_name, action, target, detail, ip, created_at)
+        VALUES ((SELECT site_id FROM post_sites WHERE post_id = ? LIMIT 1), 0, ?, ?, ?, ?, ?, ?)')
+        ->execute([(int) $post['id'], 'hermes:' . $agent['name'], 'ingest-publish', (string) $post['slug'],
+            'REFUSED: draft-only token attempted attach-and-publish; story left as a draft, art not attached',
+            (string) ($_SERVER['REMOTE_ADDR'] ?? ''), $now]);
+    pp_pub_out(403, [
+        'ok' => false,
+        'error' => 'this token is draft-only — it cannot publish; the story stays a draft for its newsroom',
+        'id' => (int) $post['id'],
+        'slug' => (string) $post['slug'],
+        'status' => 'draft',
+        'reason' => 'draft_only token: attach-and-publish refused, nothing written',
+    ]);
 }
 
 /* --- Attach and publish in one guarded write ------------------------------- */

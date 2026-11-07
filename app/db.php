@@ -60,6 +60,7 @@ function pp_schema_ddl(string $driver): array
             sites TEXT NOT NULL,
             desks TEXT NOT NULL DEFAULT '',
             enabled INTEGER NOT NULL DEFAULT 1,
+            draft_only INTEGER NOT NULL DEFAULT 0,
             created_at $dt NOT NULL,
             last_used_at $dt
         )$suffix",
@@ -1395,6 +1396,16 @@ function pp_migrations(): array
             // token — no image, no publish; no flag, no publish.
             $pdo->exec('ALTER TABLE posts ADD COLUMN awaiting_image INTEGER NOT NULL DEFAULT 0');
             $pdo->exec("UPDATE settings SET svalue = '21' WHERE site_id = 0 AND skey = 'schema_version'");
+        },
+
+        22 => function (PDO $pdo, string $driver): void {
+            // Draft-only ingest tokens (NEWS1): a credential that files but can
+            // never publish. With draft_only = 1 the wire-desk exception and the
+            // publish_on_image flag are both withheld server-side on every path
+            // that can set status = 'published' (/api/ingest, /api/ingest-publish),
+            // so the newsroom is the only publisher of what such a token files.
+            $pdo->exec('ALTER TABLE ingest_agents ADD COLUMN draft_only INTEGER NOT NULL DEFAULT 0');
+            $pdo->exec("UPDATE settings SET svalue = '22' WHERE site_id = 0 AND skey = 'schema_version'");
         },
 
     ];

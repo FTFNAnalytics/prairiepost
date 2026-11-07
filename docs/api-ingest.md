@@ -17,6 +17,19 @@ for paper A answers 403 on paper B. Revocation (one click on the API
 keys page) takes effect on the key's next request, identically to a
 key that never existed.
 
+**Draft-only keys.** A key minted draft-only (the "Draft-only" box on
+the API keys page, or `tools/make-agent.php create … --draft-only`) can
+file and upload but never publish. For such a key the server withholds
+both publish instructions on every path that can set a story live: a
+desk in the paper's `wire_desks` still files a *draft*, the
+`publish_on_image` flag is not honoured (the story is never queued for
+the image agent), and `POST /api/ingest-publish` refuses it with 403
+and writes nothing. Each such response says so — `"status":"draft"`
+plus a `reason` string. Only the paper's newsroom publishes what a
+draft-only key files. This is the credential an external evidence feed
+holds before it may deliver to any desk (milestone NEWS1); the
+capability lives on the key, never in a request.
+
 ## 1. Upload the featured image (optional): `POST /api/ingest-media`
 
 Send the bytes either as `multipart/form-data` (field `file`, optional
@@ -56,6 +69,11 @@ vhost will ever execute PHP.
       }'
 
     → 201 {"ok":true,"id":123,"slug":"…","status":"draft"}
+
+    → 201 {"ok":true,"id":123,"slug":"…","status":"draft",
+           "reason":"draft_only token: this credential files drafts for the
+                     newsroom to publish (wire-desk auto-publish withheld)"}
+      — a draft-only key, whatever the desk or flag asked for
 
 - `image` is either an `/uploads/…` path returned by step 1, or an
   https URL the **server** fetches itself (through the SSRF guard —
@@ -106,6 +124,15 @@ anything else answers 409, so an ordinary newsroom draft can never be
 published from this lane. The `url` in the response is the published
 address, ready for the social posts that follow.
 
+A draft-only key is refused here before anything is written:
+
+    → 403 {"ok":false,"error":"this token is draft-only — …",
+           "id":123,"slug":"…","status":"draft",
+           "reason":"draft_only token: attach-and-publish refused, nothing written"}
+
+The story keeps waiting (art unattached) for a key that may publish, or
+for its newsroom.
+
 ## Responses you must handle
 
 | Code | Meaning |
@@ -113,7 +140,7 @@ address, ready for the social posts that follow.
 | 201 | Created (draft). `slug` and `id` identify it in the newsroom. |
 | 200 + `duplicate` | This exact story was already filed; nothing new was created. |
 | 401 | Missing, unknown or revoked key. |
-| 403 | The key is not scoped to that site or desk. |
+| 403 | The key is not scoped to that site or desk — or, on `/api/ingest-publish`, the key is draft-only (the body carries `status: "draft"` and `reason`; nothing was written). |
 | 409 | `/api/ingest-publish` only: the story is not waiting (already published, unflagged, or changed state mid-request). Fetch the queue again. |
 | 422 | The payload broke a rule; `error` says which. Fix and resend. |
 | 429 | Hourly rate limit; wait and resend. |

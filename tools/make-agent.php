@@ -5,7 +5,7 @@
  * stores only their sha256, and the raw token is printed exactly once.
  *
  *   php tools/make-agent.php create --name hermes-bleuet \
- *       --sites bleuet-blanc [--desks actualites,economie]
+ *       --sites bleuet-blanc [--desks actualites,economie] [--draft-only]
  *   php tools/make-agent.php list
  *   php tools/make-agent.php revoke --name hermes-bleuet
  *   php tools/make-agent.php enable --name hermes-bleuet
@@ -14,6 +14,14 @@
  * a real site). --desks is optional; empty means any existing desk on the
  * scoped sites. Revocation is the kill switch: a revoked token answers
  * 401 on the next request, identically to a token that never existed.
+ *
+ * --draft-only mints a credential that can file but never publish
+ * (ingest_agents.draft_only = 1): the paper's wire_desks exception and
+ * the publish_on_image flag are withheld for it server-side, and
+ * /api/ingest-publish refuses it. Everything it files waits for the
+ * newsroom. This is the credential an external evidence feed must hold
+ * before it delivers to any desk (milestone NEWS1). The flag is set at
+ * minting and is a property of the credential, never of a request.
  */
 
 if (PHP_SAPI !== 'cli') {
@@ -29,6 +37,8 @@ for ($i = 2; $i < count($argv); $i++) {
         $opt[$m[1]] = $argv[++$i];
     } elseif (preg_match('/^--(name|sites|desks)=(.*)$/', $argv[$i], $m)) {
         $opt[$m[1]] = $m[2];
+    } elseif ($argv[$i] === '--draft-only') {
+        $opt['draft_only'] = true;
     }
 }
 $pdo = db();
@@ -77,23 +87,28 @@ switch ($cmd) {
         if ($stmt->fetch()) {
             exit("Agent '{$name}' already exists. Revoke it and create a new name, or keep its token.\n");
         }
+        $draftOnly = !empty($opt['draft_only']) ? 1 : 0;
         $token = 'hermes_' . bin2hex(random_bytes(28));
-        $pdo->prepare('INSERT INTO ingest_agents (name, token_hash, sites, desks, enabled, created_at)
-            VALUES (?, ?, ?, ?, 1, ?)')
-            ->execute([$name, hash('sha256', $token), implode(',', $sites), implode(',', $desks), now()]);
+        $pdo->prepare('INSERT INTO ingest_agents (name, token_hash, sites, desks, enabled, draft_only, created_at)
+            VALUES (?, ?, ?, ?, 1, ?, ?)')
+            ->execute([$name, hash('sha256', $token), implode(',', $sites), implode(',', $desks), $draftOnly, now()]);
         echo "Agent:  {$name}\n";
         echo 'Sites:  ' . implode(', ', $sites) . "\n";
         echo 'Desks:  ' . ($desks ? implode(', ', $desks) : '(any existing desk)') . "\n";
+        echo 'Mode:   ' . ($draftOnly
+            ? "DRAFT-ONLY — files drafts; wire desks and publish_on_image never publish for this token, /api/ingest-publish refuses it"
+            : 'standard — wire desks publish at once; publish_on_image is honoured') . "\n";
         echo "Token:  {$token}\n";
         echo "This token is shown ONCE and stored only as a hash. Give it to exactly one agent.\n";
         break;
 
     case 'list':
-        foreach ($pdo->query('SELECT name, sites, desks, enabled, created_at, last_used_at FROM ingest_agents ORDER BY name') as $a) {
+        foreach ($pdo->query('SELECT name, sites, desks, enabled, draft_only, created_at, last_used_at FROM ingest_agents ORDER BY name') as $a) {
             printf(
-                "%-24s %-9s sites=%s desks=%s created=%s last_used=%s\n",
+                "%-24s %-9s %-10s sites=%s desks=%s created=%s last_used=%s\n",
                 $a['name'],
                 $a['enabled'] ? 'active' : 'REVOKED',
+                (int) $a['draft_only'] === 1 ? 'draft-only' : 'standard',
                 $a['sites'],
                 $a['desks'] !== '' ? $a['desks'] : '(any)',
                 substr((string) $a['created_at'], 0, 10),
@@ -114,5 +129,5 @@ switch ($cmd) {
         break;
 
     default:
-        exit("Usage: php tools/make-agent.php create|list|revoke|enable [--name ...] [--sites a,b] [--desks c,d]\n");
+        exit("Usage: php tools/make-agent.php create|list|revoke|enable [--name ...] [--sites a,b] [--desks c,d] [--draft-only]\n");
 }
