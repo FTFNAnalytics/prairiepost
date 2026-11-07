@@ -238,7 +238,9 @@ $f = fresh();
 $pubByDraft = (int) $f->query("SELECT COUNT(*) FROM posts WHERE status = 'published' AND filed_by IN ('draftonly-writer', 'cli-draft-only', 'draftonly-revoked')")->fetchColumn();
 ok($pubByDraft === 0, "no row filed by a draft-only token is published (got $pubByDraft)");
 $filedByDraft = (int) $f->query("SELECT COUNT(*) FROM posts WHERE filed_by IN ('draftonly-writer', 'cli-draft-only')")->fetchColumn();
-ok($filedByDraft === 5, "the draft-only tokens filed exactly five drafts (got $filedByDraft)");
+// Three from draftonly-writer (wire desk; flag + art; flag, no art) and one
+// from the CLI-minted token; the off-scope and revoked attempts filed nothing.
+ok($filedByDraft === 4, "the draft-only tokens filed exactly four drafts (got $filedByDraft)");
 $pubTotal = (int) $f->query("SELECT COUNT(*) FROM posts WHERE status = 'published' AND (filed_by LIKE 'draftonly-%' OR filed_by LIKE 'cli-%')")->fetchColumn();
 ok($pubTotal === 3, "exactly the three normal-token stories are published (got $pubTotal)");
 ok(max($codes) < 500, 'no call answered 5xx (max status ' . max($codes) . ')');
