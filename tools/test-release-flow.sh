@@ -688,7 +688,8 @@ echo "note the passing papers' group's cron file after the Chronicle's restore: 
 OUT14X=$(UP_PORT=$FRONT_PORT UP_BASELINE="$B14/no-such-baseline.txt" run_upgrade "$B14" 2>&1); RC14X=$?
 printf 'kitchenerchronicle.test|200|/assets/css/kitchener.css\n' > "$B14/short.txt"
 OUT14Y=$(UP_PORT=$FRONT_PORT UP_BASELINE="$B14/short.txt" run_upgrade "$B14" 2>&1); RC14Y=$?
-ok "a recovery baseline that is missing or malformed stops the roll, nothing changed" '[ "$RC14X" != 0 ] && has "$OUT14X" "names a file that cannot be read" && hasnt "$OUT14X" "== Resolve the branch head" && [ "$RC14Y" != 0 ] && has "$OUT14Y" "short.txt), line 1: not" && has "$OUT14Y" "nothing changed" && hasnt "$OUT14Y" "== Fetch the release template once" && on_old "$V14" && [ "$(ls "$V14".bak.* | wc -l)" = 3 ]'
+ok "a recovery baseline that is missing or malformed stops the roll before it starts" '[ "$RC14X" != 0 ] && has "$OUT14X" "names a file that cannot be read" && hasnt "$OUT14X" "== Resolve the branch head" && [ "$RC14Y" != 0 ] && has "$OUT14Y" "short.txt), line 1: not" && has "$OUT14Y" "nothing changed" && hasnt "$OUT14Y" "== Resolve the branch head"'
+ok "and nothing changed: no vhost backup, no saved baseline, the Chronicle still down" 'on_old "$V14" && [ "$(ls "$V14".bak.* | wc -l)" = 3 ] && [ "$(ls "$B14/baselines" | wc -l)" = 2 ] && [ "$(gates kitchenerchronicle.test)" = 1 ]'
 # THE RECOVERY ROLL brings the one domain back, verified as itself. The
 # baseline here is written BY HAND and names only the Chronicle (its
 # stylesheets out of order, as a person would type them): every other

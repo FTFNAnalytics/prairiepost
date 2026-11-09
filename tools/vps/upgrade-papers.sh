@@ -95,9 +95,42 @@ fi
 # answer when it starts. PP_UPGRADE_BASELINE_DIR is for the fixture.
 BASELINE_DIR="${PP_UPGRADE_BASELINE_DIR:-/var/lib/prairiepost-upgrade}"
 RECOVERY_FILE="${PP_UPGRADE_BASELINE:-}"
+declare -A REC_CODE=()    # the named baseline's records: domain -> status code,
+declare -A REC_TITLE=()   #   -> <title> (kept only for a 200),
+declare -A REC_CSS=()     #   -> stylesheet set (likewise)
+REC_SAYS=()               # the file's own opening comment lines, printed where it is applied
+BAD="PP_UPGRADE_BASELINE ($RECOVERY_FILE)"
 if [ -n "$RECOVERY_FILE" ]; then
   [ "$PROBES" = "1" ] || fail "PP_UPGRADE_BASELINE is set but this fixture has no HTTP stand-in to probe — nothing changed"
   [ -f "$RECOVERY_FILE" ] && [ -r "$RECOVERY_FILE" ] || fail "PP_UPGRADE_BASELINE names a file that cannot be read: $RECOVERY_FILE — nothing changed"
+  # Read and checked HERE, before the roll resolves, probes or writes
+  # anything, so that "nothing changed" is true of every refusal below.
+  lineno=0
+  while IFS= read -r line || [ -n "$line" ]; do
+    lineno=$((lineno + 1))
+    line="${line%$'\r'}"
+    case "$line" in
+      '#'*) [ "$lineno" -le 2 ] && REC_SAYS+=("${line#\# }")
+            continue ;;
+      '')   continue ;;
+      *'|'*'|'*'|'*) : ;;
+      *)    fail "$BAD, line $lineno: not 'domain|status code|stylesheet set|<title>' — nothing changed" ;;
+    esac
+    IFS='|' read -r r_domain r_code r_css r_title <<< "$line"
+    case "$r_domain" in ''|*[!A-Za-z0-9.-]*) fail "$BAD, line $lineno: '$r_domain' is not a domain — nothing changed" ;; esac
+    case "$r_code" in [0-9][0-9][0-9]) : ;; *) fail "$BAD, line $lineno ($r_domain): status code '$r_code' is not three digits — nothing changed" ;; esac
+    case "$r_css" in *[!a-z0-9._/\ -]*) fail "$BAD, line $lineno ($r_domain): the stylesheet set is not a list of /assets/css/ paths — nothing changed" ;; esac
+    case "$r_title" in ''|'<title>'*'</title>') : ;; *) fail "$BAD, line $lineno ($r_domain): the title is neither empty nor a whole <title> element — nothing changed" ;; esac
+    [ -z "${REC_CODE[$r_domain]:-}" ] || fail "$BAD, line $lineno: $r_domain is named twice — nothing changed"
+    # As the capture keeps them: a title and a stylesheet set only for a
+    # 200, the set sorted the way front_css sorts it.
+    if [ "$r_code" != "200" ]; then r_css=""; r_title=""; fi
+    [ -n "$r_css" ] && r_css="$(printf '%s\n' $r_css | sort -u | tr '\n' ' ')"
+    REC_CODE[$r_domain]="$r_code"
+    REC_TITLE[$r_domain]="$r_title"
+    REC_CSS[$r_domain]="$r_css"
+  done < "$RECOVERY_FILE"
+  [ "${#REC_CODE[@]}" -gt 0 ] || fail "$BAD holds no record — nothing changed"
 fi
 
 front_page() { # domain, curl options... -> the probe itself: one GET of that domain's front page
@@ -245,6 +278,16 @@ suggest_baseline() { # domains... -> names the newest EARLIER saved baseline in 
   echo "         None of them records a 200 with a title for these domains."
 }
 
+if [ -n "$RECOVERY_FILE" ]; then
+  # Still before anything is written: a file that names none of this
+  # box's domains is the wrong file.
+  named=0
+  for DOMAIN in $(all_domains); do
+    [ -n "${REC_CODE[$DOMAIN]:-}" ] && named=$((named + 1))
+  done
+  [ "$named" -gt 0 ] || fail "$BAD names none of this box's domains — nothing changed"
+fi
+
 BASELINE_FILE=""   # where this roll's own capture is saved
 if [ "$PROBES" = "1" ]; then
   BASELINE_FILE="$BASELINE_DIR/baseline-$STAMP.txt"
@@ -272,35 +315,7 @@ RECOVERY_HELD=""         # the domains held to the recovery baseline
 RECOVERY_UNLISTED=""     # the domains the file does not name: held to what they answered at the start
 if [ -n "$RECOVERY_FILE" ]; then
   say "Recovery baseline (PP_UPGRADE_BASELINE): hold domains to $RECOVERY_FILE"
-  declare -A REC_CODE=()
-  declare -A REC_TITLE=()
-  declare -A REC_CSS=()
-  BAD="PP_UPGRADE_BASELINE ($RECOVERY_FILE)"
-  lineno=0
-  while IFS= read -r line || [ -n "$line" ]; do
-    lineno=$((lineno + 1))
-    line="${line%$'\r'}"
-    case "$line" in
-      '#'*) [ "$lineno" -le 2 ] && echo "   the file says: ${line#\# }"
-            continue ;;
-      '')   continue ;;
-      *'|'*'|'*'|'*) : ;;
-      *)    fail "$BAD, line $lineno: not 'domain|status code|stylesheet set|<title>' — nothing changed" ;;
-    esac
-    IFS='|' read -r r_domain r_code r_css r_title <<< "$line"
-    case "$r_domain" in ''|*[!A-Za-z0-9.-]*) fail "$BAD, line $lineno: '$r_domain' is not a domain — nothing changed" ;; esac
-    case "$r_code" in [0-9][0-9][0-9]) : ;; *) fail "$BAD, line $lineno ($r_domain): status code '$r_code' is not three digits — nothing changed" ;; esac
-    case "$r_css" in *[!a-z0-9._/\ -]*) fail "$BAD, line $lineno ($r_domain): the stylesheet set is not a list of /assets/css/ paths — nothing changed" ;; esac
-    case "$r_title" in ''|'<title>'*'</title>') : ;; *) fail "$BAD, line $lineno ($r_domain): the title is neither empty nor a whole <title> element — nothing changed" ;; esac
-    [ -z "${REC_CODE[$r_domain]:-}" ] || fail "$BAD, line $lineno: $r_domain is named twice — nothing changed"
-    # As the capture keeps them: a title and a stylesheet set only for a
-    # 200, the set sorted the way front_css sorts it.
-    if [ "$r_code" != "200" ]; then r_css=""; r_title=""; fi
-    [ -n "$r_css" ] && r_css="$(printf '%s\n' $r_css | sort -u | tr '\n' ' ')"
-    REC_CODE[$r_domain]="$r_code"
-    REC_TITLE[$r_domain]="$r_title"
-    REC_CSS[$r_domain]="$r_css"
-  done < "$RECOVERY_FILE"
+  for line in "${REC_SAYS[@]}"; do echo "   the file says: $line"; done
   differs=0
   for DOMAIN in $(all_domains); do
     live="$(answer_words "${CODE_BEFORE[$DOMAIN]:-}" "${TITLE_BEFORE[$DOMAIN]:-}" "${CSS_BEFORE[$DOMAIN]:-}")"
@@ -333,7 +348,6 @@ if [ -n "$RECOVERY_FILE" ]; then
   for r_domain in "${!REC_CODE[@]}"; do
     [ -n "${CODE_BEFORE[$r_domain]:-}" ] || echo "   (the file also names $r_domain, which no prairiepost vhost here serves: ignored)"
   done
-  [ -n "$RECOVERY_HELD" ] || fail "$BAD names none of this box's domains — nothing changed"
   echo "   Held to the recovery baseline:$RECOVERY_HELD ($differs of them to something other than what they answer now)."
   echo "   Held to what they answer now:${RECOVERY_UNLISTED:- none}."
 fi
