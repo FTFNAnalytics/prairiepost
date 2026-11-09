@@ -222,8 +222,70 @@ foreach ($left as $s) {
     ok(is_dir("$b10/dest/sets/$s") && is_file("$b10/dest/sets/$s/manifest.json"), "kept set $s is whole");
 }
 
+/* --- pgsql: a password the passfile has to escape ------------------------------ */
+
+// pg_dump authenticates through a pgpass file, where a literal ':' or '\'
+// in a field must be backslash-escaped — each exactly once. The fixture
+// user's own password is plain, so nothing above can tell a correct escape
+// from a wrong one. A dedicated read-only role whose password carries both
+// characters proves the writer end to end: either the dump authenticates
+// or the backup fails.
+$bh = null;
+if ($fx['engine'] === 'pgsql') {
+    $p = $fx['pg'];
+    $dsn = "pgsql:host={$p['host']};port={$p['port']};dbname={$p['name']}";
+    $admin = new PDO($dsn, $p['user'], $p['pass'], [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]);
+    $role = 'pp_bk_' . bin2hex(random_bytes(3));
+    $hostile = 'co:lon\\back:' . bin2hex(random_bytes(4));
+    $admin->exec("CREATE ROLE \"$role\" LOGIN PASSWORD " . $admin->quote($hostile));
+    register_shutdown_function(function () use ($admin, $role) {
+        try {
+            $admin->exec("DROP OWNED BY \"$role\"");
+            $admin->exec("DROP ROLE \"$role\"");
+        } catch (Throwable) {
+        }
+    });
+    // Exactly what a dump of the schema reads; nothing it could write with.
+    $admin->exec("GRANT CONNECT ON DATABASE \"{$p['name']}\" TO \"$role\"");
+    $admin->exec("GRANT USAGE ON SCHEMA \"{$fx['schema']}\" TO \"$role\"");
+    $admin->exec("GRANT SELECT ON ALL TABLES IN SCHEMA \"{$fx['schema']}\" TO \"$role\"");
+    $admin->exec("GRANT SELECT ON ALL SEQUENCES IN SCHEMA \"{$fx['schema']}\" TO \"$role\"");
+
+    $signsIn = function (string $pass) use ($dsn, $role): bool {
+        try {
+            new PDO($dsn, $role, $pass, [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]);
+            return true;
+        } catch (PDOException) {
+            return false;
+        }
+    };
+    // Controls: the role and its password are sound without any passfile
+    // involved, and the server really does ask for that password — under
+    // trust/peer authentication a wrong passfile would pass too, and the
+    // case would prove nothing.
+    ok($signsIn($hostile), 'the escaping-probe role signs in with its own password (control)');
+    if ($signsIn('not-' . $hostile)) {
+        echo "SKIP (pgpass escaping): this server admits the probe role without its password (trust/peer), so it cannot tell a correct passfile from a wrong one\n";
+    } else {
+        $fxh = $fx;
+        $fxh['pg']['user'] = $role;
+        $fxh['pg']['pass'] = $hostile;
+        $bh = layout($fxh);
+        [$outh, $rch] = runBackup($bh);
+        $sth = state($bh);
+        ok($rch === 0 && ($sth['ok'] ?? false) === true,
+            "a database password containing ':' and '\\' still authenticates the dump (rc=$rch; " . ($sth['reason'] ?? 'no reason recorded') . ')');
+        ok(($sth['schema_version'] ?? 0) >= 19, 'and the schema-version read through the same passfile');
+        ok(count(sets($bh)) === 1 && is_file("$bh/dest/sets/" . (sets($bh)[0] ?? '-') . '/db.dump'), 'and a complete set is published');
+        ok(!str_contains($outh . (string) @file_get_contents("$bh/dest/state.json"), $hostile),
+            'and the password reaches neither the output nor state.json');
+        ok(glob("$bh/dest/sets/*/.pgpass*") === [] && glob("$bh/dest/.staging-*") === [],
+            'and no passfile outlives the run');
+    }
+}
+
 /* --- Cleanup ------------------------------------------------------------------- */
-foreach ([$b, $b2, $b3, $b4, $b5, $b6, $b7, $b8, $b9, $b10, $stub] as $d) {
+foreach (array_filter([$b, $b2, $b3, $b4, $b5, $b6, $b7, $b8, $b9, $b10, $bh, $stub]) as $d) {
     exec('rm -rf ' . escapeshellarg($d));
 }
 pp_fixture_destroy($fx);
