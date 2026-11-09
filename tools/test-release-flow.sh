@@ -56,16 +56,31 @@
 # the hub in a directory of its own, and one tenant with no site row.
 #  11. a healthy roll that raises the version: every domain is captured
 #      before and compared after; the tenant with no site row is held to
-#      its 503.
+#      its 503; the capture is saved to a baseline file; and the roll's
+#      lines are word for word what they were before the recovery
+#      baseline existed.
 #  12. a release missing one paper's template tree, after a rise: the
-#      guard catches it by the stylesheet set and the group is HELD. Then
-#      the gap this fixture was built to show — a second roll onto a
-#      release that HAS the template takes the failing answer as its
-#      baseline, reads the repair as a failure, and puts the group back.
+#      guard catches it by the stylesheet set and the group is HELD. A
+#      second roll onto a release that HAS the template takes the
+#      failing answer as its baseline, reads the repair as a failure and
+#      puts the group back (the assertions marked GAP: what a roll does,
+#      and must go on doing, when nobody names a recovery baseline). The
+#      same roll with PP_UPGRADE_BASELINE naming the file roll 1 saved
+#      passes the repair and says which baseline each domain was held to.
 #  13. the vhost files copied back to the old release after a rise: every
 #      domain answers the readiness gate's 503. A roll holds each of them
-#      to that 503, reads 200 as a failure, and puts both groups back.
-#      The box cannot be recovered by rolling.
+#      to that 503, reads 200 as a failure and puts both groups back
+#      (GAP) — and now says so before it changes anything, names the
+#      saved baseline, and does not offer the .bak files as a rollback.
+#      With the recovery baseline: a roll onto the release that lacks the
+#      template still FAILS that paper (a recovery baseline is not a
+#      bypass); a roll onto HEAD brings every domain back, and the tenant
+#      with no site row stays on the 503 its record says.
+#  14. held after a rise, then the failing domain taken down by hand (the
+#      single-vhost copy-back in docs/MIGRATION-COMPAT.md). An ordinary
+#      roll moves the other papers and leaves that domain down; a missing
+#      or malformed recovery baseline stops a roll before it starts; the
+#      recovery roll brings the domain back, verified as itself.
 #
 set -uo pipefail
 cd "$(dirname "$0")/.."
@@ -158,9 +173,16 @@ run_upgrade() { # box-dir [pre|post: force that nginx test to fail] -> rc
   #   UP_PORT                the box's HTTP stand-in (front_start): the
   #                          masthead guard runs for real against it
   #   UP_SHA + UP_TARBALL    roll to a candidate other than HEAD
+  #   UP_BASELINE            PP_UPGRADE_BASELINE: a saved baseline to hold
+  #                          this roll to (the recovery baseline)
+  # A roll names its .bak files and its saved baseline by the second it
+  # started in; a second roll of the same box waits for the next one.
+  while ls "$1"/vhosts/*.bak."$(date +%s)" >/dev/null 2>&1; do sleep 0.2; done
   PP_UPGRADE_FIXTURE=1 \
   PP_UPGRADE_FIXTURE_NGINX_FAIL="${2:-}" \
   PP_UPGRADE_FIXTURE_HTTP_PORT="${UP_PORT:-}" \
+  PP_UPGRADE_BASELINE_DIR="$1/baselines" \
+  PP_UPGRADE_BASELINE="${UP_BASELINE:-}" \
   PP_UPGRADE_VHOSTS_DIR="$1/vhosts" \
   PP_UPGRADE_CRON_DIR="$1/cron" \
   PP_UPGRADE_WWW="$1/www" \
@@ -294,6 +316,13 @@ gate_503() { # domain -> true when it answers the readiness gate's own 503 page
   [ "$HTTP_CODE" = 503 ] && grep -q "This site is being updated" "$HTTP_BODY"
 }
 on_rel() { grep -q "prairiepost-$2-" "$1"; }   # a vhost or cron file names the release with that label
+has_line() { grep -qxF -- "$2" <<< "$1"; }     # the output has exactly that line, nothing before or after it
+saved_baseline() { sed -n 's/^   saved: \([^ ]*\) .*/\1/p' <<< "$1" | head -1; }   # roll output -> the baseline file that roll saved
+gates() { # domains... -> prints how many of them answer the readiness gate's 503 right now
+  local n=0 d
+  for d in "$@"; do gate_503 "$d" && n=$((n + 1)); done
+  echo "$n"
+}
 # A candidate with one paper's template tree missing — the failure the
 # stylesheet check exists for (a release cut from a line that never had
 # the paper's files): HEAD's own tree minus the Kitchener Chronicle's
@@ -502,6 +531,11 @@ ok "the schema rose"                          'has "$OUT11" "ROSE from 21" && [ 
 ok "the baseline is the REAL capture: title and stylesheet set per domain" 'has "$OUT11" "   prairiedispatch.test -> $PD_T [$PD_C]" && has "$OUT11" "   kitchenerchronicle.test -> $KC_T [$KC_C]" && has "$OUT11" "   civismedia.test -> $HUB_T [$HUB_C]"'
 ok "the tenant with no site row is held to its 503" 'has "$OUT11" "   dormant.test answered 503 with no title — it will be held to 503 afterwards" && has "$OUT11" "PASS dormant.test -> 503 (unchanged)"'
 ok "every domain is compared after the roll, none by CLI boot" 'has "$OUT11" "PASS prairiedispatch.test -> $PD_T" && has "$OUT11" "PASS kitchenerchronicle.test -> $KC_T" && has "$OUT11" "PASS civismedia.test -> $HUB_T" && [ "$(grep -c "^PASS " <<< "$OUT11")" = 4 ] && hasnt "$OUT11" "(fixture) "'
+F11=$(saved_baseline "$OUT11")
+echo "   the baseline this roll saved ($F11):"
+sed 's/^/   | /' "$F11" 2>/dev/null
+ok "the roll saves the baseline it captured, one line per domain" '[ -f "$F11" ] && [ "$(grep -vc "^#" "$F11")" = 4 ] && grep -qxF "kitchenerchronicle.test|200|$KC_C|$KC_T" "$F11" && grep -qxF "prairiedispatch.test|200|$PD_C|$PD_T" "$F11" && grep -qxF "civismedia.test|200|$HUB_C|$HUB_T" "$F11" && grep -qxF "dormant.test|503||" "$F11"'
+ok "an ordinary roll is held to nothing else: its lines are the old ones, word for word" 'has_line "$OUT11" "PASS kitchenerchronicle.test -> $KC_T" && has_line "$OUT11" "PASS dormant.test -> 503 (unchanged)" && hasnt "$OUT11" "RECOVERY" && hasnt "$OUT11" "recovery baseline" && hasnt "$OUT11" "readiness gate"'
 front_get kitchenerchronicle.test
 ok "afterwards the NEW release answers: same masthead, same stylesheets" '[ "$HTTP_CODE" = 200 ] && [ "$HTTP_TITLE" = "$KC_T" ] && [ "$HTTP_CSS" = "$KC_C" ] && [ "$HTTP_FROM" = "prairiepost-$HEAD12-shared" ]'
 front_get civismedia.test
@@ -525,9 +559,12 @@ front_get kitchenerchronicle.test
 ok "so the Chronicle is served in public without its stylesheet" '[ "$HTTP_CODE" = 200 ] && [ "$HTTP_TITLE" = "$KC_T" ] && [ "$HTTP_CSS" = "/assets/css/prairie.css " ] && [ "$HTTP_FROM" = "prairiepost-$LOSSY12-shared" ]'
 front_get prairiedispatch.test
 ok "and the Dispatch, same group, is served as before" '[ "$HTTP_CODE" = 200 ] && [ "$HTTP_TITLE" = "$PD_T" ] && [ "$HTTP_CSS" = "$PD_C" ] && [ "$HTTP_FROM" = "prairiepost-$LOSSY12-shared" ]'
+F12=$(saved_baseline "$OUT12")
+ok "roll 1 saved its baseline — the Chronicle WITH its stylesheet — and its closing text names the file" '[ -f "$F12" ] && grep -qxF "kitchenerchronicle.test|200|$KC_C|$KC_T" "$F12" && has_line "$OUT12" "  PP_UPGRADE_BASELINE=$F12"'
 # THE GAP (a). Roll 2 goes to HEAD, which has the Chronicle's template
 # tree: it is the fix. Nothing tells the roll that the Chronicle was
-# already failing when it started.
+# already failing when it started — this is a roll WITHOUT a recovery
+# baseline, and it must go on behaving exactly like this.
 OUT12B=$(UP_PORT=$FRONT_PORT run_upgrade "$B12" 2>&1); RC12B=$?
 show "$(sed -n '/^== Capture every domain/,/^== Fetch the release/p' <<< "$OUT12B")"
 show "$(sed -n '/^== Verify every domain/,$p' <<< "$OUT12B")"
@@ -538,6 +575,25 @@ ok "GAP the roll ends exit 0 with a WARN"     '[ "$RC12B" = 0 ] && has "$OUT12B"
 front_get kitchenerchronicle.test
 ok "GAP the Chronicle is STILL served without its stylesheet" '[ "$HTTP_CODE" = 200 ] && [ "$HTTP_CSS" = "/assets/css/prairie.css " ] && [ "$HTTP_FROM" = "prairiepost-$LOSSY12-shared" ]'
 ok "the hub's group, healthy throughout, did move to the fixed release" 'on_new "$B12/vhosts/civismedia" && has "$OUT12B" "PASS civismedia.test -> $HUB_T"'
+F12B=$(saved_baseline "$OUT12B")
+ok "roll 2 points at the recovery baseline, and its own saved baseline is the FAILING answer" 'has "$OUT12B" "PP_UPGRADE_BASELINE=<file>" && has_line "$OUT12B" "This roll'"'"'s own, taken before it changed anything: $F12B" && [ "$F12B" != "$F12" ] && grep -qxF "kitchenerchronicle.test|200|/assets/css/prairie.css |$KC_T" "$F12B" && grep -qxF "kitchenerchronicle.test|200|$KC_C|$KC_T" "$F12"'
+# THE RECOVERY ROLL. The same roll to HEAD, told to hold the domains to
+# the baseline roll 1 saved while the Chronicle was healthy.
+OUT12C=$(UP_PORT=$FRONT_PORT UP_BASELINE=$F12 run_upgrade "$B12" 2>&1); RC12C=$?
+show "$(sed -n '/^== Capture every domain/,/^== Fetch the release/p' <<< "$OUT12C")"
+show "$(sed -n '/^== Verify every domain/,$p' <<< "$OUT12C")"
+ok "roll 3 (HEAD, PP_UPGRADE_BASELINE = roll 1's file) succeeds" '[ "$RC12C" = 0 ]'
+ok "it says which file, and what the file says about itself" 'has "$OUT12C" "== Recovery baseline (PP_UPGRADE_BASELINE): hold domains to $F12" && has "$OUT12C" "   the file says: written "'
+ok "it holds the Chronicle to the healthy record, and says what it answers now" 'has_line "$OUT12C" "   kitchenerchronicle.test: held to the RECOVERY baseline: 200 $KC_T [$KC_C]" && has_line "$OUT12C" "      and NOT to what it answers now: 200 $KC_T [/assets/css/prairie.css ]"'
+ok "a domain whose record is what it answers now is told so" 'has_line "$OUT12C" "   prairiedispatch.test: held to the RECOVERY baseline: 200 $PD_T [$PD_C] — which is what it answers now" && has_line "$OUT12C" "   dormant.test: held to the RECOVERY baseline: 503 — which is what it answers now"'
+ok "the repair now PASSES, and its line says which baseline" 'has_line "$OUT12C" "PASS kitchenerchronicle.test -> $KC_T [recovery baseline; when this roll started it answered 200 $KC_T [/assets/css/prairie.css ]]"'
+ok "so do the domains that were healthy all along" 'has_line "$OUT12C" "PASS prairiedispatch.test -> $PD_T [recovery baseline, which is what it answered when this roll started]" && has_line "$OUT12C" "PASS dormant.test -> 503 [recovery baseline, which is what it answered when this roll started]"'
+ok "nothing is restored, nothing held: the papers' group is on the fixed release" '[ "$(restore_lines "$OUT12C")" = 0 ] && hasnt "$OUT12C" "NOT restoring" && [ "$(grep -c "^FAIL " <<< "$OUT12C")" = 0 ] && on_new "$B12/vhosts/kitchenerchronicle" && on_new "$B12/vhosts/prairiedispatch" && on_new "$B12/vhosts/dormant"'
+ok "the roll ends by naming the baseline each domain was held to" 'has "$OUT12C" "== Which baseline each domain was held to" && has_line "$OUT12C" "  the recovery baseline $F12: civismedia.test dormant.test kitchenerchronicle.test prairiedispatch.test" && has_line "$OUT12C" "  what it answered when this roll started: none"'
+ok "the release it left serves the stored version, so the repoint is offered as before" 'has "$OUT12C" "Old release directories stay on disk. Rollback for any release group:" && hasnt "$OUT12C" "NOT a rollback"'
+front_get kitchenerchronicle.test
+ok "the Chronicle is served with its stylesheet again, from the fixed release" '[ "$HTTP_CODE" = 200 ] && [ "$HTTP_TITLE" = "$KC_T" ] && [ "$HTTP_CSS" = "$KC_C" ] && [ "$HTTP_FROM" = "prairiepost-$HEAD12-shared" ]'
+ok "cron runs from the fixed release"         '[ -f "$B12/cron/pp-fetch" ] && [ ! -f "$B12/cron/pp-fetch.paused" ] && on_new "$B12/cron/pp-fetch"'
 front_stop
 
 echo
@@ -547,22 +603,98 @@ build_http_box "$B13"
 front_start "$B13"
 OUT13=$(UP_PORT=$FRONT_PORT run_upgrade "$B13" 2>&1); RC13=$?
 ok "the roll that raised the version succeeded" '[ "$RC13" = 0 ] && has "$OUT13" "ROSE from 21" && [ "$(grep -c "^PASS " <<< "$OUT13")" = 4 ]'
+F13=$(saved_baseline "$OUT13")
+ok "and saved the baseline it captured, from a healthy box" '[ -f "$F13" ] && grep -qxF "kitchenerchronicle.test|200|$KC_C|$KC_T" "$F13" && grep -qxF "dormant.test|503||" "$F13"'
 # What the closing text says not to do: every vhost's .bak copied back.
 for f in "$B13"/vhosts/*.bak.*; do cp "$f" "${f%.bak.*}"; done
 ok "the vhost files name the old release again" 'on_old "$B13/vhosts/kitchenerchronicle" && on_old "$B13/vhosts/prairiedispatch" && on_old "$B13/vhosts/dormant" && on_old "$B13/vhosts/civismedia"'
-G13=0; for d in prairiedispatch.test kitchenerchronicle.test civismedia.test dormant.test; do gate_503 "$d" && G13=$((G13 + 1)); done
-ok "all four domains answer the readiness gate's 503" '[ "$G13" = 4 ]'
+ok "all four domains answer the readiness gate's 503" '[ "$(gates prairiedispatch.test kitchenerchronicle.test civismedia.test dormant.test)" = 4 ]'
 # THE GAP (b). The release the papers need is on the box, and a roll to
-# it is the obvious repair.
+# it is the obvious repair. This too is a roll WITHOUT a recovery
+# baseline, and it must go on behaving exactly like this: a domain taken
+# down on purpose answers the same 503, and no roll may bring it back
+# unasked.
 OUT13B=$(UP_PORT=$FRONT_PORT run_upgrade "$B13" 2>&1); RC13B=$?
 show "$(sed -n '/^== Capture every domain/,/^== Fetch the release/p' <<< "$OUT13B")"
 show "$(sed -n '/^== Verify every domain/,$p' <<< "$OUT13B")"
 ok "GAP the roll holds each domain to the 503 it answered" 'has "$OUT13B" "   kitchenerchronicle.test answered 503 with no title — it will be held to 503 afterwards" && has "$OUT13B" "   civismedia.test answered 503 with no title — it will be held to 503 afterwards"'
-ok "GAP 200 afterwards reads as a failure"    'has "$OUT13B" "FAIL kitchenerchronicle.test answered 200, served 503 before" && has "$OUT13B" "FAIL prairiedispatch.test answered 200, served 503 before" && has "$OUT13B" "FAIL civismedia.test answered 200, served 503 before"'
+ok "GAP 200 afterwards reads as a failure"    'has_line "$OUT13B" "FAIL kitchenerchronicle.test answered 200, served 503 before" && has_line "$OUT13B" "FAIL prairiedispatch.test answered 200, served 503 before" && has_line "$OUT13B" "FAIL civismedia.test answered 200, served 503 before"'
 ok "GAP the version did not rise, so both groups are put back on the release that cannot serve" 'has "$OUT13B" "stored schema version after the step: $HEADV (unchanged)" && [ "$(restore_lines "$OUT13B")" = 2 ] && on_old "$B13/vhosts/kitchenerchronicle" && on_old "$B13/vhosts/prairiedispatch" && on_old "$B13/vhosts/civismedia"'
 ok "GAP the roll ends exit 0 with a WARN"     '[ "$RC13B" = 0 ] && has "$OUT13B" "WARN: at least one release group was restored"'
-G13=0; for d in prairiedispatch.test kitchenerchronicle.test civismedia.test dormant.test; do gate_503 "$d" && G13=$((G13 + 1)); done
-ok "GAP the box still answers 503 on all four domains" '[ "$G13" = 4 ]'
+ok "GAP the box still answers 503 on all four domains" '[ "$(gates prairiedispatch.test kitchenerchronicle.test civismedia.test dormant.test)" = 4 ]'
+ok "but it SAYS so before changing anything: the gate's page, by domain, and the baseline to name" 'has "$OUT13B" "NOTE: the 503 from these is the readiness gate'"'"'s own page (\"This site is being updated\"): civismedia.test dormant.test kitchenerchronicle.test prairiedispatch.test" && has_line "$OUT13B" "         The newest of them in which these answered 200 with a title (3 of 4): $F13" && [ "$(line_of "$OUT13B" "NOTE: the 503 from these")" -lt "$(line_of "$OUT13B" "== Fetch the release template once")" ]'
+ok "each restore says the release it goes back to cannot serve" '[ "$(grep -c "is not built for the stored schema version (its own runner says ahead: stored version $HEADV, built for 21). Back on it, every domain of this group answers the readiness gate" <<< "$OUT13B")" = 2 ]'
+ok "and the closing text no longer offers those .bak files as a rollback" 'has "$OUT13B" "these are NOT a rollback" && hasnt "$OUT13B" "Rollback for any release group" && has "$OUT13B" "prairiepost-oldsha11-shared — its own runner says ahead: stored version $HEADV, built for 21"'
+# A RECOVERY ROLL IS NOT A BYPASS. Told to hold the domains to the healthy
+# baseline, a roll onto the release that lacks the Chronicle's template
+# tree still fails the Chronicle — against the recovery baseline now.
+OUT13C=$(UP_PORT=$FRONT_PORT UP_BASELINE=$F13 UP_SHA=$LOSSY12 UP_TARBALL=$LOSSY_TARBALL run_upgrade "$B13" 2>&1); RC13C=$?
+show "$(sed -n '/^== Recovery baseline/,/^== Fetch the release/p' <<< "$OUT13C")"
+show "$(sed -n '/^== Verify every domain/,$p' <<< "$OUT13C")"
+ok "held to the recovery baseline, the gate NOTE has nobody left to name" 'has_line "$OUT13C" "   kitchenerchronicle.test: held to the RECOVERY baseline: 200 $KC_T [$KC_C]" && has_line "$OUT13C" "      and NOT to what it answers now: 503" && hasnt "$OUT13C" "NOTE: the 503 from these"'
+ok "the release without the template FAILS the Chronicle against the recovery baseline" 'has_line "$OUT13C" "FAIL kitchenerchronicle.test stylesheet set is not the recovery baseline'"'"'s — baseline [$KC_C] now [/assets/css/prairie.css ] [recovery baseline; when this roll started it answered 503]"'
+ok "the Dispatch, same group, passes its record" 'has_line "$OUT13C" "PASS prairiedispatch.test -> $PD_T [recovery baseline; when this roll started it answered 503]"'
+ok "the papers' group goes back where it came from, as on any roll that did not raise the version" '[ "$(restore_lines "$OUT13C")" = 1 ] && on_old "$B13/vhosts/kitchenerchronicle" && on_old "$B13/vhosts/prairiedispatch" && [ "$(gates prairiedispatch.test kitchenerchronicle.test)" = 2 ] && [ "$RC13C" = 0 ] && has "$OUT13C" "WARN: at least one release group was restored" && has_line "$OUT13C" "This roll was held to: $F13"'
+front_get civismedia.test
+ok "the hub's group passed its record and is serving again" 'has_line "$OUT13C" "PASS civismedia.test -> $HUB_T [recovery baseline; when this roll started it answered 503]" && [ "$HTTP_CODE" = 200 ] && [ "$HTTP_TITLE" = "$HUB_T" ] && [ "$HTTP_FROM" = "prairiepost-$LOSSY12-civismedia" ]'
+# THE RECOVERY ROLL. The same baseline, onto HEAD.
+OUT13D=$(UP_PORT=$FRONT_PORT UP_BASELINE=$F13 run_upgrade "$B13" 2>&1); RC13D=$?
+show "$(sed -n '/^== Recovery baseline/,/^== Fetch the release/p' <<< "$OUT13D")"
+show "$(sed -n '/^== Verify every domain/,$p' <<< "$OUT13D")"
+ok "the recovery roll onto HEAD succeeds"     '[ "$RC13D" = 0 ] && [ "$(restore_lines "$OUT13D")" = 0 ] && [ "$(grep -c "^FAIL " <<< "$OUT13D")" = 0 ]'
+ok "the papers PASS against the healthy record: 200 where they answered 503" 'has_line "$OUT13D" "PASS kitchenerchronicle.test -> $KC_T [recovery baseline; when this roll started it answered 503]" && has_line "$OUT13D" "PASS prairiedispatch.test -> $PD_T [recovery baseline; when this roll started it answered 503]"'
+ok "the tenant with no site row is held to the 503 in its record, not swept to 200" 'has_line "$OUT13D" "   dormant.test: held to the RECOVERY baseline: 503 — which is what it answers now" && has_line "$OUT13D" "PASS dormant.test -> 503 [recovery baseline, which is what it answered when this roll started]"'
+ok "every vhost is on the release built for the stored version" 'on_new "$B13/vhosts/kitchenerchronicle" && on_new "$B13/vhosts/prairiedispatch" && on_new "$B13/vhosts/dormant" && on_new "$B13/vhosts/civismedia"'
+front_get kitchenerchronicle.test; K13="$HTTP_CODE|$HTTP_TITLE|$HTTP_CSS|$HTTP_FROM"
+front_get prairiedispatch.test;    P13="$HTTP_CODE|$HTTP_TITLE|$HTTP_CSS|$HTTP_FROM"
+front_get civismedia.test;         H13="$HTTP_CODE|$HTTP_TITLE|$HTTP_CSS|$HTTP_FROM"
+ok "the box serves again: each paper its own masthead and stylesheets" '[ "$K13" = "200|$KC_T|$KC_C|prairiepost-$HEAD12-shared" ] && [ "$P13" = "200|$PD_T|$PD_C|prairiepost-$HEAD12-shared" ] && [ "$H13" = "200|$HUB_T|$HUB_C|prairiepost-$HEAD12-civismedia" ]'
+front_get dormant.test
+ok "and the unprovisioned tenant its own 503, no longer the gate's" '[ "$HTTP_CODE" = 503 ] && grep -q "This site is not provisioned here" "$HTTP_BODY" && ! grep -q "This site is being updated" "$HTTP_BODY"'
+ok "the closing text tells the two old releases apart: one is a rollback, one is 503" 'has "$OUT13D" "these are NOT a rollback" && has "$OUT13D" "prairiepost-oldsha11-shared — its own runner says ahead: stored version $HEADV, built for 21" && hasnt "$OUT13D" "prairiepost-$LOSSY12-civismedia — its own runner" && has_line "$OUT13D" "For the other release groups:" && has "$OUT13D" "Old release directories stay on disk. Rollback for any release group:"'
+front_stop
+
+echo
+echo "== scenario 14: held after a rise, the failing domain taken down by hand, then rolled back up"
+B14=$(mktemp -d)
+build_http_box "$B14"
+front_start "$B14"
+OUT14=$(UP_PORT=$FRONT_PORT UP_SHA=$LOSSY12 UP_TARBALL=$LOSSY_TARBALL run_upgrade "$B14" 2>&1); RC14=$?
+F14=$(saved_baseline "$OUT14")
+ok "roll 1 holds the papers' group, as in scenario 12" '[ "$RC14" != 0 ] && has "$OUT14" "NOT restoring release group" && has_line "$OUT14" "  PP_UPGRADE_BASELINE=$F14"'
+# "Take that one domain down" (docs/MIGRATION-COMPAT.md): the roll's own
+# backup of that single vhost copied back, the file the roll wrote kept
+# under a name the script ignores.
+V14="$B14/vhosts/kitchenerchronicle"
+BAK14=$(ls "$V14".bak.* | head -1)
+cp "$V14" "$BAK14.new" && cp "$BAK14" "$V14"
+front_get prairiedispatch.test
+ok "the Chronicle alone answers the gate's 503; the Dispatch is untouched" '[ "$(gates kitchenerchronicle.test)" = 1 ] && on_old "$V14" && [ "$HTTP_CODE" = 200 ] && [ "$HTTP_FROM" = "prairiepost-$LOSSY12-shared" ]'
+# A roll WITHOUT a recovery baseline leaves a domain that was taken down
+# exactly where the operator put it.
+OUT14B=$(UP_PORT=$FRONT_PORT run_upgrade "$B14" 2>&1); RC14B=$?
+show "$(sed -n '/^== Capture every domain/,/^== Fetch the release/p' <<< "$OUT14B")"
+show "$(sed -n '/^== Verify every domain/,$p' <<< "$OUT14B")"
+ok "an ordinary roll to HEAD moves the other papers and the hub" 'on_new "$B14/vhosts/prairiedispatch" && on_new "$B14/vhosts/dormant" && on_new "$B14/vhosts/civismedia" && has_line "$OUT14B" "PASS prairiedispatch.test -> $PD_T"'
+ok "and leaves the Chronicle down: a group of one, put back on its 503" 'has_line "$OUT14B" "FAIL kitchenerchronicle.test answered 200, served 503 before" && [ "$(restore_lines "$OUT14B")" = 1 ] && on_old "$V14" && [ "$(gates kitchenerchronicle.test)" = 1 ]'
+ok "it names the domain and the baseline before changing anything" 'has "$OUT14B" "(\"This site is being updated\"): kitchenerchronicle.test" && has_line "$OUT14B" "         The newest of them in which these answered 200 with a title (1 of 1): $F14"'
+# Observed, not asserted (as in scenario 6): what that restore does to the
+# cron file of the papers' group, which passed.
+if [ -f "$B14/cron/pp-fetch" ]; then C14="present"; elif [ -f "$B14/cron/pp-fetch.paused" ]; then C14="still paused"; else C14="GONE (only $(cd "$B14/cron" && ls | tr '\n' ' ')remain)"; fi
+echo "note the passing papers' group's cron file after the Chronicle's restore: $C14"
+# A recovery baseline that cannot be used stops the roll before it starts.
+OUT14X=$(UP_PORT=$FRONT_PORT UP_BASELINE="$B14/no-such-baseline.txt" run_upgrade "$B14" 2>&1); RC14X=$?
+printf 'kitchenerchronicle.test|200|/assets/css/kitchener.css\n' > "$B14/short.txt"
+OUT14Y=$(UP_PORT=$FRONT_PORT UP_BASELINE="$B14/short.txt" run_upgrade "$B14" 2>&1); RC14Y=$?
+ok "a recovery baseline that is missing or malformed stops the roll, nothing changed" '[ "$RC14X" != 0 ] && has "$OUT14X" "names a file that cannot be read" && hasnt "$OUT14X" "== Resolve the branch head" && [ "$RC14Y" != 0 ] && has "$OUT14Y" "short.txt), line 1: not" && has "$OUT14Y" "nothing changed" && hasnt "$OUT14Y" "== Fetch the release template once" && on_old "$V14" && [ "$(ls "$V14".bak.* | wc -l)" = 3 ]'
+# THE RECOVERY ROLL brings the one domain back, verified as itself.
+OUT14C=$(UP_PORT=$FRONT_PORT UP_BASELINE=$F14 run_upgrade "$B14" 2>&1); RC14C=$?
+show "$(sed -n '/^== Recovery baseline/,/^== Fetch the release/p' <<< "$OUT14C")"
+show "$(sed -n '/^== Verify every domain/,$p' <<< "$OUT14C")"
+ok "the recovery roll succeeds, and only the Chronicle's group rolls" '[ "$RC14C" = 0 ] && [ "$(restore_lines "$OUT14C")" = 0 ] && [ "$(grep -c "^PASS " <<< "$OUT14C")" = 1 ] && [ "$(grep -c "already on $HEAD12" <<< "$OUT14C")" = 2 ]'
+ok "the Chronicle PASSES as itself: its own masthead and stylesheet set" 'has_line "$OUT14C" "PASS kitchenerchronicle.test -> $KC_T [recovery baseline; when this roll started it answered 503]"'
+front_get kitchenerchronicle.test
+ok "it is back up, from a release directory of its own" '[ "$HTTP_CODE" = 200 ] && [ "$HTTP_TITLE" = "$KC_T" ] && [ "$HTTP_CSS" = "$KC_C" ] && [ "$HTTP_FROM" = "prairiepost-$HEAD12-kitchenerchronicle" ]'
 front_stop
 
 for B in "${BOXES[@]}"; do
