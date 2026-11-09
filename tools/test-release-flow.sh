@@ -535,7 +535,9 @@ F11=$(saved_baseline "$OUT11")
 echo "   the baseline this roll saved ($F11):"
 sed 's/^/   | /' "$F11" 2>/dev/null
 ok "the roll saves the baseline it captured, one line per domain" '[ -f "$F11" ] && [ "$(grep -vc "^#" "$F11")" = 4 ] && grep -qxF "kitchenerchronicle.test|200|$KC_C|$KC_T" "$F11" && grep -qxF "prairiedispatch.test|200|$PD_C|$PD_T" "$F11" && grep -qxF "civismedia.test|200|$HUB_C|$HUB_T" "$F11" && grep -qxF "dormant.test|503||" "$F11"'
-ok "an ordinary roll is held to nothing else: its lines are the old ones, word for word" 'has_line "$OUT11" "PASS kitchenerchronicle.test -> $KC_T" && has_line "$OUT11" "PASS dormant.test -> 503 (unchanged)" && hasnt "$OUT11" "RECOVERY" && hasnt "$OUT11" "recovery baseline" && hasnt "$OUT11" "readiness gate"'
+# (Whole phrases, not the bare word: unprivileged, chown -R names every
+# file of the release on stderr, and one of them is docs/ACCOUNT-RECOVERY.md.)
+ok "an ordinary roll is held to nothing else: its lines are the old ones, word for word" 'has_line "$OUT11" "PASS kitchenerchronicle.test -> $KC_T" && has_line "$OUT11" "PASS dormant.test -> 503 (unchanged)" && hasnt "$OUT11" "RECOVERY baseline" && hasnt "$OUT11" "Recovery baseline" && hasnt "$OUT11" "recovery baseline" && hasnt "$OUT11" "readiness gate" && hasnt "$OUT11" "PP_UPGRADE_BASELINE"'
 front_get kitchenerchronicle.test
 ok "afterwards the NEW release answers: same masthead, same stylesheets" '[ "$HTTP_CODE" = 200 ] && [ "$HTTP_TITLE" = "$KC_T" ] && [ "$HTTP_CSS" = "$KC_C" ] && [ "$HTTP_FROM" = "prairiepost-$HEAD12-shared" ]'
 front_get civismedia.test
@@ -687,11 +689,17 @@ OUT14X=$(UP_PORT=$FRONT_PORT UP_BASELINE="$B14/no-such-baseline.txt" run_upgrade
 printf 'kitchenerchronicle.test|200|/assets/css/kitchener.css\n' > "$B14/short.txt"
 OUT14Y=$(UP_PORT=$FRONT_PORT UP_BASELINE="$B14/short.txt" run_upgrade "$B14" 2>&1); RC14Y=$?
 ok "a recovery baseline that is missing or malformed stops the roll, nothing changed" '[ "$RC14X" != 0 ] && has "$OUT14X" "names a file that cannot be read" && hasnt "$OUT14X" "== Resolve the branch head" && [ "$RC14Y" != 0 ] && has "$OUT14Y" "short.txt), line 1: not" && has "$OUT14Y" "nothing changed" && hasnt "$OUT14Y" "== Fetch the release template once" && on_old "$V14" && [ "$(ls "$V14".bak.* | wc -l)" = 3 ]'
-# THE RECOVERY ROLL brings the one domain back, verified as itself.
-OUT14C=$(UP_PORT=$FRONT_PORT UP_BASELINE=$F14 run_upgrade "$B14" 2>&1); RC14C=$?
+# THE RECOVERY ROLL brings the one domain back, verified as itself. The
+# baseline here is written BY HAND and names only the Chronicle (its
+# stylesheets out of order, as a person would type them): every other
+# domain is held to what it answers when the roll starts.
+H14="$B14/chronicle-only.txt"
+printf '# by hand: what the Chronicle should answer\n%s\n' "kitchenerchronicle.test|200|/assets/css/prairie.css /assets/css/kitchener.css|$KC_T" > "$H14"
+OUT14C=$(UP_PORT=$FRONT_PORT UP_BASELINE=$H14 run_upgrade "$B14" 2>&1); RC14C=$?
 show "$(sed -n '/^== Recovery baseline/,/^== Fetch the release/p' <<< "$OUT14C")"
 show "$(sed -n '/^== Verify every domain/,$p' <<< "$OUT14C")"
 ok "the recovery roll succeeds, and only the Chronicle's group rolls" '[ "$RC14C" = 0 ] && [ "$(restore_lines "$OUT14C")" = 0 ] && [ "$(grep -c "^PASS " <<< "$OUT14C")" = 1 ] && [ "$(grep -c "already on $HEAD12" <<< "$OUT14C")" = 2 ]'
+ok "only the domain the file names is held to it; the rest to what they answer now" 'has_line "$OUT14C" "   kitchenerchronicle.test: held to the RECOVERY baseline: 200 $KC_T [$KC_C]" && has_line "$OUT14C" "   prairiedispatch.test: NOT in that file — held to what it answers now: 200 $PD_T [$PD_C]" && has_line "$OUT14C" "  the recovery baseline $H14: kitchenerchronicle.test" && has_line "$OUT14C" "  what it answered when this roll started: civismedia.test dormant.test prairiedispatch.test"'
 ok "the Chronicle PASSES as itself: its own masthead and stylesheet set" 'has_line "$OUT14C" "PASS kitchenerchronicle.test -> $KC_T [recovery baseline; when this roll started it answered 503]"'
 front_get kitchenerchronicle.test
 ok "it is back up, from a release directory of its own" '[ "$HTTP_CODE" = 200 ] && [ "$HTTP_TITLE" = "$KC_T" ] && [ "$HTTP_CSS" = "$KC_C" ] && [ "$HTTP_FROM" = "prairiepost-$HEAD12-kitchenerchronicle" ]'
