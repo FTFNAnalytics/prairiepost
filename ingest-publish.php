@@ -83,7 +83,7 @@ $imageCredit = mb_substr(trim(strip_tags((string) ($in['image_credit'] ?? ''))),
 $pdo = db();
 $col = ctype_digit($storyRef) ? 'p.id' : 'p.slug';
 $stmt = $pdo->prepare(
-    "SELECT p.id, p.slug, p.status, p.awaiting_image, s.slug AS site
+    "SELECT p.id, p.slug, p.status, p.awaiting_image, s.slug AS site, s.id AS site_id
        FROM posts p
        JOIN post_sites ps ON ps.post_id = p.id
        JOIN sites s ON s.id = ps.site_id
@@ -105,14 +105,13 @@ if ((int) $post['awaiting_image'] !== 1 || $post['status'] !== 'draft') {
 
 /* --- Capability: a draft-only token cannot take the publishing step -------- */
 // Checked after the state checks so the answer is true: the story IS a
-// waiting draft, and it stays one. Nothing is written except the audit row.
+// waiting draft, and it stays one. Nothing is written except the audit row,
+// and that row can never change this answer: pp_ingest_audit() bounds it to
+// the table's columns and does not throw, so the refusal is always the 403.
 if ($agentDraftOnly) {
-    $now = now();
-    $pdo->prepare('INSERT INTO audit_log (site_id, user_id, user_name, action, target, detail, ip, created_at)
-        VALUES ((SELECT site_id FROM post_sites WHERE post_id = ? LIMIT 1), 0, ?, ?, ?, ?, ?, ?)')
-        ->execute([(int) $post['id'], 'hermes:' . $agent['name'], 'ingest-publish', (string) $post['slug'],
-            'REFUSED: draft-only token attempted attach-and-publish; story left as a draft, art not attached',
-            (string) ($_SERVER['REMOTE_ADDR'] ?? ''), $now]);
+    pp_ingest_audit((int) $post['site_id'], (string) $agent['name'], 'ingest-publish', (string) $post['slug'],
+        'REFUSED: draft-only token attempted attach-and-publish; story left as a draft, art not attached',
+        (int) $post['id']);
     pp_pub_out(403, [
         'ok' => false,
         'error' => 'this token is draft-only — it cannot publish; the story stays a draft for its newsroom',
@@ -139,11 +138,9 @@ if ($upd->rowCount() !== 1) {
 }
 
 $pdo->prepare('UPDATE ingest_agents SET last_used_at = ? WHERE id = ?')->execute([$now, (int) $agent['id']]);
-$pdo->prepare('INSERT INTO audit_log (site_id, user_id, user_name, action, target, detail, ip, created_at)
-    VALUES ((SELECT site_id FROM post_sites WHERE post_id = ? LIMIT 1), 0, ?, ?, ?, ?, ?, ?)')
-    ->execute([(int) $post['id'], 'hermes:' . $agent['name'], 'ingest-publish', (string) $post['slug'],
-        'featured image attached, published (publish-on-image lane)',
-        (string) ($_SERVER['REMOTE_ADDR'] ?? ''), $now]);
+// The story is live by now; the audit row observes and cannot fail the call.
+pp_ingest_audit((int) $post['site_id'], (string) $agent['name'], 'ingest-publish', (string) $post['slug'],
+    'featured image attached, published (publish-on-image lane)', (int) $post['id'], $now);
 
 pp_pub_out(200, [
     'ok' => true,

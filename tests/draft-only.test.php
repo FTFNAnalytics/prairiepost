@@ -12,6 +12,12 @@
  * mints a token that behaves this way; one minted without it publishes;
  * and a mistyped or misplaced flag stops the tool with a non-zero exit
  * and no row, instead of falling through to a standard token.
+ *
+ * The audit row each call leaves is bounded to its columns and can never
+ * change the answer: a slug longer than audit_log.target (VARCHAR(160),
+ * enforced by PostgreSQL and ignored by SQLite — so the status codes in
+ * section 7c are the PostgreSQL job's assertion) still answers 201 and
+ * 403, and so does a filing made while the audit write fails outright.
  */
 if (PHP_SAPI !== 'cli') {
     exit(1);
@@ -278,16 +284,93 @@ ok($rc === 0 && str_contains($out, 'revoked'), "a well-formed revoke still works
 [$out, $rc] = pp_fixture_tool($fx, 'tools/make-agent.php enable --name=cli-standard');
 ok($rc === 0 && str_contains($out, 're-enabled'), "a well-formed enable (the --name=value form) still works (rc=$rc)");
 
+/* ---- 7c. A slug longer than audit_log.target (VARCHAR(160)) ----------------- */
+// A slug runs to 180 characters; the audit row's target column holds 160.
+// PostgreSQL rejects the overflow — SQLite does not notice — and the row is
+// written AFTER the filing has committed, so an unbounded write stored the
+// draft and then answered 500, and turned the 403 refusal into a 500. The
+// status codes here are what the PostgreSQL job proves; the stored target
+// length is asserted on both engines.
+function auditRows(string $action, string $targetPrefix): array
+{
+    $s = fresh()->prepare('SELECT target, detail FROM audit_log WHERE action = ? AND target LIKE ? ORDER BY id');
+    $s->execute([$action, $targetPrefix . '%']);
+    $rows = $s->fetchAll();
+    $s->closeCursor();
+    return $rows;
+}
+$slugA = 'draft-only-long-slug-' . str_repeat('a', 154);   // 21 + 154 = 175 characters
+$slugB = 'waiting-long-slug-' . str_repeat('b', 162);      // 18 + 162 = 180 characters
+ok(strlen($slugA) === 175 && strlen($slugB) === 180, 'the fixture slugs are 175 and 180 characters');
+
+[$code, $j] = $file($draftToken, ['desk' => 'local-news', 'title' => 'Draft-only filing with a 175-character slug',
+                                  'suggested_slug' => $slugA]);
+ok($code === 201 && ($j['status'] ?? '') === 'draft' && ($j['slug'] ?? '') === $slugA,
+   "a draft-only filing whose slug is 175 characters answers 201 draft, not 500 (got $code)");
+$p = row($slugA);
+ok($p && $p['status'] === 'draft' && $p['published_at'] === null, 'the long-slug draft is stored, unpublished');
+$a = auditRows('ingest', 'draft-only-long-slug-');
+ok(count($a) === 1 && strlen((string) $a[0]['target']) === 160 && str_starts_with($slugA, (string) $a[0]['target']),
+   'its audit row exists, the target cut to the column width (got ' . (isset($a[0]) ? strlen((string) $a[0]['target']) : 'no row') . ')');
+ok(count($a) === 1 && str_contains((string) $a[0]['detail'], 'post #' . (int) ($j['id'] ?? 0)),
+   'and the cut row still names the story by its post id');
+
+[$code, $j] = $file($normalToken, ['title' => 'Waiting story with a 180-character slug', 'publish_on_image' => true,
+                                   'suggested_slug' => $slugB]);
+ok($code === 201 && ($j['awaiting_image'] ?? false) === true && ($j['slug'] ?? '') === $slugB,
+   "a normal token's 180-character-slug filing waits for art (got $code)");
+[$code, $j] = api($port, 'POST', '/api/ingest-publish', $draftToken, ['story' => $slugB, 'image' => $art]);
+ok($code === 403 && ($j['status'] ?? '') === 'draft' && ($j['reason'] ?? '') !== '',
+   "the refusal is still a 403 with status draft when the slug is 180 characters (got $code)");
+$p = row($slugB);
+ok($p && $p['status'] === 'draft' && (int) $p['awaiting_image'] === 1 && $p['image'] === '',
+   'the long-slug story is untouched by the refusal');
+$a = auditRows('ingest-publish', 'waiting-long-slug-');
+ok(count($a) === 1 && str_starts_with((string) $a[0]['detail'], 'REFUSED') && strlen((string) $a[0]['target']) === 160,
+   'the long-slug refusal is audited, target cut to 160');
+[$code, $j] = api($port, 'POST', '/api/ingest-publish', $normalToken, ['story' => $slugB, 'image' => $art]);
+ok($code === 200 && ($j['status'] ?? '') === 'published', "a normal token still publishes the long-slug story (got $code)");
+$a = auditRows('ingest-publish', 'waiting-long-slug-');
+ok(count($a) === 2 && strlen((string) $a[1]['target']) === 160, 'the long-slug publish is audited too, target cut to 160');
+
+/* ---- 7d. An audit write that FAILS never changes the answer ----------------- */
+// Park the table so every audit insert fails outright, on either engine. The
+// filing is already stored and the refusal is already decided when the row
+// is written, so the answers must stay 201 and 403.
+[$code, $j] = $file($normalToken, ['title' => 'Waiting story for the audit-failure check', 'publish_on_image' => true]);
+$parkedWaitSlug = (string) ($j['slug'] ?? '');
+ok($code === 201 && ($j['awaiting_image'] ?? false) === true, "a second waiting story is filed for this check (got $code)");
+$maint = pp_db_connect();
+$maint->exec('ALTER TABLE audit_log RENAME TO audit_log_parked');
+[$code, $j] = $file($draftToken, ['desk' => 'local-news', 'title' => 'Draft-only filing while the audit table is away']);
+$noAuditCode = $code;
+$noAuditSlug = (string) ($j['slug'] ?? '');
+$noAuditStatus = (string) ($j['status'] ?? '?');
+[$code, $j] = api($port, 'POST', '/api/ingest-publish', $draftToken, ['story' => $parkedWaitSlug, 'image' => $art]);
+$maint->exec('ALTER TABLE audit_log_parked RENAME TO audit_log');   // restored before any assertion can exit
+$maint = null;
+ok($noAuditCode === 201 && $noAuditStatus === 'draft',
+   "with the audit write failing, a draft-only filing still answers 201 draft (got $noAuditCode/$noAuditStatus)");
+ok($code === 403 && ($j['status'] ?? '') === 'draft',
+   "with the audit write failing, the refusal still answers 403 with status draft (got $code)");
+$p = row($noAuditSlug);
+ok($p && $p['status'] === 'draft' && $p['published_at'] === null, 'the filing made while auditing failed is stored as a draft');
+$p = row($parkedWaitSlug);
+ok($p && $p['status'] === 'draft' && (int) $p['awaiting_image'] === 1 && $p['image'] === '',
+   'the story refused while auditing failed is untouched');
+ok((int) fresh()->query('SELECT COUNT(*) FROM audit_log')->fetchColumn() > 0, 'the audit table is back in place');
+
 /* ---- 8. Invariants ---------------------------------------------------------- */
 $f = fresh();
 $pubByDraft = (int) $f->query("SELECT COUNT(*) FROM posts WHERE status = 'published' AND filed_by IN ('draftonly-writer', 'cli-draft-only', 'draftonly-revoked')")->fetchColumn();
 ok($pubByDraft === 0, "no row filed by a draft-only token is published (got $pubByDraft)");
 $filedByDraft = (int) $f->query("SELECT COUNT(*) FROM posts WHERE filed_by IN ('draftonly-writer', 'cli-draft-only')")->fetchColumn();
-// Three from draftonly-writer (wire desk; flag + art; flag, no art) and one
-// from the CLI-minted token; the off-scope and revoked attempts filed nothing.
-ok($filedByDraft === 4, "the draft-only tokens filed exactly four drafts (got $filedByDraft)");
+// Five from draftonly-writer (wire desk; flag + art; flag, no art; the
+// 175-character slug; the filing made while auditing failed) and one from the
+// CLI-minted token. The off-scope and revoked attempts filed nothing.
+ok($filedByDraft === 6, "the draft-only tokens filed exactly six drafts (got $filedByDraft)");
 $pubTotal = (int) $f->query("SELECT COUNT(*) FROM posts WHERE status = 'published' AND (filed_by LIKE 'draftonly-%' OR filed_by LIKE 'cli-%')")->fetchColumn();
-ok($pubTotal === 3, "exactly the three normal-token stories are published (got $pubTotal)");
+ok($pubTotal === 4, "exactly the four normal-token stories are published (got $pubTotal)");
 ok(max($codes) < 500, 'no call answered 5xx (max status ' . max($codes) . ')');
 
 if ($fails === 0) {

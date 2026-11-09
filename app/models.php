@@ -842,6 +842,45 @@ function pp_audit(string $action, string $target = '', string $detail = '', ?arr
     }
 }
 
+/**
+ * The ingest endpoints' audit row. It is written AFTER the work it records
+ * has committed (a stored filing, a published story), or as the only side
+ * effect of a refusal — so, like pp_audit(), it must never change the
+ * answer. Every bounded column is cut to its width, and a write that still
+ * fails is logged for the operator and reported as false, never thrown.
+ *
+ * The case that bit: audit_log.target is VARCHAR(160) while a story slug
+ * runs to 180-odd characters. PostgreSQL rejects the overflow (SQLite does
+ * not notice), which stored a filing and then answered 500, and turned a
+ * 403 refusal into a 500 with no audit row at all.
+ *
+ * When the slug had to be cut, the post id goes into the detail so the row
+ * still names exactly one story.
+ */
+function pp_ingest_audit(int $siteId, string $agentName, string $action, string $target, string $detail, int $postId = 0, ?string $at = null): bool
+{
+    if ($postId > 0 && mb_strlen($target) > 160) {
+        $detail .= ' [target cut to 160 characters; post #' . $postId . ']';
+    }
+    try {
+        db()->prepare('INSERT INTO audit_log (site_id, user_id, user_name, action, target, detail, ip, created_at)
+            VALUES (?, 0, ?, ?, ?, ?, ?, ?)')
+            ->execute([
+                $siteId,
+                mb_substr('hermes:' . $agentName, 0, 120),
+                mb_substr($action, 0, 60),
+                mb_substr($target, 0, 160),
+                $detail,
+                mb_substr((string) ($_SERVER['REMOTE_ADDR'] ?? ''), 0, 64),
+                $at ?? now(),
+            ]);
+        return true;
+    } catch (Throwable $e) {
+        error_log('prairiepost: ingest audit row not written (' . $action . ' ' . mb_substr($target, 0, 160) . '): ' . $e->getMessage());
+        return false;
+    }
+}
+
 /** Is this a plausible allowlist entry — an IP, or an IP with /bits? */
 function pp_cidr_valid(string $entry): bool
 {

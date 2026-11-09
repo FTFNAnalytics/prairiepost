@@ -323,17 +323,19 @@ if ($tags !== '') {
 }
 
 $pdo->prepare('UPDATE ingest_agents SET last_used_at = ? WHERE id = ?')->execute([$now, (int) $agent['id']]);
-$pdo->prepare('INSERT INTO audit_log (site_id, user_id, user_name, action, target, detail, ip, created_at)
-    VALUES (?, 0, ?, ?, ?, ?, ?, ?)')
-    ->execute([$siteId, 'hermes:' . $agent['name'], 'ingest', $slug,
-        $status === 'published'
-            ? ($isWire ? 'wire desk, published' : 'ready flag + image, published')
-            : ($awaitingImage ? 'filed as draft, awaiting image (publishes on attach)'
-                : ($agentDraftOnly
-                    ? 'filed as draft (draft-only token' . ($isWire ? '; wire desk withheld' : '')
-                        . ($readyOnImage ? '; publish_on_image not honoured' : '') . ')'
-                    : 'filed as draft')),
-        (string) ($_SERVER['REMOTE_ADDR'] ?? ''), $now]);
+// The story is stored by now, so this row only observes. pp_ingest_audit()
+// cuts every value to its column — a slug can be longer than
+// audit_log.target, which PostgreSQL rejects — and never throws: a lost
+// audit row must not turn a filed story into a 500.
+pp_ingest_audit($siteId, (string) $agent['name'], 'ingest', $slug,
+    $status === 'published'
+        ? ($isWire ? 'wire desk, published' : 'ready flag + image, published')
+        : ($awaitingImage ? 'filed as draft, awaiting image (publishes on attach)'
+            : ($agentDraftOnly
+                ? 'filed as draft (draft-only token' . ($isWire ? '; wire desk withheld' : '')
+                    . ($readyOnImage ? '; publish_on_image not honoured' : '') . ')'
+                : 'filed as draft')),
+    $postId, $now);
 
 $out = ['ok' => true, 'id' => $postId, 'slug' => $slug, 'status' => $status];
 if ($draftReason !== '') {
