@@ -78,7 +78,7 @@ ok() { if eval "$2"; then echo "ok   $1"; else echo "FAIL $1"; FAILS=1; fi; }
 # enough for that when the fixture runs unprivileged (CI).
 has()   { grep -qF -- "$2" <<< "$1"; }
 hasnt() { ! grep -qF -- "$2" <<< "$1"; }
-show()  { sed 's/^/   | /' <<< "$1"; }
+show()  { grep -v "Operation not permitted" <<< "$1" | sed 's/^/   | /'; }  # chown noise from an unprivileged run
 
 # A shallow clone (CI) does not carry the historical releases.
 need_commit() {
