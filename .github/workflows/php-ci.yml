@@ -18,6 +18,10 @@ jobs:
   # PP_TEST_DB=mysql.
   test-postgres:
     runs-on: ubuntu-latest
+    env:
+      # The major of the service image below — change the two together.
+      # The client tools are pinned to it and the job asserts all three.
+      PG_MAJOR: '16'
     services:
       postgres:
         image: postgres:16
@@ -31,10 +35,41 @@ jobs:
           --health-timeout 5s --health-retries 10
     steps:
       - uses: actions/checkout@v4
+      # tools/backup.sh and tools/restore-drill.sh shell out to pg_dump,
+      # psql and pg_restore, and those must be the SERVER's major. The
+      # distro's own postgresql-client floats with ubuntu-latest (18 on
+      # Ubuntu 26.04), and a pg_restore newer than its target opens with a
+      # SET the older server rejects ("unrecognized configuration parameter
+      # transaction_timeout") — which the drill rightly counts as a failed
+      # restore. So the client comes from the PostgreSQL project's apt
+      # repository at the service's major — enabled by the script and
+      # signing key Ubuntu's own postgresql-common packages ship — and
+      # goes first on PATH for the steps that follow.
       - name: Install test runtime
         run: |
           sudo apt-get update
-          sudo apt-get install --yes php-cli php-sqlite3 php-pgsql php-mbstring php-xml php-curl php-gd postgresql-client
+          sudo apt-get install --yes php-cli php-sqlite3 php-pgsql php-mbstring php-xml php-curl php-gd postgresql-common
+          sudo /usr/share/postgresql-common/pgdg/apt.postgresql.org.sh -y
+          sudo apt-get install --yes "postgresql-client-$PG_MAJOR"
+          echo "/usr/lib/postgresql/$PG_MAJOR/bin" >> "$GITHUB_PATH"
+      # No credential here on purpose: a PGPASSWORD in this job's
+      # environment would authenticate the drill's psql and pg_restore by
+      # itself and leave its passfile contract unproven.
+      - name: Client tools are the server's major
+        env:
+          PG_CONTAINER: ${{ job.services.postgres.id }}
+        run: |
+          check() { # label, version line
+            echo "$1: $2"
+            case "$2" in
+              *"(PostgreSQL) $PG_MAJOR."*) ;;
+              *) echo "::error::$1 is not PostgreSQL $PG_MAJOR"; exit 1 ;;
+            esac
+          }
+          check server "$(docker exec "$PG_CONTAINER" postgres --version)"
+          for tool in pg_dump pg_restore psql; do
+            check "$tool" "$("$tool" --version)"
+          done
       - name: Run the suite on PostgreSQL
         env:
           PP_TEST_DB: pgsql
