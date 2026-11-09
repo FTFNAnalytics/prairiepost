@@ -48,6 +48,18 @@ FIXTURE="${PP_UPGRADE_FIXTURE:-0}"
 # when PP_UPGRADE_FIXTURE=1.
 FIXTURE_NGINX_FAIL=""
 [ "$FIXTURE" = "1" ] && FIXTURE_NGINX_FAIL="${PP_UPGRADE_FIXTURE_NGINX_FAIL:-}"
+# A fixture has no TLS stack either, so by default it takes no baseline
+# and verifies with a CLI boot of each new release. Given
+# PP_UPGRADE_FIXTURE_HTTP_PORT — a loopback port where the fixture answers
+# plain HTTP for every domain, from whichever release directory that
+# domain's vhost file names at that moment — it runs the real thing
+# instead: the baseline capture and the per-domain comparison below, with
+# only the probe's transport changed. Read only when PP_UPGRADE_FIXTURE=1.
+FIXTURE_HTTP_PORT=""
+[ "$FIXTURE" = "1" ] && FIXTURE_HTTP_PORT="${PP_UPGRADE_FIXTURE_HTTP_PORT:-}"
+case "$FIXTURE_HTTP_PORT" in *[!0-9]*) echo "FATAL: PP_UPGRADE_FIXTURE_HTTP_PORT is not a port number" >&2; exit 1 ;; esac
+PROBES=1   # 0 only in a fixture with no HTTP stand-in: no domain can be probed
+[ "$FIXTURE" = "1" ] && [ -z "$FIXTURE_HTTP_PORT" ] && PROBES=0
 
 REPO="FTFNAnalytics/prairiepost"
 # The branch whose head becomes the new release. Override with PP_BRANCH to
@@ -66,15 +78,25 @@ if [ "$FIXTURE" != "1" ]; then
   command -v nginx >/dev/null || fail "nginx not found"
 fi
 
+front_page() { # domain, curl options... -> the probe itself: one GET of that domain's front page
+  local domain="$1"; shift
+  if [ -n "$FIXTURE_HTTP_PORT" ]; then
+    # Fixture stand-in: the same request in clear, at the fixture's port.
+    curl -s -m 15 "$@" --resolve "$domain:$FIXTURE_HTTP_PORT:127.0.0.1" "http://$domain:$FIXTURE_HTTP_PORT/"
+    return
+  fi
+  curl -sk -m 15 "$@" --resolve "$domain:443:127.0.0.1" "https://$domain/"
+}
+
 front_title() { # domain -> prints "<code>|<title>"
   local code title
-  code=$(curl -sk -m 15 -o /tmp/up_t.html -w "%{http_code}" --resolve "$1:443:127.0.0.1" "https://$1/")
+  code=$(front_page "$1" -o /tmp/up_t.html -w "%{http_code}")
   title=$(grep -o "<title>[^<]*</title>" /tmp/up_t.html | head -1)
   printf '%s|%s' "$code" "$title"
 }
 
 front_css() { # domain -> prints the sorted set of /assets/css/*.css the front page links
-  curl -sk -m 15 --resolve "$1:443:127.0.0.1" "https://$1/" \
+  front_page "$1" \
     | grep -o '/assets/css/[a-z0-9._-]*\.css' | sort -u | tr '\n' ' '
 }
 
@@ -115,9 +137,13 @@ say "Capture every domain's title BEFORE any change (the tenant baseline)"
 declare -A TITLE_BEFORE=()
 declare -A CSS_BEFORE=()
 declare -A CODE_BEFORE=()
-[ "$FIXTURE" = "1" ] && echo "   (fixture: no TLS stack — the post-migration CLI smoke stands in)"
+if [ "$PROBES" = "0" ]; then
+  echo "   (fixture: no TLS stack — the post-migration CLI smoke stands in)"
+elif [ "$FIXTURE" = "1" ]; then
+  echo "   (fixture: probing plain HTTP on 127.0.0.1:$FIXTURE_HTTP_PORT in place of TLS on 443)"
+fi
 for OLD in "${!DIR_DOMAINS[@]}"; do
-  [ "$FIXTURE" = "1" ] && break
+  [ "$PROBES" = "0" ] && break
   for DOMAIN in ${DIR_DOMAINS[$OLD]}; do
     IFS='|' read -r code title <<< "$(front_title "$DOMAIN")"
     CODE_BEFORE[$DOMAIN]="$code"
@@ -553,10 +579,11 @@ hold_group() { # OLD dir — the group failed verification and its schema moved:
 for OLD in "${!DIR_NEW[@]}"; do
   group_ok=1
   DOMAINS_TO_CHECK="${DIR_DOMAINS[$OLD]}"
-  if [ "$FIXTURE" = "1" ]; then
-    # No TLS stack in a fixture: the post-migration smoke is a CLI boot of
-    # the candidate against its real config — the readiness gate plus the
-    # tenant resolution ARE the candidate behaving.
+  if [ "$PROBES" = "0" ]; then
+    # No TLS stack in a fixture, and no HTTP stand-in given: the
+    # post-migration smoke is a CLI boot of the candidate against its real
+    # config — the readiness gate plus the tenant resolution ARE the
+    # candidate behaving.
     if SLUG=$( (cd "${DIR_NEW[$OLD]}" && php -r 'require "app/bootstrap.php"; db(); echo current_site()["slug"];') 2>&1 ); then
       echo "PASS (fixture) $(basename "${DIR_NEW[$OLD]}") boots ready as tenant '$SLUG'"
     else
