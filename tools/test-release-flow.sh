@@ -52,7 +52,9 @@ GATED_COMMIT=d68a89fa67c491ea046a39a2ea4186a61e2464ea  # schema 21, WITH the rea
 FAILS=0
 ok() { if eval "$2"; then echo "ok   $1"; else echo "FAIL $1"; FAILS=1; fi; }
 # Here-strings, not `echo | grep -q`: under pipefail a grep that exits on
-# its first match can fail the pipeline for output that DID match.
+# its first match leaves echo writing into a closed pipe, and the
+# pipeline fails for output that DID match. A roll's output is large
+# enough for that when the fixture runs unprivileged (CI).
 has()   { grep -qF -- "$2" <<< "$1"; }
 hasnt() { ! grep -qF -- "$2" <<< "$1"; }
 show()  { sed 's/^/   | /' <<< "$1"; }
@@ -169,20 +171,20 @@ echo "== scenario 1: the happy roll (v18 -> HEAD, two groups, one schema)"
 B1=$(mktemp -d)
 build_box "$B1"
 OUT1=$(run_upgrade "$B1" 2>&1); RC1=$?
-echo "$OUT1" | grep -E "^(PASS|FAIL|FATAL)|migrating|already migrated|paused|resumed|recovery point|stored version|stored schema version" | sed 's/^/   /'
+grep -E "^(PASS|FAIL|FATAL)|migrating|already migrated|paused|resumed|recovery point|stored version|stored schema version" <<< "$OUT1" | sed 's/^/   /'
 ok "roll succeeds"                            "[ $RC1 = 0 ]"
-ok "preflight saw the recovery point"         "echo \"\$OUT1\" | grep -q 'recovery point: fixture-set'"
-ok "crons paused for the window"              "echo \"\$OUT1\" | grep -q 'paused: pp-fetch'"
-ok "crons resumed after verification"         "echo \"\$OUT1\" | grep -q 'resumed: pp-fetch'"
+ok "preflight saw the recovery point"         'has "$OUT1" "recovery point: fixture-set"'
+ok "crons paused for the window"              'has "$OUT1" "paused: pp-fetch"'
+ok "crons resumed after verification"         'has "$OUT1" "resumed: pp-fetch"'
 ok "cron file exists unpaused and repointed"  "[ -f $B1/cron/pp-fetch ] && [ ! -f $B1/cron/pp-fetch.paused ] && grep -q ${HEADSHA:0:12} $B1/cron/pp-fetch"
 ok "historical .bak cron ignored entirely"    "grep -q oldsha11 $B1/cron/pp-fetch.bak.20250101 && ! grep -q ${HEADSHA:0:12} $B1/cron/pp-fetch.bak.20250101 && [ ! -f $B1/cron/pp-fetch.bak.20250101.paused ]"
-ok "the shared schema migrated exactly once"  "[ \$(echo \"\$OUT1\" | grep -c 'migrating the schema') = 1 ]"
-ok "the second group reused the migration"    "echo \"\$OUT1\" | grep -q 'already migrated this run'"
+ok "the shared schema migrated exactly once"  '[ "$(grep -c "migrating the schema" <<< "$OUT1")" = 1 ]'
+ok "the second group reused the migration"    'has "$OUT1" "already migrated this run"'
 ok "legacy vhosts got the deny snippet injected" "grep -q prairiepost-deny $B1/vhosts/kitchenerchronicle && [ -f $B1/snippets/prairiepost-deny.conf ]"
 ok "both vhosts repointed to the new release" "grep -q ${HEADSHA:0:12} $B1/vhosts/kitchenerchronicle && grep -q ${HEADSHA:0:12} $B1/vhosts/civismedia"
-ok "both groups boot ready as their tenants"  "[ \$(echo \"\$OUT1\" | grep -c 'PASS (fixture)') = 2 ]"
+ok "both groups boot ready as their tenants"  '[ "$(grep -c "PASS (fixture)" <<< "$OUT1")" = 2 ]'
 J=$(php -r '$p = new PDO("sqlite:" . $argv[1]); echo implode(",", $p->query("SELECT version || \":\" || status FROM schema_migrations ORDER BY version")->fetchAll(PDO::FETCH_COLUMN));' "$B1/data/net.sqlite")
-ok "journal: adopted at 18, steps applied"    "echo $J | grep -q '18:adopted,19:applied,20:applied'"
+ok "journal: adopted at 18, steps applied"    'has "$J" "18:adopted,19:applied,20:applied"'
 ok "the rise is read and reported (18 -> $HEADV)" 'has "$OUT1" "stored schema version after the step: $HEADV — ROSE from 18"'
 ok "so the closing text offers no repoint"    'hasnt "$OUT1" "Rollback for any release group" && has "$OUT1" "NOT a rollback for this roll"'
 
@@ -193,10 +195,10 @@ build_box "$B2"
 php -r '$p = new PDO("sqlite:" . $argv[1]); $p->exec("CREATE TABLE media_orders (wrong_shape INTEGER)");' "$B2/data/net.sqlite"
 OUT2=$(run_upgrade "$B2" 2>&1); RC2=$?
 ok "the roll fails"                           "[ $RC2 != 0 ]"
-ok "it names the migration as the cause"      "echo \"\$OUT2\" | grep -q 'MIGRATION FAILED'"
+ok "it names the migration as the cause"      'has "$OUT2" "MIGRATION FAILED"'
 ok "vhosts still point at the OLD release"    "grep -q oldsha11 $B2/vhosts/kitchenerchronicle && ! grep -q ${HEADSHA:0:12} $B2/vhosts/kitchenerchronicle"
 ok "cron restored to the OLD release, unpaused" "[ -f $B2/cron/pp-fetch ] && grep -q oldsha11 $B2/cron/pp-fetch && [ ! -f $B2/cron/pp-fetch.paused ]"
-ok "the database is behind, not corrupted"    "php -r '\$p = new PDO(\"sqlite:$B2/data/net.sqlite\"); echo \$p->query(\"SELECT svalue FROM settings WHERE site_id=0 AND skey=\\\"schema_version\\\"\")->fetchColumn();' | grep -q '^18$'"
+ok "the database is behind, not corrupted"    '[ "$(stored_version "$B2")" = 18 ]'
 ok "no step committed, so the old wording stands" 'has "$OUT2" "the schema migration failed; the box still serves the old release" && hasnt "$OUT2" "ROSE" && hasnt "$OUT2" "could not be read back"'
 
 echo
@@ -206,7 +208,7 @@ build_box "$B3"
 rm "$B3/backups/state.json"
 OUT3=$(run_upgrade "$B3" 2>&1); RC3=$?
 ok "preflight refuses"                        "[ $RC3 != 0 ]"
-ok "and says why"                             "echo \"\$OUT3\" | grep -q 'recovery point'"
+ok "and says why"                             'has "$OUT3" "recovery point"'
 ok "nothing changed"                          "grep -q oldsha11 $B3/vhosts/kitchenerchronicle"
 
 echo
@@ -235,7 +237,7 @@ ok "OLD release, CLI boot: refuses, exit 2"   '[ "$BOOTRC4" = 2 ] && has "$BOOT4
 http_front "$OLD4"
 echo "   OLD release over HTTP: $HTTP_CODE  $(grep -o '<title>[^<]*</title>' "$HTTP_BODY" | head -1)"
 ok "OLD release, HTTP front page: 503"        '[ "$HTTP_CODE" = 503 ] && grep -q "This site is being updated" "$HTTP_BODY"'
-http_front "$B4/www/prairiepost-$HEAD12-shared"
+http_front "$B4/www/prairiepost-$HEAD12-kitchenerchronicle"
 echo "   NEW release over HTTP: $HTTP_CODE  $(grep -o '<title>[^<]*</title>' "$HTTP_BODY" | head -1)"
 ok "NEW release, HTTP front page: 200"        '[ "$HTTP_CODE" = 200 ]'
 
