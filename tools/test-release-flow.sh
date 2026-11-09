@@ -39,6 +39,27 @@
 #  10. the nginx test fails on a roll that does not change the version —
 #      everything is restored and "nothing changed" is said, as before.
 #
+# Review findings on PR 73, each with the scenario that pins it:
+#  11. the stored version cannot be read ONCE after a no-op step — the
+#      read is retried and the roll restores as it always has;
+#  12. it cannot be read at all after a no-op step that exited 0 — taken
+#      as unchanged, restore as before;
+#  13. it cannot be read at all after a step that raised it — unknown,
+#      treated as a rise: the group is held and the output says so;
+#  14. one group's config does not evaluate — the roll stops before the
+#      pause and the migration, everything restored, nothing changed;
+#  15. the papers' group (the one with the cron file) fails with no
+#      version change — its vhost AND its cron file come back from .bak;
+#      the hub's group, which passed, keeps its new release (and, since
+#      scenario 6, a passing group keeps its cron file too);
+#  16. a second run while one holds the lock — refused before it touches
+#      anything;
+#  17. SIGTERM after the cron files were paused — the trap resumes them
+#      and says where things stand; a rerun finishes the roll (migrates,
+#      verifies, marks the release complete);
+#  18. SIGTERM after the migration committed, before the reload — same,
+#      with the rerun finding nothing pending and finishing the reload.
+#
 # A fixture has no nginx and no TLS stack: the nginx test is skipped
 # unless PP_UPGRADE_FIXTURE_NGINX_FAIL forces it to fail, and
 # verification is a CLI boot of each new release directory. What a
@@ -119,28 +140,39 @@ CFG
   printf '17 3 * * * root php %s/cron/fetch-news.php\n' "$BOX/www/prairiepost-oldsha11-shared" > "$BOX/cron/pp-fetch.bak.20250101"
   php -r 'echo json_encode(["ok" => true, "set_id" => "fixture-set", "finished_epoch" => time(), "finished_at" => date("Y-m-d H:i:s")]);' > "$BOX/backups/state.json"
 }
-# Make ONE release group fail verification for a real reason: the hub's
-# own release resolves to a tenant that has no site row, so its new
-# release refuses to boot. The papers' group is untouched and passes.
-break_hub_tenant() { # box-dir
-  cat > "$1/www/prairiepost-oldsha11-civismedia/config.php" <<CFG
+# Make ONE release group fail verification for a real reason: that
+# group's release resolves to a tenant that has no site row, so its new
+# release refuses to boot. The other group is untouched and passes.
+break_tenant() { # box-dir civismedia|shared
+  cat > "$1/www/prairiepost-oldsha11-$2/config.php" <<CFG
 <?php
 return ['db' => ['driver' => 'sqlite', 'sqlite_path' => '$1/data/net.sqlite'],
         'site_slug' => 'no-such-paper', 'hub_slug' => 'civismedia',
         'site_url' => '', 'timezone' => 'America/Toronto', 'debug' => false];
 CFG
 }
-run_upgrade() { # box-dir [pre|post: force that nginx test to fail] -> rc
-  PP_UPGRADE_FIXTURE=1 \
-  PP_UPGRADE_FIXTURE_NGINX_FAIL="${2:-}" \
-  PP_UPGRADE_VHOSTS_DIR="$1/vhosts" \
-  PP_UPGRADE_CRON_DIR="$1/cron" \
-  PP_UPGRADE_WWW="$1/www" \
-  PP_UPGRADE_SNIPPET_DIR="$1/snippets" \
-  PP_UPGRADE_SHA="$HEAD12" \
-  PP_RELEASE_TARBALL="$TARBALL" \
-  PP_BACKUP_DEST="$1/backups" \
-  bash "$ROOT/tools/vps/upgrade-papers.sh"
+break_hub_tenant() { break_tenant "$1" civismedia; }
+# A config that lints but cannot be evaluated: the roll must stop before
+# it changes anything, because it cannot even learn which database this
+# group uses.
+break_config_eval() { # box-dir civismedia|shared
+  printf '<?php\nthrow new RuntimeException("this config does not evaluate in the fixture");\n' > "$1/www/prairiepost-oldsha11-$2/config.php"
+}
+marked_done() { [ -f "$1/.pp-roll-complete" ]; } # a release directory a roll finished on
+run_upgrade() { # box-dir [VAR=value ...] -> rc  (the fixture knobs go in as VAR=value)
+  local box="$1"
+  shift
+  env PP_UPGRADE_FIXTURE=1 \
+    PP_UPGRADE_VHOSTS_DIR="$box/vhosts" \
+    PP_UPGRADE_CRON_DIR="$box/cron" \
+    PP_UPGRADE_WWW="$box/www" \
+    PP_UPGRADE_SNIPPET_DIR="$box/snippets" \
+    PP_UPGRADE_LOCK="$box/upgrade.lock" \
+    PP_UPGRADE_SHA="$HEAD12" \
+    PP_RELEASE_TARBALL="$TARBALL" \
+    PP_BACKUP_DEST="$box/backups" \
+    "$@" \
+    bash "$ROOT/tools/vps/upgrade-papers.sh"
 }
 stored_version() { # box-dir -> the schema version stored in its database
   php -r '$p = new PDO("sqlite:" . $argv[1]); echo $p->query("SELECT svalue FROM settings WHERE site_id=0 AND skey=\"schema_version\"")->fetchColumn();' "$1/data/net.sqlite"
@@ -240,6 +272,7 @@ ok "OLD release, HTTP front page: 503"        '[ "$HTTP_CODE" = 503 ] && grep -q
 http_front "$B4/www/prairiepost-$HEAD12-kitchenerchronicle"
 echo "   NEW release over HTTP: $HTTP_CODE  $(grep -o '<title>[^<]*</title>' "$HTTP_BODY" | head -1)"
 ok "NEW release, HTTP front page: 200"        '[ "$HTTP_CODE" = 200 ]'
+ok "both new release directories carry the completion mark" 'marked_done "$B4/www/prairiepost-$HEAD12-kitchenerchronicle" && marked_done "$B4/www/prairiepost-$HEAD12-civismedia"'
 
 echo
 echo "== scenario 5: a group fails verification AFTER the rise — held, not restored"
@@ -258,6 +291,7 @@ ok "the passing group stays on the new release" 'on_new "$B5/vhosts/kitchenerchr
 ok "crons resumed on the new release"         '[ -f "$B5/cron/pp-fetch" ] && [ ! -f "$B5/cron/pp-fetch.paused" ] && on_new "$B5/cron/pp-fetch"'
 ok "it does not claim a restore happened"     'hasnt "$OUT5" "at least one release group was restored"'
 ok "it ends NOT done, with no repoint offered" 'has "$OUT5" "NOT done" && hasnt "$OUT5" "Rollback for any release group" && hasnt "$OUT5" "cp <vhost>.bak"'
+ok "both new release directories carry the completion mark (nginx is on them)" 'marked_done "$B5/www/prairiepost-$HEAD12-kitchenerchronicle" && marked_done "$B5/www/prairiepost-$HEAD12-civismedia"'
 
 echo
 echo "== scenario 6: the same failure, NO version change — restored, exactly as before"
@@ -273,16 +307,14 @@ ok "the failed group IS restored"             '[ "$(restore_lines "$OUT6")" = 1 
 ok "its vhost is back on the old release"     'on_old "$B6/vhosts/civismedia"'
 ok "the passing group stays on the new release" 'on_new "$B6/vhosts/kitchenerchronicle"'
 ok "the closing text is the old one, word for word" 'has "$OUT6" "Old release directories stay on disk. Rollback for any release group:" && has "$OUT6" "  cp <vhost>.bak." && has "$OUT6" "  cp <cronfile>.bak." && has "$OUT6" "  nginx -t && systemctl reload nginx" && hasnt "$OUT6" "NOT a rollback"'
-# Observed, not asserted: this path was left exactly as it was, and what
-# it does to the PASSING group's cron file is worth seeing.
-if [ -f "$B6/cron/pp-fetch" ]; then C6="present"; elif [ -f "$B6/cron/pp-fetch.paused" ]; then C6="still paused"; else C6="GONE (only $(cd "$B6/cron" && ls | tr '\n' ' ')remain)"; fi
-echo "note the passing group's cron file after the other group's restore: $C6"
+ok "the passing group's cron file is back, unpaused, on the new release" '[ -f "$B6/cron/pp-fetch" ] && [ ! -f "$B6/cron/pp-fetch.paused" ] && on_new "$B6/cron/pp-fetch" && has "$OUT6" "resumed: pp-fetch"'
+ok "only the group that stayed up is marked complete" 'marked_done "$B6/www/prairiepost-$HEAD12-kitchenerchronicle" && ! marked_done "$B6/www/prairiepost-$HEAD12-civismedia"'
 
 echo
 echo "== scenario 7: nginx test fails BEFORE the migration — stopped, schema untouched"
 B7=$(mktemp -d)
 build_box "$B7" "$GATED_COMMIT"
-OUT7=$(run_upgrade "$B7" pre 2>&1); RC7=$?
+OUT7=$(run_upgrade "$B7" PP_UPGRADE_FIXTURE_NGINX_FAIL=pre 2>&1); RC7=$?
 show "$(sed -n '/^== Read each schema/,$p' <<< "$OUT7")"
 ok "the roll fails"                           '[ "$RC7" != 0 ]'
 ok "it stops before the migration"            'has "$OUT7" "nginx test failed BEFORE the schema migration" && hasnt "$OUT7" "migrating the schema"'
@@ -296,7 +328,7 @@ echo
 echo "== scenario 8: nginx test fails AFTER the migration — nothing put back, and it says so"
 B8=$(mktemp -d)
 build_box "$B8" "$GATED_COMMIT"
-OUT8=$(run_upgrade "$B8" post 2>&1); RC8=$?
+OUT8=$(run_upgrade "$B8" PP_UPGRADE_FIXTURE_NGINX_FAIL=post 2>&1); RC8=$?
 show "$(sed -n '/^== nginx config test + reload/,$p' <<< "$OUT8")"
 ok "the roll fails"                           '[ "$RC8" != 0 ]'
 ok "the schema rose"                          '[ "$(stored_version "$B8")" = "$HEADV" ] && has "$OUT8" "ROSE from 21 to $HEADV in this roll"'
@@ -323,13 +355,121 @@ echo
 echo "== scenario 10: nginx test fails, NO version change — restored, \"nothing changed\", as before"
 B10=$(mktemp -d)
 build_box "$B10" "$HEADSHA"
-OUT10=$(run_upgrade "$B10" post 2>&1); RC10=$?
+OUT10=$(run_upgrade "$B10" PP_UPGRADE_FIXTURE_NGINX_FAIL=post 2>&1); RC10=$?
 show "$(sed -n '/^== nginx config test + reload/,$p' <<< "$OUT10")"
 ok "the roll fails"                           '[ "$RC10" != 0 ]'
 ok "the old message, word for word"           'has "$OUT10" "nginx test failed — every vhost and cron file restored, nothing changed"'
 ok "vhosts are back on the old release"       'on_old "$B10/vhosts/kitchenerchronicle" && on_old "$B10/vhosts/civismedia"'
 ok "cron is back on the old release, unpaused" '[ -f "$B10/cron/pp-fetch" ] && on_old "$B10/cron/pp-fetch" && [ ! -f "$B10/cron/pp-fetch.paused" ]'
 ok "the version did not move"                 '[ "$(stored_version "$B10")" = "$HEADV" ] && hasnt "$OUT10" "ROSE"'
+
+echo
+echo "== scenario 11: the stored version cannot be read ONCE after a no-op step — retried, restore as before"
+B11=$(mktemp -d)
+build_box "$B11" "$HEADSHA"
+break_hub_tenant "$B11"
+OUT11=$(run_upgrade "$B11" PP_UPGRADE_FIXTURE_STATUS_FAIL=1 2>&1); RC11=$?
+show "$(sed -n '/^== Quiesce scheduled writers/,/^== nginx config test/p' <<< "$OUT11")"
+ok "the roll ends as it always has (exit 0, with a WARN)" '[ "$RC11" = 0 ] && has "$OUT11" "WARN: at least one release group was restored"'
+ok "one read failed and the retry answered"   '[ "$(grep -c "post-step --status read made to fail" <<< "$OUT11")" = 1 ] && has "$OUT11" "stored schema version after the step: $HEADV (unchanged)"'
+ok "the failed group IS restored, not held"   '[ "$(restore_lines "$OUT11")" = 1 ] && hasnt "$OUT11" "NOT restoring" && hasnt "$OUT11" "could not be confirmed" && on_old "$B11/vhosts/civismedia"'
+ok "the closing text is the old one"          'has "$OUT11" "Rollback for any release group:" && hasnt "$OUT11" "NOT a rollback"'
+
+echo
+echo "== scenario 12: the stored version cannot be read AT ALL after a no-op step — taken as unchanged"
+B12=$(mktemp -d)
+build_box "$B12" "$HEADSHA"
+break_hub_tenant "$B12"
+OUT12=$(run_upgrade "$B12" PP_UPGRADE_FIXTURE_STATUS_FAIL=9 2>&1); RC12=$?
+show "$(sed -n '/^== Quiesce scheduled writers/,/^== nginx config test/p' <<< "$OUT12")"
+ok "the roll ends as it always has (exit 0, with a WARN)" '[ "$RC12" = 0 ] && has "$OUT12" "WARN: at least one release group was restored"'
+ok "three reads failed; the step was a no-op that exited 0, so: unchanged" '[ "$(grep -c "post-step --status read made to fail" <<< "$OUT12")" = 3 ] && has "$OUT12" "taken as unchanged ($HEADV) because nothing was pending and the step exited 0"'
+ok "the failed group IS restored, not held"   '[ "$(restore_lines "$OUT12")" = 1 ] && hasnt "$OUT12" "NOT restoring" && on_old "$B12/vhosts/civismedia"'
+ok "the closing text is the old one"          'has "$OUT12" "Rollback for any release group:" && hasnt "$OUT12" "NOT a rollback"'
+
+echo
+echo "== scenario 13: the stored version cannot be read at all after a step that RAISED it — unknown, treated as a rise"
+B13=$(mktemp -d)
+build_box "$B13" "$GATED_COMMIT"
+break_hub_tenant "$B13"
+OUT13=$(run_upgrade "$B13" PP_UPGRADE_FIXTURE_STATUS_FAIL=9 2>&1); RC13=$?
+show "$(sed -n '/^== Verify every domain/,$p' <<< "$OUT13")"
+ok "the roll exits non-zero"                  '[ "$RC13" != 0 ]'
+ok "the database did move to $HEADV"          '[ "$(stored_version "$B13")" = "$HEADV" ]'
+ok "the version is reported as unconfirmed, and treated as risen" 'has "$OUT13" "could not be confirmed unchanged" && has "$OUT13" "treated as risen"'
+ok "the failed group is HELD, not restored"   'has "$OUT13" "NOT restoring release group" && [ "$(restore_lines "$OUT13")" = 0 ] && on_new "$B13/vhosts/civismedia"'
+ok "no repoint is offered"                    'has "$OUT13" "NOT done" && hasnt "$OUT13" "Rollback for any release group"'
+
+echo
+echo "== scenario 14: one group's config does not evaluate — stopped before the pause, nothing changed"
+B14=$(mktemp -d)
+build_box "$B14" "$GATED_COMMIT"
+break_config_eval "$B14" civismedia
+OUT14=$(run_upgrade "$B14" 2>&1); RC14=$?
+show "$(sed -n '/^== Read each schema/,$p' <<< "$OUT14")"
+ok "the roll fails"                           '[ "$RC14" != 0 ]'
+ok "it names the group it could not read"     'has "$OUT14" "cannot read the database identity from $B14/www/prairiepost-$HEAD12-civismedia/config.php"'
+ok "before any pause or migration"            'hasnt "$OUT14" "paused:" && hasnt "$OUT14" "migrating the schema" && [ "$(stored_version "$B14")" = 21 ]'
+ok "vhosts and cron are back on the old release, unpaused" 'on_old "$B14/vhosts/kitchenerchronicle" && on_old "$B14/vhosts/civismedia" && [ -f "$B14/cron/pp-fetch" ] && on_old "$B14/cron/pp-fetch" && [ ! -f "$B14/cron/pp-fetch.paused" ]'
+ok "and it says so"                           'has "$OUT14" "every vhost and cron file restored, the schema was not touched, nothing changed"'
+
+echo
+echo "== scenario 15: the papers' group fails with NO version change — its vhost and its cron file come back"
+B15=$(mktemp -d)
+build_box "$B15" "$HEADSHA"
+break_tenant "$B15" shared
+OUT15=$(run_upgrade "$B15" 2>&1); RC15=$?
+show "$(sed -n '/^== Verify every domain/,/^== Fallback/p' <<< "$OUT15")"
+ok "the roll ends as it always has (exit 0, with a WARN)" '[ "$RC15" = 0 ] && has "$OUT15" "WARN: at least one release group was restored"'
+ok "the papers' group is restored"            '[ "$(restore_lines "$OUT15")" = 1 ] && on_old "$B15/vhosts/kitchenerchronicle"'
+ok "its cron file is back on the old release, unpaused, no residue" '[ -f "$B15/cron/pp-fetch" ] && on_old "$B15/cron/pp-fetch" && [ ! -f "$B15/cron/pp-fetch.paused" ]'
+ok "the hub's group stays on the new release" 'on_new "$B15/vhosts/civismedia" && marked_done "$B15/www/prairiepost-$HEAD12-civismedia"'
+
+echo
+echo "== scenario 16: a second run while one holds the lock — refused, nothing touched"
+B16=$(mktemp -d)
+build_box "$B16" "$GATED_COMMIT"
+( flock 9; sleep 30 ) 9>"$B16/upgrade.lock" &
+HOLDER=$!
+sleep 1
+OUT16=$(run_upgrade "$B16" 2>&1); RC16=$?
+pkill -P "$HOLDER" 2>/dev/null; kill "$HOLDER" 2>/dev/null; wait "$HOLDER" 2>/dev/null
+show "$OUT16"
+ok "the roll refuses"                         '[ "$RC16" != 0 ] && has "$OUT16" "one roll at a time"'
+ok "before touching anything"                 'on_old "$B16/vhosts/kitchenerchronicle" && [ "$(ls "$B16/vhosts" | grep -c bak)" = 0 ] && [ ! -d "$B16/www/prairiepost-$HEAD12-kitchenerchronicle" ] && [ "$(stored_version "$B16")" = 21 ]'
+
+echo
+echo "== scenario 17: SIGTERM after the pause — crons resumed, state reported; a rerun finishes the roll"
+B17=$(mktemp -d)
+build_box "$B17" "$GATED_COMMIT"
+OUT17=$(run_upgrade "$B17" PP_UPGRADE_FIXTURE_DIE=after-pause 2>&1); RC17=$?
+show "$(sed -n '/^== Quiesce scheduled writers/,$p' <<< "$OUT17")"
+ok "the run stops with the signal's exit code" '[ "$RC17" = 143 ]'
+ok "it says what was interrupted"             'has "$OUT17" "INTERRUPTED by SIGTERM during: Quiesce scheduled writers"'
+ok "it resumed the cron file it had paused"   'has "$OUT17" "resumed: pp-fetch" && [ -f "$B17/cron/pp-fetch" ] && [ ! -f "$B17/cron/pp-fetch.paused" ] && on_new "$B17/cron/pp-fetch"'
+ok "it reports the state: files rewritten, schema untouched, nginx not reloaded" 'has "$OUT17" "vhost and cron files: rewritten" && has "$OUT17" "schema: the migration step had not run" && has "$OUT17" "nginx: NOT reloaded" && [ "$(stored_version "$B17")" = 21 ] && on_new "$B17/vhosts/kitchenerchronicle"'
+ok "nothing is marked complete"               '! marked_done "$B17/www/prairiepost-$HEAD12-kitchenerchronicle"'
+OUT17b=$(run_upgrade "$B17" 2>&1); RC17b=$?
+show "$(sed -n '/^== Upgrade each release/,/^== Read each schema/p;/^== Verify every domain/,/^== Fallback/p' <<< "$OUT17b")"
+ok "the rerun finishes instead of saying nothing to do" '[ "$RC17b" = 0 ] && has "$OUT17b" "no roll finished it" && hasnt "$OUT17b" "Nothing to upgrade"'
+ok "it ran the migration the first run never reached" 'has "$OUT17b" "ROSE from 21 to $HEADV" && [ "$(stored_version "$B17")" = "$HEADV" ]'
+ok "both groups boot ready, crons resumed, marks written" '[ "$(grep -c "PASS (fixture)" <<< "$OUT17b")" = 2 ] && [ -f "$B17/cron/pp-fetch" ] && [ ! -f "$B17/cron/pp-fetch.paused" ] && marked_done "$B17/www/prairiepost-$HEAD12-kitchenerchronicle" && marked_done "$B17/www/prairiepost-$HEAD12-civismedia"'
+OUT17c=$(run_upgrade "$B17" 2>&1); RC17c=$?
+ok "a third run has nothing to do"            '[ "$RC17c" = 0 ] && has "$OUT17c" "Nothing to upgrade" && [ "$(grep -c "already on $HEAD12" <<< "$OUT17c")" = 2 ]'
+
+echo
+echo "== scenario 18: SIGTERM after the migration, before the reload — state reported; a rerun finishes the reload"
+B18=$(mktemp -d)
+build_box "$B18" "$GATED_COMMIT"
+OUT18=$(run_upgrade "$B18" PP_UPGRADE_FIXTURE_DIE=after-migrate 2>&1); RC18=$?
+show "$(sed -n '/INTERRUPTED/,$p' <<< "$OUT18")"
+ok "the run stops with the signal's exit code" '[ "$RC18" = 143 ]'
+ok "it reports the rise and that nginx still runs the old release" 'has "$OUT18" "INTERRUPTED by SIGTERM" && has "$OUT18" "ROSE from 21 to $HEADV" && has "$OUT18" "nginx: NOT reloaded" && [ "$(stored_version "$B18")" = "$HEADV" ]'
+ok "it resumed the cron file it had paused"   'has "$OUT18" "resumed: pp-fetch" && [ -f "$B18/cron/pp-fetch" ] && [ ! -f "$B18/cron/pp-fetch.paused" ]'
+OUT18b=$(run_upgrade "$B18" 2>&1); RC18b=$?
+show "$(sed -n '/^== Read each schema/,/^== nginx config test/p;/^== Done/,$p' <<< "$OUT18b")"
+ok "the rerun finishes: nothing pending, reload, verify" '[ "$RC18b" = 0 ] && has "$OUT18b" "no roll finished it" && has "$OUT18b" "nothing pending" && [ "$(grep -c "PASS (fixture)" <<< "$OUT18b")" = 2 ]'
+ok "marks written, and the closing text says these groups have no rollback of their own" 'marked_done "$B18/www/prairiepost-$HEAD12-kitchenerchronicle" && has "$OUT18b" "FINISHED after an interrupted roll"'
 
 for B in "${BOXES[@]}"; do
   git worktree remove --force "$B/www/prairiepost-oldsha11-shared" 2>/dev/null
