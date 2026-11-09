@@ -314,13 +314,19 @@ sourced claims) reaches a newsroom desk through the same
 to a desk, its credential must be **incapable of publishing**. That is
 what a *draft-only* token is: minted with `--draft-only`
 (`ingest_agents.draft_only = 1`, schema step 22), and then held to a
-draft server-side on every path that can publish —
+draft server-side on every path that can publish, and kept out of the
+publish queue —
 
 - the paper's `wire_desks` exception files a **draft**, not a live story;
 - the `publish_on_image` flag is **not honoured** (the story is never
   queued for the image agent, so no other token can publish it later);
-- `POST /api/ingest-publish` is **refused** with 403 and nothing is
-  written.
+- `POST /api/ingest-publish` is **refused** with 403: the story is left
+  untouched and the refusal is recorded in the paper's audit log (a
+  malformed request, an unknown or off-scope story, or one that is not
+  waiting answers 422, 404, 403 or 409 first, as for any token);
+- `GET /api/ingest-queue` is **refused** with 403 and returns no rows:
+  the queue lists other filers' unpublished headlines and ledes for
+  the agent that publishes them, and this token is not that agent.
 
 Every such answer says so: `{"status":"draft","reason":"draft_only
 token: …"}`. The token still uploads art through `/api/ingest-media`
@@ -366,7 +372,9 @@ ticking **Draft-only**; the two paths write the same row.
    story appears in the Kermode newsroom as a draft and
    `https://kermodechronicle.ca/story/<slug>` is 404. Remove the test
    draft from the admin UI afterwards — never by SQL.
-3. `php tools/make-agent.php revoke --name evidence-kermode` is the
+3. `GET /api/ingest-queue` with the token answers `403` with a
+   `reason` and no `stories`.
+4. `php tools/make-agent.php revoke --name evidence-kermode` is the
    kill switch, identical to every other token: 401 on the next request.
 
 The flag is a property of the credential. It is never readable or

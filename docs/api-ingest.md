@@ -23,10 +23,12 @@ file and upload but never publish. For such a key the server withholds
 both publish instructions on every path that can set a story live: a
 desk in the paper's `wire_desks` still files a *draft*, the
 `publish_on_image` flag is not honoured (the story is never queued for
-the image agent), and `POST /api/ingest-publish` refuses it with 403
-and writes nothing. Each such response says so — `"status":"draft"`
-plus a `reason` string. Only the paper's newsroom publishes what a
-draft-only key files. This is the credential an external evidence feed
+the image agent), and `POST /api/ingest-publish` refuses it with 403,
+leaving the story untouched. Each such response says so —
+`"status":"draft"` plus a `reason` string. The publish queue is closed
+to it as well: `GET /api/ingest-queue` answers 403, so a draft-only key
+cannot read the headlines and ledes of stories waiting to be published.
+Only the paper's newsroom publishes what a draft-only key files. This is the credential an external evidence feed
 holds before it may deliver to any desk (milestone NEWS1); the
 capability lives on the key, never in a request.
 
@@ -106,6 +108,19 @@ read, and it reads only pipeline state these keys created.
     → 200 {"ok":true,"stories":[{"id":123,"slug":"…","site":"…",
            "desk":"…","title":"…","lede":"…",…}]}
 
+A draft-only key is refused here. The queue is the worklist of the
+agent that publishes, which that key cannot do, and its rows are other
+filers' unpublished headlines and ledes:
+
+    → 403 {"ok":false,"error":"this token is draft-only — …",
+           "reason":"draft_only token: it cannot publish, so it cannot
+                     read the stories waiting to be published"}
+
+It is a refusal rather than an empty list on purpose: a key of the
+wrong kind shows up at once instead of looking like a queue with
+nothing in it. A missing, unknown or revoked key answers 401 first, as
+everywhere else.
+
 ## 4. Attach the art and publish: `POST /api/ingest-publish`
 
     curl -X POST https://<paper-domain>/api/ingest-publish \
@@ -124,14 +139,19 @@ anything else answers 409, so an ordinary newsroom draft can never be
 published from this lane. The `url` in the response is the published
 address, ready for the social posts that follow.
 
-A draft-only key is refused here before anything is written:
+A draft-only key is refused here. The capability is checked once the
+request is known to name a waiting story in the key's scope, so a
+malformed request, an unknown story, a story on another paper or one
+that is not waiting answers 422, 404, 403 or 409 first, exactly as it
+does for any key. The refusal itself:
 
     → 403 {"ok":false,"error":"this token is draft-only — …",
            "id":123,"slug":"…","status":"draft",
            "reason":"draft_only token: attach-and-publish refused, nothing written"}
 
-The story keeps waiting (art unattached) for a key that may publish, or
-for its newsroom.
+The story is not touched: the art is not attached and it keeps waiting
+for a key that may publish, or for its newsroom. The refusal is
+recorded in the paper's audit log.
 
 ## Responses you must handle
 
@@ -140,7 +160,7 @@ for its newsroom.
 | 201 | Created (draft). `slug` and `id` identify it in the newsroom. |
 | 200 + `duplicate` | This exact story was already filed; nothing new was created. |
 | 401 | Missing, unknown or revoked key. |
-| 403 | The key is not scoped to that site or desk — or, on `/api/ingest-publish`, the key is draft-only (the body carries `status: "draft"` and `reason`; nothing was written). |
+| 403 | The key is not scoped to that site or desk — or the key is draft-only: on `/api/ingest-publish` the body carries `status: "draft"` and `reason` and the story is untouched; on `/api/ingest-queue` the body carries `reason` and no stories. |
 | 409 | `/api/ingest-publish` only: the story is not waiting (already published, unflagged, or changed state mid-request). Fetch the queue again. |
 | 422 | The payload broke a rule; `error` says which. Fix and resend. |
 | 429 | Hourly rate limit; wait and resend. |

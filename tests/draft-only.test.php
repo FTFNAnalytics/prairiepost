@@ -13,6 +13,10 @@
  * and a mistyped or misplaced flag stops the tool with a non-zero exit
  * and no row, instead of falling through to a standard token.
  *
+ * The publish queue is closed to a draft-only token: GET
+ * /api/ingest-queue answers 403 with a reason and no rows, while a normal
+ * token on the same paper reads the waiting story; 401 still comes first.
+ *
  * The audit row each call leaves is bounded to its columns and can never
  * change the answer: a slug longer than audit_log.target (VARCHAR(160),
  * enforced by PostgreSQL and ignored by SQLite — so the status codes in
@@ -181,6 +185,27 @@ ok($code === 201 && ($j['status'] ?? '') === 'draft' && ($j['awaiting_image'] ??
    "a normal token's flagged filing waits in the queue (got $code)");
 $waitSlug = (string) ($j['slug'] ?? '');
 
+// The queue itself is closed to a draft-only token. It now holds a real
+// waiting story — headline, lede, dateline, filed_by — that a normal token
+// on this paper can read. The draft-only token must be refused outright
+// (403 with a reason): neither handed the rows nor an empty list. Remove
+// the check in ingest-queue.php and the second call answers 200 with the
+// headline, failing all three assertions that follow it.
+[$code, $q] = api($port, 'GET', '/api/ingest-queue', $normalToken);
+ok($code === 200 && count($q['stories'] ?? []) === 1 && ($q['stories'][0]['slug'] ?? '') === $waitSlug
+   && ($q['stories'][0]['title'] ?? '') === 'Waiting for art, filed by a normal token',
+   "a normal token reads the waiting story, headline included, from the queue (got $code)");
+[$code, $q] = api($port, 'GET', '/api/ingest-queue', $draftToken);
+ok($code === 403 && ($q['ok'] ?? true) === false, "a draft-only token is refused the queue with 403 (got $code)");
+ok(is_string($q['reason'] ?? null) && str_contains((string) ($q['reason'] ?? ''), 'draft_only'),
+   'the queue refusal carries a reason naming the capability');
+ok(!array_key_exists('stories', $q) && !str_contains((string) json_encode($q), 'Waiting for art'),
+   'the queue refusal carries no stories and leaks no headline');
+[$code] = api($port, 'GET', '/api/ingest-queue', $revokedToken);
+ok($code === 401, "a revoked draft-only token still answers 401 on the queue: authentication comes first (got $code)");
+[$code] = api($port, 'GET', '/api/ingest-queue', null);
+ok($code === 401, "no token still answers 401 on the queue (got $code)");
+
 [$code, $j] = api($port, 'POST', '/api/ingest-publish', $draftToken, ['story' => $waitSlug, 'image' => $art]);
 ok($code === 403 && ($j['ok'] ?? true) === false && ($j['status'] ?? '') === 'draft',
    "draft-only token cannot attach-and-publish: 403 with status draft (got $code/" . ($j['status'] ?? '?') . ')');
@@ -234,6 +259,8 @@ ok($code === 201 && ($j['status'] ?? '') === 'draft' && ($j['reason'] ?? '') !==
    "the CLI-minted draft-only token stays a draft on the wire desk (got $code/" . ($j['status'] ?? '?') . ')');
 [$out, $rc] = pp_fixture_tool($fx, 'tools/make-agent.php list');
 ok($rc === 0 && preg_match('/cli-draft-only\s+active\s+draft-only/', $out) === 1, 'list shows the token as draft-only');
+[$code, $q] = api($port, 'GET', '/api/ingest-queue', $cliToken);
+ok($code === 403 && !array_key_exists('stories', $q), "the CLI-minted draft-only token is refused the queue too (got $code)");
 
 [$out, $rc] = pp_fixture_tool($fx, 'tools/make-agent.php create --name cli-standard --sites prairiedispatch');
 ok($rc === 0 && preg_match('/Token:\s+(hermes_[0-9a-f]{56})/', $out, $tm) === 1 && str_contains($out, 'standard'),
