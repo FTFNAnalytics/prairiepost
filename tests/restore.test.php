@@ -160,10 +160,27 @@ if ($engine === 'pgsql') {
     $p = $fx['pg'];
     $freshDb = 'pp_restore_' . bin2hex(random_bytes(3));
     $admin->exec("CREATE DATABASE $freshDb");
+    // The drill takes the target's credential ONLY through a private
+    // passfile (its contract: never argv, never inherited) and falls back
+    // to /dev/null without one — so a password-authenticated server is
+    // unreachable unless the test hands it one. The file is 0600 BEFORE
+    // the secret is written (libpq ignores a group/world-readable
+    // passfile) and names the fresh target database alone, so the
+    // credential it carries opens nothing but the drill's own target.
+    $passfile = "$b/restore.pgpass";
+    touch($passfile);
+    chmod($passfile, 0600);
+    file_put_contents($passfile, implode(':', array_map(
+        fn ($field): string => addcslashes((string) $field, ':\\'),
+        [$p['host'], $p['port'], $freshDb, $p['user'], $p['pass']]
+    )) . "\n");
+    clearstatcache(true, $passfile);
+    ok((fileperms($passfile) & 0777) === 0600, 'the drill passfile is private (0600)');
     $drillEnv .= ' PP_RESTORE_PG_HOST=' . escapeshellarg($p['host'])
         . ' PP_RESTORE_PG_PORT=' . escapeshellarg((string) $p['port'])
         . ' PP_RESTORE_PG_DB=' . escapeshellarg($freshDb)
-        . ' PP_RESTORE_PG_USER=' . escapeshellarg($p['user']);
+        . ' PP_RESTORE_PG_USER=' . escapeshellarg($p['user'])
+        . ' PP_RESTORE_PG_PASSFILE=' . escapeshellarg($passfile);
 }
 exec("$drillEnv bash " . escapeshellarg("$root/tools/restore-drill.sh") . ' 2>&1', $dro, $drrc);
 ok($drrc === 0, "the restore drill succeeds (rc=$drrc)\n" . ($drrc ? implode("\n", $dro) : ''));
@@ -181,12 +198,18 @@ ok(is_file("$b/target/config/rel-drill-shared/config.php") && is_file("$b/target
 // Documented test mapping: the restored code connects ONLY to the restored
 // database — the original schema no longer exists, and this config names
 // the fresh target explicitly. No mail, no jobs, no external providers.
+// On pgsql the fresh database lives on the fixture's server, so the
+// mapping carries that server's own credential (an empty one only ever
+// worked against a trust-authenticated server); the file is private
+// before it holds it.
 $rcfg = "$b/restored-config.php";
 if ($engine === 'pgsql') {
     $p = $fx['pg'];
+    touch($rcfg);
+    chmod($rcfg, 0600);
     file_put_contents($rcfg, "<?php\nreturn ['db' => ['driver' => 'pgsql', 'pgsql' => [\n"
         . " 'host' => '{$p['host']}', 'port' => {$p['port']}, 'name' => '$freshDb',\n"
-        . " 'user' => '{$p['user']}', 'pass' => '', 'sslmode' => 'disable', 'schema' => '{$fx['schema']}']],\n"
+        . " 'user' => '{$p['user']}', 'pass' => " . var_export((string) $p['pass'], true) . ", 'sslmode' => 'disable', 'schema' => '{$fx['schema']}']],\n"
         . " 'site_slug' => 'prairiedispatch', 'hub_slug' => 'civismedia', 'site_url' => '', 'timezone' => 'America/Toronto', 'debug' => false];\n");
 } else {
     file_put_contents($rcfg, "<?php\nreturn ['db' => ['driver' => 'sqlite', 'sqlite_path' => '$b/target/db.dump'],\n"
