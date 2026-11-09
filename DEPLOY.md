@@ -394,7 +394,7 @@ it beside each token's scope.
 
 | Symptom | Cause → fix |
 |---|---|
-| Every paper answers 503 "This site is being updated" after a roll, or after a release group was restored | The database is at a newer schema than the release now serving (schema step 22 ran, then the vhosts went back to a release built for 21) → do not repoint again; roll forward to a release built for the stored version. `php tools/migrate.php --status` from the serving release prints `ahead`. See `docs/MIGRATION-COMPAT.md`, "Step 22" |
+| Every paper answers 503 "This site is being updated" after a roll | The database is at a newer schema than the release nginx is serving (`php tools/migrate.php --status` from that release prints `ahead`). The roll itself no longer puts a group back once a step has raised the version, so either nginx never loaded the new release — the roll's output says `nginx test failed AFTER the migration`: fix that error, then `nginx -t && systemctl reload nginx` — or someone copied the `.bak` vhost files back → point those vhosts at the release built for the stored version again. A second roll will not do that for you: it holds each domain to the 503 it answered when it started. See `docs/MIGRATION-COMPAT.md`, "When a roll raises the stored version" |
 | `SQLSTATE[08006]` on connect | Outbound 5432 blocked → hosting support opens it; or wrong host (use the pooler) |
 | Front page 500s on first boot | Check `debug => true` temporarily; usually a missing PHP extension (`pdo_pgsql`, `gd`) |
 | Pretty URLs 404 but `/index.php` works | `mod_rewrite`/`.htaccess` not honoured → enable AllowOverride |
