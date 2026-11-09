@@ -124,6 +124,14 @@ From a held roll the operator has these moves:
    runs the take-down, the ordinary roll that leaves the domain down
    and the recovery roll that brings it back (scenario 14), against its
    HTTP stand-in.
+
+   One caution while a domain is down. Each ordinary roll restores that
+   domain's group of one, and a roll that restores any group deletes
+   the paused cron files of the groups that passed — a known fault of
+   the restore path, not fixed here, which the fixture prints as a note
+   in scenarios 6 and 14. After any roll that printed `restoring
+   release group`, look in `/etc/cron.d` before assuming the scheduled
+   jobs are still there.
 3. **Restore the database.** Rule 2, and not a way to get one paper
    back.
 
