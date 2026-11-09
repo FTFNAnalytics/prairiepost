@@ -50,6 +50,9 @@ if (!$agent || (int) $agent['enabled'] !== 1) {
     // A revoked agent and an unknown token answer identically.
     pp_media_out(401, ['ok' => false, 'error' => 'unknown or revoked token']);
 }
+// A draft-only token parks files here like any other. An upload is data
+// under /uploads and publishes nothing: the publish decision lives in
+// /api/ingest and /api/ingest-publish, where draft_only is enforced.
 
 /* --- Rate limit: uploads per token per hour, from the audit trail --------- */
 $limit = 60;

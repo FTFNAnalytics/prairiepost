@@ -108,9 +108,10 @@ if (!$found) {
 }
 
 echo "\n== INGEST TOKENS (scope only; no secret is stored or printed)\n";
-foreach ($pdo->query('SELECT name, sites, desks, enabled, last_used_at FROM ingest_agents ORDER BY id') as $a) {
-    printf("  %-20s %s  sites=%s  desks=%s  last used %s\n", $a['name'],
-        $a['enabled'] ? 'enabled ' : 'REVOKED ', $a['sites'], $a['desks'] !== '' ? $a['desks'] : '(any)',
+foreach ($pdo->query('SELECT name, sites, desks, enabled, draft_only, last_used_at FROM ingest_agents ORDER BY id') as $a) {
+    printf("  %-20s %s %s  sites=%s  desks=%s  last used %s\n", $a['name'],
+        $a['enabled'] ? 'enabled ' : 'REVOKED ', (int) $a['draft_only'] === 1 ? 'draft-only' : 'standard  ',
+        $a['sites'], $a['desks'] !== '' ? $a['desks'] : '(any)',
         $a['last_used_at'] ?: 'never');
 }
 

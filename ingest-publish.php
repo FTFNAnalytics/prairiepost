@@ -12,11 +12,19 @@
  * must be an /uploads/… path this install minted via
  * POST /api/ingest-media.
  *
+ * A draft-only token (ingest_agents.draft_only = 1) is refused here:
+ * attaching the art IS the act that publishes, and that credential
+ * cannot publish. The answer is 403 with `status: "draft"` and a
+ * `reason`, nothing is written, and the story keeps waiting — for a
+ * token that may publish, or for its newsroom.
+ *
  * Request:  Authorization: Bearer <token>
  *           JSON body: {story, image, image_caption?, image_credit?}
  *           `story` is the slug (or numeric id) from the filing
  *           response or GET /api/ingest-queue.
  * Response: 200 {ok, id, slug, status: "published", url, image}
+ *           403 {ok: false, error, id, slug, status: "draft", reason}
+ *               — a draft-only token; the story is untouched
  *           4xx {ok: false, error} — the reason, never a coercion
  */
 require __DIR__ . '/app/bootstrap.php';
@@ -48,6 +56,7 @@ if (!$agent || (int) $agent['enabled'] !== 1) {
     pp_pub_out(401, ['ok' => false, 'error' => 'unknown or revoked token']);
 }
 $agentSites = array_filter(array_map('trim', explode(',', (string) $agent['sites'])));
+$agentDraftOnly = (int) ($agent['draft_only'] ?? 0) === 1;
 
 /* --- Payload -------------------------------------------------------------- */
 $raw = file_get_contents('php://input', false, null, 0, 64 * 1024);
@@ -74,7 +83,7 @@ $imageCredit = mb_substr(trim(strip_tags((string) ($in['image_credit'] ?? ''))),
 $pdo = db();
 $col = ctype_digit($storyRef) ? 'p.id' : 'p.slug';
 $stmt = $pdo->prepare(
-    "SELECT p.id, p.slug, p.status, p.awaiting_image, s.slug AS site
+    "SELECT p.id, p.slug, p.status, p.awaiting_image, s.slug AS site, s.id AS site_id
        FROM posts p
        JOIN post_sites ps ON ps.post_id = p.id
        JOIN sites s ON s.id = ps.site_id
@@ -94,6 +103,25 @@ if ((int) $post['awaiting_image'] !== 1 || $post['status'] !== 'draft') {
         : 'that story was not filed as publish-on-image — only its newsroom can publish it']);
 }
 
+/* --- Capability: a draft-only token cannot take the publishing step -------- */
+// Checked after the state checks so the answer is true: the story IS a
+// waiting draft, and it stays one. Nothing is written except the audit row,
+// and that row can never change this answer: pp_ingest_audit() bounds it to
+// the table's columns and does not throw, so the refusal is always the 403.
+if ($agentDraftOnly) {
+    pp_ingest_audit((int) $post['site_id'], (string) $agent['name'], 'ingest-publish', (string) $post['slug'],
+        'REFUSED: draft-only token attempted attach-and-publish; story left as a draft, art not attached',
+        (int) $post['id']);
+    pp_pub_out(403, [
+        'ok' => false,
+        'error' => 'this token is draft-only — it cannot publish; the story stays a draft for its newsroom',
+        'id' => (int) $post['id'],
+        'slug' => (string) $post['slug'],
+        'status' => 'draft',
+        'reason' => 'draft_only token: attach-and-publish refused, nothing written',
+    ]);
+}
+
 /* --- Attach and publish in one guarded write ------------------------------- */
 $now = now();
 $upd = $pdo->prepare(
@@ -110,11 +138,9 @@ if ($upd->rowCount() !== 1) {
 }
 
 $pdo->prepare('UPDATE ingest_agents SET last_used_at = ? WHERE id = ?')->execute([$now, (int) $agent['id']]);
-$pdo->prepare('INSERT INTO audit_log (site_id, user_id, user_name, action, target, detail, ip, created_at)
-    VALUES ((SELECT site_id FROM post_sites WHERE post_id = ? LIMIT 1), 0, ?, ?, ?, ?, ?, ?)')
-    ->execute([(int) $post['id'], 'hermes:' . $agent['name'], 'ingest-publish', (string) $post['slug'],
-        'featured image attached, published (publish-on-image lane)',
-        (string) ($_SERVER['REMOTE_ADDR'] ?? ''), $now]);
+// The story is live by now; the audit row observes and cannot fail the call.
+pp_ingest_audit((int) $post['site_id'], (string) $agent['name'], 'ingest-publish', (string) $post['slug'],
+    'featured image attached, published (publish-on-image lane)', (int) $post['id'], $now);
 
 pp_pub_out(200, [
     'ok' => true,

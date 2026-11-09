@@ -13,6 +13,14 @@
  * that waits for a click is not live — and those stories carry the
  * automated-report treatment like every other agent filing.
  *
+ * A token minted draft-only (ingest_agents.draft_only = 1; the
+ * `--draft-only` flag of tools/make-agent.php) files drafts and nothing
+ * else. The wire-desk exception and the publish_on_image flag are both
+ * publish instructions, and that credential cannot give them: its
+ * filing lands as a plain draft whatever the desk or the flag says, is
+ * never queued for the image agent, and the response carries `reason`
+ * saying so. Only the newsroom publishes what a draft-only token files.
+ *
  * The server owns what agents must not: the slug (allocated here,
  * auto-suffixed on collision — the silent-skip failure mode does not
  * exist on this path), the byline (the site's `automated_byline`
@@ -34,7 +42,9 @@
  *           filing carries one, otherwise when a second agent attaches
  *           one through POST /api/ingest-publish. Flagged stories
  *           waiting for art are listed by GET /api/ingest-queue.
- * Response: 201 {ok, id, slug, status}
+ * Response: 201 {ok, id, slug, status, reason?}
+ *           `reason` is present when a draft-only token's filing was kept
+ *           as a draft (it says what was withheld).
  *           200 {ok, duplicate: true, id, slug} on an exact re-file
  *           4xx {ok: false, error} — the reason, never a coercion
  */
@@ -83,6 +93,9 @@ if (!$agent || (int) $agent['enabled'] !== 1) {
 }
 $agentSites = array_filter(array_map('trim', explode(',', (string) $agent['sites'])));
 $agentDesks = array_filter(array_map('trim', explode(',', (string) $agent['desks'])));
+// The capability, read from the token row and nowhere else: a request can
+// neither claim nor shed it.
+$agentDraftOnly = (int) ($agent['draft_only'] ?? 0) === 1;
 
 /* --- Payload -------------------------------------------------------------- */
 $raw = file_get_contents('php://input', false, null, 0, 512 * 1024);
@@ -216,8 +229,23 @@ for ($n = 2; ; $n++) {
 $wireDesks = array_filter(array_map('trim', explode(',', pp_hermes_setting($siteId, 'wire_desks'))));
 $isWire = in_array($deskSlug, $wireDesks, true);
 $readyOnImage = !empty($in['publish_on_image']);
-$status = $isWire ? 'published' : 'draft';
+// A draft-only token can give neither publish instruction: the wire-desk
+// exception is withheld here and the ready flag below, so its filing is
+// a plain draft for the newsroom — never queued for the image agent.
+$status = ($isWire && !$agentDraftOnly) ? 'published' : 'draft';
 $awaitingImage = 0;   // resolved below, once the image outcome is known
+$draftReason = '';
+if ($agentDraftOnly) {
+    $withheld = [];
+    if ($isWire) {
+        $withheld[] = 'wire-desk auto-publish withheld';
+    }
+    if ($readyOnImage) {
+        $withheld[] = 'publish_on_image not honoured';
+    }
+    $draftReason = 'draft_only token: this credential files drafts for the newsroom to publish'
+        . ($withheld ? ' (' . implode('; ', $withheld) . ')' : '');
+}
 $byline = pp_hermes_setting($siteId, 'automated_byline', 'Automated report');
 $now = now();
 
@@ -245,7 +273,7 @@ if ($imageIsUpload) {
 // The ready flag resolves only NOW, when the image outcome is known: a
 // filing that brought usable art publishes at once; one still waiting
 // stays a draft that /api/ingest-publish may flip when the art arrives.
-if ($readyOnImage && $status !== 'published') {
+if ($readyOnImage && !$agentDraftOnly && $status !== 'published') {
     if ($imagePath !== '') {
         $status = 'published';
     } else {
@@ -295,15 +323,24 @@ if ($tags !== '') {
 }
 
 $pdo->prepare('UPDATE ingest_agents SET last_used_at = ? WHERE id = ?')->execute([$now, (int) $agent['id']]);
-$pdo->prepare('INSERT INTO audit_log (site_id, user_id, user_name, action, target, detail, ip, created_at)
-    VALUES (?, 0, ?, ?, ?, ?, ?, ?)')
-    ->execute([$siteId, 'hermes:' . $agent['name'], 'ingest', $slug,
-        $status === 'published'
-            ? ($isWire ? 'wire desk, published' : 'ready flag + image, published')
-            : ($awaitingImage ? 'filed as draft, awaiting image (publishes on attach)' : 'filed as draft'),
-        (string) ($_SERVER['REMOTE_ADDR'] ?? ''), $now]);
+// The story is stored by now, so this row only observes. pp_ingest_audit()
+// cuts every value to its column — a slug can be longer than
+// audit_log.target, which PostgreSQL rejects — and never throws: a lost
+// audit row must not turn a filed story into a 500.
+pp_ingest_audit($siteId, (string) $agent['name'], 'ingest', $slug,
+    $status === 'published'
+        ? ($isWire ? 'wire desk, published' : 'ready flag + image, published')
+        : ($awaitingImage ? 'filed as draft, awaiting image (publishes on attach)'
+            : ($agentDraftOnly
+                ? 'filed as draft (draft-only token' . ($isWire ? '; wire desk withheld' : '')
+                    . ($readyOnImage ? '; publish_on_image not honoured' : '') . ')'
+                : 'filed as draft')),
+    $postId, $now);
 
 $out = ['ok' => true, 'id' => $postId, 'slug' => $slug, 'status' => $status];
+if ($draftReason !== '') {
+    $out['reason'] = $draftReason;
+}
 if ($awaitingImage === 1) {
     $out['awaiting_image'] = true;
 }

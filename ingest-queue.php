@@ -10,10 +10,19 @@
  * read the ingest surface offers, and it reads pipeline state the same
  * tokens created; the archive stays without a read API.
  *
+ * A draft-only token (ingest_agents.draft_only = 1) is refused with 403.
+ * The queue is the worklist of the agent that attaches art and PUBLISHES,
+ * which that credential cannot do, and its rows are other filers'
+ * unpublished headlines and ledes. The answer is a refusal rather than
+ * an empty list, so a key of the wrong kind is visible at once instead
+ * of looking like a queue with nothing in it.
+ *
  * Request:  Authorization: Bearer <token>
  * Response: 200 {ok, stories: [{id, slug, site, desk, title, lede,
  *                               dateline, filed_by, filed_at}]}
  *           Oldest first, at most 100.
+ *           401 {ok: false, error}          — missing, unknown or revoked token
+ *           403 {ok: false, error, reason}  — a draft-only token; no rows
  */
 require __DIR__ . '/app/bootstrap.php';
 
@@ -42,6 +51,21 @@ $agent = $stmt->fetch();
 if (!$agent || (int) $agent['enabled'] !== 1) {
     // A revoked agent and an unknown token answer identically.
     pp_queue_out(401, ['ok' => false, 'error' => 'unknown or revoked token']);
+}
+
+/* --- Capability: after authentication, before any read ------------------- */
+// This queue exists so an image agent can attach art and publish. A
+// draft-only token cannot publish, and what the queue holds is other
+// filers' unpublished headlines, ledes and datelines — so it gets none of
+// it. Refused outright, not answered with an empty list: an empty queue
+// reads as "nothing to do" forever, while a 403 tells the operator which
+// kind of key they are holding.
+if ((int) ($agent['draft_only'] ?? 0) === 1) {
+    pp_queue_out(403, [
+        'ok' => false,
+        'error' => 'this token is draft-only — the publish-on-image queue is closed to it',
+        'reason' => 'draft_only token: it cannot publish, so it cannot read the stories waiting to be published',
+    ]);
 }
 $agentSites = array_values(array_filter(array_map('trim', explode(',', (string) $agent['sites']))));
 if (!$agentSites) {

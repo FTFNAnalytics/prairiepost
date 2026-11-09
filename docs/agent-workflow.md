@@ -36,6 +36,20 @@ was not explicitly filed as ready, so ordinary newsroom drafts are
 untouchable from this lane. Both keys can at worst publish what a
 human already approved.
 
+**Draft-only keys sit outside this lane entirely.** A key minted
+draft-only (the API keys page's "Draft-only" box, or `make-agent.php
+… --draft-only`) cannot publish by any route: its ready flag is not
+honoured (the story files as a plain draft and never appears in the
+queue), a paper's wire desk files a draft for it, its attach call is
+refused with 403 and `"status":"draft"` plus a `reason`, and the queue
+itself answers 403 to it — a draft-only key cannot read the stories
+waiting to be published. If your filing answers `"status":"draft"`
+with a `reason` and no `awaiting_image`, you hold a draft-only key: the
+newsroom publishes what you filed, and there is nothing further for
+the Image Agent to do with it. And if you are the Image Agent and
+`GET /api/ingest-queue` answers 403, you were handed a draft-only key:
+that is not an empty queue — stop and ask for a standard key.
+
 ## The Text Agent's run
 
 For each approved story:

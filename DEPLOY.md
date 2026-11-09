@@ -306,6 +306,83 @@ Per new paper:
    site's job matters for its own newsletter and scheduled stories.
 7. Syndication: editors tick "Runs on" per story.
 
+## 11 · Draft-only ingest credentials (evidence feeds — milestone NEWS1)
+
+An external evidence feed (AugurWell's regulatory decisions, Veritas's
+sourced claims) reaches a newsroom desk through the same
+`POST /api/ingest` the Hermes agents use. Before any such feed delivers
+to a desk, its credential must be **incapable of publishing**. That is
+what a *draft-only* token is: minted with `--draft-only`
+(`ingest_agents.draft_only = 1`, schema step 22), and then held to a
+draft server-side on every path that can publish, and kept out of the
+publish queue —
+
+- the paper's `wire_desks` exception files a **draft**, not a live story;
+- the `publish_on_image` flag is **not honoured** (the story is never
+  queued for the image agent, so no other token can publish it later);
+- `POST /api/ingest-publish` is **refused** with 403: the story is left
+  untouched and the refusal is recorded in the paper's audit log (a
+  malformed request, an unknown or off-scope story, or one that is not
+  waiting answers 422, 404, 403 or 409 first, as for any token);
+- `GET /api/ingest-queue` is **refused** with 403 and returns no rows:
+  the queue lists other filers' unpublished headlines and ledes for
+  the agent that publishes them, and this token is not that agent.
+
+Every such answer says so: `{"status":"draft","reason":"draft_only
+token: …"}`. The token still uploads art through `/api/ingest-media`
+(an upload publishes nothing). Scope (`--sites`, `--desks`), 401 on
+revocation and 403 off-scope are unchanged. Only the paper's newsroom
+publishes what a draft-only token files.
+
+### Issuing the Kermode Chronicle credential
+
+Run from the **live release directory** — the one the enabled nginx
+blocks point at; discover it, never assume it (CLAUDE.md) — and only
+after the roll that carries schema version 22: the app refuses to
+serve a schema behind its code, and a release that predates step 22
+does not know the flag.
+
+    cd "$REL" && php tools/make-agent.php create --name evidence-kermode --sites kermode-chronicle --draft-only
+
+Expected output: `Agent:  evidence-kermode`, `Sites:  kermode-chronicle`,
+`Desks:  (any existing desk)`, `Mode:   DRAFT-ONLY — files drafts; …`,
+then the token, shown exactly once. Store it root-only beside the
+Hermes tokens (`/root/hermes-tokens/`) and hand it to exactly one feed.
+To confine the feed to desks, add `--desks` with any of Kermode's
+desk slugs — `environment, wildlife, climate, resources, communities,
+coast, interior, culture` — e.g. `--desks environment,resources,climate`.
+
+The tool is strict about its arguments: anything it does not recognise
+(a mistyped `--draft_only`, `--draft-only=1`, a misspelt subcommand)
+stops it with exit code 2 and mints nothing, so a typo cannot fall
+through to a standard, publish-capable token. All the same, read the
+`Mode:` line — it must say `DRAFT-ONLY` — before the token is handed
+over.
+
+Hub admins can mint the same credential on `/admin/api-keys.php` by
+ticking **Draft-only**; the two paths write the same row.
+
+### Verify before the feed is switched on
+
+1. `php tools/make-agent.php list` shows
+   `evidence-kermode  active  draft-only  sites=kermode-chronicle …`.
+2. One test filing with the token against a desk the paper lists in
+   `wire_desks` (or, with `"publish_on_image": true` and an uploaded
+   image) answers `201` with `"status":"draft"` and a `reason`; the
+   story appears in the Kermode newsroom as a draft and
+   `https://kermodechronicle.ca/story/<slug>` is 404. Remove the test
+   draft from the admin UI afterwards — never by SQL.
+3. `GET /api/ingest-queue` with the token answers `403` with a
+   `reason` and no `stories`.
+4. `php tools/make-agent.php revoke --name evidence-kermode` is the
+   kill switch, identical to every other token: 401 on the next request.
+
+The flag is a property of the credential. It is never readable or
+settable through the ingest API, and `tools/wire-map.php` exports show
+it beside each token's scope.
+
+---
+
 ## Troubleshooting quick table
 
 | Symptom | Cause → fix |

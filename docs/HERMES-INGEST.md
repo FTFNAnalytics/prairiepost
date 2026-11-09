@@ -14,7 +14,8 @@ front controller.) The token comes from `tools/make-agent.php create`,
 is shown exactly once, and is stored only as a hash. It is scoped to
 specific papers (`--sites`) and optionally desks (`--desks`); requests
 outside the scope answer 403. Revocation (`revoke`) turns the token
-into a 401, indistinguishable from one that never existed.
+into a 401, indistinguishable from one that never existed. A token
+minted `--draft-only` can never publish — see "Status" below.
 
 ## Payload
 
@@ -50,7 +51,12 @@ into a 401, indistinguishable from one that never existed.
 - **Status** — `draft`, behind the newsroom's existing publish gate.
   The single exception: a desk listed in the site's `wire_desks`
   setting publishes immediately, and still carries the automated-report
-  treatment.
+  treatment. A **draft-only** token (`make-agent.php create …
+  --draft-only`, `ingest_agents.draft_only = 1`) has no exception: the
+  wire desk files a draft, `publish_on_image` is not honoured, and
+  `/api/ingest-publish` refuses it (403) — the response carries
+  `"status":"draft"` and a `reason`. The newsroom alone publishes what
+  such a token files.
 - **Sanitization** — the same allowlist as every newsroom save.
 - **Provenance** — the agent's name and every source are stored and
   rendered on the article as the automated-report box.
