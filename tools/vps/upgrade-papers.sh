@@ -483,7 +483,7 @@ for OLD in "${!DIR_NEW[@]}"; do
       fail "the schema migration failed part-way and the old release is not a fallback. Until the migration is finished neither release can serve: the schema is ahead of the old one and not yet complete for the new one. Finish it from the new release — (cd $NEWDIR && php tools/migrate.php --status) names the obstacle, php tools/migrate.php --apply completes it — then: nginx -t && systemctl reload nginx, and check every domain. Do NOT copy the .bak.$STAMP files back (docs/MIGRATION-COMPAT.md)."
     fi
     if [ "${SCHEMA_CHANGE[$IDENT]:-unknown}" != "same" ]; then
-      echo "WARNING: the stored schema version could not be read back after the failure (before: ${SCHEMA_BEFORE[$IDENT]:-not readable}, after: ${SCHEMA_AFTER[$IDENT]:-not readable})." >&2
+      echo "WARNING: the stored schema version was not readable both before and after the failed step (before: ${SCHEMA_BEFORE[$IDENT]:-not readable}, after: ${SCHEMA_AFTER[$IDENT]:-not readable})." >&2
       echo "         What follows assumes it did not change. If it rose, the old release answers 503: check with (cd $NEWDIR && php tools/migrate.php --status)." >&2
     fi
     echo "MIGRATION FAILED — rolling every vhost and cron file back; nothing was reloaded." >&2

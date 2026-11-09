@@ -199,7 +199,7 @@ ok "it names the migration as the cause"      'has "$OUT2" "MIGRATION FAILED"'
 ok "vhosts still point at the OLD release"    "grep -q oldsha11 $B2/vhosts/kitchenerchronicle && ! grep -q ${HEADSHA:0:12} $B2/vhosts/kitchenerchronicle"
 ok "cron restored to the OLD release, unpaused" "[ -f $B2/cron/pp-fetch ] && grep -q oldsha11 $B2/cron/pp-fetch && [ ! -f $B2/cron/pp-fetch.paused ]"
 ok "the database is behind, not corrupted"    '[ "$(stored_version "$B2")" = 18 ]'
-ok "no step committed, so the old wording stands" 'has "$OUT2" "the schema migration failed; the box still serves the old release" && hasnt "$OUT2" "ROSE" && hasnt "$OUT2" "could not be read back"'
+ok "no step committed, so the old wording stands" 'has "$OUT2" "the schema migration failed; the box still serves the old release" && hasnt "$OUT2" "ROSE" && hasnt "$OUT2" "was not readable both before and after"'
 
 echo
 echo "== scenario 3: no recovery point, no roll"
