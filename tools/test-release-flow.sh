@@ -40,9 +40,32 @@
 #      everything is restored and "nothing changed" is said, as before.
 #
 # A fixture has no nginx and no TLS stack: the nginx test is skipped
-# unless PP_UPGRADE_FIXTURE_NGINX_FAIL forces it to fail, and
-# verification is a CLI boot of each new release directory. What a
-# failed group gets (restore or hold) is the code a real box runs.
+# unless PP_UPGRADE_FIXTURE_NGINX_FAIL forces it to fail, and in
+# scenarios 1 to 10 verification is a CLI boot of each new release
+# directory. What a failed group gets (restore or hold) is the code a
+# real box runs.
+#
+# The masthead guard itself, over HTTP. These boxes have a stand-in for
+# nginx (front_start): one PHP built-in server that answers each request
+# from whichever release directory the vhost file for its Host header
+# names at that moment. Handed its port, upgrade-papers.sh runs its REAL
+# baseline capture and its REAL per-domain comparison — status code,
+# <title>, stylesheet set — with only the probe's transport changed
+# (plain HTTP on that port instead of TLS on 443). The box is shaped like
+# production: one release directory serving several papers by hostname,
+# the hub in a directory of its own, and one tenant with no site row.
+#  11. a healthy roll that raises the version: every domain is captured
+#      before and compared after; the tenant with no site row is held to
+#      its 503.
+#  12. a release missing one paper's template tree, after a rise: the
+#      guard catches it by the stylesheet set and the group is HELD. Then
+#      the gap this fixture was built to show — a second roll onto a
+#      release that HAS the template takes the failing answer as its
+#      baseline, reads the repair as a failure, and puts the group back.
+#  13. the vhost files copied back to the old release after a rise: every
+#      domain answers the readiness gate's 503. A roll holds each of them
+#      to that 503, reads 200 as a failure, and puts both groups back.
+#      The box cannot be recovered by rolling.
 #
 set -uo pipefail
 cd "$(dirname "$0")/.."
@@ -131,14 +154,19 @@ return ['db' => ['driver' => 'sqlite', 'sqlite_path' => '$1/data/net.sqlite'],
 CFG
 }
 run_upgrade() { # box-dir [pre|post: force that nginx test to fail] -> rc
+  # Set for one call, in front of it:
+  #   UP_PORT                the box's HTTP stand-in (front_start): the
+  #                          masthead guard runs for real against it
+  #   UP_SHA + UP_TARBALL    roll to a candidate other than HEAD
   PP_UPGRADE_FIXTURE=1 \
   PP_UPGRADE_FIXTURE_NGINX_FAIL="${2:-}" \
+  PP_UPGRADE_FIXTURE_HTTP_PORT="${UP_PORT:-}" \
   PP_UPGRADE_VHOSTS_DIR="$1/vhosts" \
   PP_UPGRADE_CRON_DIR="$1/cron" \
   PP_UPGRADE_WWW="$1/www" \
   PP_UPGRADE_SNIPPET_DIR="$1/snippets" \
-  PP_UPGRADE_SHA="$HEAD12" \
-  PP_RELEASE_TARBALL="$TARBALL" \
+  PP_UPGRADE_SHA="${UP_SHA:-$HEAD12}" \
+  PP_RELEASE_TARBALL="${UP_TARBALL:-$TARBALL}" \
   PP_BACKUP_DEST="$1/backups" \
   bash "$ROOT/tools/vps/upgrade-papers.sh"
 }
@@ -165,6 +193,124 @@ http_front() { # release-dir
   done
   kill "$pid" 2>/dev/null
   wait "$pid" 2>/dev/null
+}
+
+# ---------------------------------------------------------------------
+# The HTTP stage (scenarios 11 on).
+# ---------------------------------------------------------------------
+# A box shaped like production: the papers' release directory serves
+# several domains and its config picks the tenant from the hostname on
+# each request, as the live one does; the hub has a directory of its own.
+#   prairiedispatch.test, kitchenerchronicle.test   the papers' group
+#   dormant.test       the papers' group; a tenant with NO site row, which
+#                      answers 503 "This site is not provisioned here"
+#   civismedia.test    the hub's group
+build_http_box() { # box-dir [commit] -> populates $BOX
+  build_box "$1" "${2:-$GATED_COMMIT}"
+  local dir
+  for dir in shared civismedia; do
+    cat > "$BOX/www/prairiepost-oldsha11-$dir/config.php" <<CFG
+<?php
+\$host = strtolower((string) preg_replace('/:\\d+\$/', '', \$_SERVER['HTTP_HOST'] ?? ''));
+\$slug = ['prairiedispatch.test' => 'prairiedispatch', 'kitchenerchronicle.test' => 'kitchener-chronicle',
+         'civismedia.test' => 'civismedia', 'dormant.test' => 'no-such-paper'][\$host] ?? 'prairiedispatch';
+return ['db' => ['driver' => 'sqlite', 'sqlite_path' => '$BOX/data/net.sqlite'],
+        'site_slug' => \$slug, 'hub_slug' => 'civismedia',
+        'site_url' => '', 'timezone' => 'America/Toronto', 'debug' => false];
+CFG
+  done
+  printf 'server {\n  root %s;\n  server_name prairiedispatch.test;\n}\n' "$BOX/www/prairiepost-oldsha11-shared" > "$BOX/vhosts/prairiedispatch"
+  printf 'server {\n  root %s;\n  server_name dormant.test;\n}\n' "$BOX/www/prairiepost-oldsha11-shared" > "$BOX/vhosts/dormant"
+}
+# The stand-in for nginx: ONE PHP built-in server per box. Its router
+# reads the vhost files on every request and hands the request to the
+# release directory that the file for the request's Host names right
+# then — so a rewrite, a restore or a hold by upgrade-papers.sh changes
+# what the next probe sees. It has no reload: the files are its
+# configuration, which is what nginx serves after a successful reload.
+FRONT_PID=""
+FRONT_PORT=""
+front_start() { # box-dir -> sets $FRONT_PORT and $FRONT_PID
+  local try i body
+  cat > "$1/front.php" <<'FRONT'
+<?php
+$host = strtolower((string) preg_replace('/:\d+$/', '', $_SERVER['HTTP_HOST'] ?? ''));
+foreach (glob(getenv('PP_FIXTURE_VHOSTS') . '/*') ?: [] as $vh) {
+    // Dotted names are the upgrader's own .bak.* and .paused artifacts.
+    if (!is_file($vh) || str_contains(basename($vh), '.')) {
+        continue;
+    }
+    $text = (string) file_get_contents($vh);
+    if (!preg_match('/server_name\s+([^;\s]+)/', $text, $name) || strtolower($name[1]) !== $host) {
+        continue;
+    }
+    if (preg_match('/root\s+([^;\s]+)\s*;/', $text, $root) && is_file($root[1] . '/router.php')) {
+        header('X-Fixture-Release: ' . basename($root[1]));
+        chdir($root[1]);
+        return require $root[1] . '/router.php';
+    }
+    break;
+}
+http_response_code(502);
+header('Content-Type: text/plain');
+echo "fixture front: no vhost file names a release directory for host '$host'\n";
+return true;
+FRONT
+  for try in 1 2 3 4 5; do
+    FRONT_PORT=$((20000 + RANDOM % 20000))
+    ( cd "$1" && PP_FIXTURE_VHOSTS="$1/vhosts" exec php -S "127.0.0.1:$FRONT_PORT" front.php >"$1/front.log" 2>&1 ) &
+    FRONT_PID=$!
+    for i in 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20; do
+      # Its own 502 for a host nobody serves proves it is OURS on that port.
+      body=$(curl -s -m 5 -H 'Host: nobody.invalid' "http://127.0.0.1:$FRONT_PORT/" 2>/dev/null)
+      case "$body" in "fixture front:"*) return 0 ;; esac
+      kill -0 "$FRONT_PID" 2>/dev/null || break   # it exited: the port was taken
+      sleep 0.25
+    done
+    kill "$FRONT_PID" 2>/dev/null
+    wait "$FRONT_PID" 2>/dev/null
+  done
+  echo "FATAL: the fixture's HTTP stand-in did not start"
+  exit 1
+}
+front_stop() {
+  [ -n "$FRONT_PID" ] || return 0
+  kill "$FRONT_PID" 2>/dev/null
+  wait "$FRONT_PID" 2>/dev/null
+  FRONT_PID=""
+}
+# What a DOMAIN answers through the stand-in right now: sets $HTTP_CODE,
+# $HTTP_TITLE, $HTTP_CSS (read the way upgrade-papers.sh reads them) and
+# $HTTP_FROM (the release directory that answered); body in $HTTP_BODY.
+HTTP_HEAD=$(mktemp)
+front_get() { # domain
+  HTTP_CODE=$(curl -s -m 15 -o "$HTTP_BODY" -D "$HTTP_HEAD" -w '%{http_code}' --resolve "$1:$FRONT_PORT:127.0.0.1" "http://$1:$FRONT_PORT/")
+  HTTP_TITLE=$(grep -o '<title>[^<]*</title>' "$HTTP_BODY" | head -1)
+  HTTP_CSS=$(grep -o '/assets/css/[a-z0-9._-]*\.css' "$HTTP_BODY" | sort -u | tr '\n' ' ')
+  HTTP_FROM=$(sed -n 's/^X-Fixture-Release: //p' "$HTTP_HEAD" | tr -d '\r')
+}
+gate_503() { # domain -> true when it answers the readiness gate's own 503 page
+  front_get "$1"
+  [ "$HTTP_CODE" = 503 ] && grep -q "This site is being updated" "$HTTP_BODY"
+}
+on_rel() { grep -q "prairiepost-$2-" "$1"; }   # a vhost or cron file names the release with that label
+# A candidate with one paper's template tree missing — the failure the
+# stylesheet check exists for (a release cut from a line that never had
+# the paper's files): HEAD's own tree minus the Kitchener Chronicle's
+# chrome partials, views and stylesheet. Its front page still answers 200
+# with the right <title>, because the title is in the database.
+LOSSY12=lossyrelease
+LOSSY_TARBALL=""
+make_lossy_tarball() { # -> sets $LOSSY_TARBALL
+  [ -n "$LOSSY_TARBALL" ] && return 0
+  local t
+  t=$(mktemp -d)
+  LOSSY_TARBALL=$(mktemp --suffix=.tgz)
+  tar -xzf "$TARBALL" -C "$t" \
+    && rm "$t"/prairiepost-head/app/views/chrome/kitchener-*.php "$t"/prairiepost-head/app/views/*-kitchener.php "$t/prairiepost-head/assets/css/kitchener.css" \
+    && tar -czf "$LOSSY_TARBALL" -C "$t" prairiepost-head \
+    || { echo "FATAL: cannot build the candidate without the Chronicle's template tree"; exit 1; }
+  rm -rf "$t"
 }
 
 echo "== scenario 1: the happy roll (v18 -> HEAD, two groups, one schema)"
@@ -331,13 +477,101 @@ ok "vhosts are back on the old release"       'on_old "$B10/vhosts/kitchenerchro
 ok "cron is back on the old release, unpaused" '[ -f "$B10/cron/pp-fetch" ] && on_old "$B10/cron/pp-fetch" && [ ! -f "$B10/cron/pp-fetch.paused" ]'
 ok "the version did not move"                 '[ "$(stored_version "$B10")" = "$HEADV" ] && hasnt "$OUT10" "ROSE"'
 
+echo
+echo "== scenario 11: the masthead guard over HTTP — a healthy roll that raises the version (21 -> $HEADV)"
+B11=$(mktemp -d)
+build_http_box "$B11"
+front_start "$B11"
+front_get prairiedispatch.test;    PD_K="$HTTP_CODE"; PD_T="$HTTP_TITLE"; PD_C="$HTTP_CSS"; PD_F="$HTTP_FROM"
+front_get kitchenerchronicle.test; KC_K="$HTTP_CODE"; KC_T="$HTTP_TITLE"; KC_C="$HTTP_CSS"
+front_get civismedia.test;         HUB_K="$HTTP_CODE"; HUB_T="$HTTP_TITLE"; HUB_C="$HTTP_CSS"; HUB_F="$HTTP_FROM"
+front_get dormant.test;            DOR_K="$HTTP_CODE"
+echo "   before the roll, through the stand-in, from the old release:"
+echo "     prairiedispatch.test     $PD_K  $PD_T  [$PD_C]"
+echo "     kitchenerchronicle.test  $KC_K  $KC_T  [$KC_C]"
+echo "     civismedia.test          $HUB_K  $HUB_T  [$HUB_C]"
+echo "     dormant.test             $DOR_K  $(grep -o 'This site is[^.]*\.' "$HTTP_BODY" | head -1)"
+ok "each domain is answered by the OLD release, as its own tenant" '[ "$PD_K" = 200 ] && [ "$KC_K" = 200 ] && [ "$HUB_K" = 200 ] && [ -n "$PD_T" ] && [ -n "$KC_T" ] && [ -n "$HUB_T" ] && [ "$PD_T" != "$KC_T" ] && [ "$KC_T" != "$HUB_T" ] && [ "$PD_F" = prairiepost-oldsha11-shared ] && [ "$HUB_F" = prairiepost-oldsha11-civismedia ]'
+ok "the Chronicle links its own stylesheet, the Dispatch does not" 'has "$KC_C" "/assets/css/kitchener.css" && hasnt "$PD_C" "/assets/css/kitchener.css"'
+ok "the tenant with no site row answers 503, and it is NOT the gate's page" '[ "$DOR_K" = 503 ] && grep -q "This site is not provisioned here" "$HTTP_BODY" && ! grep -q "This site is being updated" "$HTTP_BODY"'
+OUT11=$(UP_PORT=$FRONT_PORT run_upgrade "$B11" 2>&1); RC11=$?
+show "$(sed -n '/^== Capture every domain/,/^== Fetch the release/p' <<< "$OUT11")"
+show "$(sed -n '/^== Verify every domain/,$p' <<< "$OUT11")"
+ok "roll succeeds"                            '[ "$RC11" = 0 ]'
+ok "the schema rose"                          'has "$OUT11" "ROSE from 21" && [ "$(stored_version "$B11")" = "$HEADV" ]'
+ok "the baseline is the REAL capture: title and stylesheet set per domain" 'has "$OUT11" "   prairiedispatch.test -> $PD_T [$PD_C]" && has "$OUT11" "   kitchenerchronicle.test -> $KC_T [$KC_C]" && has "$OUT11" "   civismedia.test -> $HUB_T [$HUB_C]"'
+ok "the tenant with no site row is held to its 503" 'has "$OUT11" "   dormant.test answered 503 with no title — it will be held to 503 afterwards" && has "$OUT11" "PASS dormant.test -> 503 (unchanged)"'
+ok "every domain is compared after the roll, none by CLI boot" 'has "$OUT11" "PASS prairiedispatch.test -> $PD_T" && has "$OUT11" "PASS kitchenerchronicle.test -> $KC_T" && has "$OUT11" "PASS civismedia.test -> $HUB_T" && [ "$(grep -c "^PASS " <<< "$OUT11")" = 4 ] && hasnt "$OUT11" "(fixture) "'
+front_get kitchenerchronicle.test
+ok "afterwards the NEW release answers: same masthead, same stylesheets" '[ "$HTTP_CODE" = 200 ] && [ "$HTTP_TITLE" = "$KC_T" ] && [ "$HTTP_CSS" = "$KC_C" ] && [ "$HTTP_FROM" = "prairiepost-$HEAD12-shared" ]'
+front_get civismedia.test
+ok "and the hub from its own new directory"   '[ "$HTTP_CODE" = 200 ] && [ "$HTTP_TITLE" = "$HUB_T" ] && [ "$HTTP_FROM" = "prairiepost-$HEAD12-civismedia" ]'
+front_stop
+
+echo
+echo "== scenario 12: a release missing one paper's template tree, after a rise — HELD; then the roll that fixes it"
+make_lossy_tarball
+B12=$(mktemp -d)
+build_http_box "$B12"
+front_start "$B12"
+OUT12=$(UP_PORT=$FRONT_PORT UP_SHA=$LOSSY12 UP_TARBALL=$LOSSY_TARBALL run_upgrade "$B12" 2>&1); RC12=$?
+show "$(sed -n '/^== Verify every domain/,$p' <<< "$OUT12")"
+ok "roll 1 exits non-zero"                    '[ "$RC12" != 0 ]'
+ok "the schema rose"                          'has "$OUT12" "ROSE from 21" && [ "$(stored_version "$B12")" = "$HEADV" ]'
+ok "the guard catches it by the stylesheet set (the title is right)" 'has "$OUT12" "FAIL kitchenerchronicle.test stylesheet set changed — was [$KC_C] now [/assets/css/prairie.css ]" && hasnt "$OUT12" "wrong tenant"'
+ok "the other three domains pass"             'has "$OUT12" "PASS prairiedispatch.test -> $PD_T" && has "$OUT12" "PASS dormant.test -> 503 (unchanged)" && has "$OUT12" "PASS civismedia.test -> $HUB_T"'
+ok "the papers' group is HELD on the new release, not restored" 'has "$OUT12" "NOT restoring release group" && [ "$(restore_lines "$OUT12")" = 0 ] && on_rel "$B12/vhosts/kitchenerchronicle" "$LOSSY12" && on_rel "$B12/vhosts/prairiedispatch" "$LOSSY12" && has "$OUT12" "NOT done"'
+front_get kitchenerchronicle.test
+ok "so the Chronicle is served in public without its stylesheet" '[ "$HTTP_CODE" = 200 ] && [ "$HTTP_TITLE" = "$KC_T" ] && [ "$HTTP_CSS" = "/assets/css/prairie.css " ] && [ "$HTTP_FROM" = "prairiepost-$LOSSY12-shared" ]'
+front_get prairiedispatch.test
+ok "and the Dispatch, same group, is served as before" '[ "$HTTP_CODE" = 200 ] && [ "$HTTP_TITLE" = "$PD_T" ] && [ "$HTTP_CSS" = "$PD_C" ] && [ "$HTTP_FROM" = "prairiepost-$LOSSY12-shared" ]'
+# THE GAP (a). Roll 2 goes to HEAD, which has the Chronicle's template
+# tree: it is the fix. Nothing tells the roll that the Chronicle was
+# already failing when it started.
+OUT12B=$(UP_PORT=$FRONT_PORT run_upgrade "$B12" 2>&1); RC12B=$?
+show "$(sed -n '/^== Capture every domain/,/^== Fetch the release/p' <<< "$OUT12B")"
+show "$(sed -n '/^== Verify every domain/,$p' <<< "$OUT12B")"
+ok "GAP roll 2 takes the FAILING answer as the Chronicle's baseline" 'has "$OUT12B" "   kitchenerchronicle.test -> $KC_T [/assets/css/prairie.css ]"'
+ok "GAP so the repair reads as a failure"     'has "$OUT12B" "FAIL kitchenerchronicle.test stylesheet set changed — was [/assets/css/prairie.css ] now [$KC_C]"'
+ok "GAP the version did not rise, so the papers' group is put back" 'has "$OUT12B" "stored schema version after the step: $HEADV (unchanged)" && [ "$(restore_lines "$OUT12B")" = 1 ] && hasnt "$OUT12B" "NOT restoring" && on_rel "$B12/vhosts/kitchenerchronicle" "$LOSSY12" && on_rel "$B12/vhosts/prairiedispatch" "$LOSSY12" && on_rel "$B12/vhosts/dormant" "$LOSSY12"'
+ok "GAP the roll ends exit 0 with a WARN"     '[ "$RC12B" = 0 ] && has "$OUT12B" "WARN: at least one release group was restored"'
+front_get kitchenerchronicle.test
+ok "GAP the Chronicle is STILL served without its stylesheet" '[ "$HTTP_CODE" = 200 ] && [ "$HTTP_CSS" = "/assets/css/prairie.css " ] && [ "$HTTP_FROM" = "prairiepost-$LOSSY12-shared" ]'
+ok "the hub's group, healthy throughout, did move to the fixed release" 'on_new "$B12/vhosts/civismedia" && has "$OUT12B" "PASS civismedia.test -> $HUB_T"'
+front_stop
+
+echo
+echo "== scenario 13: the vhost files copied back to the old release after a rise — every domain 503 — then a roll"
+B13=$(mktemp -d)
+build_http_box "$B13"
+front_start "$B13"
+OUT13=$(UP_PORT=$FRONT_PORT run_upgrade "$B13" 2>&1); RC13=$?
+ok "the roll that raised the version succeeded" '[ "$RC13" = 0 ] && has "$OUT13" "ROSE from 21" && [ "$(grep -c "^PASS " <<< "$OUT13")" = 4 ]'
+# What the closing text says not to do: every vhost's .bak copied back.
+for f in "$B13"/vhosts/*.bak.*; do cp "$f" "${f%.bak.*}"; done
+ok "the vhost files name the old release again" 'on_old "$B13/vhosts/kitchenerchronicle" && on_old "$B13/vhosts/prairiedispatch" && on_old "$B13/vhosts/dormant" && on_old "$B13/vhosts/civismedia"'
+G13=0; for d in prairiedispatch.test kitchenerchronicle.test civismedia.test dormant.test; do gate_503 "$d" && G13=$((G13 + 1)); done
+ok "all four domains answer the readiness gate's 503" '[ "$G13" = 4 ]'
+# THE GAP (b). The release the papers need is on the box, and a roll to
+# it is the obvious repair.
+OUT13B=$(UP_PORT=$FRONT_PORT run_upgrade "$B13" 2>&1); RC13B=$?
+show "$(sed -n '/^== Capture every domain/,/^== Fetch the release/p' <<< "$OUT13B")"
+show "$(sed -n '/^== Verify every domain/,$p' <<< "$OUT13B")"
+ok "GAP the roll holds each domain to the 503 it answered" 'has "$OUT13B" "   kitchenerchronicle.test answered 503 with no title — it will be held to 503 afterwards" && has "$OUT13B" "   civismedia.test answered 503 with no title — it will be held to 503 afterwards"'
+ok "GAP 200 afterwards reads as a failure"    'has "$OUT13B" "FAIL kitchenerchronicle.test answered 200, served 503 before" && has "$OUT13B" "FAIL prairiedispatch.test answered 200, served 503 before" && has "$OUT13B" "FAIL civismedia.test answered 200, served 503 before"'
+ok "GAP the version did not rise, so both groups are put back on the release that cannot serve" 'has "$OUT13B" "stored schema version after the step: $HEADV (unchanged)" && [ "$(restore_lines "$OUT13B")" = 2 ] && on_old "$B13/vhosts/kitchenerchronicle" && on_old "$B13/vhosts/prairiedispatch" && on_old "$B13/vhosts/civismedia"'
+ok "GAP the roll ends exit 0 with a WARN"     '[ "$RC13B" = 0 ] && has "$OUT13B" "WARN: at least one release group was restored"'
+G13=0; for d in prairiedispatch.test kitchenerchronicle.test civismedia.test dormant.test; do gate_503 "$d" && G13=$((G13 + 1)); done
+ok "GAP the box still answers 503 on all four domains" '[ "$G13" = 4 ]'
+front_stop
+
 for B in "${BOXES[@]}"; do
   git worktree remove --force "$B/www/prairiepost-oldsha11-shared" 2>/dev/null
   rm -rf "$B"
 done
 git worktree prune 2>/dev/null
 rm -rf "$SEEDS"
-rm -f "$TARBALL" "$HTTP_BODY"
+rm -f "$TARBALL" "$HTTP_BODY" "$HTTP_HEAD" "$LOSSY_TARBALL"
 
 echo
 if [ "$FAILS" = "1" ]; then
