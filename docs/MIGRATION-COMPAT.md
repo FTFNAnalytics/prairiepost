@@ -73,9 +73,12 @@ the old release:
 A reading the script could not take counts as a rise wherever the new
 release is known to be ready, because "it did not change" would then be
 a guess. Every cell is exercised by `tools/test-release-flow.sh`
-(scenarios 2 and 4 to 10), which CI runs; its verification stage is a
-CLI boot of each new release, not the masthead probe, and it has no
-nginx.
+(scenarios 2 and 4 to 10), which CI runs. In those scenarios the
+verification stage is a CLI boot of each new release. Scenarios 11 to
+14 run the masthead guard itself — the capture before the roll and the
+per-domain comparison after it — against a stand-in that answers plain
+HTTP from whichever release directory each vhost file names. No fixture
+has nginx or TLS.
 
 ### When a roll that raised the schema version fails
 
@@ -85,10 +88,10 @@ takes the one that leaves the most papers up:
 
 - **Put the group back** (what the script does when the version has not
   changed). After a rise that is 503 on every domain the group serves —
-  twenty-four papers for one failing masthead — and the next roll then
-  holds each of them to that 503 ("What a second roll can and cannot
-  do", below). The script no longer does this, and nobody should do it
-  by hand for a group.
+  twenty-four papers for one failing masthead — and an ordinary roll
+  then holds each of them to that 503 ("What a second roll can and
+  cannot do", below). The script no longer does this, and nobody should
+  do it by hand for a group.
 - **Hold the group on the new release** (what it does now). Every
   domain that passed keeps serving. The one that failed keeps serving
   whatever failed its check — another paper's masthead, a changed set
@@ -101,7 +104,8 @@ From a held roll the operator has these moves:
    all there is to do when the guard objected to something intended,
    such as a stylesheet set the release changed on purpose: the next
    roll takes its baseline from what is served then. If the domain
-   needs a fix, read "What a second roll can and cannot do" first.
+   needs a fix, the roll that carries the fix needs the recovery
+   baseline (below), or it will put the fix back.
 2. **Take that one domain down.** Right when it is serving the wrong
    paper. Copy the roll's own backup of that single vhost back and
    reload: the old release answers the gate's 503 for that domain and
@@ -112,30 +116,129 @@ From a held roll the operator has these moves:
        cp <vhost>.bak.<stamp> <vhost>
        nginx -t && systemctl reload nginx
 
-   The domain comes back only by hand: once a fixed release is on the
-   box, point this vhost's `root` at that release directory and reload.
-   A roll will not do it (next paragraph). Not rehearsed on a server;
-   the fixture shows only that the old release answers 503 once the
-   version has risen.
+   An ordinary roll leaves the domain down: it holds it to its 503 and
+   puts its group of one back. It comes back with the roll that carries
+   the fix, held to the recovery baseline (below), or by hand: once a
+   fixed release is on the box, point this vhost's `root` at that
+   release directory and reload. Not rehearsed on a server. The fixture
+   runs the take-down, the ordinary roll that leaves the domain down
+   and the recovery roll that brings it back (scenario 14), against its
+   HTTP stand-in.
 3. **Restore the database.** Rule 2, and not a way to get one paper
    back.
 
 **What a second roll can and cannot do.** The masthead guard holds each
-domain to what it served when THAT roll started, not to what it should
-serve. A second roll therefore replaces the release cleanly for every
-domain that is healthy when it starts. For a domain that is failing
-when it starts, the repair itself reads as a failure — 200 where it
-answered 503, the right masthead where it served the wrong one — and,
-because the second roll does not raise the version, the script puts
-that domain's release group back where it came from. If the failing
-domain is still in the papers' group, that undoes the fix for all of
-them (no outage: they return to the first new release). If it was taken
-down first (move 2) it is a group of one: the other papers move to the
-fixed release and that domain stays on 503 until its vhost is repointed
-by hand. Either way the roll does not mend the failing domain. This is
-read from the script, not exercised: no fixture has an HTTP
-verification stage. Teaching the script a recovery baseline is open
-work.
+domain to what it answered when THAT roll started, not to what it
+should answer. A second roll therefore replaces the release cleanly for
+every domain that is healthy when it starts. For a domain that is
+failing when it starts, the repair itself reads as a failure — 200
+where it answered 503, the right stylesheet set where it served the
+wrong one — and, because the second roll does not raise the version,
+the script puts that domain's release group back where it came from. If
+the failing domain is still in the papers' group, that undoes the fix
+for all of them (no outage: they return to the first new release). If
+it was taken down first (move 2) it is a group of one: the other papers
+move to the fixed release and that domain stays on 503. Either way an
+ordinary roll does not mend the failing domain, and it is meant not to:
+a domain taken down on purpose answers the same 503, and no roll may
+bring it back unasked. The fixture runs each of these (the assertions
+marked GAP in scenarios 12 and 13 of `tools/test-release-flow.sh`, and
+scenario 14). The roll also says so itself: a domain answering the
+gate's 503 is named before anything changes, and a failed verification
+ends with a pointer to what follows.
+
+### The recovery baseline
+
+What mends such a domain is a roll that has been told what the domain
+SHOULD answer. The script cannot work that out, but an earlier roll
+captured it while the domain was healthy.
+
+- **Every roll saves the baseline it captured**, before it changes
+  anything: `/var/lib/prairiepost-upgrade/baseline-<stamp>.txt`, one
+  line per domain, `domain|status code|stylesheet set|<title>`, under a
+  header that says when it was written and which release the roll was
+  going to. The roll prints the path (`saved: …`). The file is a
+  record. No roll reads one unless it is told to, and none is ever
+  overwritten.
+- **`PP_UPGRADE_BASELINE=<file>` holds a roll to one of them.** Each
+  domain the file names is held to its record there instead of to what
+  it answers when the roll starts: the same status code, `<title>` and
+  stylesheet set, compared the same way. A domain the file does not
+  name is held to what it answers now, as always. The file is read and
+  checked before anything changes. One that is missing or malformed,
+  or that names none of the box's domains, stops the roll there.
+- **The output says which baseline each domain was held to**: where
+  the baseline is taken (`held to the RECOVERY baseline: …`, with `and
+  NOT to what it answers now: …` under it when the two differ), on
+  every PASS and FAIL line (`[recovery baseline; when this roll started
+  it answered 503]`), and in a closing list.
+
+It is the ordinary roll with one more variable in its environment. Only
+the reference changes: nothing about the comparison, and nothing about
+what a failing group gets.
+
+**Which file.** The one saved by the last roll that STARTED on a
+healthy box.
+
+- After a roll that ended "NOT done" with a group held: that roll's own
+  file. Its closing text prints the line to use.
+- After vhost files were copied back onto an old release, so that the
+  papers answer the gate's 503: the file saved by the roll that raised
+  the version, the one before the copy-back. An ordinary roll on such a
+  box names the newest saved baseline in which those domains answered
+  200 with a title.
+- Read the file before using it. "The newest with a 200" is not
+  "healthy": a roll that started while a paper was serving without its
+  stylesheet saved exactly that, and a roll held to it fails the
+  repaired paper.
+- A box with no file from a healthy start (it broke before the first
+  roll by a script that saves them) can be given one by hand, in the
+  same format. What each domain should answer is in the output of its
+  last good roll, which prints every title and stylesheet set.
+
+**What it does not change.**
+
+- An ordinary roll. With the variable unset there is no difference in
+  what is captured, compared or printed, apart from the saved file and
+  its one `saved:` line.
+- What a failing group gets. A domain that does not match its record
+  FAILS, and its release group is restored — or held, if this roll
+  raised the version — as on any roll. On a box that came into the roll
+  on the gate's 503, "restored" means back to 503 for every domain of
+  that group, and the roll prints that the release it is restoring to
+  is not built for the stored version. Correct the record or the
+  release and roll again.
+- A tenant with no site row. It answers 503 "This site is not
+  provisioned here", and on a release built for another version it
+  answers the gate's 503 like every other domain. Its record says 503,
+  so it is held to 503. Nothing reads a 503 as "should be 200".
+- A domain taken down on purpose (move 2). It stays down through every
+  ordinary roll. Only a roll whose named baseline holds a healthy
+  record for it brings it back, and only if it then answers as that
+  record says.
+
+**Limits.**
+
+- A record is as old as the roll that saved it. A title comes from the
+  database (the site title and tagline), so an editor's change since
+  then makes that domain fail its record, and so does a release that
+  changes a stylesheet set on purpose. The FAIL line prints both
+  sides. Correct that domain's line and roll again.
+- A hand-edited record can ask for less than a capture would. A 200
+  with no title passes any 200, and a title with no stylesheet set
+  skips that comparison. The roll says so under that domain's line when
+  it reads the file.
+- A domain taken down alone and brought back by a recovery roll lands
+  in a release directory of its own, `prairiepost-<sha>-<vhost>`,
+  because it is no longer in the papers' group, and later rolls keep
+  rolling it as its own group. To rejoin it, point its vhost's `root`
+  at the papers' directory and reload.
+- A box where nginx never loaded the new release (the roll said `nginx
+  test failed AFTER the migration`) is not a case for a roll. Fix the
+  nginx error and reload.
+- Run by the fixture only, on SQLite, against a stand-in that serves
+  what the vhost files name. Not exercised: real nginx and TLS,
+  PostgreSQL, the production box.
 
 ## The table
 
@@ -217,13 +320,16 @@ schema, so it applies to all of them at once.
 
 1. **Fix forward.** A second roll, pinned to a commit built for schema
    22. The schema is already at 22, so `tools/migrate.php --apply`
-   reports nothing pending and only the code switches. It works for a
-   release group whose domains are all healthy when it starts. A
-   domain that is failing or on 503 when it starts is not mended, and
-   takes its group back with it: the masthead guard holds each domain
-   to what it served at the start of that roll ("What a second roll
-   can and cannot do", above). Plan for the second roll, and plan for
-   one hand repoint if a domain was the problem.
+   reports nothing pending and only the code switches. For a release
+   group whose domains are all healthy when it starts, that is the
+   ordinary roll. If a domain was the problem — it failed the first
+   roll's masthead check and its group was held, or it is on 503 — the
+   second roll has to be told what that domain should answer, or it
+   reads the repair as a failure and puts it back: run it with
+   `PP_UPGRADE_BASELINE` naming the baseline the first roll saved. The
+   first roll's "NOT done" text prints that line ("The recovery
+   baseline", above). Plan for the second roll, and keep the first
+   roll's output.
 2. **Restore the database from the pre-roll backup.** That is rule 2:
    a separate operator decision that discards every write since the
    backup, for every paper and the hub together. The repository has no
@@ -245,7 +351,8 @@ roll to the exact commit, and have the fix-forward ready — a second
 pinned roll — instead of counting on the old release. If the roll ends
 "NOT done", it has held a group: send the output back and choose from
 "When a roll that raised the schema version fails" before touching a
-vhost.
+vhost. That output also names the saved baseline the fixing roll will
+need.
 
 ## Forward repair
 
