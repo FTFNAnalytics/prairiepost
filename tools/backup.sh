@@ -168,8 +168,14 @@ if [ "$DRIVER" = "pgsql" ]; then
     $c = require $argv[1]; $p = $c["db"]["pgsql"];
     echo ($p["host"] ?? "") . " " . (int)($p["port"] ?? 5432) . " " . ($p["name"] ?? "postgres") . " " . ($p["user"] ?? "") . " " . ($p["schema"] ?? "prairiedispatch");' "$HUB_CFG")"
   PASSFILE="$STAGE/.pgpass"
+  # pgpass: a literal ':' or '\' in ANY field is backslash-escaped, each
+  # exactly once — addcslashes is a single pass. (Chained str_replace
+  # pairs run in sequence: the second pair re-escaped the backslash the
+  # first had just put before a ':', so a password containing ':' was
+  # written as "\\:" and could never authenticate the dump.)
   php -r '$c = require $argv[1]; $p = $c["db"]["pgsql"];
-    file_put_contents($argv[2], sprintf("%s:%d:%s:%s:%s\n", $p["host"], (int)($p["port"] ?? 5432), $p["name"] ?? "postgres", $p["user"], str_replace([":","\\"],["\\:","\\\\"], (string) $p["pass"])));' "$HUB_CFG" "$PASSFILE"
+    $f = fn ($v): string => addcslashes((string) $v, ":\\");
+    file_put_contents($argv[2], sprintf("%s:%d:%s:%s:%s\n", $f($p["host"]), (int)($p["port"] ?? 5432), $f($p["name"] ?? "postgres"), $f($p["user"]), $f($p["pass"])));' "$HUB_CFG" "$PASSFILE"
   chmod 600 "$PASSFILE"
   DB_IDENTITY="pgsql $PGH:$PGP db=$PGN schema=$SCHEMA"
   if ! PGPASSFILE="$PASSFILE" pg_dump -h "$PGH" -p "$PGP" -U "$PGU" -d "$PGN" --schema="$SCHEMA" -Fc -f "$STAGE/db.dump" 2> "$STAGE/.dump.err"; then
