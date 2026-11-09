@@ -346,6 +346,13 @@ To confine the feed to desks, add `--desks` with any of Kermode's
 desk slugs — `environment, wildlife, climate, resources, communities,
 coast, interior, culture` — e.g. `--desks environment,resources,climate`.
 
+The tool is strict about its arguments: anything it does not recognise
+(a mistyped `--draft_only`, `--draft-only=1`, a misspelt subcommand)
+stops it with exit code 2 and mints nothing, so a typo cannot fall
+through to a standard, publish-capable token. All the same, read the
+`Mode:` line — it must say `DRAFT-ONLY` — before the token is handed
+over.
+
 Hub admins can mint the same credential on `/admin/api-keys.php` by
 ticking **Draft-only**; the two paths write the same row.
 

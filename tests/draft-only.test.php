@@ -9,7 +9,9 @@
  * draft-only token filed ends up published, the attach call it is
  * refused leaves the story untouched, and no call answers 5xx. The CLI
  * flag is exercised end to end: tools/make-agent.php --draft-only
- * mints a token that behaves this way; one minted without it publishes.
+ * mints a token that behaves this way; one minted without it publishes;
+ * and a mistyped or misplaced flag stops the tool with a non-zero exit
+ * and no row, instead of falling through to a standard token.
  */
 if (PHP_SAPI !== 'cli') {
     exit(1);
@@ -232,6 +234,49 @@ ok($rc === 0 && preg_match('/Token:\s+(hermes_[0-9a-f]{56})/', $out, $tm) === 1 
    "make-agent without the flag mints a standard token (rc=$rc)");
 [$code, $j] = $file($tm[1] ?? '', ['desk' => 'local-news', 'title' => 'CLI standard token on the wire desk']);
 ok($code === 201 && ($j['status'] ?? '') === 'published', "the default is unchanged: a standard token publishes on the wire desk (got $code)");
+
+/* ---- 7b. The CLI fails CLOSED on anything it does not recognise ------------- */
+// Skipped instead of refused, each of these mints a STANDARD, publish-capable
+// token and exits 0 — the failure the review found. Refused, nothing is minted.
+function agentCount(string $name): int
+{
+    $s = fresh()->prepare('SELECT COUNT(*) FROM ingest_agents WHERE name = ?');
+    $s->execute([$name]);
+    $n = (int) $s->fetchColumn();
+    $s->closeCursor();
+    return $n;
+}
+$agentsBefore = (int) fresh()->query('SELECT COUNT(*) FROM ingest_agents')->fetchColumn();
+foreach ([
+    'misspelt flag (--draft_only)'   => ['cli-typo-a', 'create --name cli-typo-a --sites prairiedispatch --draft_only'],
+    'flag given a value'             => ['cli-typo-b', 'create --name cli-typo-b --sites prairiedispatch --draft-only=1'],
+    'single-dash flag'               => ['cli-typo-c', 'create --name cli-typo-c --sites prairiedispatch -draft-only'],
+    'unknown option'                 => ['cli-typo-d', 'create --name cli-typo-d --sites prairiedispatch --publish'],
+    'stray positional word'          => ['cli-typo-e', 'create --name cli-typo-e --sites prairiedispatch draft-only'],
+    'flag swallowed as the name'     => ['draft-only', 'create --sites prairiedispatch --name --draft-only'],
+    'option given twice'             => ['cli-typo-f', 'create --name cli-typo-f --name cli-typo-g --sites prairiedispatch --draft-only'],
+    'misspelt subcommand'            => ['cli-typo-h', 'creat --name cli-typo-h --sites prairiedispatch --draft-only'],
+] as $label => [$wouldBe, $args]) {
+    [$out, $rc] = pp_fixture_tool($fx, "tools/make-agent.php $args");
+    ok($rc !== 0 && !str_contains($out, 'Token:'),
+       "make-agent refuses a $label: non-zero exit, no token printed (rc=$rc)");
+    ok(agentCount($wouldBe) === 0, "… and creates no row ($label)");
+}
+// --draft-only where it means nothing is an error, never a silent no-op.
+foreach (['list --draft-only', 'revoke --name cli-standard --draft-only', 'enable --name cli-standard --draft-only',
+          'list --name cli-standard'] as $args) {
+    [$out, $rc] = pp_fixture_tool($fx, "tools/make-agent.php $args");
+    ok($rc !== 0, "make-agent refuses `$args` (rc=$rc)");
+}
+$r = fresh()->query("SELECT enabled, draft_only FROM ingest_agents WHERE name = 'cli-standard'")->fetch();
+ok($r && (int) $r['enabled'] === 1 && (int) $r['draft_only'] === 0, 'the refused revoke left the token exactly as it was');
+ok((int) fresh()->query('SELECT COUNT(*) FROM ingest_agents')->fetchColumn() === $agentsBefore,
+   'no refusal created or removed a token row');
+// The documented invocations still work after the refusals.
+[$out, $rc] = pp_fixture_tool($fx, 'tools/make-agent.php revoke --name cli-standard');
+ok($rc === 0 && str_contains($out, 'revoked'), "a well-formed revoke still works (rc=$rc)");
+[$out, $rc] = pp_fixture_tool($fx, 'tools/make-agent.php enable --name=cli-standard');
+ok($rc === 0 && str_contains($out, 're-enabled'), "a well-formed enable (the --name=value form) still works (rc=$rc)");
 
 /* ---- 8. Invariants ---------------------------------------------------------- */
 $f = fresh();

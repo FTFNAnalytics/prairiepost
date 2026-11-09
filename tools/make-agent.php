@@ -22,6 +22,12 @@
  * newsroom. This is the credential an external evidence feed must hold
  * before it delivers to any desk (milestone NEWS1). The flag is set at
  * minting and is a property of the credential, never of a request.
+ *
+ * Arguments are strict, because this tool mints credentials: anything it
+ * does not recognise stops it with exit code 2 before the database is
+ * opened, and so does an option given to a subcommand it means nothing
+ * to. A mistyped --draft_only therefore mints nothing — it can never
+ * fall through to a standard, publish-capable token.
  */
 
 if (PHP_SAPI !== 'cli') {
@@ -30,15 +36,63 @@ if (PHP_SAPI !== 'cli') {
 require dirname(__DIR__) . '/app/bootstrap.php';
 
 $cmd = $argv[1] ?? '';
+
+const PP_AGENT_USAGE = 'Usage: php tools/make-agent.php create --name <n> --sites <a,b> [--desks <c,d>] [--draft-only]'
+    . ' | list | revoke --name <n> | enable --name <n>';
+
+/** Stop having changed nothing: the reason on stderr, a non-zero exit. */
+function pp_agent_refuse(string $message): never
+{
+    fwrite(STDERR, $message . "\nNothing was created or changed.\n" . PP_AGENT_USAGE . "\n");
+    exit(2);
+}
+
+// The options each subcommand understands. An argument this tool does not
+// recognise STOPS it: when unknown arguments were skipped, a mistyped
+// `create … --draft_only` (or `--draft-only=1`) minted a standard,
+// publish-capable token and exited 0. An option that means nothing to the
+// subcommand it was given to is an error too, never a silent no-op. All of
+// this runs before the database is opened, so a refusal writes nothing.
+$allowed = [
+    'create' => ['name', 'sites', 'desks', 'draft-only'],
+    'list'   => [],
+    'revoke' => ['name'],
+    'enable' => ['name'],
+];
 // getopt() stops at the first non-option (the subcommand), so parse by hand.
 $opt = [];
-for ($i = 2; $i < count($argv); $i++) {
-    if (preg_match('/^--(name|sites|desks)$/', $argv[$i], $m) && isset($argv[$i + 1])) {
-        $opt[$m[1]] = $argv[++$i];
-    } elseif (preg_match('/^--(name|sites|desks)=(.*)$/', $argv[$i], $m)) {
-        $opt[$m[1]] = $m[2];
-    } elseif ($argv[$i] === '--draft-only') {
-        $opt['draft_only'] = true;
+if (isset($allowed[$cmd])) {
+    for ($i = 2; $i < count($argv); $i++) {
+        $arg = (string) $argv[$i];
+        if ($arg === '--draft-only') {
+            $key = 'draft-only';
+            $value = true;
+        } elseif (preg_match('/^--(name|sites|desks)=(.*)$/s', $arg, $m)) {
+            $key = $m[1];
+            $value = $m[2];
+        } elseif (preg_match('/^--(name|sites|desks)$/', $arg, $m)) {
+            $key = $m[1];
+            if (!isset($argv[$i + 1])) {
+                pp_agent_refuse("--{$key} needs a value.");
+            }
+            $value = (string) $argv[++$i];
+        } elseif (preg_match('/^-{1,2}draft[-_]?only/i', $arg)) {
+            pp_agent_refuse("Unrecognised argument '{$arg}'. The flag is spelled exactly --draft-only and takes no value.");
+        } else {
+            pp_agent_refuse("Unrecognised argument '{$arg}'.");
+        }
+        // A value never starts with "--": `--name --draft-only` would
+        // otherwise swallow the flag as the name and mint a standard token.
+        if (is_string($value) && str_starts_with($value, '--')) {
+            pp_agent_refuse("--{$key} needs a value, and '{$value}' looks like another option.");
+        }
+        if (!in_array($key, $allowed[$cmd], true)) {
+            pp_agent_refuse("--{$key} has no meaning for '{$cmd}'.");
+        }
+        if (array_key_exists($key, $opt)) {
+            pp_agent_refuse("--{$key} was given more than once.");
+        }
+        $opt[$key] = $value;
     }
 }
 $pdo = db();
@@ -87,7 +141,7 @@ switch ($cmd) {
         if ($stmt->fetch()) {
             exit("Agent '{$name}' already exists. Revoke it and create a new name, or keep its token.\n");
         }
-        $draftOnly = !empty($opt['draft_only']) ? 1 : 0;
+        $draftOnly = !empty($opt['draft-only']) ? 1 : 0;
         $token = 'hermes_' . bin2hex(random_bytes(28));
         $pdo->prepare('INSERT INTO ingest_agents (name, token_hash, sites, desks, enabled, draft_only, created_at)
             VALUES (?, ?, ?, ?, 1, ?, ?)')
@@ -129,5 +183,6 @@ switch ($cmd) {
         break;
 
     default:
-        exit("Usage: php tools/make-agent.php create|list|revoke|enable [--name ...] [--sites a,b] [--desks c,d] [--draft-only]\n");
+        // No subcommand, or one this tool does not have: nothing ran.
+        pp_agent_refuse($cmd === '' ? 'A subcommand is required.' : "Unrecognised subcommand '{$cmd}'.");
 }
