@@ -28,53 +28,35 @@
  *           4xx {ok: false, error} — the reason, never a coercion
  */
 require __DIR__ . '/app/bootstrap.php';
+require __DIR__ . '/app/ingest.php';
 
 header('Content-Type: application/json; charset=utf-8');
 header('X-Robots-Tag: noindex');
 
-function pp_pub_out(int $code, array $body): never
-{
-    http_response_code($code);
-    echo json_encode($body, JSON_UNESCAPED_SLASHES);
-    exit;
-}
-
 if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') {
-    pp_pub_out(405, ['ok' => false, 'error' => 'POST one JSON attach-and-publish per call']);
+    pp_ingest_respond(405, ['ok' => false, 'error' => 'POST one JSON attach-and-publish per call']);
 }
 
-/* --- Authentication: token -> agent row, fail closed ---------------------- */
-$auth = (string) ($_SERVER['HTTP_AUTHORIZATION'] ?? $_SERVER['REDIRECT_HTTP_AUTHORIZATION'] ?? '');
-if (!preg_match('/^Bearer\s+(\S{20,200})$/i', $auth, $m)) {
-    pp_pub_out(401, ['ok' => false, 'error' => 'missing bearer token']);
-}
-$stmt = db()->prepare('SELECT * FROM ingest_agents WHERE token_hash = ?');
-$stmt->execute([hash('sha256', $m[1])]);
-$agent = $stmt->fetch();
-if (!$agent || (int) $agent['enabled'] !== 1) {
-    // A revoked agent and an unknown token answer identically.
-    pp_pub_out(401, ['ok' => false, 'error' => 'unknown or revoked token']);
-}
-$agentSites = array_filter(array_map('trim', explode(',', (string) $agent['sites'])));
-$agentDraftOnly = (int) ($agent['draft_only'] ?? 0) === 1;
+/* --- Authentication: token -> agent, fail closed (app/ingest.php) --------- */
+$agent = pp_ingest_authenticate();
 
 /* --- Payload -------------------------------------------------------------- */
 $raw = file_get_contents('php://input', false, null, 0, 64 * 1024);
 $in = json_decode((string) $raw, true);
 if (!is_array($in)) {
-    pp_pub_out(400, ['ok' => false, 'error' => 'body must be a JSON object']);
+    pp_ingest_respond(400, ['ok' => false, 'error' => 'body must be a JSON object']);
 }
 
 $storyRef = trim((string) ($in['story'] ?? ''));
 if ($storyRef === '') {
-    pp_pub_out(422, ['ok' => false, 'error' => 'story is required: the slug (or id) from the filing response or /api/ingest-queue']);
+    pp_ingest_respond(422, ['ok' => false, 'error' => 'story is required: the slug (or id) from the filing response or /api/ingest-queue']);
 }
 $imagePath = trim((string) ($in['image'] ?? ''));
 if (!preg_match('#^/uploads/\d{4}/\d{2}/[a-z0-9][a-z0-9-]*\.(jpg|jpeg|png|webp|gif)$#', $imagePath)) {
-    pp_pub_out(422, ['ok' => false, 'error' => 'image must be an /uploads/ path returned by /api/ingest-media']);
+    pp_ingest_respond(422, ['ok' => false, 'error' => 'image must be an /uploads/ path returned by /api/ingest-media']);
 }
 if (!is_file(PP_ROOT . $imagePath)) {
-    pp_pub_out(422, ['ok' => false, 'error' => 'image names an /uploads/ path that does not exist — upload it first via /api/ingest-media']);
+    pp_ingest_respond(422, ['ok' => false, 'error' => 'image names an /uploads/ path that does not exist — upload it first via /api/ingest-media']);
 }
 $imageCaption = mb_substr(trim(strip_tags((string) ($in['image_caption'] ?? ''))), 0, 255);
 $imageCredit = mb_substr(trim(strip_tags((string) ($in['image_credit'] ?? ''))), 0, 120);
@@ -92,13 +74,13 @@ $stmt = $pdo->prepare(
 $stmt->execute([ctype_digit($storyRef) ? (int) $storyRef : $storyRef]);
 $post = $stmt->fetch();
 if (!$post) {
-    pp_pub_out(404, ['ok' => false, 'error' => 'no such story']);
+    pp_ingest_respond(404, ['ok' => false, 'error' => 'no such story']);
 }
-if (!in_array((string) $post['site'], $agentSites, true)) {
-    pp_pub_out(403, ['ok' => false, 'error' => 'this token is not scoped to that story\'s site']);
+if (!in_array((string) $post['site'], $agent['sites'], true)) {
+    pp_ingest_respond(403, ['ok' => false, 'error' => 'this token is not scoped to that story\'s site']);
 }
 if ((int) $post['awaiting_image'] !== 1 || $post['status'] !== 'draft') {
-    pp_pub_out(409, ['ok' => false, 'error' => $post['status'] === 'published'
+    pp_ingest_respond(409, ['ok' => false, 'error' => $post['status'] === 'published'
         ? 'that story is already published'
         : 'that story was not filed as publish-on-image — only its newsroom can publish it']);
 }
@@ -108,19 +90,19 @@ if ((int) $post['awaiting_image'] !== 1 || $post['status'] !== 'draft') {
 // waiting draft, and it stays one. Nothing is written except the audit row,
 // and that row can never change this answer: pp_ingest_audit() bounds it to
 // the table's columns and does not throw, so the refusal is always the 403.
-if ($agentDraftOnly) {
-    pp_ingest_audit((int) $post['site_id'], (string) $agent['name'], 'ingest-publish', (string) $post['slug'],
-        'REFUSED: draft-only token attempted attach-and-publish; story left as a draft, art not attached',
-        (int) $post['id']);
-    pp_pub_out(403, [
-        'ok' => false,
-        'error' => 'this token is draft-only — it cannot publish; the story stays a draft for its newsroom',
-        'id' => (int) $post['id'],
-        'slug' => (string) $post['slug'],
-        'status' => 'draft',
-        'reason' => 'draft_only token: attach-and-publish refused, nothing written',
-    ]);
-}
+pp_ingest_require_publish($agent, [
+    'error' => 'this token is draft-only — it cannot publish; the story stays a draft for its newsroom',
+    'id' => (int) $post['id'],
+    'slug' => (string) $post['slug'],
+    'status' => 'draft',
+    'reason' => 'draft_only token: attach-and-publish refused, nothing written',
+], [
+    'site_id' => (int) $post['site_id'],
+    'action' => 'ingest-publish',
+    'target' => (string) $post['slug'],
+    'detail' => 'REFUSED: draft-only token attempted attach-and-publish; story left as a draft, art not attached',
+    'post_id' => (int) $post['id'],
+]);
 
 /* --- Attach and publish in one guarded write ------------------------------- */
 $now = now();
@@ -134,7 +116,7 @@ $upd = $pdo->prepare(
 $upd->execute([$imagePath, $imageCaption, $imageCredit, $now, $now, (int) $post['id']]);
 if ($upd->rowCount() !== 1) {
     // Lost a race: someone published, unflagged or deleted it meanwhile.
-    pp_pub_out(409, ['ok' => false, 'error' => 'the story changed state while this request ran — fetch the queue again']);
+    pp_ingest_respond(409, ['ok' => false, 'error' => 'the story changed state while this request ran — fetch the queue again']);
 }
 
 $pdo->prepare('UPDATE ingest_agents SET last_used_at = ? WHERE id = ?')->execute([$now, (int) $agent['id']]);
@@ -142,7 +124,7 @@ $pdo->prepare('UPDATE ingest_agents SET last_used_at = ? WHERE id = ?')->execute
 pp_ingest_audit((int) $post['site_id'], (string) $agent['name'], 'ingest-publish', (string) $post['slug'],
     'featured image attached, published (publish-on-image lane)', (int) $post['id'], $now);
 
-pp_pub_out(200, [
+pp_ingest_respond(200, [
     'ok' => true,
     'id' => (int) $post['id'],
     'slug' => (string) $post['slug'],

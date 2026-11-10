@@ -25,33 +25,17 @@
  *           403 {ok: false, error, reason}  — a draft-only token; no rows
  */
 require __DIR__ . '/app/bootstrap.php';
+require __DIR__ . '/app/ingest.php';
 
 header('Content-Type: application/json; charset=utf-8');
 header('X-Robots-Tag: noindex');
 
-function pp_queue_out(int $code, array $body): never
-{
-    http_response_code($code);
-    echo json_encode($body, JSON_UNESCAPED_SLASHES);
-    exit;
-}
-
 if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'GET') {
-    pp_queue_out(405, ['ok' => false, 'error' => 'GET, with the bearer token']);
+    pp_ingest_respond(405, ['ok' => false, 'error' => 'GET, with the bearer token']);
 }
 
-/* --- Authentication: token -> agent row, fail closed ---------------------- */
-$auth = (string) ($_SERVER['HTTP_AUTHORIZATION'] ?? $_SERVER['REDIRECT_HTTP_AUTHORIZATION'] ?? '');
-if (!preg_match('/^Bearer\s+(\S{20,200})$/i', $auth, $m)) {
-    pp_queue_out(401, ['ok' => false, 'error' => 'missing bearer token']);
-}
-$stmt = db()->prepare('SELECT * FROM ingest_agents WHERE token_hash = ?');
-$stmt->execute([hash('sha256', $m[1])]);
-$agent = $stmt->fetch();
-if (!$agent || (int) $agent['enabled'] !== 1) {
-    // A revoked agent and an unknown token answer identically.
-    pp_queue_out(401, ['ok' => false, 'error' => 'unknown or revoked token']);
-}
+/* --- Authentication: token -> agent, fail closed (app/ingest.php) --------- */
+$agent = pp_ingest_authenticate();
 
 /* --- Capability: after authentication, before any read ------------------- */
 // This queue exists so an image agent can attach art and publish. A
@@ -60,19 +44,15 @@ if (!$agent || (int) $agent['enabled'] !== 1) {
 // it. Refused outright, not answered with an empty list: an empty queue
 // reads as "nothing to do" forever, while a 403 tells the operator which
 // kind of key they are holding.
-if ((int) ($agent['draft_only'] ?? 0) === 1) {
-    pp_queue_out(403, [
-        'ok' => false,
-        'error' => 'this token is draft-only — the publish-on-image queue is closed to it',
-        'reason' => 'draft_only token: it cannot publish, so it cannot read the stories waiting to be published',
-    ]);
-}
-$agentSites = array_values(array_filter(array_map('trim', explode(',', (string) $agent['sites']))));
-if (!$agentSites) {
-    pp_queue_out(200, ['ok' => true, 'stories' => []]);
+pp_ingest_require_publish($agent, [
+    'error' => 'this token is draft-only — the publish-on-image queue is closed to it',
+    'reason' => 'draft_only token: it cannot publish, so it cannot read the stories waiting to be published',
+]);
+if (!$agent['sites']) {
+    pp_ingest_respond(200, ['ok' => true, 'stories' => []]);
 }
 
-$marks = implode(',', array_fill(0, count($agentSites), '?'));
+$marks = implode(',', array_fill(0, count($agent['sites']), '?'));
 $stmt = db()->prepare(
     "SELECT p.id, p.slug, s.slug AS site, c.slug AS desk, p.title, p.lede,
             p.dateline, p.filed_by, p.created_at AS filed_at
@@ -84,7 +64,7 @@ $stmt = db()->prepare(
       ORDER BY p.id
       LIMIT 100"
 );
-$stmt->execute($agentSites);
+$stmt->execute($agent['sites']);
 
 $stories = [];
 foreach ($stmt as $row) {
@@ -100,4 +80,4 @@ foreach ($stmt as $row) {
         'filed_at' => (string) $row['filed_at'],
     ];
 }
-pp_queue_out(200, ['ok' => true, 'stories' => $stories]);
+pp_ingest_respond(200, ['ok' => true, 'stories' => $stories]);
