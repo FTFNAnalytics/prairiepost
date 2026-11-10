@@ -19,6 +19,8 @@
  *   pp_ingest_authenticate()     bearer token -> agent, or 401
  *   pp_ingest_require_publish()  403 for an agent that may not publish
  *   pp_ingest_respond()          the one JSON emitter
+ *   pp_ingest_audit()            the one audit row: bounded, and unable to
+ *                                change an answer
  *
  * What stays in each endpoint is what is its own: the method it accepts,
  * its payload rules, the order of its checks and the wording of its
@@ -118,4 +120,43 @@ function pp_ingest_require_publish(array $agent, array $refusal, ?array $audit =
             (string) $audit['target'], (string) $audit['detail'], (int) ($audit['post_id'] ?? 0));
     }
     pp_ingest_respond(403, ['ok' => false] + $refusal);
+}
+
+/**
+ * The ingest endpoints' audit row. It is written AFTER the work it records
+ * has committed (a stored filing, a published story), or as the only side
+ * effect of a refusal — so, like pp_audit(), it must never change the
+ * answer. Every bounded column is cut to its width, and a write that still
+ * fails is logged for the operator and reported as false, never thrown.
+ *
+ * The case that bit: audit_log.target is VARCHAR(160) while a story slug
+ * runs to 180-odd characters. PostgreSQL rejects the overflow (SQLite does
+ * not notice), which stored a filing and then answered 500, and turned a
+ * 403 refusal into a 500 with no audit row at all.
+ *
+ * When the slug had to be cut, the post id goes into the detail so the row
+ * still names exactly one story.
+ */
+function pp_ingest_audit(int $siteId, string $agentName, string $action, string $target, string $detail, int $postId = 0, ?string $at = null): bool
+{
+    if ($postId > 0 && mb_strlen($target) > 160) {
+        $detail .= ' [target cut to 160 characters; post #' . $postId . ']';
+    }
+    try {
+        db()->prepare('INSERT INTO audit_log (site_id, user_id, user_name, action, target, detail, ip, created_at)
+            VALUES (?, 0, ?, ?, ?, ?, ?, ?)')
+            ->execute([
+                $siteId,
+                mb_substr('hermes:' . $agentName, 0, 120),
+                mb_substr($action, 0, 60),
+                mb_substr($target, 0, 160),
+                $detail,
+                mb_substr((string) ($_SERVER['REMOTE_ADDR'] ?? ''), 0, 64),
+                $at ?? now(),
+            ]);
+        return true;
+    } catch (Throwable $e) {
+        error_log('prairiepost: ingest audit row not written (' . $action . ' ' . mb_substr($target, 0, 160) . '): ' . $e->getMessage());
+        return false;
+    }
 }
