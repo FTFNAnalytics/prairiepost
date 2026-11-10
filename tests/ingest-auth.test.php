@@ -53,6 +53,11 @@ putenv('PP_CONFIG=' . $config);
 define('PP_TEST_BOOT', 1);
 require $root . '/app/bootstrap.php';
 $pdo = db();
+// Say which engine this really ran on; tests/run.php prints the line for a
+// passing file. Section 5b holds an assertion only PostgreSQL can fail.
+$driver = (string) $pdo->getAttribute(PDO::ATTR_DRIVER_NAME);
+ok($driver === $fx['engine'], "the app is connected to the engine the fixture built ({$fx['engine']}, got $driver)");
+echo "engine: $driver server " . ((string) $pdo->getAttribute(PDO::ATTR_SERVER_VERSION) ?: 'n/a') . " ({$fx['id']})\n";
 
 /* ---- Fixtures: a wire desk and a plain desk, a second paper, six tokens ---- */
 $pdo->prepare('INSERT INTO categories (name, slug) VALUES (?,?)')->execute(['Local News', 'local-news']);
@@ -410,6 +415,41 @@ ok($code === 403 && $j === ['ok' => false, 'error' => 'this token is not scoped 
 $p = post('on-the-desk');
 ok($code === 201 && is_array($j) && ($j['status'] ?? '') === 'draft' && $p && $p['filed_by'] === 'authtest-desk-bound',
    "a desk-bound token files to its own desk, under its own name (got $code)");
+
+/* ---- 5b. A token whose name fills its column still uploads ----------------- */
+// ingest_agents.name holds 120 characters and so does audit_log.user_name,
+// but the audit row signs as 'hermes:' + name. A name of 114 characters or
+// more overflowed the row; PostgreSQL rejects that (SQLite does not notice),
+// and the row is written after the file is stored, so the upload was kept
+// and then answered 500. pp_ingest_audit() cuts the name to the column, and
+// the hourly limit has to count rows under that same cut name or such a
+// token would have no limit at all. The 201 is the PostgreSQL job's
+// assertion; the stored length and the 429 hold on both engines.
+$longName = 'authtest-' . str_repeat('n', 109);   // 118 characters
+$longNamed = $mint($longName, 'prairiedispatch', '', 1, 0);
+[$code, $j] = $endpoints['/api/ingest-media']['send']("Bearer $longNamed");
+$path = is_array($j) ? (string) ($j['path'] ?? '') : '';
+ok($code === 201 && $path !== '' && is_file($root . $path), "a token with a 118-character name uploads: 201, not 500 (got $code)");
+$storedFiles[] = $path;
+$a = one("SELECT user_name FROM audit_log WHERE action = 'ingest-media' AND target = ?", [$path]);
+ok($a && $a['user_name'] === substr('hermes:' . $longName, 0, 120) && strlen($a['user_name']) === 120,
+   'its audit row is signed with the name cut to the column (got ' . ($a ? strlen((string) $a['user_name']) . ' characters' : 'no row') . ')');
+// 59 more rows under exactly the name that row was stored with: the 61st
+// upload of the hour must be refused, which it is only if the limit counts
+// under the stored name.
+$maint = pp_db_connect();
+$ins = $maint->prepare("INSERT INTO audit_log (site_id, user_id, user_name, action, target, detail, ip, created_at) VALUES (0, 0, ?, 'ingest-media', ?, 'fixture', '', ?)");
+for ($i = 0; $a && $i < 59; $i++) {
+    $ins->execute([$a['user_name'], '/uploads/fixture/' . $i, now()]);
+}
+$ins = null;
+$maint = null;
+[$code, $j] = $endpoints['/api/ingest-media']['send']("Bearer $longNamed");
+ok($code === 429 && $j === ['ok' => false, 'error' => 'rate limit: at most 60 uploads per hour for this token'],
+   "and its sixty-first upload of the hour is refused: the limit counts under the stored name (got $code)");
+if ($code === 201 && is_array($j)) {
+    $storedFiles[] = (string) ($j['path'] ?? '');   // only when the assertion above has failed
+}
 
 /* ---- 6. A standard token: the same four requests succeed ------------------- */
 // So every refusal above was about the credential, not the request.
