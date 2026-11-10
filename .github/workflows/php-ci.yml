@@ -124,6 +124,12 @@ jobs:
           done
       - name: Run regression suite
         run: php tests/run.php
+      # The release procedure itself: tools/vps/upgrade-papers.sh rolled
+      # over synthetic boxes built from real historical releases, on
+      # SQLite. It never touches a server. This checkout is shallow, so
+      # the fixture fetches the two old commits it builds from.
+      - name: Release-flow fixture — synthetic upgrade rolls
+        run: bash tools/test-release-flow.sh
       - name: Seed the full network — zero skipped lines
         run: bash tools/seed-all.sh /tmp/ci-network.sqlite
       # The baseline compares a pull request with its base, and its gate

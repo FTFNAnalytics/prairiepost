@@ -19,6 +19,30 @@
 # masthead fails and its whole release group (vhosts AND cron files)
 # rolls back together.
 #
+# That rollback exists only while the stored schema version is the one
+# the OLD release was built for. Every release since Phase 2 refuses to
+# serve any other version, so once the migration step has RAISED it, a
+# group pointed back at its old directory answers 503 on every domain.
+# The script reads the stored version before and after the step; when it
+# rose, nothing is put back — a failure is held on the new release and
+# reported, and the closing text offers no repoint. The rules, and what
+# recovery is then, are in docs/MIGRATION-COMPAT.md.
+#
+# One roll at a time (a lock), and a stopped roll is FINISHED by running
+# the script again at the same release. Each roll leaves three small
+# files in the release directory it builds: .pp-roll-baseline (what every
+# domain answered before the roll changed anything), .pp-roll-before (the
+# stored schema version it found, and which run found it) and, once nginx
+# has reloaded onto the release and its domains passed, .pp-roll-complete.
+# A run that finds the vhosts naming a release with the first file and
+# not the last finishes that roll: migrate if pending, test, reload, and
+# verify every domain against the SAVED baseline, never against the 503
+# it may be answering now; such a run puts nothing back and offers no
+# rollback. Output also goes to a log file on the box; HUP and PIPE are
+# ignored (a dropped connection must not stop a roll), INT and TERM stop
+# it — except between the migration step and the reload, where nothing
+# does.
+#
 # Also creates the network's shared /uploads directory, merged from every
 # release and symlinked in, so campaign creatives and syndicated images
 # resolve on every domain.
@@ -33,6 +57,26 @@ EN_DIR="${PP_UPGRADE_VHOSTS_DIR:-/etc/nginx/sites-enabled}"
 CRON_DIR="${PP_UPGRADE_CRON_DIR:-/etc/cron.d}"
 WWW="${PP_UPGRADE_WWW:-/var/www}"
 FIXTURE="${PP_UPGRADE_FIXTURE:-0}"
+# A fixture has no nginx, so its configuration test is skipped. It can be
+# made to FAIL instead — PP_UPGRADE_FIXTURE_NGINX_FAIL=pre (the test
+# before the migration) or =post (the one after it) — and is read only
+# when PP_UPGRADE_FIXTURE=1.
+FIXTURE_NGINX_FAIL=""
+[ "$FIXTURE" = "1" ] && FIXTURE_NGINX_FAIL="${PP_UPGRADE_FIXTURE_NGINX_FAIL:-}"
+# Two more fixture-only knobs, read the same way. PP_UPGRADE_FIXTURE_STATUS_FAIL=N
+# makes the first N reads of the stored version AFTER the migration step
+# return nothing (a runner that cannot answer). PP_UPGRADE_FIXTURE_DIE=<point>
+# sends this run SIGTERM at that point (after-pause, after-reload), to
+# exercise the interruption handling.
+STATUS_FAILS_LEFT=0
+[ "$FIXTURE" = "1" ] && STATUS_FAILS_LEFT="${PP_UPGRADE_FIXTURE_STATUS_FAIL:-0}"
+fixture_die() { # point -> a fixture may ask for SIGTERM here
+  if [ "$FIXTURE" = "1" ] && [ "${PP_UPGRADE_FIXTURE_DIE:-}" = "$1" ]; then
+    echo "   (fixture: SIGTERM to this run at '$1')"
+    kill -TERM $$
+    sleep 2   # the trap runs when this command ends
+  fi
+}
 
 REPO="FTFNAnalytics/prairiepost"
 # The branch whose head becomes the new release. Override with PP_BRANCH to
@@ -43,7 +87,8 @@ BRANCH="${PP_BRANCH:-claude/master-dashboard-control-room-nr3mp4}"
 SHARED_UP="$WWW/prairiepost-shared-uploads"
 STAMP=$(date +%s)
 
-say()  { echo; echo "== $*"; }
+PHASE="starting"
+say()  { PHASE="$*"; echo; echo "== $*"; }
 fail() { echo "FATAL: $*" >&2; exit 1; }
 
 if [ "$FIXTURE" != "1" ]; then
@@ -51,10 +96,45 @@ if [ "$FIXTURE" != "1" ]; then
   command -v nginx >/dev/null || fail "nginx not found"
 fi
 
+# One roll at a time. Two runs at once would each take .bak copies of the
+# other's rewrites and pause each other's cron files.
+LOCK="${PP_UPGRADE_LOCK:-/run/lock/prairiepost-upgrade.lock}"
+command -v flock >/dev/null || fail "flock (util-linux) is not installed — the roll needs it to run one at a time"
+exec 9>"$LOCK" || fail "cannot open the lock file $LOCK"
+flock -n 9 || fail "another upgrade-papers.sh run holds $LOCK — one roll at a time (fuser $LOCK names it)"
+
+# Everything this run prints also goes to a log file on the box, and the
+# run does not stop when the terminal goes: the script runs as
+# `curl | bash` over SSH, where a dropped connection is a HUP (with a
+# terminal) or a PIPE at the next line printed (without one). Both are
+# ignored. INT and TERM are deliberate stops and are handled below.
+LOG_DIR="${PP_UPGRADE_LOG_DIR:-/var/log/prairiepost-upgrade}"
+LOG=""
+if mkdir -p "$LOG_DIR" 2>/dev/null && touch "$LOG_DIR/roll-$STAMP.log" 2>/dev/null; then
+  LOG="$LOG_DIR/roll-$STAMP.log"
+  exec > >(tee -p -a "$LOG") 2>&1
+  echo "log: $LOG"
+else
+  echo "WARNING: no log file ($LOG_DIR is not writable); output goes to this terminal only" >&2
+fi
+trap '' HUP PIPE
+
+# State the interruption handler reports.
+declare -a PAUSED=()           # cron files this run renamed to .paused
+declare -a ALL_VHOST_BACKUPS=()
+declare -a ALL_CRON_BACKUPS=()
+declare -A SCHEMA_DIR=()       # identity -> the release directory its version is read through
+declare -A SCHEMA_NOW=()       # identity -> what this run read before its own migration step
+MIGRATION_STARTED=0            # set just before the first --apply
+MIGRATION_RAN=0                # set when the migration loop is through
+RELOADED=0                     # set the moment systemctl reload nginx succeeds
+FINISHING=0                    # set when any group is a roll an earlier run started
+
+PROBE_BODY=$(mktemp)
 front_title() { # domain -> prints "<code>|<title>"
   local code title
-  code=$(curl -sk -m 15 -o /tmp/up_t.html -w "%{http_code}" --resolve "$1:443:127.0.0.1" "https://$1/")
-  title=$(grep -o "<title>[^<]*</title>" /tmp/up_t.html | head -1)
+  code=$(curl -sk -m 15 -o "$PROBE_BODY" -w "%{http_code}" --resolve "$1:443:127.0.0.1" "https://$1/")
+  title=$(grep -o "<title>[^<]*</title>" "$PROBE_BODY" | head -1)
   printf '%s|%s' "$code" "$title"
 }
 
@@ -63,15 +143,213 @@ front_css() { # domain -> prints the sorted set of /assets/css/*.css the front p
     | grep -o '/assets/css/[a-z0-9._-]*\.css' | sort -u | tr '\n' ' '
 }
 
+# ---------------------------------------------------------------------
+# Is the old release still a fallback? One fact decides it: whether the
+# migration step RAISES the stored schema version. A release since
+# Phase 2 serves only the version it was built for (db() in
+# app/bootstrap.php), so after a rise the old directories cannot serve
+# this database and every "put it back" below would be an outage, not a
+# rollback. The stored version is therefore read before the step and
+# again after it — by the candidate's own runner, whose --status never
+# writes — and kept per logical schema:
+#   same     both readings agree: the old release is a real fallback and
+#            everything below behaves as it always has;
+#   rose     the step raised it: nothing is put back on the old release;
+#   unknown  a reading was missing: treated as a rise wherever the new
+#            release is known to be ready, because "it did not change"
+#            is then a guess.
+# ---------------------------------------------------------------------
+declare -A DIR_IDENT=()      # OLD dir  -> logical schema identity
+declare -A SCHEMA_STATE=()   # identity -> what --status called the schema before the step (ready, behind, ...)
+declare -A SCHEMA_BEFORE=()  # identity -> stored version before the step ("" = not readable)
+declare -A SCHEMA_AFTER=()   # identity -> stored version after it
+declare -A SCHEMA_CHANGE=()  # identity -> same | rose | unknown
+declare -A SCHEMA_LABEL=()   # identity -> the release directory it was read through
+declare -a HELD_GROUPS=()    # OLD dirs that failed verification and were NOT put back
+NOT_A_FALLBACK="The old release was built for the earlier version. A release since Phase 2 refuses every schema version but its own, so each paper pointed back at it answers 503 and its cron jobs exit before any write"
+
+db_identity() { # release dir -> prints driver+endpoint+database+schema, or nothing
+  (cd "$1" && php -r '$c = require "config.php"; $d = $c["db"] ?? []; $x = $d["driver"] ?? "sqlite";
+    if ($x === "pgsql") { $p = $d["pgsql"]; echo "pgsql|", $p["host"] ?? "", "|", $p["port"] ?? 5432, "|", $p["name"] ?? "", "|", $p["schema"] ?? "prairiedispatch"; }
+    elseif ($x === "mysql") { $m = $d["mysql"]; echo "mysql|", $m["socket"] ?? ($m["host"] ?? ""), "|", $m["name"] ?? ""; }
+    else { echo "sqlite|", $d["sqlite_path"] ?? ""; }' 2>/dev/null)
+}
+schema_stored() { # release dir -> prints "<state> <stored version> <built-for version>", or nothing
+  (cd "$1" && php tools/migrate.php --status 2>/dev/null) \
+    | sed -n 's/^state:[[:space:]]*\([a-z]*\) (stored version \([0-9a-z]*\), target \([0-9]*\)).*/\1 \2 \3/p'
+}
+schema_stored_after() { # release dir [pre] -> sets STATUS_OUT like schema_stored prints, retried: a runner that cannot answer once is not a changed schema
+  local attempt
+  STATUS_OUT=""
+  for attempt in 1 2 3; do
+    if [ "${2:-}" != "pre" ] && [ "$STATUS_FAILS_LEFT" -gt 0 ]; then   # the fixture knob fails post-step reads only
+      STATUS_FAILS_LEFT=$((STATUS_FAILS_LEFT - 1))
+      echo "   (fixture: post-step --status read made to fail)"
+    else
+      STATUS_OUT="$(schema_stored "$1")"
+    fi
+    [ -n "$STATUS_OUT" ] && return
+    [ "$attempt" = 3 ] || sleep 1
+  done
+}
+schema_after() { # identity, release dir, exit code of --apply -> records the stored version now and what happened to it
+  local id="$1" rc="${3:-1}" state version target before
+  schema_stored_after "$2"
+  read -r state version target <<< "$STATUS_OUT"
+  before="${SCHEMA_BEFORE[$id]:-}"
+  SCHEMA_AFTER[$id]="${version:-}"
+  case "${version:-}" in
+    ''|*[!0-9]*)
+      # Nothing was pending, the step exited clean, and the version was
+      # numeric going in: a no-op cannot have moved it. Only then is a
+      # missing reading "unchanged"; otherwise it is unknown.
+      if [ "${SCHEMA_STATE[$id]:-}" = "ready" ] && [ "$rc" = 0 ] && [ -n "$before" ] && [ "$before" -eq "$before" ] 2>/dev/null; then
+        SCHEMA_AFTER[$id]="$before"
+        SCHEMA_CHANGE[$id]="same"
+        echo "   stored schema version not read back after the step; taken as unchanged ($before) because nothing was pending and the step exited 0"
+      else
+        SCHEMA_CHANGE[$id]="unknown"
+      fi
+      return ;;
+  esac
+  case "$before" in
+    none)        SCHEMA_CHANGE[$id]="rose"; return ;;   # there was no schema; now there is one
+    ''|*[!0-9]*) SCHEMA_CHANGE[$id]="unknown"; return ;;
+  esac
+  if   [ "$version" -gt "$before" ]; then SCHEMA_CHANGE[$id]="rose"
+  elif [ "$version" -eq "$before" ]; then SCHEMA_CHANGE[$id]="same"
+  else SCHEMA_CHANGE[$id]="unknown"
+  fi
+}
+schema_note() { # identity -> one clause: what happened to its stored version
+  local id="$1"
+  case "${SCHEMA_CHANGE[$id]:-}" in
+    rose)    echo "the stored schema version ROSE from ${SCHEMA_BEFORE[$id]:-none} to ${SCHEMA_AFTER[$id]:-?} in this roll" ;;
+    unknown) echo "the stored schema version could not be confirmed unchanged (before: ${SCHEMA_BEFORE[$id]:-not readable}, after: ${SCHEMA_AFTER[$id]:-not readable}) and is treated as risen" ;;
+    *)       echo "the stored schema version is unchanged at ${SCHEMA_AFTER[$id]:-?}" ;;
+  esac
+}
+schema_moved_lines() { # one line per schema this roll moved (rose, or unknown)
+  local id
+  for id in "${!SCHEMA_CHANGE[@]}"; do
+    [ "${SCHEMA_CHANGE[$id]}" = "same" ] && continue
+    echo "  $(schema_note "$id") (the schema behind ${SCHEMA_LABEL[$id]:-?})."
+  done
+}
+any_schema_moved() { # true when any schema rose, or may have — or when this run is finishing an earlier one
+  local id
+  [ "$FINISHING" = 1 ] && return 0
+  for id in "${!SCHEMA_CHANGE[@]}"; do
+    [ "${SCHEMA_CHANGE[$id]}" = "same" ] || return 0
+  done
+  return 1
+}
+any_schema_rose() { # true when a rise was actually read
+  local id
+  for id in "${!SCHEMA_CHANGE[@]}"; do
+    [ "${SCHEMA_CHANGE[$id]}" = "rose" ] && return 0
+  done
+  return 1
+}
+group_change() { # OLD dir -> same | rose | unknown | finishing, for the schema that group serves from
+  local id="${DIR_IDENT[$1]:-}" c
+  c="same"
+  [ -n "$id" ] && c="${SCHEMA_CHANGE[$id]:-same}"
+  if [ "$c" = "same" ] && [ -n "${UNFINISHED[$1]:-}" ]; then c="finishing"; fi
+  echo "$c"
+}
+finishing_lines() { # what is true of a run that finishes a roll an earlier run started
+  [ "$FINISHING" = 1 ] || return 0
+  echo "  This run finished a roll an earlier run started: the vhost and cron files already named the new release"
+  echo "  when it began, so its own .bak.$STAMP copies are of those files and put nothing back. The earlier run's"
+  echo "  copies name the old release, which cannot serve a schema that has moved."
+}
+nginx_test() { # the configuration test; a fixture reaches this only to fail it
+  if [ "$FIXTURE" = "1" ]; then
+    echo "   (fixture: nginx test forced to fail)"
+    return 1
+  fi
+  nginx -t
+}
+on_signal() { # INT or TERM mid-roll: undo what can be undone, say where things stand, stop
+  local sig="$1" cf id
+  trap '' INT TERM HUP PIPE   # a second signal must not stop this handler half-way
+  {
+    echo
+    echo "INTERRUPTED by SIG$sig during: $PHASE"
+    if [ "$MIGRATION_STARTED" = 0 ] && [ "$FINISHING" = 0 ] && [ "${#ALL_VHOST_BACKUPS[@]}" -gt 0 ]; then
+      # Before the migration the .bak copies are true pre-roll files and
+      # nginx still runs the old release: put them back, so no reload
+      # from elsewhere can load the new release against the old schema.
+      for VH in "${ALL_VHOST_BACKUPS[@]}"; do cp "$VH.bak.$STAMP" "$VH"; done
+      for cf in "${PAUSED[@]}"; do rm -f "$cf.paused"; done
+      for cf in "${ALL_CRON_BACKUPS[@]}"; do cp "$cf.bak.$STAMP" "$cf"; done
+      echo "   every vhost and cron file restored to the old release; the schema was not touched; nginx was not reloaded: nothing changed"
+      echo "   Run this script again when ready; it starts over."
+    else
+      for cf in "${PAUSED[@]}"; do
+        [ -f "$cf.paused" ] && mv "$cf.paused" "$cf" && echo "   resumed: $(basename "$cf")"
+      done
+      if [ "${#ALL_VHOST_BACKUPS[@]}" -gt 0 ]; then
+        echo "   vhost and cron files: name the new release (this run's .bak.$STAMP copies are beside them)"
+      else
+        echo "   vhost and cron files: untouched by this run"
+      fi
+      if [ "$MIGRATION_STARTED" = 1 ] && [ "${#SCHEMA_CHANGE[@]}" -eq 0 ]; then
+        # Stopped with the step in flight and its result unrecorded: ask.
+        for id in "${!SCHEMA_DIR[@]}"; do
+          schema_after "$id" "${SCHEMA_DIR[$id]}" 1
+        done
+      fi
+      if any_schema_moved; then
+        schema_moved_lines
+        finishing_lines
+        echo "   $NOT_A_FALLBACK."
+        [ "$RELOADED" = 1 ] || echo "   So until a run finishes, every paper is answering 503."
+      elif [ "$MIGRATION_RAN" = 1 ]; then
+        echo "   schema: the migration step ran and the stored version did not change"
+      elif [ "$MIGRATION_STARTED" = 1 ]; then
+        echo "   schema: the migration step was in flight; its result could not be read — the version may have risen, and the papers may be down until a run finishes"
+      else
+        echo "   schema: the migration step had not run"
+      fi
+      if [ "$RELOADED" = 1 ]; then
+        echo "   nginx: reloaded onto the new release (verification may not have run)"
+      else
+        echo "   nginx: NOT reloaded — still running what it ran before this roll"
+      fi
+      echo "Run this script again at the same release. A release the vhosts already name but no run finished is"
+      echo "finished, not skipped: migrate if pending, test, reload, verify against the baseline that run saved."
+    fi
+  } >&2
+  case "$sig" in INT) exit 130 ;; *) exit 143 ;; esac
+}
+arm_traps() { trap 'on_signal INT' INT; trap 'on_signal TERM' TERM; }
+arm_traps
+
 say "Resolve the branch head"
+PIN=""
 if [ -n "${PP_UPGRADE_SHA:-}" ]; then
-  SHA="${PP_UPGRADE_SHA:0:12}"   # pinned (fixtures, or a pre-verified deploy)
+  # Pinned (fixtures, or a pre-verified deploy): the full SHA from the
+  # brief. It names the release directory AND the tarball fetched below.
+  PIN="$PP_UPGRADE_SHA"
+  case "$PIN" in
+    *[!0-9a-f]*|?????????????????????????????????????????*) fail "PP_UPGRADE_SHA must be a lowercase hex commit id, 12 to 40 characters (the full 40 from the brief): got '$PIN'" ;;
+  esac
+  [ "${#PIN}" -ge 12 ] || fail "PP_UPGRADE_SHA must be a lowercase hex commit id, 12 to 40 characters (the full 40 from the brief): got '$PIN'"
+  SHA="${PIN:0:12}"
 else
   SHA=$(curl -fsSL "https://api.github.com/repos/$REPO/branches/${BRANCH//\//%2F}" \
         | php -r '$d=json_decode(stream_get_contents(STDIN),true); echo substr($d["commit"]["sha"]??"",0,12);')
 fi
 [ -n "$SHA" ] || fail "couldn't resolve the branch head"
-echo "release: $SHA"
+if [ -n "$PIN" ] && [ -n "${PP_RELEASE_TARBALL:-}" ]; then
+  echo "release: $SHA (pinned by PP_UPGRADE_SHA; the pre-staged tarball is checked against it once extracted)"
+elif [ -n "$PIN" ]; then
+  echo "release: $SHA (pinned by PP_UPGRADE_SHA; the tarball is fetched for this commit, not for the branch head)"
+else
+  echo "release: $SHA"
+fi
 
 say "Map the papers behind nginx (a release dir may serve several vhosts)"
 declare -A DIR_VHOSTS=()   # OLD dir -> "vhostbase vhostbase..."
@@ -88,6 +366,15 @@ for link in "$EN_DIR"/*; do
   OLD=$(grep -Eo "root[[:space:]]+$WWW/prairiepost-[A-Za-z0-9._-]+" "$VH" | head -1 | awk '{print $2}')
   [ -n "$OLD" ] && [ -d "$OLD" ] || { echo "-- $base: no prairiepost root, skipped"; continue; }
   [ -f "$OLD/config.php" ] || { echo "-- $base: no config.php at $OLD, skipped"; continue; }
+  if [ -f "$OLD/.pp-roll-baseline" ] && [ ! -f "$OLD/.pp-roll-complete" ]; then
+    # A roll started into this directory and no run finished it. Only a
+    # run at that same commit can finish it; anything else would roll
+    # over a box nobody verified and strand what that roll paused.
+    case "$OLD" in
+      "$WWW/prairiepost-$SHA-"*) ;;
+      *) fail "$base names $OLD, a release a roll started into and no run finished. Finish that roll first: run this script again pinned to its commit (PP_UPGRADE_SHA, the one in the directory name), and only then roll to $SHA" ;;
+    esac
+  fi
   DOMAIN=$(grep -Eo 'server_name[[:space:]]+[^;]+' "$VH" | head -1 | awk '{print $2}')
   [ -n "$DOMAIN" ] || { echo "-- $base: no server_name, skipped"; continue; }
   DIR_VHOSTS[$OLD]="${DIR_VHOSTS[$OLD]:-} $base"
@@ -134,9 +421,12 @@ if [ -n "${PP_RELEASE_TARBALL:-}" ]; then
   [ -f "$PP_RELEASE_TARBALL" ] || fail "PP_RELEASE_TARBALL points at nothing"
   cp "$PP_RELEASE_TARBALL" "$TMP/rel.tgz"
   echo "   using pre-staged tarball: $PP_RELEASE_TARBALL"
-elif curl -fsSL --connect-timeout 25 "https://codeload.github.com/$REPO/tar.gz/refs/heads/$BRANCH" -o "$TMP/rel.tgz"; then
+elif curl -fsSL --connect-timeout 25 "https://codeload.github.com/$REPO/tar.gz/${PIN:-refs/heads/$BRANCH}" -o "$TMP/rel.tgz"; then
   :
 else
+  # The clone can only follow the branch head. Pinned to another commit,
+  # it is checked against the pin below and refused if they differ: a
+  # pinned roll that cannot reach codeload needs PP_RELEASE_TARBALL.
   echo "   codeload unreachable — falling back to a shallow git clone"
   git clone --depth 1 --branch "$BRANCH" "https://github.com/$REPO.git" "$TMP/clone" \
     || fail "tarball download failed AND git clone fallback failed"
@@ -154,6 +444,14 @@ if [ -f "$TMP/rel.tgz" ]; then
 fi
 TPL=$(find "$TMP" -maxdepth 1 -mindepth 1 -type d | head -1)
 [ -f "$TPL/app/bootstrap.php" ] || fail "extracted tree doesn't look like the app"
+if [ -n "$PIN" ]; then
+  # A tarball for a commit extracts to prairiepost-<that commit>; one for
+  # a branch head, or a tree someone staged by hand, does not.
+  case "$(basename "$TPL")" in
+    *"$SHA"*) echo "   extracted tree: $(basename "$TPL") — it is the pinned commit" ;;
+    *) fail "the extracted tree ($(basename "$TPL")) is not the pinned commit $SHA — fetch the tarball for that commit (https://codeload.github.com/$REPO/tar.gz/$PIN) and pass it as PP_RELEASE_TARBALL" ;;
+  esac
+fi
 
 say "Preflight: candidate provenance, runtime, vendored code, recovery point"
 # The candidate must carry its own migration runner and the pinned
@@ -195,27 +493,81 @@ chmod 2775 "$SHARED_UP"
 echo "shared uploads: $(du -sh "$SHARED_UP" 2>/dev/null | cut -f1) at $SHARED_UP"
 
 say "Upgrade each release directory"
+# A roll stopped after its pause pass leaves cron files .paused with no
+# active copy. Those come back here, whatever release they name: an
+# earlier run paused them, no run resumed them, and nothing else will.
+# Brought back here, before the cron files are read, they are rewritten,
+# paused and resumed like any other.
+for pf in "$CRON_DIR"/*.paused; do
+  [ -f "$pf" ] || continue
+  cf="${pf%.paused}"
+  [ -f "$cf" ] && continue
+  mv "$pf" "$cf" && echo "   $(basename "$cf") was left paused by an earlier, stopped roll — active again (it names $(grep -Eo 'prairiepost-[A-Za-z0-9._-]+' "$cf" | head -1))"
+done
 declare -A DIR_NEW=()
 declare -A DIR_CRONS=()
-declare -a ALL_VHOST_BACKUPS=()
-declare -a ALL_CRON_BACKUPS=()
+declare -A UNFINISHED=()   # OLD dir -> 1 when the vhosts already named this release but no roll finished it
+write_baseline_file() { # new dir, old dir — what every domain answered before this roll, in the release it builds
+  {
+    echo "# prairiepost upgrade baseline: what each domain's front page answered BEFORE the roll that wrote this file changed anything."
+    echo "# written $(date -u +%Y-%m-%dT%H:%M:%SZ) (stamp $STAMP) by upgrade-papers.sh, rolling $2 to $SHA"
+    echo "# one line per domain:  domain|status code|stylesheet set|<title>   (the title and the stylesheet set are kept only for a 200)"
+    for D in "${!CODE_BEFORE[@]}"; do
+      printf '%s|%s|%s|%s\n' "$D" "${CODE_BEFORE[$D]:-}" "${CSS_BEFORE[$D]:-}" "${TITLE_BEFORE[$D]:-}"
+    done | LC_ALL=C sort
+  } > "$1/.pp-roll-baseline"
+}
 for OLD in "${!DIR_VHOSTS[@]}"; do
   vhosts=(${DIR_VHOSTS[$OLD]})
   if [ "${#vhosts[@]}" -eq 1 ]; then LABEL="${vhosts[0]}"; else LABEL="shared"; fi
-  NEW="$WWW/prairiepost-$SHA-$LABEL"
+  case "$OLD" in
+    # A vhost that already names a directory for this commit keeps it: a
+    # run stopped inside this loop must not split a shared group into a
+    # directory per paper on the next run.
+    "$WWW/prairiepost-$SHA-"*) NEW="$OLD" ;;
+    *) NEW="$WWW/prairiepost-$SHA-$LABEL" ;;
+  esac
   if [ "$OLD" = "$NEW" ]; then
-    echo "-- ${vhosts[*]}: already on $SHA"
-    continue
-  fi
-  echo "-- ${vhosts[*]}: $OLD -> $NEW"
-
-  if [ ! -d "$NEW" ]; then
-    cp -a "$TPL" "$NEW" || { echo "   copy failed, skipped"; continue; }
+    if [ -f "$NEW/.pp-roll-complete" ]; then
+      echo "-- ${vhosts[*]}: already on $SHA"
+      continue
+    fi
+    # The vhosts name this release but no run wrote its completion mark:
+    # a roll was interrupted (or stopped at a failed nginx test, a
+    # part-finished migration, or a failed verification) after rewriting
+    # the files. Finish it — migrate whatever is pending, test, reload,
+    # verify against the baseline that roll saved — instead of reporting
+    # nothing to do.
+    echo "-- ${vhosts[*]}: already on $SHA, but no run finished that roll (no $NEW/.pp-roll-complete) — finishing it"
+    UNFINISHED[$OLD]=1
+    FINISHING=1
+  else
+    echo "-- ${vhosts[*]}: $OLD -> $NEW"
+    if [ -d "$NEW" ]; then
+      # Left by an earlier roll into this commit (so a roll back to it).
+      # Whole, because a tree is only ever renamed into place. Its marks
+      # are that roll's; this roll must earn its own.
+      rm -f "$NEW/.pp-roll-complete" "$NEW/.pp-roll-baseline" "$NEW/.pp-roll-before"
+      echo "   $NEW exists from an earlier roll: its completion mark is cleared; this roll must finish on its own"
+    else
+      # Copy under a temporary name and rename, so the directory either
+      # exists whole or not at all — a run stopped inside cp leaves no
+      # half tree for the next run to build on.
+      rm -rf "$NEW.tmp."*
+      if cp -a "$TPL" "$NEW.tmp.$STAMP" && mv "$NEW.tmp.$STAMP" "$NEW"; then :; else
+        rm -rf "$NEW.tmp.$STAMP"
+        echo "   copy failed, skipped"
+        continue
+      fi
+    fi
+    write_baseline_file "$NEW" "$OLD"
   fi
 
   # The original config, VERBATIM — host mapping and every other live
   # decision intact. If a previous run of this script already wrapped it,
   # the true source is app/config.site.php; carry that forward instead.
+  # (A roll being finished has both files in place already.)
+  if [ -z "${UNFINISHED[$OLD]:-}" ]; then
   SRC="$OLD/config.php"
   [ -f "$OLD/app/config.site.php" ] && SRC="$OLD/app/config.site.php"
   cp "$SRC" "$NEW/app/config.site.php" || { echo "   config copy failed, skipped"; continue; }
@@ -231,6 +583,7 @@ if (is_array($c) && !isset($c['hub_slug'])) {
 }
 return $c;
 WRAP
+  fi
   # Lint only — the config is never executed outside a real request.
   php -l "$NEW/config.php" >/dev/null || { echo "   wrapper doesn't lint, skipped"; continue; }
   php -l "$NEW/app/config.site.php" >/dev/null || { echo "   copied config doesn't lint, skipped"; continue; }
@@ -284,6 +637,87 @@ done
 
 [ "${#DIR_NEW[@]}" -gt 0 ] || { echo; echo "Nothing to upgrade."; exit 0; }
 
+# Before the migration, the .bak.$STAMP copies are true pre-roll files
+# and putting them back changes nothing — unless this run is finishing a
+# roll an earlier run started, in which case they are copies of files
+# that already named the new release, and there is nothing to put back.
+restore_or_explain() { # -> 0 after a real restore; 1 when there was nothing to restore (and says so)
+  if [ "$FINISHING" = 1 ]; then
+    echo "   nothing to put back: this run was finishing a roll an earlier run started, so the vhost and cron files already named the new release when it began. nginx runs what it ran. If the earlier run had raised the schema, every paper answers 503 until a run finishes." >&2
+    return 1
+  fi
+  for VH in "${ALL_VHOST_BACKUPS[@]}"; do cp "$VH.bak.$STAMP" "$VH"; done
+  for cf in "${PAUSED[@]}"; do rm -f "$cf.paused"; done
+  for cf in "${ALL_CRON_BACKUPS[@]}"; do cp "$cf.bak.$STAMP" "$cf"; done
+  return 0
+}
+
+say "Read each schema's stored version BEFORE the migration step"
+PENDING=0
+for OLD in "${!DIR_NEW[@]}"; do
+  NEWDIR="${DIR_NEW[$OLD]}"
+  IDENT=$(db_identity "$NEWDIR")
+  if [ -z "$IDENT" ]; then
+    # Stop here, while nothing has been paused or migrated and the
+    # restore is a true one — not in the migration loop, after another
+    # group's schema may already have moved.
+    if restore_or_explain; then
+      fail "cannot read the database identity from $NEWDIR/config.php (its config.site.php does not evaluate under the CLI) — every vhost and cron file restored, the schema was not touched, nothing changed"
+    fi
+    fail "cannot read the database identity from $NEWDIR/config.php (its config.site.php does not evaluate under the CLI) — nothing was put back (above); fix the config and run again"
+  fi
+  DIR_IDENT[$OLD]="$IDENT"
+  if [ -z "${SCHEMA_LABEL[$IDENT]:-}" ]; then
+    # One read per logical schema, however many groups share it.
+    SCHEMA_LABEL[$IDENT]="$(basename "$NEWDIR")"
+    SCHEMA_DIR[$IDENT]="$NEWDIR"
+    schema_stored_after "$NEWDIR" pre   # the retrying reader; one failed read is not a changed schema
+    read -r S_STATE S_VERSION S_TARGET <<< "$STATUS_OUT"
+    SCHEMA_STATE[$IDENT]="${S_STATE:-}"
+    SCHEMA_BEFORE[$IDENT]="${S_VERSION:-}"
+    SCHEMA_NOW[$IDENT]="${S_VERSION:-}"
+    if [ "${S_STATE:-}" = "ready" ]; then
+      echo "   the schema behind $(basename "$NEWDIR"): stored version $S_VERSION — nothing pending"
+    elif [ -n "${S_STATE:-}" ]; then
+      PENDING=1
+      echo "   the schema behind $(basename "$NEWDIR"): $S_STATE — stored version $S_VERSION, this release is built for $S_TARGET"
+    else
+      PENDING=1
+      echo "   the schema behind $(basename "$NEWDIR"): stored version NOT READABLE (php tools/migrate.php --status gave no state line)"
+    fi
+  fi
+  # Every group's release records the version the roll into it found —
+  # the "before" a later run finishing that roll is judged against, not
+  # what is stored by then: the step may have run in between.
+  if [ -n "${UNFINISHED[$OLD]:-}" ] && [ -f "$NEWDIR/.pp-roll-before" ]; then
+    SAVED_BEFORE=$(sed -n 's/^version_before=//p' "$NEWDIR/.pp-roll-before" | head -1)
+    SAVED_BY=$(sed -n 's/^stamp=//p' "$NEWDIR/.pp-roll-before" | head -1)
+    case "$SAVED_BEFORE" in
+      ''|*[!0-9a-z]*) ;;
+      *) SCHEMA_BEFORE[$IDENT]="$SAVED_BEFORE"
+         echo "   $(basename "$NEWDIR"): the run that started this roll (stamp ${SAVED_BY:-?}) found stored version $SAVED_BEFORE; it is ${SCHEMA_NOW[$IDENT]:-not readable} now" ;;
+    esac
+  else
+    printf 'version_before=%s\nstate_before=%s\nstamp=%s\nold=%s\n' "${SCHEMA_NOW[$IDENT]:-}" "${SCHEMA_STATE[$IDENT]:-}" "$STAMP" "$OLD" > "$NEWDIR/.pp-roll-before"
+  fi
+done
+
+if [ "$PENDING" = "1" ]; then
+  say "nginx config test BEFORE the migration (the step is about to change the schema)"
+  # The vhost files already name the new release; nginx has not reloaded.
+  # A configuration that will not load has to stop the roll HERE, while
+  # the old release is still a real fallback. After the step it is not.
+  if [ "$FIXTURE" = "1" ] && [ "$FIXTURE_NGINX_FAIL" != "pre" ]; then
+    echo "   (fixture: nginx test skipped)"
+  elif ! nginx_test; then
+    if restore_or_explain; then
+      nginx_test
+      fail "nginx test failed BEFORE the schema migration — every vhost and cron file restored, the schema was not touched, nothing changed"
+    fi
+    fail "nginx test failed BEFORE the schema migration — nothing was put back (above). Fix the error printed above and run again at the same release"
+  fi
+fi
+
 say "Quiesce scheduled writers, then migrate each logical schema ONCE"
 # The cron files were rewritten to the new release above but nginx has not
 # reloaded: old code still serves. Pausing the cron files (cron.d ignores
@@ -293,7 +727,7 @@ say "Quiesce scheduled writers, then migrate each logical schema ONCE"
 # compatibility contract instead: see docs/MIGRATION-COMPAT.md — a
 # migration that old code cannot safely write through requires the
 # full-stop procedure there, not this script.
-PAUSED=()
+
 for OLD in "${!DIR_CRONS[@]}"; do
   for cf in ${DIR_CRONS[$OLD]:-}; do
     if [ -f "$cf" ]; then
@@ -303,6 +737,12 @@ for OLD in "${!DIR_CRONS[@]}"; do
     fi
   done
 done
+fixture_die after-pause
+# From here to the reload nothing stops the roll: a stop between the step
+# that raises the version and the reload is every paper on 503 until a
+# run finishes, and the probes are local, so finishing is always the
+# better outcome. INT and TERM are ignored, not deferred.
+trap '' INT TERM
 resume_crons() {
   for cf in "${PAUSED[@]}"; do
     [ -f "$cf.paused" ] && mv "$cf.paused" "$cf" && echo "   resumed: $(basename "$cf")"
@@ -316,17 +756,38 @@ resume_crons() {
 declare -A MIGRATED=()
 for OLD in "${!DIR_NEW[@]}"; do
   NEWDIR="${DIR_NEW[$OLD]}"
-  IDENT=$( (cd "$NEWDIR" && php -r '$c = require "config.php"; $d = $c["db"] ?? []; $x = $d["driver"] ?? "sqlite";
-    if ($x === "pgsql") { $p = $d["pgsql"]; echo "pgsql|", $p["host"] ?? "", "|", $p["port"] ?? 5432, "|", $p["name"] ?? "", "|", $p["schema"] ?? "prairiedispatch"; }
-    elseif ($x === "mysql") { $m = $d["mysql"]; echo "mysql|", $m["socket"] ?? ($m["host"] ?? ""), "|", $m["name"] ?? ""; }
-    else { echo "sqlite|", $d["sqlite_path"] ?? ""; }' 2>/dev/null) )
+  IDENT=$(db_identity "$NEWDIR")
   [ -n "$IDENT" ] || { resume_crons; fail "cannot read the database identity from $NEWDIR/config.php"; }
   if [ -n "${MIGRATED[$IDENT]:-}" ]; then
     echo "   schema already migrated this run ($(basename "$NEWDIR") shares it)"
     continue
   fi
   echo "   migrating the schema behind $(basename "$NEWDIR")"
+  MIGRATION_STARTED=1
   if ! (cd "$NEWDIR" && php tools/migrate.php --apply); then
+    schema_after "$IDENT" "$NEWDIR" 1
+    if any_schema_rose; then
+      # A step committed before the failure (or an earlier schema was
+      # migrated in this run). The old release cannot serve what is
+      # stored now, so "roll everything back" would be untrue: nothing
+      # is put back, and the message says what state the box is in.
+      echo "MIGRATION FAILED — after the stored schema version had already risen; nothing was reloaded." >&2
+      schema_moved_lines >&2
+      echo "  $NOT_A_FALLBACK." >&2
+      echo "  So nothing is put back: the vhost and cron files stay on the new release." >&2
+      resume_crons >&2
+      fail "the schema migration failed part-way and the old release is not a fallback. Until the migration is finished neither release can serve: the schema is ahead of the old one and not yet complete for the new one. From the new release, (cd $NEWDIR && php tools/migrate.php --status) names the obstacle and the repair: once it is out of the way, --apply reruns the failed step on PostgreSQL and SQLite, and a schema --status calls partial needs --apply --resume-partial. Then run this roll again at the same release — it finishes what this run started (test, reload, verify, resume). Do NOT copy the .bak.$STAMP files back (docs/MIGRATION-COMPAT.md)."
+    fi
+    if [ "${SCHEMA_CHANGE[$IDENT]:-unknown}" != "same" ]; then
+      echo "WARNING: the stored schema version was not readable both before and after the failed step (before: ${SCHEMA_BEFORE[$IDENT]:-not readable}, after: ${SCHEMA_AFTER[$IDENT]:-not readable})." >&2
+      echo "         What follows assumes it did not change. If it rose, the old release answers 503: check with (cd $NEWDIR && php tools/migrate.php --status)." >&2
+    fi
+    if [ "$FINISHING" = 1 ]; then
+      echo "MIGRATION FAILED — in a run that was finishing a roll an earlier run started; nothing was reloaded." >&2
+      restore_or_explain >&2 || true
+      resume_crons >&2
+      fail "the schema migration failed. Diagnose with: (cd $NEWDIR && php tools/migrate.php --status); when it is out of the way, run this script again at the same release"
+    fi
     echo "MIGRATION FAILED — rolling every vhost and cron file back; nothing was reloaded." >&2
     for VH in "${ALL_VHOST_BACKUPS[@]}"; do cp "$VH.bak.$STAMP" "$VH"; done
     for cf in "${PAUSED[@]}"; do rm -f "$cf.paused"; done
@@ -334,30 +795,107 @@ for OLD in "${!DIR_NEW[@]}"; do
     fail "the schema migration failed; the box still serves the old release. Diagnose with: (cd $NEWDIR && php tools/migrate.php --status)"
   fi
   MIGRATED[$IDENT]=1
+  schema_after "$IDENT" "$NEWDIR" 0
+  case "${SCHEMA_CHANGE[$IDENT]}" in
+    same) echo "   stored schema version after the step: ${SCHEMA_AFTER[$IDENT]} (unchanged)" ;;
+    rose) echo "   stored schema version after the step: ${SCHEMA_AFTER[$IDENT]} — ROSE from ${SCHEMA_BEFORE[$IDENT]:-none}. The old release is no longer a fallback for this schema." ;;
+    *)    echo "   WARNING: $(schema_note "$IDENT") — the old release is not offered as a fallback." ;;
+  esac
 done
+MIGRATION_RAN=1
 
 say "nginx config test + reload"
-if [ "$FIXTURE" = "1" ]; then
+if [ "$FIXTURE" = "1" ] && [ "$FIXTURE_NGINX_FAIL" != "post" ]; then
   echo "   (fixture: nginx test/reload skipped)"
-elif ! nginx -t; then
+elif ! nginx_test; then
+  if any_schema_moved; then
+    # nginx is still running its previous configuration — the old
+    # release — and that release cannot serve the schema as it now
+    # stands. Putting the files back would only make the disk agree with
+    # an outage; the way out is to load the new release.
+    echo "nginx test FAILED — after the schema migration. Nothing is put back:" >&2
+    schema_moved_lines >&2
+    finishing_lines >&2
+    echo "  $NOT_A_FALLBACK." >&2
+    echo "  nginx is still running its previous configuration (the old release), so that is what the papers get until it loads the new one." >&2
+    echo "  The vhost and cron files stay on the new release." >&2
+    say "Resume scheduled writers (on the new release — the only one this schema can run)"
+    resume_crons
+    fail "nginx test failed AFTER the migration changed the schema — NOT restored, and the old release is not a fallback. Fix the nginx error printed above, then run this roll again at the same release: it finishes what this run started (test, reload, verify). Do NOT copy the .bak.$STAMP files back (docs/MIGRATION-COMPAT.md)."
+  fi
   for VH in "${ALL_VHOST_BACKUPS[@]}"; do cp "$VH.bak.$STAMP" "$VH"; done
   for cf in "${ALL_CRON_BACKUPS[@]}"; do cp "$cf.bak.$STAMP" "$cf"; done
   # The pause pass renamed the (already rewritten) active files to
   # FILE.paused; the originals are back from .bak above, so the dotted
   # copies are pure residue — remove them or they linger forever.
   for cf in "${PAUSED[@]}"; do rm -f "$cf.paused"; done
-  nginx -t
+  nginx_test
   fail "nginx test failed — every vhost and cron file restored, nothing changed"
 fi
 if [ "$FIXTURE" != "1" ]; then
-  systemctl reload nginx
-  sleep 2
+  if systemctl reload nginx; then
+    RELOADED=1
+  else
+    # The configuration passed its test, so this is nginx or systemd, not
+    # the vhosts. The files stay as they are — they are right — and a
+    # rerun finishes the roll once nginx can reload.
+    say "Resume scheduled writers (the reload failed; the new release is ready for them)"
+    resume_crons
+    fail "systemctl reload nginx failed after a successful nginx -t. nginx still runs the old release; the vhost and cron files name the new one and are left so. Look at: systemctl status nginx; journalctl -u nginx. Then run this roll again at the same release — it finishes (test, reload, verify). Do not copy the .bak.$STAMP files back$(any_schema_moved && echo ': the old release cannot serve this schema')."
+  fi
 fi
+[ "$FIXTURE" = "1" ] && RELOADED=1   # a fixture has nothing to reload
+arm_traps   # the stretch that must not be interrupted ends with the reload
+fixture_die after-reload
+[ "$FIXTURE" = "1" ] || sleep 2
 
 say "Verify every domain serves 200 AND its own masthead (the baseline title)"
 RESTORED=0
+declare -A RESTORED_GROUPS=()
+hold_group() { # OLD dir — the group failed verification and its schema moved (or this run finished its roll): do NOT put it back
+  local old="$1" cf
+  if [ -n "${UNFINISHED[$old]:-}" ]; then
+    echo "     NOT restoring release group ($old): this run finished a roll an earlier run started, and $(schema_note "${DIR_IDENT[$old]:-}")."
+  else
+    echo "     NOT restoring release group ($old): $(schema_note "${DIR_IDENT[$old]:-}")."
+  fi
+  echo "     $NOT_A_FALLBACK —"
+  echo "     putting this group back would take down EVERY domain it serves (${DIR_DOMAINS[$old]# }), not only the one that failed."
+  echo "     It stays on ${DIR_NEW[$old]}. Each FAIL above is what that domain is serving now, and goes on serving."
+  # Its scheduled writers resume here, on the new release: no other
+  # release can run them against this schema, and a cron file left
+  # .paused is skipped by every later roll (cron.d and this script both
+  # ignore dotted names), so it would stay off for good.
+  for cf in ${DIR_CRONS[$old]:-}; do
+    [ -f "$cf.paused" ] && mv "$cf.paused" "$cf" && echo "     resumed: $(basename "$cf") (on the new release)"
+  done
+  HELD_GROUPS+=("$old")
+}
+# A run finishing an earlier roll must not hold the domains to what they
+# answered when IT started — after a rise that is the gate's 503, and
+# after a stop during verification it is the new release itself, wrong
+# masthead included. It holds them to what the run that started the roll
+# saved before anything changed.
+for OLD in "${!UNFINISHED[@]}"; do
+  BF="${DIR_NEW[$OLD]}/.pp-roll-baseline"
+  if [ -f "$BF" ]; then
+    n=0
+    while IFS='|' read -r D C CSS T; do
+      case "$D" in ''|'#'*) continue ;; esac
+      CODE_BEFORE[$D]="$C"; CSS_BEFORE[$D]="$CSS"; TITLE_BEFORE[$D]="$T"
+      n=$((n + 1))
+    done < "$BF"
+    echo "   $(basename "${DIR_NEW[$OLD]}"): its domains are held to the baseline the run that started this roll saved ($n domains, $BF), not to what they answered when this run began"
+  else
+    echo "   WARNING: $(basename "${DIR_NEW[$OLD]}") has no saved baseline ($BF); its domains are held to answering 200, and their mastheads cannot be checked"
+    for DOMAIN in ${DIR_DOMAINS[$OLD]}; do
+      CODE_BEFORE[$DOMAIN]="200"; TITLE_BEFORE[$DOMAIN]=""; CSS_BEFORE[$DOMAIN]=""
+    done
+  fi
+done
 for OLD in "${!DIR_NEW[@]}"; do
   group_ok=1
+  DOMAINS_TO_CHECK="${DIR_DOMAINS[$OLD]}"
   if [ "$FIXTURE" = "1" ]; then
     # No TLS stack in a fixture: the post-migration smoke is a CLI boot of
     # the candidate against its real config — the readiness gate plus the
@@ -368,16 +906,11 @@ for OLD in "${!DIR_NEW[@]}"; do
       echo "FAIL (fixture) $(basename "${DIR_NEW[$OLD]}"): $SLUG"
       group_ok=0
     fi
-    if [ "$group_ok" = "0" ]; then
-      for base in ${DIR_VHOSTS[$OLD]}; do
-        VH=$(readlink -f "$EN_DIR/$base")
-        cp "$VH.bak.$STAMP" "$VH"
-      done
-      RESTORED=1
-    fi
-    continue
+    # No domain can be probed in a fixture; what happens to a group that
+    # failed is the same code a real box runs, below.
+    DOMAINS_TO_CHECK=""
   fi
-  for DOMAIN in ${DIR_DOMAINS[$OLD]}; do
+  for DOMAIN in $DOMAINS_TO_CHECK; do
     IFS='|' read -r code title <<< "$(front_title "$DOMAIN")"
     expected="${TITLE_BEFORE[$DOMAIN]}"
     want_code="${CODE_BEFORE[$DOMAIN]:-200}"
@@ -413,7 +946,9 @@ for OLD in "${!DIR_NEW[@]}"; do
       fi
     fi
   done
-  if [ "$group_ok" = "0" ]; then
+  if [ "$group_ok" = "0" ] && [ "$(group_change "$OLD")" != "same" ]; then
+    hold_group "$OLD"
+  elif [ "$group_ok" = "0" ]; then
     echo "     restoring release group ($OLD): vhosts and cron files"
     for base in ${DIR_VHOSTS[$OLD]}; do
       VH=$(readlink -f "$EN_DIR/$base")
@@ -422,14 +957,26 @@ for OLD in "${!DIR_NEW[@]}"; do
     for cf in ${DIR_CRONS[$OLD]:-}; do
       cp "$cf.bak.$STAMP" "$cf"
     done
+    RESTORED_GROUPS[$OLD]=1
     RESTORED=1
   fi
 done
 if [ "$RESTORED" = "1" ]; then
-  [ "$FIXTURE" = "1" ] || { nginx -t && systemctl reload nginx; }
-  # Restored groups got their OLD cron files back from .bak above; clear
-  # any paused copies so nothing runs twice.
-  for cf in "${PAUSED[@]}"; do rm -f "$cf.paused"; done
+  if [ "$FIXTURE" != "1" ]; then
+    { nginx -t && systemctl reload nginx; } \
+      || echo "WARN: the restore did not load into nginx (see above). The restored group's vhost files name its old release, but nginx may still run the new one: nginx -t && systemctl reload nginx by hand." >&2
+  fi
+  # Restored groups got their OLD cron files back from .bak above, so
+  # their .paused copies are residue. The groups that PASSED got nothing
+  # back — their files are still the paused rewrites — and resume here,
+  # on the new release they now serve from.
+  for cf in "${PAUSED[@]}"; do
+    if [ -f "$cf" ]; then
+      rm -f "$cf.paused"
+    elif [ -f "$cf.paused" ]; then
+      mv "$cf.paused" "$cf" && echo "   resumed: $(basename "$cf")"
+    fi
+  done
   echo "WARN: at least one release group was restored — send this output back for a look."
 else
   say "Resume scheduled writers"
@@ -451,7 +998,52 @@ if [ -n "$HUBVH" ] && [ -f "$HUBVH" ]; then
   fi
 fi
 
+# Every group that passed is marked done inside its release, so a later
+# run can tell "already on this release" from "named by the vhosts but
+# never reloaded and verified". A held group gets no mark: a run told to
+# try again verifies it again instead of reporting nothing to do.
+for OLD in "${!DIR_NEW[@]}"; do
+  [ -n "${RESTORED_GROUPS[$OLD]:-}" ] && continue
+  held=0
+  for H in "${HELD_GROUPS[@]}"; do [ "$H" = "$OLD" ] && held=1; done
+  [ "$held" = 1 ] && continue
+  printf 'upgrade-papers.sh run %s (%s): nginx reloaded onto this release and every domain of it passed verification\n' \
+    "$STAMP" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" > "${DIR_NEW[$OLD]}/.pp-roll-complete"
+done
+rm -rf "$TMP"
+rm -f "$PROBE_BODY"
+
+if [ "${#HELD_GROUPS[@]}" -gt 0 ]; then
+  say "NOT done — verification failed, and there is no release to go back to"
+  echo "Held on the new release, NOT restored:"
+  for OLD in "${HELD_GROUPS[@]}"; do
+    echo "  ${DIR_NEW[$OLD]}  (vhosts: ${DIR_VHOSTS[$OLD]# }; domains: ${DIR_DOMAINS[$OLD]# })"
+  done
+  schema_moved_lines
+  finishing_lines
+  echo "  $NOT_A_FALLBACK."
+  echo "What is true now: those groups answer from the new release. A domain marked FAIL above is"
+  echo "serving exactly what its FAIL line says, in public, until someone acts. Domains marked PASS"
+  echo "are fine. Scheduled writers are running again, on the new release."
+  echo "Do NOT copy the .bak.$STAMP files back for a group: that is 503 on every domain it serves."
+  echo "Send this output back. The choices from here — leave the domain up while a fix is rolled,"
+  echo "or take that one domain down — are in docs/MIGRATION-COMPAT.md, \"When a roll that raised"
+  echo "the schema version fails\". A run at the same release verifies these groups again."
+  exit 1
+fi
+
 say "Done"
+if any_schema_moved; then
+  echo "Old release directories stay on disk, but they are NOT a rollback for this roll:"
+  schema_moved_lines
+  finishing_lines
+  echo "  $NOT_A_FALLBACK."
+  echo "  The .bak.$STAMP files beside each vhost and cron file are a record of what was there."
+  echo "  Copying them back takes those papers down; it does not undo the roll."
+  echo "If something is wrong, recovery goes forward: a new roll pinned to a commit built for the"
+  echo "stored version, or the operator's database restore. Both are in docs/MIGRATION-COMPAT.md."
+  exit 0
+fi
 echo "Old release directories stay on disk. Rollback for any release group:"
 echo "  cp <vhost>.bak.$STAMP <vhost>   (each of its vhosts)"
 echo "  cp <cronfile>.bak.$STAMP <cronfile>   (each of its cron files)"
