@@ -23,6 +23,10 @@
  *
  * Refusals are compared as whole bodies, keys in order: these answers are
  * what agent authors code against, so a refactor must not move a word.
+ *
+ * The token check itself lives in app/ingest.php. Section 1 also fails if
+ * an ingest*.php file reads the Authorization header or the token table on
+ * its own instead of calling pp_ingest_authenticate().
  */
 if (PHP_SAPI !== 'cli') {
     exit(1);
@@ -227,6 +231,15 @@ ok($routed === $known,
 ok($rewritten === $routed, '.htaccess rewrites exactly the routes router.php maps (.htaccess: ' . json_encode($rewritten) . ')');
 ok($onDisk === $knownFiles,
    'every ingest*.php file in the web root is one of those endpoints (on disk: ' . implode(', ', $onDisk) . ')');
+// Each of those files gets its agent from app/ingest.php and holds no token
+// check of its own to drift from it. Read from the tree, not from the table
+// above, so a file this suite has never heard of is held to it too.
+foreach ($onDisk as $file) {
+    $src = (string) file_get_contents($root . '/' . $file);
+    ok(preg_match('/^\$agent = pp_ingest_authenticate\(\);$/m', $src) === 1
+       && !str_contains($src, 'token_hash') && !str_contains($src, 'HTTP_AUTHORIZATION'),
+       "$file authenticates through pp_ingest_authenticate() and reads neither the Authorization header nor the token table itself");
+}
 
 /* ---- Setup, by a standard token: the art, and a story that waits for it ---- */
 [$code, $j] = $endpoints['/api/ingest-media']['send']("Bearer $standard");

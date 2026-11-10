@@ -173,6 +173,15 @@ recorded in the paper's audit log.
   `/api/ingest-media`, `/api/ingest-queue` and `/api/ingest-publish`
   added in a routes pass. The bare `.php` endpoints answer everywhere
   regardless.
+- The four endpoints share one token check: `pp_ingest_authenticate()`
+  in `app/ingest.php` turns the bearer key into an agent (id, name,
+  papers, desks, whether it may publish), and
+  `pp_ingest_require_publish()` is the 403 a draft-only key gets. A new
+  ingest endpoint calls them rather than reading the key itself, and
+  gets a row in `tests/ingest-auth.test.php` saying what a revoked key
+  and a draft-only key receive from it; that test fails while an
+  `ingest*.php` file or an `/api/ingest…` route exists that it does not
+  cover.
 - Key management UI: hub `/admin/api-keys.php` (admins). CLI
   equivalent: `php tools/make-agent.php` from a release directory.
 - Every filing and upload writes an `audit_log` row naming the key.
