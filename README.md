@@ -5,8 +5,8 @@ A regional news site and newsroom CMS built on the Prairie Dispatch brand system
 database, or MySQL. No framework, no build step, no Composer. Upload it to
 shared hosting, or run it locally with one command.
 
-The full brand package (guide, tokens, logos) lives in [`design/`](design/) —
-open `design/prairie-post-brand-guide.html` in a browser.
+The full brand package (guide, tokens, logos) lives in [`docs/design/`](docs/design/) —
+open `docs/design/prairie-dispatch-brand-guide.html` in a browser.
 
 ## What's here
 
@@ -213,7 +213,7 @@ honoured here and worth protecting in future changes:
    images. A rounded corner reads as a different paper.
 
 Colours, type roles (`Archivo` display / `Newsreader` body / `IBM Plex Mono`
-utility) and desk assignments follow `design/prairie-post-tokens.css`. Each
+utility) and desk assignments follow `docs/design/prairie-dispatch-tokens.css`. Each
 desk owns one colour, used in exactly two places: the nav underline and the
 eyebrow. Fill-only colours (Weather's Noon Sky) never carry text — the desks
 admin has a "fill only" flag that switches the eyebrow to ink-on-block.
@@ -233,7 +233,8 @@ admin/      the newsroom (dashboard, editor, review queue, accounts, profiles)
 assets/     stylesheets, editor JS, logos, placeholder art
 cron/       fetch-news.php
 data/       SQLite database (blocked from the web, gitignored)
-design/     the original brand package
+docs/       runbooks and notes; docs/design/ is the original brand package
+            (under docs/ so the web server never serves it)
 supabase/   schema.sql — the shared network database schema
 uploads/    reader-visible images (PHP execution disabled)
 ```
