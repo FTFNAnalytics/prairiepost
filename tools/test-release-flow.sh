@@ -54,11 +54,31 @@
 #      scenario 6, a passing group keeps its cron file too);
 #  16. a second run while one holds the lock — refused before it touches
 #      anything;
-#  17. SIGTERM after the cron files were paused — the trap resumes them
-#      and says where things stand; a rerun finishes the roll (migrates,
-#      verifies, marks the release complete);
-#  18. SIGTERM after the migration committed, before the reload — same,
-#      with the rerun finding nothing pending and finishing the reload.
+#  17. SIGTERM after the cron files were paused, before the migration —
+#      the handler puts every vhost and cron file back and says nothing
+#      changed; the next run is an ordinary roll;
+#  18. the nginx test fails after the rise, so the roll stops with the
+#      files naming the new release — the next run FINISHES that roll:
+#      it reads the version the first run found, holds nothing to its
+#      own 503, puts nothing back, offers no rollback, writes the marks.
+#
+# The re-review of PR 73 (the stopped-roll path), each with its scenario:
+#  19. SIGTERM after the reload, during verification — the handler says
+#      nginx is on the new release; the next run finishes against the
+#      baseline the first run saved, and marks the release;
+#  20. a group held after a failed verification gets no completion mark,
+#      so a run told to try again verifies it again, instead of saying
+#      there is nothing to do;
+#  21. a roll into a directory an earlier roll completed (a roll back)
+#      clears that directory's old mark first, so a stop leaves it
+#      unfinished, not "done";
+#  22. a run pinned to a different commit while the vhosts name a release
+#      no run finished is refused before it touches anything;
+#  23. a cron file an earlier, stopped run left .paused with no active
+#      copy comes back on the next run, whatever release it names;
+#  24. a pin that is not a commit id, and a pre-staged tarball that is
+#      not the pinned commit, are refused; the release tree is renamed
+#      into place, so no half copy is ever reused.
 #
 # A fixture has no nginx and no TLS stack: the nginx test is skipped
 # unless PP_UPGRADE_FIXTURE_NGINX_FAIL forces it to fail, and
@@ -96,7 +116,7 @@ HEAD12=${HEADSHA:0:12}
 HEADV=$(sed -n "s/^define('PP_SCHEMA_VERSION', *\([0-9]*\));.*/\1/p" app/bootstrap.php)
 [ -n "$HEADV" ] || { echo "FATAL: cannot read PP_SCHEMA_VERSION from app/bootstrap.php"; exit 1; }
 TARBALL=$(mktemp --suffix=.tgz)
-git archive --prefix="prairiepost-head/" "$HEADSHA" | gzip > "$TARBALL"
+git archive --prefix="prairiepost-$HEADSHA/" "$HEADSHA" | gzip > "$TARBALL"
 
 # One database per old release, seeded by ITS OWN tooling — provenance:
 # the commit named. Every box built from that release starts from a copy.
@@ -168,6 +188,7 @@ run_upgrade() { # box-dir [VAR=value ...] -> rc  (the fixture knobs go in as VAR
     PP_UPGRADE_WWW="$box/www" \
     PP_UPGRADE_SNIPPET_DIR="$box/snippets" \
     PP_UPGRADE_LOCK="$box/upgrade.lock" \
+    PP_UPGRADE_LOG_DIR="$box/log" \
     PP_UPGRADE_SHA="$HEAD12" \
     PP_RELEASE_TARBALL="$TARBALL" \
     PP_BACKUP_DEST="$box/backups" \
@@ -273,6 +294,9 @@ http_front "$B4/www/prairiepost-$HEAD12-kitchenerchronicle"
 echo "   NEW release over HTTP: $HTTP_CODE  $(grep -o '<title>[^<]*</title>' "$HTTP_BODY" | head -1)"
 ok "NEW release, HTTP front page: 200"        '[ "$HTTP_CODE" = 200 ]'
 ok "both new release directories carry the completion mark" 'marked_done "$B4/www/prairiepost-$HEAD12-kitchenerchronicle" && marked_done "$B4/www/prairiepost-$HEAD12-civismedia"'
+ok "each carries the saved baseline and the before-version (21)" '[ -f "$B4/www/prairiepost-$HEAD12-civismedia/.pp-roll-baseline" ] && grep -q "^version_before=21" "$B4/www/prairiepost-$HEAD12-civismedia/.pp-roll-before" && grep -q "^version_before=21" "$B4/www/prairiepost-$HEAD12-kitchenerchronicle/.pp-roll-before"'
+ok "the tree was renamed into place: no temporary copy remains (scenario 24)" '[ "$(ls -d "$B4"/www/*.tmp.* 2>/dev/null | wc -l)" = 0 ]'
+ok "the run was logged"                      '[ "$(ls "$B4/log" | wc -l)" = 1 ] && grep -q "^== Done" "$B4"/log/roll-*.log'
 
 echo
 echo "== scenario 5: a group fails verification AFTER the rise — held, not restored"
@@ -291,7 +315,9 @@ ok "the passing group stays on the new release" 'on_new "$B5/vhosts/kitchenerchr
 ok "crons resumed on the new release"         '[ -f "$B5/cron/pp-fetch" ] && [ ! -f "$B5/cron/pp-fetch.paused" ] && on_new "$B5/cron/pp-fetch"'
 ok "it does not claim a restore happened"     'hasnt "$OUT5" "at least one release group was restored"'
 ok "it ends NOT done, with no repoint offered" 'has "$OUT5" "NOT done" && hasnt "$OUT5" "Rollback for any release group" && hasnt "$OUT5" "cp <vhost>.bak"'
-ok "both new release directories carry the completion mark (nginx is on them)" 'marked_done "$B5/www/prairiepost-$HEAD12-kitchenerchronicle" && marked_done "$B5/www/prairiepost-$HEAD12-civismedia"'
+ok "the group that passed is marked; the held one is not" 'marked_done "$B5/www/prairiepost-$HEAD12-kitchenerchronicle" && ! marked_done "$B5/www/prairiepost-$HEAD12-civismedia"'
+OUT5b=$(run_upgrade "$B5" 2>&1); RC5b=$?
+ok "a run after NOT done verifies the held group again (scenario 20)" '[ "$RC5b" != 0 ] && has "$OUT5b" "no run finished that roll" && [ "$(grep -c "FAIL (fixture)" <<< "$OUT5b")" = 1 ] && hasnt "$OUT5b" "Nothing to upgrade" && has "$OUT5b" "NOT done"'
 
 echo
 echo "== scenario 6: the same failure, NO version change — restored, exactly as before"
@@ -446,30 +472,83 @@ OUT17=$(run_upgrade "$B17" PP_UPGRADE_FIXTURE_DIE=after-pause 2>&1); RC17=$?
 show "$(sed -n '/^== Quiesce scheduled writers/,$p' <<< "$OUT17")"
 ok "the run stops with the signal's exit code" '[ "$RC17" = 143 ]'
 ok "it says what was interrupted"             'has "$OUT17" "INTERRUPTED by SIGTERM during: Quiesce scheduled writers"'
-ok "it resumed the cron file it had paused"   'has "$OUT17" "resumed: pp-fetch" && [ -f "$B17/cron/pp-fetch" ] && [ ! -f "$B17/cron/pp-fetch.paused" ] && on_new "$B17/cron/pp-fetch"'
-ok "it reports the state: files rewritten, schema untouched, nginx not reloaded" 'has "$OUT17" "vhost and cron files: rewritten" && has "$OUT17" "schema: the migration step had not run" && has "$OUT17" "nginx: NOT reloaded" && [ "$(stored_version "$B17")" = 21 ] && on_new "$B17/vhosts/kitchenerchronicle"'
+ok "before the migration, it puts everything back and says nothing changed" 'has "$OUT17" "every vhost and cron file restored to the old release" && on_old "$B17/vhosts/kitchenerchronicle" && on_old "$B17/vhosts/civismedia" && [ -f "$B17/cron/pp-fetch" ] && on_old "$B17/cron/pp-fetch" && [ ! -f "$B17/cron/pp-fetch.paused" ] && [ "$(stored_version "$B17")" = 21 ]'
 ok "nothing is marked complete"               '! marked_done "$B17/www/prairiepost-$HEAD12-kitchenerchronicle"'
 OUT17b=$(run_upgrade "$B17" 2>&1); RC17b=$?
-show "$(sed -n '/^== Upgrade each release/,/^== Read each schema/p;/^== Verify every domain/,/^== Fallback/p' <<< "$OUT17b")"
-ok "the rerun finishes instead of saying nothing to do" '[ "$RC17b" = 0 ] && has "$OUT17b" "no roll finished it" && hasnt "$OUT17b" "Nothing to upgrade"'
-ok "it ran the migration the first run never reached" 'has "$OUT17b" "ROSE from 21 to $HEADV" && [ "$(stored_version "$B17")" = "$HEADV" ]'
-ok "both groups boot ready, crons resumed, marks written" '[ "$(grep -c "PASS (fixture)" <<< "$OUT17b")" = 2 ] && [ -f "$B17/cron/pp-fetch" ] && [ ! -f "$B17/cron/pp-fetch.paused" ] && marked_done "$B17/www/prairiepost-$HEAD12-kitchenerchronicle" && marked_done "$B17/www/prairiepost-$HEAD12-civismedia"'
+ok "the next run is an ordinary roll, and completes" '[ "$RC17b" = 0 ] && has "$OUT17b" "prairiepost-oldsha11-shared -> " && hasnt "$OUT17b" "finishing it" && has "$OUT17b" "ROSE from 21 to $HEADV" && [ "$(grep -c "PASS (fixture)" <<< "$OUT17b")" = 2 ] && marked_done "$B17/www/prairiepost-$HEAD12-kitchenerchronicle"'
 OUT17c=$(run_upgrade "$B17" 2>&1); RC17c=$?
 ok "a third run has nothing to do"            '[ "$RC17c" = 0 ] && has "$OUT17c" "Nothing to upgrade" && [ "$(grep -c "already on $HEAD12" <<< "$OUT17c")" = 2 ]'
 
 echo
-echo "== scenario 18: SIGTERM after the migration, before the reload — state reported; a rerun finishes the reload"
+echo "== scenario 18: the nginx test fails after the rise; the next run FINISHES the roll against what the first run saved"
 B18=$(mktemp -d)
 build_box "$B18" "$GATED_COMMIT"
-OUT18=$(run_upgrade "$B18" PP_UPGRADE_FIXTURE_DIE=after-migrate 2>&1); RC18=$?
-show "$(sed -n '/INTERRUPTED/,$p' <<< "$OUT18")"
-ok "the run stops with the signal's exit code" '[ "$RC18" = 143 ]'
-ok "it reports the rise and that nginx still runs the old release" 'has "$OUT18" "INTERRUPTED by SIGTERM" && has "$OUT18" "ROSE from 21 to $HEADV" && has "$OUT18" "nginx: NOT reloaded" && [ "$(stored_version "$B18")" = "$HEADV" ]'
-ok "it resumed the cron file it had paused"   'has "$OUT18" "resumed: pp-fetch" && [ -f "$B18/cron/pp-fetch" ] && [ ! -f "$B18/cron/pp-fetch.paused" ]'
+OUT18=$(run_upgrade "$B18" PP_UPGRADE_FIXTURE_NGINX_FAIL=post 2>&1); RC18=$?
+ok "the first run stops after the rise with the files on the new release" '[ "$RC18" != 0 ] && [ "$(stored_version "$B18")" = "$HEADV" ] && on_new "$B18/vhosts/kitchenerchronicle" && ! marked_done "$B18/www/prairiepost-$HEAD12-kitchenerchronicle"'
+ok "it saved the baseline and the version it found (21)" 'grep -q "^version_before=21" "$B18/www/prairiepost-$HEAD12-kitchenerchronicle/.pp-roll-before" && grep -q "^version_before=21" "$B18/www/prairiepost-$HEAD12-civismedia/.pp-roll-before" && [ -f "$B18/www/prairiepost-$HEAD12-civismedia/.pp-roll-baseline" ]'
 OUT18b=$(run_upgrade "$B18" 2>&1); RC18b=$?
-show "$(sed -n '/^== Read each schema/,/^== nginx config test/p;/^== Done/,$p' <<< "$OUT18b")"
-ok "the rerun finishes: nothing pending, reload, verify" '[ "$RC18b" = 0 ] && has "$OUT18b" "no roll finished it" && has "$OUT18b" "nothing pending" && [ "$(grep -c "PASS (fixture)" <<< "$OUT18b")" = 2 ]'
-ok "marks written, and the closing text says these groups have no rollback of their own" 'marked_done "$B18/www/prairiepost-$HEAD12-kitchenerchronicle" && has "$OUT18b" "FINISHED after an interrupted roll"'
+show "$(sed -n '/^== Upgrade each release/,/^== nginx config test/p;/^== Verify every domain/,$p' <<< "$OUT18b")"
+ok "the rerun finishes: exit 0, both groups pass, marks written" '[ "$RC18b" = 0 ] && has "$OUT18b" "no run finished that roll" && [ "$(grep -c "PASS (fixture)" <<< "$OUT18b")" = 2 ] && marked_done "$B18/www/prairiepost-$HEAD12-kitchenerchronicle" && marked_done "$B18/www/prairiepost-$HEAD12-civismedia"'
+ok "it judges the roll by the version the first run found: 21, risen to $HEADV" 'has "$OUT18b" "found stored version 21; it is $HEADV now" && has "$OUT18b" "ROSE from 21 to $HEADV"'
+ok "it holds the domains to the saved baseline, not to its own start" 'has "$OUT18b" "held to the baseline the run that started this roll saved"'
+ok "it puts nothing back and offers NO rollback" 'hasnt "$OUT18b" "Rollback for any release group" && hasnt "$OUT18b" "restoring release group" && has "$OUT18b" "NOT a rollback" && has "$OUT18b" "finished a roll an earlier run started"'
+ok "crons active on the new release"          '[ -f "$B18/cron/pp-fetch" ] && [ ! -f "$B18/cron/pp-fetch.paused" ] && on_new "$B18/cron/pp-fetch"'
+
+echo
+echo "== scenario 19: SIGTERM after the reload, during verification — the rerun finishes against the saved baseline"
+B19=$(mktemp -d)
+build_box "$B19" "$GATED_COMMIT"
+OUT19=$(run_upgrade "$B19" PP_UPGRADE_FIXTURE_DIE=after-reload 2>&1); RC19=$?
+show "$(sed -n '/INTERRUPTED/,$p' <<< "$OUT19")"
+ok "the run stops with the signal's exit code" '[ "$RC19" = 143 ]'
+ok "it says nginx is on the new release and the schema rose" 'has "$OUT19" "nginx: reloaded onto the new release" && has "$OUT19" "ROSE from 21 to $HEADV" && [ "$(stored_version "$B19")" = "$HEADV" ]'
+ok "it resumed the cron file; nothing is marked" 'has "$OUT19" "resumed: pp-fetch" && [ ! -f "$B19/cron/pp-fetch.paused" ] && ! marked_done "$B19/www/prairiepost-$HEAD12-kitchenerchronicle"'
+OUT19b=$(run_upgrade "$B19" 2>&1); RC19b=$?
+ok "the rerun finishes against the saved baseline and marks both releases" '[ "$RC19b" = 0 ] && has "$OUT19b" "held to the baseline the run that started this roll saved" && [ "$(grep -c "PASS (fixture)" <<< "$OUT19b")" = 2 ] && marked_done "$B19/www/prairiepost-$HEAD12-kitchenerchronicle" && marked_done "$B19/www/prairiepost-$HEAD12-civismedia" && hasnt "$OUT19b" "Rollback for any release group"'
+
+echo
+echo "== scenario 21: a roll into a directory an earlier roll completed clears its old mark"
+B21=$(mktemp -d)
+build_box "$B21" "$GATED_COMMIT"
+OUT21=$(run_upgrade "$B21" 2>&1); RC21=$?
+ok "a clean roll first"                       '[ "$RC21" = 0 ] && marked_done "$B21/www/prairiepost-$HEAD12-kitchenerchronicle"'
+# "roll back" by hand: the vhosts and the cron file name the old release again
+for f in "$B21"/vhosts/kitchenerchronicle "$B21"/vhosts/civismedia "$B21"/cron/pp-fetch; do cp "$(ls -t "$f".bak.* | head -1)" "$f"; done
+OUT21b=$(run_upgrade "$B21" PP_UPGRADE_FIXTURE_NGINX_FAIL=post 2>&1); RC21b=$?
+ok "the roll into the existing directory clears its old mark, then stops at the nginx test" '[ "$RC21b" != 0 ] && has "$OUT21b" "completion mark is cleared" && ! marked_done "$B21/www/prairiepost-$HEAD12-kitchenerchronicle" && on_new "$B21/vhosts/kitchenerchronicle"'
+OUT21c=$(run_upgrade "$B21" 2>&1); RC21c=$?
+ok "so the next run finishes it instead of saying there is nothing to do" '[ "$RC21c" = 0 ] && has "$OUT21c" "no run finished that roll" && hasnt "$OUT21c" "Nothing to upgrade" && marked_done "$B21/www/prairiepost-$HEAD12-kitchenerchronicle"'
+
+echo
+echo "== scenario 22: a run pinned to a DIFFERENT commit while the vhosts name an unfinished release — refused"
+B22=$(mktemp -d)
+build_box "$B22" "$GATED_COMMIT"
+OUT22=$(run_upgrade "$B22" PP_UPGRADE_FIXTURE_NGINX_FAIL=post 2>&1); RC22=$?
+OUT22b=$(run_upgrade "$B22" PP_UPGRADE_SHA=0123456789abcdef0123456789abcdef01234567 2>&1); RC22b=$?
+show "$(sed -n '/^== Map the papers/,$p' <<< "$OUT22b")"
+ok "refused in the mapping step, before anything is touched" '[ "$RC22" != 0 ] && [ "$RC22b" != 0 ] && has "$OUT22b" "no run finished. Finish that roll first" && hasnt "$OUT22b" "Fetch the release template" && on_new "$B22/vhosts/kitchenerchronicle"'
+OUT22c=$(run_upgrade "$B22" 2>&1); RC22c=$?
+ok "the run at the right commit finishes"     '[ "$RC22c" = 0 ] && marked_done "$B22/www/prairiepost-$HEAD12-kitchenerchronicle"'
+
+echo
+echo "== scenario 23: a cron file left .paused by an earlier, stopped run comes back on the next run"
+B23=$(mktemp -d)
+build_box "$B23" "$GATED_COMMIT"
+mv "$B23/cron/pp-fetch" "$B23/cron/pp-fetch.paused"
+OUT23=$(run_upgrade "$B23" 2>&1); RC23=$?
+ok "the roll brings it back, then pauses and resumes it like any other" '[ "$RC23" = 0 ] && has "$OUT23" "pp-fetch was left paused by an earlier, stopped roll" && has "$OUT23" "paused: pp-fetch" && has "$OUT23" "resumed: pp-fetch"'
+ok "it ends active, on the new release"       '[ -f "$B23/cron/pp-fetch" ] && [ ! -f "$B23/cron/pp-fetch.paused" ] && on_new "$B23/cron/pp-fetch"'
+
+echo
+echo "== scenario 24: a pin that is not a commit id, and a tarball that is not the pin, are refused"
+B24=$(mktemp -d)
+build_box "$B24" "$GATED_COMMIT"
+OUT24=$(run_upgrade "$B24" PP_UPGRADE_SHA=not-a-sha 2>&1); RC24=$?
+ok "a bad pin is refused before anything is read" '[ "$RC24" != 0 ] && has "$OUT24" "PP_UPGRADE_SHA must be a lowercase hex commit id" && hasnt "$OUT24" "Map the papers"'
+OTHER=$(mktemp --suffix=.tgz); git archive --prefix="prairiepost-0123456789abcdef0123456789abcdef01234567/" "$HEADSHA" | gzip > "$OTHER"
+OUT24b=$(run_upgrade "$B24" PP_RELEASE_TARBALL="$OTHER" 2>&1); RC24b=$?
+rm -f "$OTHER"
+ok "a pre-staged tarball for another commit is refused" '[ "$RC24b" != 0 ] && has "$OUT24b" "is not the pinned commit $HEAD12" && on_old "$B24/vhosts/kitchenerchronicle" && [ "$(stored_version "$B24")" = 21 ]'
 
 for B in "${BOXES[@]}"; do
   git worktree remove --force "$B/www/prairiepost-oldsha11-shared" 2>/dev/null
