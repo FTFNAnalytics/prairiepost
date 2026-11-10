@@ -512,10 +512,14 @@ B21=$(mktemp -d)
 build_box "$B21" "$GATED_COMMIT"
 OUT21=$(run_upgrade "$B21" 2>&1); RC21=$?
 ok "a clean roll first"                       '[ "$RC21" = 0 ] && marked_done "$B21/www/prairiepost-$HEAD12-kitchenerchronicle"'
-# "roll back" by hand: the vhosts and the cron file name the old release again
+# The shape of "A, then B, then back to A": the HEAD directory exists and
+# carries a completion mark, while the box serves and stores an earlier
+# release — the vhosts and the cron file name the old release again, and
+# the database is the one that release was seeded with (schema 21).
 for f in "$B21"/vhosts/kitchenerchronicle "$B21"/vhosts/civismedia "$B21"/cron/pp-fetch; do cp "$(ls -t "$f".bak.* | head -1)" "$f"; done
+cp "$SEEDS/${GATED_COMMIT:0:12}.sqlite" "$B21/data/net.sqlite"
 OUT21b=$(run_upgrade "$B21" PP_UPGRADE_FIXTURE_NGINX_FAIL=post 2>&1); RC21b=$?
-ok "the roll into the existing directory clears its old mark, then stops at the nginx test" '[ "$RC21b" != 0 ] && has "$OUT21b" "completion mark is cleared" && ! marked_done "$B21/www/prairiepost-$HEAD12-kitchenerchronicle" && on_new "$B21/vhosts/kitchenerchronicle"'
+ok "the roll into the existing directory clears its old mark, then stops at the nginx test after the rise" '[ "$RC21b" != 0 ] && has "$OUT21b" "completion mark is cleared" && ! marked_done "$B21/www/prairiepost-$HEAD12-kitchenerchronicle" && on_new "$B21/vhosts/kitchenerchronicle" && [ "$(stored_version "$B21")" = "$HEADV" ]'
 OUT21c=$(run_upgrade "$B21" 2>&1); RC21c=$?
 ok "so the next run finishes it instead of saying there is nothing to do" '[ "$RC21c" = 0 ] && has "$OUT21c" "no run finished that roll" && hasnt "$OUT21c" "Nothing to upgrade" && marked_done "$B21/www/prairiepost-$HEAD12-kitchenerchronicle"'
 

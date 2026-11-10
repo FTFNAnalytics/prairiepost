@@ -178,11 +178,11 @@ schema_stored() { # release dir -> prints "<state> <stored version> <built-for v
   (cd "$1" && php tools/migrate.php --status 2>/dev/null) \
     | sed -n 's/^state:[[:space:]]*\([a-z]*\) (stored version \([0-9a-z]*\), target \([0-9]*\)).*/\1 \2 \3/p'
 }
-schema_stored_after() { # release dir -> sets STATUS_OUT like schema_stored prints, retried: a runner that cannot answer once is not a changed schema
+schema_stored_after() { # release dir [pre] -> sets STATUS_OUT like schema_stored prints, retried: a runner that cannot answer once is not a changed schema
   local attempt
   STATUS_OUT=""
   for attempt in 1 2 3; do
-    if [ "$STATUS_FAILS_LEFT" -gt 0 ]; then
+    if [ "${2:-}" != "pre" ] && [ "$STATUS_FAILS_LEFT" -gt 0 ]; then   # the fixture knob fails post-step reads only
       STATUS_FAILS_LEFT=$((STATUS_FAILS_LEFT - 1))
       echo "   (fixture: post-step --status read made to fail)"
     else
@@ -493,6 +493,17 @@ chmod 2775 "$SHARED_UP"
 echo "shared uploads: $(du -sh "$SHARED_UP" 2>/dev/null | cut -f1) at $SHARED_UP"
 
 say "Upgrade each release directory"
+# A roll stopped after its pause pass leaves cron files .paused with no
+# active copy. Those come back here, whatever release they name: an
+# earlier run paused them, no run resumed them, and nothing else will.
+# Brought back here, before the cron files are read, they are rewritten,
+# paused and resumed like any other.
+for pf in "$CRON_DIR"/*.paused; do
+  [ -f "$pf" ] || continue
+  cf="${pf%.paused}"
+  [ -f "$cf" ] && continue
+  mv "$pf" "$cf" && echo "   $(basename "$cf") was left paused by an earlier, stopped roll — active again (it names $(grep -Eo 'prairiepost-[A-Za-z0-9._-]+' "$cf" | head -1))"
+done
 declare -A DIR_NEW=()
 declare -A DIR_CRONS=()
 declare -A UNFINISHED=()   # OLD dir -> 1 when the vhosts already named this release but no roll finished it
@@ -660,7 +671,7 @@ for OLD in "${!DIR_NEW[@]}"; do
     # One read per logical schema, however many groups share it.
     SCHEMA_LABEL[$IDENT]="$(basename "$NEWDIR")"
     SCHEMA_DIR[$IDENT]="$NEWDIR"
-    schema_stored_after "$NEWDIR"   # the retrying reader; one failed read is not a changed schema
+    schema_stored_after "$NEWDIR" pre   # the retrying reader; one failed read is not a changed schema
     read -r S_STATE S_VERSION S_TARGET <<< "$STATUS_OUT"
     SCHEMA_STATE[$IDENT]="${S_STATE:-}"
     SCHEMA_BEFORE[$IDENT]="${S_VERSION:-}"
@@ -717,18 +728,6 @@ say "Quiesce scheduled writers, then migrate each logical schema ONCE"
 # migration that old code cannot safely write through requires the
 # full-stop procedure there, not this script.
 
-# A roll stopped after its pause pass leaves cron files .paused with no
-# active copy. Those come back here, whatever release they name: an
-# earlier run paused them, no run resumed them, and nothing else will.
-# They are not in DIR_CRONS (built before this, from active files only),
-# so they stay active through this run's pause pass; the new release's
-# readiness gate stops their writes until the schema is ready for it.
-for pf in "$CRON_DIR"/*.paused; do
-  [ -f "$pf" ] || continue
-  cf="${pf%.paused}"
-  [ -f "$cf" ] && continue
-  mv "$pf" "$cf" && echo "   $(basename "$cf") was left paused by an earlier, stopped roll — active again (it names $(grep -Eo 'prairiepost-[A-Za-z0-9._-]+' "$cf" | head -1))"
-done
 for OLD in "${!DIR_CRONS[@]}"; do
   for cf in ${DIR_CRONS[$OLD]:-}; do
     if [ -f "$cf" ]; then
