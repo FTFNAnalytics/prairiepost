@@ -65,8 +65,8 @@ the old release:
 | Where the roll fails | The version did not change | The version rose |
 | --- | --- | --- |
 | `nginx -t` BEFORE the migration (run only when a step is pending, with the rewritten vhost files in place) | not run | every vhost and cron file restored, the schema untouched: "nothing changed" is true, and the old release serves |
-| The migration | files restored; the old release serves | possible only when an earlier step of the same roll had committed: nothing is put back, and neither release can serve until the migration is finished from the new release directory; then the roll is run again at the same release, and finishes (test, reload, verify) |
-| `nginx -t` after the migration | files restored; "nothing changed" | nothing is put back. nginx is still running the old release, so every paper answers 503 until the error is fixed and the roll is run again at the same release, which finishes it (test, reload, verify) |
+| The migration | files restored; the old release serves | possible only when an earlier step of the same roll had committed: nothing is put back, and neither release can serve until the migration is finished from the new release directory; then the roll is run again at the same release, and finishes (test, reload, verify against the saved baseline) |
+| `nginx -t` after the migration | files restored; "nothing changed" | nothing is put back. nginx is still running the old release, so every paper answers 503 until the error is fixed and the roll is run again at the same release, which finishes it (test, reload, verify against the saved baseline) |
 | A domain fails the masthead check | its release group is restored — vhosts and cron files — and the old release serves | the group is HELD on the new release and the roll exits non-zero. The domain that failed goes on serving what failed; the other domains of the group are untouched |
 | Nothing fails: the closing text | offers the repoint as a rollback | says the old directories are not one |
 
@@ -74,30 +74,60 @@ A reading the script could not take is retried. If it never comes, it
 counts as unchanged only when nothing was pending and the step exited
 0 — a no-op cannot have moved the version — and as a rise otherwise,
 because "it did not change" would then be a guess. Every cell is
-exercised by `tools/test-release-flow.sh` (scenarios 2 and 4 to 18),
+exercised by `tools/test-release-flow.sh` (scenarios 2 and 4 to 24),
 which CI runs; its verification stage is a CLI boot of each new
-release, not the masthead probe, and it has no nginx.
+release, not the masthead probe, and it has no nginx. The finishing
+run's verification against a saved baseline, over the real probe code,
+has been run only in a sandbox with stand-ins (PR 73's re-review and
+its fixes), not on CI and not on a server.
 
 **One roll at a time, and a stopped roll is finished, not repeated.**
 The script takes a lock (`/run/lock/prairiepost-upgrade.lock`); a
-second run refuses while the first holds it. INT, HUP or TERM in the
-middle of a roll — a dropped SSH connection is a HUP — resumes the cron
-files that run paused and prints where things stand: whether the files
-were rewritten, whether the schema moved, whether nginx reloaded. Every
-run that reloads nginx onto a release writes `.pp-roll-complete` inside
-that release directory. A later run that finds the vhosts naming a
-release with no such mark finishes that roll — migrate if pending,
-test, reload, verify, resume — instead of saying there is nothing to
-do. So whatever stopped a roll after the migration — a failed
-`nginx -t`, a part-finished migration, a failed reload, a lost
-connection — the answer is the same: fix what stopped it, then run the
-roll again at the same release. Pinning means `PP_UPGRADE_SHA=<the full
-commit sha>`: it names the release directory and fetches that commit's
-tarball (or hand the script a `PP_RELEASE_TARBALL`); `PP_BRANCH` alone
-follows a branch head. A group that was finished this way has no
-rollback of its own in that run — its `.bak` copies already name the
-new release; the interrupted run's `.bak` files are the record of what
-came before.
+second run refuses while the first holds it. Everything it prints also
+goes to `/var/log/prairiepost-upgrade/roll-<stamp>.log`. A lost
+connection does not stop it: HUP and PIPE are ignored for the whole
+run (start it detached all the same — `DEPLOY.md` says how — and read
+the log). INT and TERM are deliberate stops, and are ignored too
+between the migration step and the reload, where a stop would be every
+paper on 503 until the next run. Stopped before the migration, the
+handler puts every vhost and cron file back and says nothing changed;
+stopped after it, the handler resumes the cron files the run paused
+and prints where things stand: whether the files name the new release,
+what the schema did (it asks the runner if the step was in flight),
+whether nginx reloaded.
+
+Each roll leaves three small files in the release directory it builds:
+`.pp-roll-baseline` (what every domain answered before the roll changed
+anything — one line per domain, `domain|status code|stylesheet
+set|<title>`), `.pp-roll-before` (the stored schema version the roll
+found, and which run found it) and, once nginx has reloaded onto the
+release and every domain of a group passed, `.pp-roll-complete` for
+that group. A later run that finds the vhosts naming a release with the
+first file and not the last FINISHES that roll instead of saying there
+is nothing to do: it migrates whatever is pending, tests, reloads, and
+verifies every domain against the SAVED baseline — never against the
+503 the domains may be answering when it starts, and never against the
+new release itself. Such a run judges the roll by the version the first
+run found, puts nothing back (its own `.bak` copies are of files that
+already named the new release), offers no rollback, and holds a group
+that fails. A held group is not marked, so a run told to try again
+verifies it again. So whatever stopped a roll after the migration — a
+failed `nginx -t`, a part-finished migration, a failed reload, a
+signal, a lost terminal — the answer is the same: fix what stopped it,
+then run the roll again at the same release. A run pinned to a
+different commit while the vhosts name an unfinished release refuses
+before it touches anything; a cron file an earlier run left `.paused`
+with no active copy comes back on the next run whatever release it
+names; a roll into a directory an earlier roll completed clears that
+directory's old mark first; the release tree is copied under a
+temporary name and renamed into place, so a stop inside the copy leaves
+nothing a later run would build on.
+
+Pinning means `PP_UPGRADE_SHA=<the full 40-character commit sha>`: it
+names the release directory, fetches that commit's tarball, and refuses
+a pre-staged `PP_RELEASE_TARBALL` that is not that commit; `PP_BRANCH`
+alone follows a branch head. Pin every roll, and re-run a stopped roll
+at the same pin.
 
 ### When a roll that raised the schema version fails
 
