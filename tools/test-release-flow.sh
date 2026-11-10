@@ -2,7 +2,7 @@
 #
 # Exercise tools/vps/upgrade-papers.sh against a SYNTHETIC box — the
 # Phase 2 release-procedure proof, never run against the real VPS. SLOW
-# (builds a genuine old release from the v18-era commit and migrates it).
+# (builds genuine old releases from their own commits and migrates them).
 #
 #   bash tools/test-release-flow.sh
 #
@@ -17,25 +17,127 @@
 #      restored to the old release.
 #   3. missing recovery point: preflight refuses to roll at all.
 #
+# A roll that RAISES the stored schema version, from a release that has
+# the readiness gate (d68a89f, schema 21 — what production ran when step
+# 22 was written). After such a roll the old release is not a fallback:
+#   4. the happy roll — the rise is read and reported, the closing text
+#      offers no repoint, and the OLD release is then asked what it makes
+#      of the database: its runner says "ahead", its CLI refuses, and
+#      over HTTP it answers 503.
+#   5. a group fails verification after the rise — it is HELD on the new
+#      release, not restored, and the roll exits non-zero.
+#   6. the same failure on a roll that does NOT change the version (old
+#      release = HEAD) — the group is restored and the closing text
+#      offers the repoint, exactly as before.
+#   7. the nginx test fails BEFORE the migration — the roll stops with
+#      the schema untouched and "nothing changed" is true.
+#   8. the nginx test fails AFTER the migration — nothing is put back
+#      and the message does not say "nothing changed".
+#   9. the migration fails part-way, after one step committed (v18 box,
+#      step 20 blocked) — nothing is put back, and the message does not
+#      say the box still serves the old release.
+#  10. the nginx test fails on a roll that does not change the version —
+#      everything is restored and "nothing changed" is said, as before.
+#
+# A fixture has no nginx and no TLS stack: the nginx test is skipped
+# unless PP_UPGRADE_FIXTURE_NGINX_FAIL forces it to fail, and in
+# scenarios 1 to 10 verification is a CLI boot of each new release
+# directory. What a failed group gets (restore or hold) is the code a
+# real box runs.
+#
+# The masthead guard itself, over HTTP. These boxes have a stand-in for
+# nginx (front_start): one PHP built-in server that answers each request
+# from whichever release directory the vhost file for its Host header
+# names at that moment. Handed its port, upgrade-papers.sh runs its REAL
+# baseline capture and its REAL per-domain comparison — status code,
+# <title>, stylesheet set — with only the probe's transport changed
+# (plain HTTP on that port instead of TLS on 443). The box is shaped like
+# production: one release directory serving several papers by hostname,
+# the hub in a directory of its own, and one tenant with no site row.
+#  11. a healthy roll that raises the version: every domain is captured
+#      before and compared after; the tenant with no site row is held to
+#      its 503; the capture is saved to a baseline file; and the roll's
+#      lines are word for word what they were before the recovery
+#      baseline existed.
+#  12. a release missing one paper's template tree, after a rise: the
+#      guard catches it by the stylesheet set and the group is HELD. A
+#      second roll onto a release that HAS the template takes the
+#      failing answer as its baseline, reads the repair as a failure and
+#      puts the group back (the assertions marked GAP: what a roll does,
+#      and must go on doing, when nobody names a recovery baseline). The
+#      same roll with PP_UPGRADE_BASELINE naming the file roll 1 saved
+#      passes the repair and says which baseline each domain was held to.
+#  13. the vhost files copied back to the old release after a rise: every
+#      domain answers the readiness gate's 503. A roll holds each of them
+#      to that 503, reads 200 as a failure and puts both groups back
+#      (GAP) — and now says so before it changes anything, names the
+#      saved baseline, and does not offer the .bak files as a rollback.
+#      With the recovery baseline: a roll onto the release that lacks the
+#      template still FAILS that paper (a recovery baseline is not a
+#      bypass); a roll onto HEAD brings every domain back, and the tenant
+#      with no site row stays on the 503 its record says.
+#  14. held after a rise, then the failing domain taken down by hand (the
+#      single-vhost copy-back in docs/MIGRATION-COMPAT.md). An ordinary
+#      roll moves the other papers and leaves that domain down; a missing
+#      or malformed recovery baseline stops a roll before it starts; the
+#      recovery roll brings the domain back, verified as itself.
+#
 set -uo pipefail
 cd "$(dirname "$0")/.."
 ROOT=$(pwd)
-OLD_COMMIT=83e1467   # the v18-era release (schema 18, own seed-all)
+OLD_COMMIT=83e146758c4cefb4334a97b2472dd9f0bc85cb99    # the v18-era release (schema 18, own seed-all); predates the readiness gate
+GATED_COMMIT=d68a89fa67c491ea046a39a2ea4186a61e2464ea  # schema 21, WITH the readiness gate (production's release, 29 Sep 2026)
 FAILS=0
 ok() { if eval "$2"; then echo "ok   $1"; else echo "FAIL $1"; FAILS=1; fi; }
+# Here-strings, not `echo | grep -q`: under pipefail a grep that exits on
+# its first match leaves echo writing into a closed pipe, and the
+# pipeline fails for output that DID match. A roll's output is large
+# enough for that when the fixture runs unprivileged (CI).
+has()   { grep -qF -- "$2" <<< "$1"; }
+hasnt() { ! grep -qF -- "$2" <<< "$1"; }
+show()  { sed 's/^/   | /' <<< "$1"; }
+
+# A shallow clone (CI) does not carry the historical releases.
+need_commit() {
+  git cat-file -e "$1^{commit}" 2>/dev/null && return 0
+  git fetch --quiet --no-tags --depth=1 origin "$1" 2>/dev/null
+  git cat-file -e "$1^{commit}" 2>/dev/null && return 0
+  echo "FATAL: commit $1 is not in this clone and could not be fetched from origin"
+  exit 1
+}
+need_commit "$OLD_COMMIT"
+need_commit "$GATED_COMMIT"
 
 HEADSHA=$(git rev-parse HEAD)
+HEAD12=${HEADSHA:0:12}
+HEADV=$(sed -n "s/^define('PP_SCHEMA_VERSION', *\([0-9]*\));.*/\1/p" app/bootstrap.php)
+[ -n "$HEADV" ] || { echo "FATAL: cannot read PP_SCHEMA_VERSION from app/bootstrap.php"; exit 1; }
 TARBALL=$(mktemp --suffix=.tgz)
 git archive --prefix="prairiepost-head/" "$HEADSHA" | gzip > "$TARBALL"
 
-build_box() { # box-dir  -> populates $BOX
+# One database per old release, seeded by ITS OWN tooling — provenance:
+# the commit named. Every box built from that release starts from a copy.
+SEEDS=$(mktemp -d)
+BOXES=()
+seed_db() { # commit -> sets $SEED_DB
+  SEED_DB="$SEEDS/${1:0:12}.sqlite"
+  [ -f "$SEED_DB" ] && return 0
+  git worktree add --detach "$SEEDS/wt-${1:0:12}" "$1" >/dev/null 2>&1 \
+    || { echo "FATAL: cannot check out $1"; exit 1; }
+  ( cd "$SEEDS/wt-${1:0:12}" && bash tools/seed-all.sh "$SEED_DB" >/dev/null 2>&1 ) \
+    || { echo "FATAL: old-release seed failed ($1)"; exit 1; }
+  git worktree remove --force "$SEEDS/wt-${1:0:12}" 2>/dev/null
+}
+build_box() { # box-dir [commit]  -> populates $BOX
   BOX="$1"
+  local commit="${2:-$OLD_COMMIT}"
+  BOXES+=("$BOX")
   mkdir -p "$BOX"/{www,vhosts,cron,backups,data}
-  # A genuine old release with a genuine v18 database, built by ITS OWN
-  # tooling — provenance: commit $OLD_COMMIT.
-  git worktree add --detach "$BOX/www/prairiepost-oldsha11-shared" "$OLD_COMMIT" >/dev/null 2>&1
-  ( cd "$BOX/www/prairiepost-oldsha11-shared" && bash tools/seed-all.sh "$BOX/data/net.sqlite" >/dev/null 2>&1 ) \
-    || { echo "FATAL: old-release seed failed"; exit 1; }
+  # A genuine old release with a genuine database of its own version.
+  git worktree add --detach "$BOX/www/prairiepost-oldsha11-shared" "$commit" >/dev/null 2>&1 \
+    || { echo "FATAL: cannot check out $commit"; exit 1; }
+  seed_db "$commit"
+  cp "$SEED_DB" "$BOX/data/net.sqlite"
   cat > "$BOX/www/prairiepost-oldsha11-shared/config.php" <<CFG
 <?php
 return ['db' => ['driver' => 'sqlite', 'sqlite_path' => '$BOX/data/net.sqlite'],
@@ -55,36 +157,211 @@ CFG
   printf '17 3 * * * root php %s/cron/fetch-news.php\n' "$BOX/www/prairiepost-oldsha11-shared" > "$BOX/cron/pp-fetch.bak.20250101"
   php -r 'echo json_encode(["ok" => true, "set_id" => "fixture-set", "finished_epoch" => time(), "finished_at" => date("Y-m-d H:i:s")]);' > "$BOX/backups/state.json"
 }
-run_upgrade() { # box-dir -> rc
+# Make ONE release group fail verification for a real reason: the hub's
+# own release resolves to a tenant that has no site row, so its new
+# release refuses to boot. The papers' group is untouched and passes.
+break_hub_tenant() { # box-dir
+  cat > "$1/www/prairiepost-oldsha11-civismedia/config.php" <<CFG
+<?php
+return ['db' => ['driver' => 'sqlite', 'sqlite_path' => '$1/data/net.sqlite'],
+        'site_slug' => 'no-such-paper', 'hub_slug' => 'civismedia',
+        'site_url' => '', 'timezone' => 'America/Toronto', 'debug' => false];
+CFG
+}
+run_upgrade() { # box-dir [pre|post: force that nginx test to fail] -> rc
+  # Set for one call, in front of it:
+  #   UP_PORT                the box's HTTP stand-in (front_start): the
+  #                          masthead guard runs for real against it
+  #   UP_SHA + UP_TARBALL    roll to a candidate other than HEAD
+  #   UP_BASELINE            PP_UPGRADE_BASELINE: a saved baseline to hold
+  #                          this roll to (the recovery baseline)
+  # A roll names its .bak files and its saved baseline by the second it
+  # started in; a second roll of the same box waits for the next one.
+  while ls "$1"/vhosts/*.bak."$(date +%s)" >/dev/null 2>&1; do sleep 0.2; done
   PP_UPGRADE_FIXTURE=1 \
+  PP_UPGRADE_FIXTURE_NGINX_FAIL="${2:-}" \
+  PP_UPGRADE_FIXTURE_HTTP_PORT="${UP_PORT:-}" \
+  PP_UPGRADE_BASELINE_DIR="$1/baselines" \
+  PP_UPGRADE_BASELINE="${UP_BASELINE:-}" \
   PP_UPGRADE_VHOSTS_DIR="$1/vhosts" \
   PP_UPGRADE_CRON_DIR="$1/cron" \
   PP_UPGRADE_WWW="$1/www" \
   PP_UPGRADE_SNIPPET_DIR="$1/snippets" \
-  PP_UPGRADE_SHA="${HEADSHA:0:12}" \
-  PP_RELEASE_TARBALL="$TARBALL" \
+  PP_UPGRADE_SHA="${UP_SHA:-$HEAD12}" \
+  PP_RELEASE_TARBALL="${UP_TARBALL:-$TARBALL}" \
   PP_BACKUP_DEST="$1/backups" \
   bash "$ROOT/tools/vps/upgrade-papers.sh"
+}
+stored_version() { # box-dir -> the schema version stored in its database
+  php -r '$p = new PDO("sqlite:" . $argv[1]); echo $p->query("SELECT svalue FROM settings WHERE site_id=0 AND skey=\"schema_version\"")->fetchColumn();' "$1/data/net.sqlite"
+}
+on_new() { grep -q "$HEAD12" "$1"; }                                # a vhost or cron file names the new release
+on_old() { grep -q oldsha11 "$1" && ! grep -q "$HEAD12" "$1"; }     # ... or still the old one, untouched
+restore_lines() { grep -cE '^ +restoring release group' <<< "$1"; } # the restore line, not the "NOT restoring" one
+line_of() { grep -nF -- "$2" <<< "$1" | head -1 | cut -d: -f1; }
+# What a release directory answers over real HTTP (php -S, its own
+# config.php): sets $HTTP_CODE and leaves the body in $HTTP_BODY.
+HTTP_BODY=$(mktemp)
+http_front() { # release-dir
+  local port pid i
+  port=$((20000 + RANDOM % 20000))
+  HTTP_CODE=""
+  ( cd "$1" && exec php -S "127.0.0.1:$port" router.php >/dev/null 2>&1 ) &
+  pid=$!
+  for i in 1 2 3 4 5 6 7 8 9 10 11 12; do
+    HTTP_CODE=$(curl -s -o "$HTTP_BODY" -w '%{http_code}' -m 10 "http://127.0.0.1:$port/" 2>/dev/null)
+    [ -n "$HTTP_CODE" ] && [ "$HTTP_CODE" != "000" ] && break
+    sleep 0.5
+  done
+  kill "$pid" 2>/dev/null
+  wait "$pid" 2>/dev/null
+}
+
+# ---------------------------------------------------------------------
+# The HTTP stage (scenarios 11 on).
+# ---------------------------------------------------------------------
+# A box shaped like production: the papers' release directory serves
+# several domains and its config picks the tenant from the hostname on
+# each request, as the live one does; the hub has a directory of its own.
+#   prairiedispatch.test, kitchenerchronicle.test   the papers' group
+#   dormant.test       the papers' group; a tenant with NO site row, which
+#                      answers 503 "This site is not provisioned here"
+#   civismedia.test    the hub's group
+build_http_box() { # box-dir [commit] -> populates $BOX
+  build_box "$1" "${2:-$GATED_COMMIT}"
+  local dir
+  for dir in shared civismedia; do
+    cat > "$BOX/www/prairiepost-oldsha11-$dir/config.php" <<CFG
+<?php
+\$host = strtolower((string) preg_replace('/:\\d+\$/', '', \$_SERVER['HTTP_HOST'] ?? ''));
+\$slug = ['prairiedispatch.test' => 'prairiedispatch', 'kitchenerchronicle.test' => 'kitchener-chronicle',
+         'civismedia.test' => 'civismedia', 'dormant.test' => 'no-such-paper'][\$host] ?? 'prairiedispatch';
+return ['db' => ['driver' => 'sqlite', 'sqlite_path' => '$BOX/data/net.sqlite'],
+        'site_slug' => \$slug, 'hub_slug' => 'civismedia',
+        'site_url' => '', 'timezone' => 'America/Toronto', 'debug' => false];
+CFG
+  done
+  printf 'server {\n  root %s;\n  server_name prairiedispatch.test;\n}\n' "$BOX/www/prairiepost-oldsha11-shared" > "$BOX/vhosts/prairiedispatch"
+  printf 'server {\n  root %s;\n  server_name dormant.test;\n}\n' "$BOX/www/prairiepost-oldsha11-shared" > "$BOX/vhosts/dormant"
+}
+# The stand-in for nginx: ONE PHP built-in server per box. Its router
+# reads the vhost files on every request and hands the request to the
+# release directory that the file for the request's Host names right
+# then — so a rewrite, a restore or a hold by upgrade-papers.sh changes
+# what the next probe sees. It has no reload: the files are its
+# configuration, which is what nginx serves after a successful reload.
+FRONT_PID=""
+FRONT_PORT=""
+front_start() { # box-dir -> sets $FRONT_PORT and $FRONT_PID
+  local try i body
+  cat > "$1/front.php" <<'FRONT'
+<?php
+$host = strtolower((string) preg_replace('/:\d+$/', '', $_SERVER['HTTP_HOST'] ?? ''));
+foreach (glob(getenv('PP_FIXTURE_VHOSTS') . '/*') ?: [] as $vh) {
+    // Dotted names are the upgrader's own .bak.* and .paused artifacts.
+    if (!is_file($vh) || str_contains(basename($vh), '.')) {
+        continue;
+    }
+    $text = (string) file_get_contents($vh);
+    if (!preg_match('/server_name\s+([^;\s]+)/', $text, $name) || strtolower($name[1]) !== $host) {
+        continue;
+    }
+    if (preg_match('/root\s+([^;\s]+)\s*;/', $text, $root) && is_file($root[1] . '/router.php')) {
+        header('X-Fixture-Release: ' . basename($root[1]));
+        chdir($root[1]);
+        return require $root[1] . '/router.php';
+    }
+    break;
+}
+http_response_code(502);
+header('Content-Type: text/plain');
+echo "fixture front: no vhost file names a release directory for host '$host'\n";
+return true;
+FRONT
+  for try in 1 2 3 4 5; do
+    FRONT_PORT=$((20000 + RANDOM % 20000))
+    ( cd "$1" && PP_FIXTURE_VHOSTS="$1/vhosts" exec php -S "127.0.0.1:$FRONT_PORT" front.php >"$1/front.log" 2>&1 ) &
+    FRONT_PID=$!
+    for i in 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20; do
+      # Its own 502 for a host nobody serves proves it is OURS on that port.
+      body=$(curl -s -m 5 -H 'Host: nobody.invalid' "http://127.0.0.1:$FRONT_PORT/" 2>/dev/null)
+      case "$body" in "fixture front:"*) return 0 ;; esac
+      kill -0 "$FRONT_PID" 2>/dev/null || break   # it exited: the port was taken
+      sleep 0.25
+    done
+    kill "$FRONT_PID" 2>/dev/null
+    wait "$FRONT_PID" 2>/dev/null
+  done
+  echo "FATAL: the fixture's HTTP stand-in did not start"
+  exit 1
+}
+front_stop() {
+  [ -n "$FRONT_PID" ] || return 0
+  kill "$FRONT_PID" 2>/dev/null
+  wait "$FRONT_PID" 2>/dev/null
+  FRONT_PID=""
+}
+# What a DOMAIN answers through the stand-in right now: sets $HTTP_CODE,
+# $HTTP_TITLE, $HTTP_CSS (read the way upgrade-papers.sh reads them) and
+# $HTTP_FROM (the release directory that answered); body in $HTTP_BODY.
+HTTP_HEAD=$(mktemp)
+front_get() { # domain
+  HTTP_CODE=$(curl -s -m 15 -o "$HTTP_BODY" -D "$HTTP_HEAD" -w '%{http_code}' --resolve "$1:$FRONT_PORT:127.0.0.1" "http://$1:$FRONT_PORT/")
+  HTTP_TITLE=$(grep -o '<title>[^<]*</title>' "$HTTP_BODY" | head -1)
+  HTTP_CSS=$(grep -o '/assets/css/[a-z0-9._-]*\.css' "$HTTP_BODY" | sort -u | tr '\n' ' ')
+  HTTP_FROM=$(sed -n 's/^X-Fixture-Release: //p' "$HTTP_HEAD" | tr -d '\r')
+}
+gate_503() { # domain -> true when it answers the readiness gate's own 503 page
+  front_get "$1"
+  [ "$HTTP_CODE" = 503 ] && grep -q "This site is being updated" "$HTTP_BODY"
+}
+on_rel() { grep -q "prairiepost-$2-" "$1"; }   # a vhost or cron file names the release with that label
+has_line() { grep -qxF -- "$2" <<< "$1"; }     # the output has exactly that line, nothing before or after it
+saved_baseline() { sed -n 's/^   saved: \([^ ]*\) .*/\1/p' <<< "$1" | head -1; }   # roll output -> the baseline file that roll saved
+gates() { # domains... -> prints how many of them answer the readiness gate's 503 right now
+  local n=0 d
+  for d in "$@"; do gate_503 "$d" && n=$((n + 1)); done
+  echo "$n"
+}
+# A candidate with one paper's template tree missing — the failure the
+# stylesheet check exists for (a release cut from a line that never had
+# the paper's files): HEAD's own tree minus the Kitchener Chronicle's
+# chrome partials, views and stylesheet. Its front page still answers 200
+# with the right <title>, because the title is in the database.
+LOSSY12=lossyrelease
+LOSSY_TARBALL=""
+make_lossy_tarball() { # -> sets $LOSSY_TARBALL
+  [ -n "$LOSSY_TARBALL" ] && return 0
+  local t
+  t=$(mktemp -d)
+  LOSSY_TARBALL=$(mktemp --suffix=.tgz)
+  tar -xzf "$TARBALL" -C "$t" \
+    && rm "$t"/prairiepost-head/app/views/chrome/kitchener-*.php "$t"/prairiepost-head/app/views/*-kitchener.php "$t/prairiepost-head/assets/css/kitchener.css" \
+    && tar -czf "$LOSSY_TARBALL" -C "$t" prairiepost-head \
+    || { echo "FATAL: cannot build the candidate without the Chronicle's template tree"; exit 1; }
+  rm -rf "$t"
 }
 
 echo "== scenario 1: the happy roll (v18 -> HEAD, two groups, one schema)"
 B1=$(mktemp -d)
 build_box "$B1"
 OUT1=$(run_upgrade "$B1" 2>&1); RC1=$?
-echo "$OUT1" | grep -E "^(PASS|FAIL|FATAL)|migrating|already migrated|paused|resumed|recovery point" | sed 's/^/   /'
+grep -E "^(PASS|FAIL|FATAL)|migrating|already migrated|paused|resumed|recovery point|stored version|stored schema version" <<< "$OUT1" | sed 's/^/   /'
 ok "roll succeeds"                            "[ $RC1 = 0 ]"
-ok "preflight saw the recovery point"         "echo \"\$OUT1\" | grep -q 'recovery point: fixture-set'"
-ok "crons paused for the window"              "echo \"\$OUT1\" | grep -q 'paused: pp-fetch'"
-ok "crons resumed after verification"         "echo \"\$OUT1\" | grep -q 'resumed: pp-fetch'"
+ok "preflight saw the recovery point"         'has "$OUT1" "recovery point: fixture-set"'
+ok "crons paused for the window"              'has "$OUT1" "paused: pp-fetch"'
+ok "crons resumed after verification"         'has "$OUT1" "resumed: pp-fetch"'
 ok "cron file exists unpaused and repointed"  "[ -f $B1/cron/pp-fetch ] && [ ! -f $B1/cron/pp-fetch.paused ] && grep -q ${HEADSHA:0:12} $B1/cron/pp-fetch"
 ok "historical .bak cron ignored entirely"    "grep -q oldsha11 $B1/cron/pp-fetch.bak.20250101 && ! grep -q ${HEADSHA:0:12} $B1/cron/pp-fetch.bak.20250101 && [ ! -f $B1/cron/pp-fetch.bak.20250101.paused ]"
-ok "the shared schema migrated exactly once"  "[ \$(echo \"\$OUT1\" | grep -c 'migrating the schema') = 1 ]"
-ok "the second group reused the migration"    "echo \"\$OUT1\" | grep -q 'already migrated this run'"
+ok "the shared schema migrated exactly once"  '[ "$(grep -c "migrating the schema" <<< "$OUT1")" = 1 ]'
+ok "the second group reused the migration"    'has "$OUT1" "already migrated this run"'
 ok "legacy vhosts got the deny snippet injected" "grep -q prairiepost-deny $B1/vhosts/kitchenerchronicle && [ -f $B1/snippets/prairiepost-deny.conf ]"
 ok "both vhosts repointed to the new release" "grep -q ${HEADSHA:0:12} $B1/vhosts/kitchenerchronicle && grep -q ${HEADSHA:0:12} $B1/vhosts/civismedia"
-ok "both groups boot ready as their tenants"  "[ \$(echo \"\$OUT1\" | grep -c 'PASS (fixture)') = 2 ]"
+ok "both groups boot ready as their tenants"  '[ "$(grep -c "PASS (fixture)" <<< "$OUT1")" = 2 ]'
 J=$(php -r '$p = new PDO("sqlite:" . $argv[1]); echo implode(",", $p->query("SELECT version || \":\" || status FROM schema_migrations ORDER BY version")->fetchAll(PDO::FETCH_COLUMN));' "$B1/data/net.sqlite")
-ok "journal: adopted at 18, steps applied"    "echo $J | grep -q '18:adopted,19:applied,20:applied'"
+ok "journal: adopted at 18, steps applied"    'has "$J" "18:adopted,19:applied,20:applied"'
+ok "the rise is read and reported (18 -> $HEADV)" 'has "$OUT1" "stored schema version after the step: $HEADV — ROSE from 18"'
+ok "so the closing text offers no repoint"    'hasnt "$OUT1" "Rollback for any release group" && has "$OUT1" "NOT a rollback for this roll"'
 
 echo
 echo "== scenario 2: migration failure aborts BEFORE the serving switch"
@@ -93,10 +370,11 @@ build_box "$B2"
 php -r '$p = new PDO("sqlite:" . $argv[1]); $p->exec("CREATE TABLE media_orders (wrong_shape INTEGER)");' "$B2/data/net.sqlite"
 OUT2=$(run_upgrade "$B2" 2>&1); RC2=$?
 ok "the roll fails"                           "[ $RC2 != 0 ]"
-ok "it names the migration as the cause"      "echo \"\$OUT2\" | grep -q 'MIGRATION FAILED'"
+ok "it names the migration as the cause"      'has "$OUT2" "MIGRATION FAILED"'
 ok "vhosts still point at the OLD release"    "grep -q oldsha11 $B2/vhosts/kitchenerchronicle && ! grep -q ${HEADSHA:0:12} $B2/vhosts/kitchenerchronicle"
 ok "cron restored to the OLD release, unpaused" "[ -f $B2/cron/pp-fetch ] && grep -q oldsha11 $B2/cron/pp-fetch && [ ! -f $B2/cron/pp-fetch.paused ]"
-ok "the database is behind, not corrupted"    "php -r '\$p = new PDO(\"sqlite:$B2/data/net.sqlite\"); echo \$p->query(\"SELECT svalue FROM settings WHERE site_id=0 AND skey=\\\"schema_version\\\"\")->fetchColumn();' | grep -q '^18$'"
+ok "the database is behind, not corrupted"    '[ "$(stored_version "$B2")" = 18 ]'
+ok "no step committed, so the old wording stands" 'has "$OUT2" "the schema migration failed; the box still serves the old release" && hasnt "$OUT2" "ROSE" && hasnt "$OUT2" "was not readable both before and after"'
 
 echo
 echo "== scenario 3: no recovery point, no roll"
@@ -105,15 +383,336 @@ build_box "$B3"
 rm "$B3/backups/state.json"
 OUT3=$(run_upgrade "$B3" 2>&1); RC3=$?
 ok "preflight refuses"                        "[ $RC3 != 0 ]"
-ok "and says why"                             "echo \"\$OUT3\" | grep -q 'recovery point'"
+ok "and says why"                             'has "$OUT3" "recovery point"'
 ok "nothing changed"                          "grep -q oldsha11 $B3/vhosts/kitchenerchronicle"
 
-for B in "$B1" "$B2" "$B3"; do
+echo
+echo "== scenario 4: a roll that RAISES the version from a gated release (21 -> $HEADV)"
+B4=$(mktemp -d)
+build_box "$B4" "$GATED_COMMIT"
+OLD4="$B4/www/prairiepost-oldsha11-shared"
+ok "the box starts at schema 21"              '[ "$(stored_version "$B4")" = 21 ]'
+OUT4=$(run_upgrade "$B4" 2>&1); RC4=$?
+show "$(sed -n '/^== Read each schema/,$p' <<< "$OUT4")"
+ok "roll succeeds"                            '[ "$RC4" = 0 ]'
+ok "the stored version is read before the step" 'has "$OUT4" "behind — stored version 21, this release is built for $HEADV"'
+ok "the nginx test is placed before the migration" '[ -n "$(line_of "$OUT4" "nginx config test BEFORE the migration")" ] && [ "$(line_of "$OUT4" "nginx config test BEFORE the migration")" -lt "$(line_of "$OUT4" "migrating the schema")" ]'
+ok "the rise is read back and reported"       'has "$OUT4" "stored schema version after the step: $HEADV — ROSE from 21"'
+ok "the database is at $HEADV"                '[ "$(stored_version "$B4")" = "$HEADV" ]'
+ok "both groups boot ready as their tenants"  '[ "$(grep -c "PASS (fixture)" <<< "$OUT4")" = 2 ]'
+ok "crons resumed on the new release"         '[ -f "$B4/cron/pp-fetch" ] && [ ! -f "$B4/cron/pp-fetch.paused" ] && on_new "$B4/cron/pp-fetch"'
+ok "the closing text does NOT offer a repoint" 'hasnt "$OUT4" "Rollback for any release group" && hasnt "$OUT4" "cp <vhost>.bak"'
+ok "it says the old directories are not a rollback" 'has "$OUT4" "NOT a rollback for this roll" && has "$OUT4" "ROSE from 21 to $HEADV in this roll"'
+# The consequence itself, asked of the OLD release against the migrated
+# database: this is what a repoint would have put back in front of readers.
+ST4=$( (cd "$OLD4" && php tools/migrate.php --status) 2>&1 ); STRC4=$?
+ok "OLD release, its own runner: ahead, exit 6" '[ "$STRC4" = 6 ] && has "$ST4" "ahead (stored version $HEADV, target 21)"'
+BOOT4=$( (cd "$OLD4" && php -r 'require "app/bootstrap.php"; db();') 2>&1 ); BOOTRC4=$?
+ok "OLD release, CLI boot: refuses, exit 2"   '[ "$BOOTRC4" = 2 ] && has "$BOOT4" "schema ahead (stored version $HEADV, this code needs 21)"'
+http_front "$OLD4"
+echo "   OLD release over HTTP: $HTTP_CODE  $(grep -o '<title>[^<]*</title>' "$HTTP_BODY" | head -1)"
+ok "OLD release, HTTP front page: 503"        '[ "$HTTP_CODE" = 503 ] && grep -q "This site is being updated" "$HTTP_BODY"'
+http_front "$B4/www/prairiepost-$HEAD12-kitchenerchronicle"
+echo "   NEW release over HTTP: $HTTP_CODE  $(grep -o '<title>[^<]*</title>' "$HTTP_BODY" | head -1)"
+ok "NEW release, HTTP front page: 200"        '[ "$HTTP_CODE" = 200 ]'
+
+echo
+echo "== scenario 5: a group fails verification AFTER the rise — held, not restored"
+B5=$(mktemp -d)
+build_box "$B5" "$GATED_COMMIT"
+break_hub_tenant "$B5"
+OUT5=$(run_upgrade "$B5" 2>&1); RC5=$?
+show "$(sed -n '/^== Verify every domain/,$p' <<< "$OUT5")"
+ok "the roll exits non-zero"                  '[ "$RC5" != 0 ]'
+ok "the schema did rise"                      'has "$OUT5" "ROSE from 21" && [ "$(stored_version "$B5")" = "$HEADV" ]'
+ok "one group failed, one passed"             '[ "$(grep -c "FAIL (fixture)" <<< "$OUT5")" = 1 ] && [ "$(grep -c "PASS (fixture)" <<< "$OUT5")" = 1 ]'
+ok "the failed group is NOT restored"         'has "$OUT5" "NOT restoring release group" && [ "$(restore_lines "$OUT5")" = 0 ]'
+ok "and the roll says why"                    'has "$OUT5" "ROSE from 21 to $HEADV in this roll" && has "$OUT5" "answers 503"'
+ok "its vhost stays on the new release"       'on_new "$B5/vhosts/civismedia"'
+ok "the passing group stays on the new release" 'on_new "$B5/vhosts/kitchenerchronicle"'
+ok "crons resumed on the new release"         '[ -f "$B5/cron/pp-fetch" ] && [ ! -f "$B5/cron/pp-fetch.paused" ] && on_new "$B5/cron/pp-fetch"'
+ok "it does not claim a restore happened"     'hasnt "$OUT5" "at least one release group was restored"'
+ok "it ends NOT done, with no repoint offered" 'has "$OUT5" "NOT done" && hasnt "$OUT5" "Rollback for any release group" && hasnt "$OUT5" "cp <vhost>.bak"'
+
+echo
+echo "== scenario 6: the same failure, NO version change — restored, exactly as before"
+B6=$(mktemp -d)
+build_box "$B6" "$HEADSHA"
+break_hub_tenant "$B6"
+OUT6=$(run_upgrade "$B6" 2>&1); RC6=$?
+show "$(sed -n '/^== Read each schema/,$p' <<< "$OUT6")"
+ok "the roll ends as it always has (exit 0, with a WARN)" '[ "$RC6" = 0 ] && has "$OUT6" "WARN: at least one release group was restored"'
+ok "nothing was pending and the version is unchanged" 'has "$OUT6" "stored version $HEADV — nothing pending" && has "$OUT6" "stored schema version after the step: $HEADV (unchanged)"'
+ok "no nginx test is added before the migration" 'hasnt "$OUT6" "nginx config test BEFORE the migration"'
+ok "the failed group IS restored"             '[ "$(restore_lines "$OUT6")" = 1 ] && hasnt "$OUT6" "NOT restoring"'
+ok "its vhost is back on the old release"     'on_old "$B6/vhosts/civismedia"'
+ok "the passing group stays on the new release" 'on_new "$B6/vhosts/kitchenerchronicle"'
+ok "the closing text is the old one, word for word" 'has "$OUT6" "Old release directories stay on disk. Rollback for any release group:" && has "$OUT6" "  cp <vhost>.bak." && has "$OUT6" "  cp <cronfile>.bak." && has "$OUT6" "  nginx -t && systemctl reload nginx" && hasnt "$OUT6" "NOT a rollback"'
+# Observed, not asserted: this path was left exactly as it was, and what
+# it does to the PASSING group's cron file is worth seeing.
+if [ -f "$B6/cron/pp-fetch" ]; then C6="present"; elif [ -f "$B6/cron/pp-fetch.paused" ]; then C6="still paused"; else C6="GONE (only $(cd "$B6/cron" && ls | tr '\n' ' ')remain)"; fi
+echo "note the passing group's cron file after the other group's restore: $C6"
+
+echo
+echo "== scenario 7: nginx test fails BEFORE the migration — stopped, schema untouched"
+B7=$(mktemp -d)
+build_box "$B7" "$GATED_COMMIT"
+OUT7=$(run_upgrade "$B7" pre 2>&1); RC7=$?
+show "$(sed -n '/^== Read each schema/,$p' <<< "$OUT7")"
+ok "the roll fails"                           '[ "$RC7" != 0 ]'
+ok "it stops before the migration"            'has "$OUT7" "nginx test failed BEFORE the schema migration" && hasnt "$OUT7" "migrating the schema"'
+ok "the schema was not touched"               '[ "$(stored_version "$B7")" = 21 ]'
+ok "vhosts are back on the old release"       'on_old "$B7/vhosts/kitchenerchronicle" && on_old "$B7/vhosts/civismedia"'
+ok "cron is back on the old release, unpaused" '[ -f "$B7/cron/pp-fetch" ] && on_old "$B7/cron/pp-fetch" && [ ! -f "$B7/cron/pp-fetch.paused" ]'
+BOOT7=$( (cd "$B7/www/prairiepost-oldsha11-shared" && php -r 'require "app/bootstrap.php"; db(); echo current_site()["slug"];') 2>&1 ); BOOTRC7=$?
+ok "so \"nothing changed\" is true: the OLD release still boots ready" '[ "$BOOTRC7" = 0 ] && [ "$BOOT7" = prairiedispatch ] && has "$OUT7" "nothing changed"'
+
+echo
+echo "== scenario 8: nginx test fails AFTER the migration — nothing put back, and it says so"
+B8=$(mktemp -d)
+build_box "$B8" "$GATED_COMMIT"
+OUT8=$(run_upgrade "$B8" post 2>&1); RC8=$?
+show "$(sed -n '/^== nginx config test + reload/,$p' <<< "$OUT8")"
+ok "the roll fails"                           '[ "$RC8" != 0 ]'
+ok "the schema rose"                          '[ "$(stored_version "$B8")" = "$HEADV" ] && has "$OUT8" "ROSE from 21 to $HEADV in this roll"'
+ok "it does NOT say nothing changed"          'hasnt "$OUT8" "nothing changed" && has "$OUT8" "nginx test failed AFTER the migration changed the schema"'
+ok "vhost files are left on the new release"  'on_new "$B8/vhosts/kitchenerchronicle" && on_new "$B8/vhosts/civismedia"'
+ok "crons resumed on the new release"         '[ -f "$B8/cron/pp-fetch" ] && [ ! -f "$B8/cron/pp-fetch.paused" ] && on_new "$B8/cron/pp-fetch"'
+ok "no repoint is offered"                    'hasnt "$OUT8" "Rollback for any release group" && has "$OUT8" "Do NOT copy the .bak."'
+
+echo
+echo "== scenario 9: migration fails part-way, AFTER a step committed (v18, step 20 blocked)"
+B9=$(mktemp -d)
+build_box "$B9"
+php -r '$p = new PDO("sqlite:" . $argv[1]); $p->exec("CREATE INDEX idx_post_tags_tag ON post_tags (tag_id)");' "$B9/data/net.sqlite"
+OUT9=$(run_upgrade "$B9" 2>&1); RC9=$?
+show "$(sed -n '/^== Quiesce scheduled writers/,$p' <<< "$OUT9")"
+ok "the roll fails"                           '[ "$RC9" != 0 ]'
+ok "step 19 committed before step 20 failed"  '[ "$(stored_version "$B9")" = 19 ]'
+ok "it reports the rise (18 -> 19)"           'has "$OUT9" "MIGRATION FAILED — after the stored schema version had already risen" && has "$OUT9" "ROSE from 18 to 19 in this roll"'
+ok "it does NOT say the box still serves the old release" 'hasnt "$OUT9" "the box still serves the old release" && hasnt "$OUT9" "rolling every vhost and cron file back"'
+ok "vhost files are left on the new release"  'on_new "$B9/vhosts/kitchenerchronicle" && on_new "$B9/vhosts/civismedia"'
+ok "cron file is active, on the new release"  '[ -f "$B9/cron/pp-fetch" ] && [ ! -f "$B9/cron/pp-fetch.paused" ] && on_new "$B9/cron/pp-fetch"'
+
+echo
+echo "== scenario 10: nginx test fails, NO version change — restored, \"nothing changed\", as before"
+B10=$(mktemp -d)
+build_box "$B10" "$HEADSHA"
+OUT10=$(run_upgrade "$B10" post 2>&1); RC10=$?
+show "$(sed -n '/^== nginx config test + reload/,$p' <<< "$OUT10")"
+ok "the roll fails"                           '[ "$RC10" != 0 ]'
+ok "the old message, word for word"           'has "$OUT10" "nginx test failed — every vhost and cron file restored, nothing changed"'
+ok "vhosts are back on the old release"       'on_old "$B10/vhosts/kitchenerchronicle" && on_old "$B10/vhosts/civismedia"'
+ok "cron is back on the old release, unpaused" '[ -f "$B10/cron/pp-fetch" ] && on_old "$B10/cron/pp-fetch" && [ ! -f "$B10/cron/pp-fetch.paused" ]'
+ok "the version did not move"                 '[ "$(stored_version "$B10")" = "$HEADV" ] && hasnt "$OUT10" "ROSE"'
+
+echo
+echo "== scenario 11: the masthead guard over HTTP — a healthy roll that raises the version (21 -> $HEADV)"
+B11=$(mktemp -d)
+build_http_box "$B11"
+front_start "$B11"
+front_get prairiedispatch.test;    PD_K="$HTTP_CODE"; PD_T="$HTTP_TITLE"; PD_C="$HTTP_CSS"; PD_F="$HTTP_FROM"
+front_get kitchenerchronicle.test; KC_K="$HTTP_CODE"; KC_T="$HTTP_TITLE"; KC_C="$HTTP_CSS"
+front_get civismedia.test;         HUB_K="$HTTP_CODE"; HUB_T="$HTTP_TITLE"; HUB_C="$HTTP_CSS"; HUB_F="$HTTP_FROM"
+front_get dormant.test;            DOR_K="$HTTP_CODE"
+echo "   before the roll, through the stand-in, from the old release:"
+echo "     prairiedispatch.test     $PD_K  $PD_T  [$PD_C]"
+echo "     kitchenerchronicle.test  $KC_K  $KC_T  [$KC_C]"
+echo "     civismedia.test          $HUB_K  $HUB_T  [$HUB_C]"
+echo "     dormant.test             $DOR_K  $(grep -o 'This site is[^.]*\.' "$HTTP_BODY" | head -1)"
+ok "each domain is answered by the OLD release, as its own tenant" '[ "$PD_K" = 200 ] && [ "$KC_K" = 200 ] && [ "$HUB_K" = 200 ] && [ -n "$PD_T" ] && [ -n "$KC_T" ] && [ -n "$HUB_T" ] && [ "$PD_T" != "$KC_T" ] && [ "$KC_T" != "$HUB_T" ] && [ "$PD_F" = prairiepost-oldsha11-shared ] && [ "$HUB_F" = prairiepost-oldsha11-civismedia ]'
+ok "the Chronicle links its own stylesheet, the Dispatch does not" 'has "$KC_C" "/assets/css/kitchener.css" && hasnt "$PD_C" "/assets/css/kitchener.css"'
+ok "the tenant with no site row answers 503, and it is NOT the gate's page" '[ "$DOR_K" = 503 ] && grep -q "This site is not provisioned here" "$HTTP_BODY" && ! grep -q "This site is being updated" "$HTTP_BODY"'
+OUT11=$(UP_PORT=$FRONT_PORT run_upgrade "$B11" 2>&1); RC11=$?
+show "$(sed -n '/^== Capture every domain/,/^== Fetch the release/p' <<< "$OUT11")"
+show "$(sed -n '/^== Verify every domain/,$p' <<< "$OUT11")"
+ok "roll succeeds"                            '[ "$RC11" = 0 ]'
+ok "the schema rose"                          'has "$OUT11" "ROSE from 21" && [ "$(stored_version "$B11")" = "$HEADV" ]'
+ok "the baseline is the REAL capture: title and stylesheet set per domain" 'has "$OUT11" "   prairiedispatch.test -> $PD_T [$PD_C]" && has "$OUT11" "   kitchenerchronicle.test -> $KC_T [$KC_C]" && has "$OUT11" "   civismedia.test -> $HUB_T [$HUB_C]"'
+ok "the tenant with no site row is held to its 503" 'has "$OUT11" "   dormant.test answered 503 with no title — it will be held to 503 afterwards" && has "$OUT11" "PASS dormant.test -> 503 (unchanged)"'
+ok "every domain is compared after the roll, none by CLI boot" 'has "$OUT11" "PASS prairiedispatch.test -> $PD_T" && has "$OUT11" "PASS kitchenerchronicle.test -> $KC_T" && has "$OUT11" "PASS civismedia.test -> $HUB_T" && [ "$(grep -c "^PASS " <<< "$OUT11")" = 4 ] && hasnt "$OUT11" "(fixture) "'
+F11=$(saved_baseline "$OUT11")
+echo "   the baseline this roll saved ($F11):"
+sed 's/^/   | /' "$F11" 2>/dev/null
+ok "the roll saves the baseline it captured, one line per domain" '[ -f "$F11" ] && [ "$(grep -vc "^#" "$F11")" = 4 ] && grep -qxF "kitchenerchronicle.test|200|$KC_C|$KC_T" "$F11" && grep -qxF "prairiedispatch.test|200|$PD_C|$PD_T" "$F11" && grep -qxF "civismedia.test|200|$HUB_C|$HUB_T" "$F11" && grep -qxF "dormant.test|503||" "$F11"'
+# (Whole phrases, not the bare word: unprivileged, chown -R names every
+# file of the release on stderr, and one of them is docs/ACCOUNT-RECOVERY.md.)
+ok "an ordinary roll is held to nothing else: its lines are the old ones, word for word" 'has_line "$OUT11" "PASS kitchenerchronicle.test -> $KC_T" && has_line "$OUT11" "PASS dormant.test -> 503 (unchanged)" && hasnt "$OUT11" "RECOVERY baseline" && hasnt "$OUT11" "Recovery baseline" && hasnt "$OUT11" "recovery baseline" && hasnt "$OUT11" "readiness gate" && hasnt "$OUT11" "PP_UPGRADE_BASELINE"'
+front_get kitchenerchronicle.test
+ok "afterwards the NEW release answers: same masthead, same stylesheets" '[ "$HTTP_CODE" = 200 ] && [ "$HTTP_TITLE" = "$KC_T" ] && [ "$HTTP_CSS" = "$KC_C" ] && [ "$HTTP_FROM" = "prairiepost-$HEAD12-shared" ]'
+front_get civismedia.test
+ok "and the hub from its own new directory"   '[ "$HTTP_CODE" = 200 ] && [ "$HTTP_TITLE" = "$HUB_T" ] && [ "$HTTP_FROM" = "prairiepost-$HEAD12-civismedia" ]'
+front_stop
+
+echo
+echo "== scenario 12: a release missing one paper's template tree, after a rise — HELD; then the roll that fixes it"
+make_lossy_tarball
+B12=$(mktemp -d)
+build_http_box "$B12"
+front_start "$B12"
+OUT12=$(UP_PORT=$FRONT_PORT UP_SHA=$LOSSY12 UP_TARBALL=$LOSSY_TARBALL run_upgrade "$B12" 2>&1); RC12=$?
+show "$(sed -n '/^== Verify every domain/,$p' <<< "$OUT12")"
+ok "roll 1 exits non-zero"                    '[ "$RC12" != 0 ]'
+ok "the schema rose"                          'has "$OUT12" "ROSE from 21" && [ "$(stored_version "$B12")" = "$HEADV" ]'
+ok "the guard catches it by the stylesheet set (the title is right)" 'has "$OUT12" "FAIL kitchenerchronicle.test stylesheet set changed — was [$KC_C] now [/assets/css/prairie.css ]" && hasnt "$OUT12" "wrong tenant"'
+ok "the other three domains pass"             'has "$OUT12" "PASS prairiedispatch.test -> $PD_T" && has "$OUT12" "PASS dormant.test -> 503 (unchanged)" && has "$OUT12" "PASS civismedia.test -> $HUB_T"'
+ok "the papers' group is HELD on the new release, not restored" 'has "$OUT12" "NOT restoring release group" && [ "$(restore_lines "$OUT12")" = 0 ] && on_rel "$B12/vhosts/kitchenerchronicle" "$LOSSY12" && on_rel "$B12/vhosts/prairiedispatch" "$LOSSY12" && has "$OUT12" "NOT done"'
+front_get kitchenerchronicle.test
+ok "so the Chronicle is served in public without its stylesheet" '[ "$HTTP_CODE" = 200 ] && [ "$HTTP_TITLE" = "$KC_T" ] && [ "$HTTP_CSS" = "/assets/css/prairie.css " ] && [ "$HTTP_FROM" = "prairiepost-$LOSSY12-shared" ]'
+front_get prairiedispatch.test
+ok "and the Dispatch, same group, is served as before" '[ "$HTTP_CODE" = 200 ] && [ "$HTTP_TITLE" = "$PD_T" ] && [ "$HTTP_CSS" = "$PD_C" ] && [ "$HTTP_FROM" = "prairiepost-$LOSSY12-shared" ]'
+F12=$(saved_baseline "$OUT12")
+ok "roll 1 saved its baseline — the Chronicle WITH its stylesheet — and its closing text names the file" '[ -f "$F12" ] && grep -qxF "kitchenerchronicle.test|200|$KC_C|$KC_T" "$F12" && has_line "$OUT12" "  PP_UPGRADE_BASELINE=$F12"'
+# THE GAP (a). Roll 2 goes to HEAD, which has the Chronicle's template
+# tree: it is the fix. Nothing tells the roll that the Chronicle was
+# already failing when it started — this is a roll WITHOUT a recovery
+# baseline, and it must go on behaving exactly like this.
+OUT12B=$(UP_PORT=$FRONT_PORT run_upgrade "$B12" 2>&1); RC12B=$?
+show "$(sed -n '/^== Capture every domain/,/^== Fetch the release/p' <<< "$OUT12B")"
+show "$(sed -n '/^== Verify every domain/,$p' <<< "$OUT12B")"
+ok "GAP roll 2 takes the FAILING answer as the Chronicle's baseline" 'has "$OUT12B" "   kitchenerchronicle.test -> $KC_T [/assets/css/prairie.css ]"'
+ok "GAP so the repair reads as a failure"     'has "$OUT12B" "FAIL kitchenerchronicle.test stylesheet set changed — was [/assets/css/prairie.css ] now [$KC_C]"'
+ok "GAP the version did not rise, so the papers' group is put back" 'has "$OUT12B" "stored schema version after the step: $HEADV (unchanged)" && [ "$(restore_lines "$OUT12B")" = 1 ] && hasnt "$OUT12B" "NOT restoring" && on_rel "$B12/vhosts/kitchenerchronicle" "$LOSSY12" && on_rel "$B12/vhosts/prairiedispatch" "$LOSSY12" && on_rel "$B12/vhosts/dormant" "$LOSSY12"'
+ok "GAP the roll ends exit 0 with a WARN"     '[ "$RC12B" = 0 ] && has "$OUT12B" "WARN: at least one release group was restored"'
+front_get kitchenerchronicle.test
+ok "GAP the Chronicle is STILL served without its stylesheet" '[ "$HTTP_CODE" = 200 ] && [ "$HTTP_CSS" = "/assets/css/prairie.css " ] && [ "$HTTP_FROM" = "prairiepost-$LOSSY12-shared" ]'
+ok "the hub's group, healthy throughout, did move to the fixed release" 'on_new "$B12/vhosts/civismedia" && has "$OUT12B" "PASS civismedia.test -> $HUB_T"'
+F12B=$(saved_baseline "$OUT12B")
+ok "roll 2 points at the recovery baseline, and its own saved baseline is the FAILING answer" 'has "$OUT12B" "PP_UPGRADE_BASELINE=<file>" && has_line "$OUT12B" "This roll'"'"'s own, taken before it changed anything: $F12B" && [ "$F12B" != "$F12" ] && grep -qxF "kitchenerchronicle.test|200|/assets/css/prairie.css |$KC_T" "$F12B" && grep -qxF "kitchenerchronicle.test|200|$KC_C|$KC_T" "$F12"'
+# THE RECOVERY ROLL. The same roll to HEAD, told to hold the domains to
+# the baseline roll 1 saved while the Chronicle was healthy.
+OUT12C=$(UP_PORT=$FRONT_PORT UP_BASELINE=$F12 run_upgrade "$B12" 2>&1); RC12C=$?
+show "$(sed -n '/^== Capture every domain/,/^== Fetch the release/p' <<< "$OUT12C")"
+show "$(sed -n '/^== Verify every domain/,$p' <<< "$OUT12C")"
+ok "roll 3 (HEAD, PP_UPGRADE_BASELINE = roll 1's file) succeeds" '[ "$RC12C" = 0 ]'
+ok "it says which file, and what the file says about itself" 'has "$OUT12C" "== Recovery baseline (PP_UPGRADE_BASELINE): hold domains to $F12" && has "$OUT12C" "   the file says: written "'
+ok "it holds the Chronicle to the healthy record, and says what it answers now" 'has_line "$OUT12C" "   kitchenerchronicle.test: held to the RECOVERY baseline: 200 $KC_T [$KC_C]" && has_line "$OUT12C" "      and NOT to what it answers now: 200 $KC_T [/assets/css/prairie.css ]"'
+ok "a domain whose record is what it answers now is told so" 'has_line "$OUT12C" "   prairiedispatch.test: held to the RECOVERY baseline: 200 $PD_T [$PD_C] — which is what it answers now" && has_line "$OUT12C" "   dormant.test: held to the RECOVERY baseline: 503 — which is what it answers now"'
+ok "the repair now PASSES, and its line says which baseline" 'has_line "$OUT12C" "PASS kitchenerchronicle.test -> $KC_T [recovery baseline; when this roll started it answered 200 $KC_T [/assets/css/prairie.css ]]"'
+ok "so do the domains that were healthy all along" 'has_line "$OUT12C" "PASS prairiedispatch.test -> $PD_T [recovery baseline, which is what it answered when this roll started]" && has_line "$OUT12C" "PASS dormant.test -> 503 [recovery baseline, which is what it answered when this roll started]"'
+ok "nothing is restored, nothing held: the papers' group is on the fixed release" '[ "$(restore_lines "$OUT12C")" = 0 ] && hasnt "$OUT12C" "NOT restoring" && [ "$(grep -c "^FAIL " <<< "$OUT12C")" = 0 ] && on_new "$B12/vhosts/kitchenerchronicle" && on_new "$B12/vhosts/prairiedispatch" && on_new "$B12/vhosts/dormant"'
+ok "the roll ends by naming the baseline each domain was held to" 'has "$OUT12C" "== Which baseline each domain was held to" && has_line "$OUT12C" "  the recovery baseline $F12: civismedia.test dormant.test kitchenerchronicle.test prairiedispatch.test" && has_line "$OUT12C" "  what it answered when this roll started: none"'
+ok "the release it left serves the stored version, so the repoint is offered as before" 'has "$OUT12C" "Old release directories stay on disk. Rollback for any release group:" && hasnt "$OUT12C" "NOT a rollback"'
+front_get kitchenerchronicle.test
+ok "the Chronicle is served with its stylesheet again, from the fixed release" '[ "$HTTP_CODE" = 200 ] && [ "$HTTP_TITLE" = "$KC_T" ] && [ "$HTTP_CSS" = "$KC_C" ] && [ "$HTTP_FROM" = "prairiepost-$HEAD12-shared" ]'
+ok "cron runs from the fixed release"         '[ -f "$B12/cron/pp-fetch" ] && [ ! -f "$B12/cron/pp-fetch.paused" ] && on_new "$B12/cron/pp-fetch"'
+front_stop
+
+echo
+echo "== scenario 13: the vhost files copied back to the old release after a rise — every domain 503 — then a roll"
+B13=$(mktemp -d)
+build_http_box "$B13"
+front_start "$B13"
+OUT13=$(UP_PORT=$FRONT_PORT run_upgrade "$B13" 2>&1); RC13=$?
+ok "the roll that raised the version succeeded" '[ "$RC13" = 0 ] && has "$OUT13" "ROSE from 21" && [ "$(grep -c "^PASS " <<< "$OUT13")" = 4 ]'
+F13=$(saved_baseline "$OUT13")
+ok "and saved the baseline it captured, from a healthy box" '[ -f "$F13" ] && grep -qxF "kitchenerchronicle.test|200|$KC_C|$KC_T" "$F13" && grep -qxF "dormant.test|503||" "$F13"'
+# What the closing text says not to do: every vhost's .bak copied back.
+for f in "$B13"/vhosts/*.bak.*; do cp "$f" "${f%.bak.*}"; done
+ok "the vhost files name the old release again" 'on_old "$B13/vhosts/kitchenerchronicle" && on_old "$B13/vhosts/prairiedispatch" && on_old "$B13/vhosts/dormant" && on_old "$B13/vhosts/civismedia"'
+ok "all four domains answer the readiness gate's 503" '[ "$(gates prairiedispatch.test kitchenerchronicle.test civismedia.test dormant.test)" = 4 ]'
+# THE GAP (b). The release the papers need is on the box, and a roll to
+# it is the obvious repair. This too is a roll WITHOUT a recovery
+# baseline, and it must go on behaving exactly like this: a domain taken
+# down on purpose answers the same 503, and no roll may bring it back
+# unasked.
+OUT13B=$(UP_PORT=$FRONT_PORT run_upgrade "$B13" 2>&1); RC13B=$?
+show "$(sed -n '/^== Capture every domain/,/^== Fetch the release/p' <<< "$OUT13B")"
+show "$(sed -n '/^== Verify every domain/,$p' <<< "$OUT13B")"
+ok "GAP the roll holds each domain to the 503 it answered" 'has "$OUT13B" "   kitchenerchronicle.test answered 503 with no title — it will be held to 503 afterwards" && has "$OUT13B" "   civismedia.test answered 503 with no title — it will be held to 503 afterwards"'
+ok "GAP 200 afterwards reads as a failure"    'has_line "$OUT13B" "FAIL kitchenerchronicle.test answered 200, served 503 before" && has_line "$OUT13B" "FAIL prairiedispatch.test answered 200, served 503 before" && has_line "$OUT13B" "FAIL civismedia.test answered 200, served 503 before"'
+ok "GAP the version did not rise, so both groups are put back on the release that cannot serve" 'has "$OUT13B" "stored schema version after the step: $HEADV (unchanged)" && [ "$(restore_lines "$OUT13B")" = 2 ] && on_old "$B13/vhosts/kitchenerchronicle" && on_old "$B13/vhosts/prairiedispatch" && on_old "$B13/vhosts/civismedia"'
+ok "GAP the roll ends exit 0 with a WARN"     '[ "$RC13B" = 0 ] && has "$OUT13B" "WARN: at least one release group was restored"'
+ok "GAP the box still answers 503 on all four domains" '[ "$(gates prairiedispatch.test kitchenerchronicle.test civismedia.test dormant.test)" = 4 ]'
+ok "but it SAYS so before changing anything: the gate's page, by domain, and the baseline to name" 'has "$OUT13B" "NOTE: the 503 from these is the readiness gate'"'"'s own page (\"This site is being updated\"): civismedia.test dormant.test kitchenerchronicle.test prairiedispatch.test" && has_line "$OUT13B" "         The newest of them in which these answered 200 with a title (3 of 4): $F13" && [ "$(line_of "$OUT13B" "NOTE: the 503 from these")" -lt "$(line_of "$OUT13B" "== Fetch the release template once")" ]'
+ok "each restore says the release it goes back to cannot serve" '[ "$(grep -c "is not built for the stored schema version (its own runner says ahead: stored version $HEADV, built for 21). Back on it, every domain of this group answers the readiness gate" <<< "$OUT13B")" = 2 ]'
+ok "and the closing text no longer offers those .bak files as a rollback" 'has "$OUT13B" "these are NOT a rollback" && hasnt "$OUT13B" "Rollback for any release group" && has "$OUT13B" "prairiepost-oldsha11-shared — its own runner says ahead: stored version $HEADV, built for 21"'
+# A RECOVERY ROLL IS NOT A BYPASS. Told to hold the domains to the healthy
+# baseline, a roll onto the release that lacks the Chronicle's template
+# tree still fails the Chronicle — against the recovery baseline now.
+OUT13C=$(UP_PORT=$FRONT_PORT UP_BASELINE=$F13 UP_SHA=$LOSSY12 UP_TARBALL=$LOSSY_TARBALL run_upgrade "$B13" 2>&1); RC13C=$?
+show "$(sed -n '/^== Recovery baseline/,/^== Fetch the release/p' <<< "$OUT13C")"
+show "$(sed -n '/^== Verify every domain/,$p' <<< "$OUT13C")"
+ok "held to the recovery baseline, the gate NOTE has nobody left to name" 'has_line "$OUT13C" "   kitchenerchronicle.test: held to the RECOVERY baseline: 200 $KC_T [$KC_C]" && has_line "$OUT13C" "      and NOT to what it answers now: 503" && hasnt "$OUT13C" "NOTE: the 503 from these"'
+ok "the release without the template FAILS the Chronicle against the recovery baseline" 'has_line "$OUT13C" "FAIL kitchenerchronicle.test stylesheet set is not the recovery baseline'"'"'s — baseline [$KC_C] now [/assets/css/prairie.css ] [recovery baseline; when this roll started it answered 503]"'
+ok "the Dispatch, same group, passes its record" 'has_line "$OUT13C" "PASS prairiedispatch.test -> $PD_T [recovery baseline; when this roll started it answered 503]"'
+ok "the papers' group goes back where it came from, as on any roll that did not raise the version" '[ "$(restore_lines "$OUT13C")" = 1 ] && on_old "$B13/vhosts/kitchenerchronicle" && on_old "$B13/vhosts/prairiedispatch" && [ "$(gates prairiedispatch.test kitchenerchronicle.test)" = 2 ] && [ "$RC13C" = 0 ] && has "$OUT13C" "WARN: at least one release group was restored" && has_line "$OUT13C" "This roll was held to: $F13"'
+front_get civismedia.test
+ok "the hub's group passed its record and is serving again" 'has_line "$OUT13C" "PASS civismedia.test -> $HUB_T [recovery baseline; when this roll started it answered 503]" && [ "$HTTP_CODE" = 200 ] && [ "$HTTP_TITLE" = "$HUB_T" ] && [ "$HTTP_FROM" = "prairiepost-$LOSSY12-civismedia" ]'
+# THE RECOVERY ROLL. The same baseline, onto HEAD.
+OUT13D=$(UP_PORT=$FRONT_PORT UP_BASELINE=$F13 run_upgrade "$B13" 2>&1); RC13D=$?
+show "$(sed -n '/^== Recovery baseline/,/^== Fetch the release/p' <<< "$OUT13D")"
+show "$(sed -n '/^== Verify every domain/,$p' <<< "$OUT13D")"
+ok "the recovery roll onto HEAD succeeds"     '[ "$RC13D" = 0 ] && [ "$(restore_lines "$OUT13D")" = 0 ] && [ "$(grep -c "^FAIL " <<< "$OUT13D")" = 0 ]'
+ok "the papers PASS against the healthy record: 200 where they answered 503" 'has_line "$OUT13D" "PASS kitchenerchronicle.test -> $KC_T [recovery baseline; when this roll started it answered 503]" && has_line "$OUT13D" "PASS prairiedispatch.test -> $PD_T [recovery baseline; when this roll started it answered 503]"'
+ok "the tenant with no site row is held to the 503 in its record, not swept to 200" 'has_line "$OUT13D" "   dormant.test: held to the RECOVERY baseline: 503 — which is what it answers now" && has_line "$OUT13D" "PASS dormant.test -> 503 [recovery baseline, which is what it answered when this roll started]"'
+ok "every vhost is on the release built for the stored version" 'on_new "$B13/vhosts/kitchenerchronicle" && on_new "$B13/vhosts/prairiedispatch" && on_new "$B13/vhosts/dormant" && on_new "$B13/vhosts/civismedia"'
+front_get kitchenerchronicle.test; K13="$HTTP_CODE|$HTTP_TITLE|$HTTP_CSS|$HTTP_FROM"
+front_get prairiedispatch.test;    P13="$HTTP_CODE|$HTTP_TITLE|$HTTP_CSS|$HTTP_FROM"
+front_get civismedia.test;         H13="$HTTP_CODE|$HTTP_TITLE|$HTTP_CSS|$HTTP_FROM"
+ok "the box serves again: each paper its own masthead and stylesheets" '[ "$K13" = "200|$KC_T|$KC_C|prairiepost-$HEAD12-shared" ] && [ "$P13" = "200|$PD_T|$PD_C|prairiepost-$HEAD12-shared" ] && [ "$H13" = "200|$HUB_T|$HUB_C|prairiepost-$HEAD12-civismedia" ]'
+front_get dormant.test
+ok "and the unprovisioned tenant its own 503, no longer the gate's" '[ "$HTTP_CODE" = 503 ] && grep -q "This site is not provisioned here" "$HTTP_BODY" && ! grep -q "This site is being updated" "$HTTP_BODY"'
+ok "the closing text tells the two old releases apart: one is a rollback, one is 503" 'has "$OUT13D" "these are NOT a rollback" && has "$OUT13D" "prairiepost-oldsha11-shared — its own runner says ahead: stored version $HEADV, built for 21" && hasnt "$OUT13D" "prairiepost-$LOSSY12-civismedia — its own runner" && has_line "$OUT13D" "For the other release groups:" && has "$OUT13D" "Old release directories stay on disk. Rollback for any release group:"'
+front_stop
+
+echo
+echo "== scenario 14: held after a rise, the failing domain taken down by hand, then rolled back up"
+B14=$(mktemp -d)
+build_http_box "$B14"
+front_start "$B14"
+OUT14=$(UP_PORT=$FRONT_PORT UP_SHA=$LOSSY12 UP_TARBALL=$LOSSY_TARBALL run_upgrade "$B14" 2>&1); RC14=$?
+F14=$(saved_baseline "$OUT14")
+ok "roll 1 holds the papers' group, as in scenario 12" '[ "$RC14" != 0 ] && has "$OUT14" "NOT restoring release group" && has_line "$OUT14" "  PP_UPGRADE_BASELINE=$F14"'
+# "Take that one domain down" (docs/MIGRATION-COMPAT.md): the roll's own
+# backup of that single vhost copied back, the file the roll wrote kept
+# under a name the script ignores.
+V14="$B14/vhosts/kitchenerchronicle"
+BAK14=$(ls "$V14".bak.* | head -1)
+cp "$V14" "$BAK14.new" && cp "$BAK14" "$V14"
+front_get prairiedispatch.test
+ok "the Chronicle alone answers the gate's 503; the Dispatch is untouched" '[ "$(gates kitchenerchronicle.test)" = 1 ] && on_old "$V14" && [ "$HTTP_CODE" = 200 ] && [ "$HTTP_FROM" = "prairiepost-$LOSSY12-shared" ]'
+# A roll WITHOUT a recovery baseline leaves a domain that was taken down
+# exactly where the operator put it.
+OUT14B=$(UP_PORT=$FRONT_PORT run_upgrade "$B14" 2>&1); RC14B=$?
+show "$(sed -n '/^== Capture every domain/,/^== Fetch the release/p' <<< "$OUT14B")"
+show "$(sed -n '/^== Verify every domain/,$p' <<< "$OUT14B")"
+ok "an ordinary roll to HEAD moves the other papers and the hub" 'on_new "$B14/vhosts/prairiedispatch" && on_new "$B14/vhosts/dormant" && on_new "$B14/vhosts/civismedia" && has_line "$OUT14B" "PASS prairiedispatch.test -> $PD_T"'
+ok "and leaves the Chronicle down: a group of one, put back on its 503" 'has_line "$OUT14B" "FAIL kitchenerchronicle.test answered 200, served 503 before" && [ "$(restore_lines "$OUT14B")" = 1 ] && on_old "$V14" && [ "$(gates kitchenerchronicle.test)" = 1 ]'
+ok "it names the domain and the baseline before changing anything" 'has "$OUT14B" "(\"This site is being updated\"): kitchenerchronicle.test" && has_line "$OUT14B" "         The newest of them in which these answered 200 with a title (1 of 1): $F14"'
+# Observed, not asserted (as in scenario 6): what that restore does to the
+# cron file of the papers' group, which passed.
+if [ -f "$B14/cron/pp-fetch" ]; then C14="present"; elif [ -f "$B14/cron/pp-fetch.paused" ]; then C14="still paused"; else C14="GONE (only $(cd "$B14/cron" && ls | tr '\n' ' ')remain)"; fi
+echo "note the passing papers' group's cron file after the Chronicle's restore: $C14"
+# A recovery baseline that cannot be used stops the roll before it starts.
+OUT14X=$(UP_PORT=$FRONT_PORT UP_BASELINE="$B14/no-such-baseline.txt" run_upgrade "$B14" 2>&1); RC14X=$?
+printf 'kitchenerchronicle.test|200|/assets/css/kitchener.css\n' > "$B14/short.txt"
+OUT14Y=$(UP_PORT=$FRONT_PORT UP_BASELINE="$B14/short.txt" run_upgrade "$B14" 2>&1); RC14Y=$?
+ok "a recovery baseline that is missing or malformed stops the roll before it starts" '[ "$RC14X" != 0 ] && has "$OUT14X" "names a file that cannot be read" && hasnt "$OUT14X" "== Resolve the branch head" && [ "$RC14Y" != 0 ] && has "$OUT14Y" "short.txt), line 1: not" && has "$OUT14Y" "nothing changed" && hasnt "$OUT14Y" "== Resolve the branch head"'
+ok "and nothing changed: no vhost backup, no saved baseline, the Chronicle still down" 'on_old "$V14" && [ "$(ls "$V14".bak.* | wc -l)" = 3 ] && [ "$(ls "$B14/baselines" | wc -l)" = 2 ] && [ "$(gates kitchenerchronicle.test)" = 1 ]'
+# THE RECOVERY ROLL brings the one domain back, verified as itself. The
+# baseline here is written BY HAND and names only the Chronicle (its
+# stylesheets out of order, as a person would type them): every other
+# domain is held to what it answers when the roll starts.
+H14="$B14/chronicle-only.txt"
+printf '# by hand: what the Chronicle should answer\n%s\n' "kitchenerchronicle.test|200|/assets/css/prairie.css /assets/css/kitchener.css|$KC_T" > "$H14"
+OUT14C=$(UP_PORT=$FRONT_PORT UP_BASELINE=$H14 run_upgrade "$B14" 2>&1); RC14C=$?
+show "$(sed -n '/^== Recovery baseline/,/^== Fetch the release/p' <<< "$OUT14C")"
+show "$(sed -n '/^== Verify every domain/,$p' <<< "$OUT14C")"
+ok "the recovery roll succeeds, and only the Chronicle's group rolls" '[ "$RC14C" = 0 ] && [ "$(restore_lines "$OUT14C")" = 0 ] && [ "$(grep -c "^PASS " <<< "$OUT14C")" = 1 ] && [ "$(grep -c "already on $HEAD12" <<< "$OUT14C")" = 2 ]'
+ok "only the domain the file names is held to it; the rest to what they answer now" 'has_line "$OUT14C" "   kitchenerchronicle.test: held to the RECOVERY baseline: 200 $KC_T [$KC_C]" && has_line "$OUT14C" "   prairiedispatch.test: NOT in that file — held to what it answers now: 200 $PD_T [$PD_C]" && has_line "$OUT14C" "  the recovery baseline $H14: kitchenerchronicle.test" && has_line "$OUT14C" "  what it answered when this roll started: civismedia.test dormant.test prairiedispatch.test"'
+ok "the Chronicle PASSES as itself: its own masthead and stylesheet set" 'has_line "$OUT14C" "PASS kitchenerchronicle.test -> $KC_T [recovery baseline; when this roll started it answered 503]"'
+front_get kitchenerchronicle.test
+ok "it is back up, from a release directory of its own" '[ "$HTTP_CODE" = 200 ] && [ "$HTTP_TITLE" = "$KC_T" ] && [ "$HTTP_CSS" = "$KC_C" ] && [ "$HTTP_FROM" = "prairiepost-$HEAD12-kitchenerchronicle" ]'
+front_stop
+
+for B in "${BOXES[@]}"; do
   git worktree remove --force "$B/www/prairiepost-oldsha11-shared" 2>/dev/null
   rm -rf "$B"
 done
 git worktree prune 2>/dev/null
-rm -f "$TARBALL"
+rm -rf "$SEEDS"
+rm -f "$TARBALL" "$HTTP_BODY" "$HTTP_HEAD" "$LOSSY_TARBALL"
 
 echo
 if [ "$FAILS" = "1" ]; then

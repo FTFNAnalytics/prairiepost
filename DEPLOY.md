@@ -342,6 +342,13 @@ after the roll that carries schema version 22: the app refuses to
 serve a schema behind its code, and a release that predates step 22
 does not know the flag.
 
+That roll is the one that runs schema step 22. Read its row and the
+"Step 22: before you run the roll" section in
+`docs/MIGRATION-COMPAT.md` first: the step is additive and existing
+tokens keep their behaviour, but once it has run the old release is
+not a fallback — it answers 503 — so recovery is a second roll
+forward, never a repoint.
+
     cd "$REL" && php tools/make-agent.php create --name evidence-kermode --sites kermode-chronicle --draft-only
 
 Expected output: `Agent:  evidence-kermode`, `Sites:  kermode-chronicle`,
@@ -387,6 +394,7 @@ it beside each token's scope.
 
 | Symptom | Cause → fix |
 |---|---|
+| Every paper answers 503 "This site is being updated" after a roll | The database is at a newer schema than the release nginx is serving (`php tools/migrate.php --status` from that release prints `ahead`). The roll itself no longer puts a group back once a step has raised the version, so either nginx never loaded the new release — the roll's output says `nginx test failed AFTER the migration`: fix that error, then `nginx -t && systemctl reload nginx` — or someone copied the `.bak` vhost files back → roll again onto the release built for the stored version, with `PP_UPGRADE_BASELINE=<file>` naming the baseline saved by the roll that raised the version (`/var/lib/prairiepost-upgrade/baseline-<stamp>.txt`); or point those vhosts at that release again by hand and reload. An ordinary roll will not do it: it holds each domain to the 503 it answered when it started, puts the group back, and says so before it changes anything, naming the saved baseline to use. See `docs/MIGRATION-COMPAT.md`, "The recovery baseline" |
 | `SQLSTATE[08006]` on connect | Outbound 5432 blocked → hosting support opens it; or wrong host (use the pooler) |
 | Front page 500s on first boot | Check `debug => true` temporarily; usually a missing PHP extension (`pdo_pgsql`, `gd`) |
 | Pretty URLs 404 but `/index.php` works | `mod_rewrite`/`.htaccess` not honoured → enable AllowOverride |
