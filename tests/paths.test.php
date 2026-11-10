@@ -64,6 +64,10 @@ foreach ([
     '/tests/run.php', '/tests/fixtures/transport-server.php',
     '/vendor/ezyang/htmlpurifier/library/HTMLPurifier.php', '/vendor/autoload.php',
     '/docs/HERMES-INGEST.md',
+    // The brand package and the admin mock-ups live under docs/ so that
+    // this rule covers them; at the repository root they were served.
+    '/docs/design/prairie-dispatch-brand-guide.html',
+    '/docs/design/civismedia-admin-redesign/styles.css',
     '/.git/config', '/.git/HEAD', '/.gitignore', '/.htaccess',
     '/composer.json', '/composer.lock', '/router.php',
     '/DEPLOY.md', '/CLAUDE.md',

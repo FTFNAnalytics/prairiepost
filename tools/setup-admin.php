@@ -54,6 +54,27 @@ $driver = $pdo->getAttribute(PDO::ATTR_DRIVER_NAME);
 
 // Atomic founding: the emptiness check and the insert commit as one unit,
 // so two simultaneous runs cannot both found the paper.
+//
+// SQLite's transaction is opened with a raw BEGIN IMMEDIATE (PDO cannot ask
+// for the immediate lock), so it has to be ended with raw statements too,
+// exactly as tools/migrate.php does. Before PHP 8.4, PDO does not know that
+// transaction exists: inTransaction() is false and commit() throws "There is
+// no active transaction". On PHP 8.3, which production runs, this tool
+// therefore refused to found an administrator on SQLite.
+$commit = static function () use ($pdo, $driver): void {
+    $driver === 'sqlite' ? $pdo->exec('COMMIT') : $pdo->commit();
+};
+$rollback = static function () use ($pdo, $driver): void {
+    if ($driver === 'sqlite') {
+        try {
+            $pdo->exec('ROLLBACK');
+        } catch (Throwable) {
+            // No transaction was open; nothing to undo.
+        }
+    } elseif ($pdo->inTransaction()) {
+        $pdo->rollBack();
+    }
+};
 try {
     if ($driver === 'pgsql') {
         $pdo->beginTransaction();
@@ -71,7 +92,7 @@ try {
 
     $existing = (int) $pdo->query('SELECT COUNT(*) FROM users')->fetchColumn();
     if ($existing > 0) {
-        $pdo->rollBack();
+        $rollback();
         fwrite(STDERR, "Refused: $existing account(s) already exist — this installation is provisioned.\n"
                      . "Lost passphrase? php tools/reset-password.php\n");
         exit(1);
@@ -80,11 +101,9 @@ try {
     $pdo->prepare('INSERT INTO users (name, email, pass_hash, role, slug, created_at) VALUES (?, ?, ?, ?, ?, ?)')
         ->execute([$name, $email, password_hash($pass, PASSWORD_DEFAULT), 'admin', unique_user_slug($name), now()]);
     $uid = pp_last_id('users');
-    $pdo->commit();
+    $commit();
 } catch (Throwable $e) {
-    if ($pdo->inTransaction()) {
-        $pdo->rollBack();
-    }
+    $rollback();
     fwrite(STDERR, "Refused: " . $e->getMessage() . "\n");
     exit(1);
 } finally {
