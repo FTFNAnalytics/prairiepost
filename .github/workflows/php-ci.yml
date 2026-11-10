@@ -1,7 +1,14 @@
 name: PHP CI
 
+# Pull requests are the gate. The push trigger covers what a pull request
+# cannot: commits that reach the release line directly, and the merged
+# result itself. Before it existed nothing ever ran on the release head.
 on:
   pull_request:
+  push:
+    branches:
+      - main
+      - claude/master-dashboard-control-room-nr3mp4
 
 # The workflow only reads the repository. Event metadata (the PR title
 # above all) is attacker-influenced: it reaches shell steps ONLY through
@@ -17,7 +24,10 @@ jobs:
   # not a CI gate; its suites remain runnable on demand via
   # PP_TEST_DB=mysql.
   test-postgres:
-    runs-on: ubuntu-latest
+    # Pinned to the release the production host runs, so the distribution's
+    # php-cli is production's PHP 8.3. `ubuntu-latest` had moved on to 26.04
+    # and a newer PHP; the step below fails if this ever drifts again.
+    runs-on: ubuntu-24.04
     env:
       # The major of the service image below — change the two together.
       # The client tools are pinned to it and the job asserts all three.
@@ -52,6 +62,11 @@ jobs:
           sudo /usr/share/postgresql-common/pgdg/apt.postgresql.org.sh -y
           sudo apt-get install --yes "postgresql-client-$PG_MAJOR"
           echo "/usr/lib/postgresql/$PG_MAJOR/bin" >> "$GITHUB_PATH"
+      - name: PHP is production's 8.3
+        run: |
+          php -v | head -1
+          php -r 'exit(PHP_MAJOR_VERSION === 8 && PHP_MINOR_VERSION === 3 ? 0 : 1);' \
+            || { echo "::error::this job must run the PHP that production runs (8.3)"; exit 1; }
       # No credential here on purpose: a PGPASSWORD in this job's
       # environment would authenticate the drill's psql and pg_restore by
       # itself and leave its passfile contract unproven.
@@ -81,15 +96,26 @@ jobs:
         run: php tests/run.php
 
   test:
-    runs-on: ubuntu-latest
+    # Same pin, same reason, as test-postgres above.
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
       - name: Install test runtime
         run: |
           sudo apt-get update
           sudo apt-get install --yes php-cli php-sqlite3 php-mbstring php-xml php-curl php-gd
+      - name: PHP is production's 8.3
+        run: |
+          php -v | head -1
+          php -r 'exit(PHP_MAJOR_VERSION === 8 && PHP_MINOR_VERSION === 3 ? 0 : 1);' \
+            || { echo "::error::this job must run the PHP that production runs (8.3)"; exit 1; }
       - name: Lint PHP
         run: find . -type f -name '*.php' -not -path './data/*' -not -path './vendor/*' -print0 | xargs -0 -n1 php -l
+      # supabase/schema.sql is generated from app/db.php. The generator's
+      # own header says this check belongs in CI; until now nothing ran it,
+      # and the copy has drifted from the code before.
+      - name: Generated schema matches the code
+        run: php tools/schema-sql.php --check
       - name: Validate brand palettes
         run: |
           for f in assets/sites/*/palette.json; do
@@ -100,7 +126,10 @@ jobs:
         run: php tests/run.php
       - name: Seed the full network — zero skipped lines
         run: bash tools/seed-all.sh /tmp/ci-network.sqlite
+      # The baseline compares a pull request with its base, and its gate
+      # reads the pull request title, so it has nothing to compare on a push.
       - name: Render baseline against the base branch
+        if: github.event_name == 'pull_request'
         env:
           # Event metadata stays data: quoted env expansion only, and the
           # title is read exclusively by render-gate.sh's case match.
