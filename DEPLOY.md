@@ -342,6 +342,13 @@ after the roll that carries schema version 22: the app refuses to
 serve a schema behind its code, and a release that predates step 22
 does not know the flag.
 
+That roll is the one that runs schema step 22. Read its row and the
+"Step 22: before you run the roll" section in
+`docs/MIGRATION-COMPAT.md` first: the step is additive and existing
+tokens keep their behaviour, but once it has run the old release is
+not a fallback — it answers 503 — so recovery is a second roll
+forward, never a repoint.
+
     cd "$REL" && php tools/make-agent.php create --name evidence-kermode --sites kermode-chronicle --draft-only
 
 Expected output: `Agent:  evidence-kermode`, `Sites:  kermode-chronicle`,
@@ -387,6 +394,7 @@ it beside each token's scope.
 
 | Symptom | Cause → fix |
 |---|---|
+| Every paper answers 503 "This site is being updated" after a roll, or after a release group was restored | The database is at a newer schema than the release now serving (schema step 22 ran, then the vhosts went back to a release built for 21) → do not repoint again; roll forward to a release built for the stored version. `php tools/migrate.php --status` from the serving release prints `ahead`. See `docs/MIGRATION-COMPAT.md`, "Step 22" |
 | `SQLSTATE[08006]` on connect | Outbound 5432 blocked → hosting support opens it; or wrong host (use the pooler) |
 | Front page 500s on first boot | Check `debug => true` temporarily; usually a missing PHP extension (`pdo_pgsql`, `gd`) |
 | Pretty URLs 404 but `/index.php` works | `mod_rewrite`/`.htaccess` not honoured → enable AllowOverride |
