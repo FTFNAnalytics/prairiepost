@@ -38,10 +38,15 @@
 # not the last finishes that roll: migrate if pending, test, reload, and
 # verify every domain against the SAVED baseline, never against the 503
 # it may be answering now; such a run puts nothing back and offers no
-# rollback. Output also goes to a log file on the box; HUP and PIPE are
-# ignored (a dropped connection must not stop a roll), INT and TERM stop
-# it — except between the migration step and the reload, where nothing
-# does.
+# rollback. A roll that ran to the end and HELD a group leaves
+# .pp-roll-held instead of .pp-roll-complete: a run at that commit
+# verifies the group again, and a roll of another commit (the fix) is
+# allowed. Only a roll that was STOPPED — a baseline and neither mark —
+# blocks another commit, unless PP_UPGRADE_ABANDON names it. Output also
+# goes to a log file on the box; HUP and PIPE are ignored by the script
+# and its logger (a dropped connection must not stop a roll or its log),
+# INT and TERM stop it — except between the migration step and the
+# reload, where nothing does.
 #
 # Also creates the network's shared /uploads directory, merged from every
 # release and symlinked in, so campaign creatives and syndicated images
@@ -67,15 +72,30 @@ FIXTURE_NGINX_FAIL=""
 # makes the first N reads of the stored version AFTER the migration step
 # return nothing (a runner that cannot answer). PP_UPGRADE_FIXTURE_DIE=<point>
 # sends this run SIGTERM at that point (after-pause, after-reload), to
-# exercise the interruption handling.
+# exercise the interruption handling; <point>:GROUP-HUP or <point>:GROUP-INT
+# sends that signal to the run's whole process group instead, as a
+# terminal hangup or a Ctrl-C does (the run must lead its own group:
+# start it under setsid).
 STATUS_FAILS_LEFT=0
 [ "$FIXTURE" = "1" ] && STATUS_FAILS_LEFT="${PP_UPGRADE_FIXTURE_STATUS_FAIL:-0}"
-fixture_die() { # point -> a fixture may ask for SIGTERM here
-  if [ "$FIXTURE" = "1" ] && [ "${PP_UPGRADE_FIXTURE_DIE:-}" = "$1" ]; then
-    echo "   (fixture: SIGTERM to this run at '$1')"
-    kill -TERM $$
-    sleep 2   # the trap runs when this command ends
-  fi
+fixture_die() { # point -> a fixture may ask for a signal here
+  [ "$FIXTURE" = "1" ] || return 0
+  local want="${PP_UPGRADE_FIXTURE_DIE:-}" pg sig
+  case "$want" in
+    "$1")
+      echo "   (fixture: SIGTERM to this run at '$1')"
+      kill -TERM $$
+      sleep 2 ;;   # the trap runs when this command ends
+    "$1:GROUP-HUP"|"$1:GROUP-INT")
+      sig="${want#*:GROUP-}"
+      pg=$(ps -o pgid= -p $$ | tr -d ' ')
+      # Never signal a group this run does not lead: it would be the
+      # caller's own, the fixture's or CI's.
+      [ "$pg" = "$$" ] || fail "fixture: PP_UPGRADE_FIXTURE_DIE=$want needs this run to lead its own process group — start it under setsid"
+      echo "   (fixture: SIG$sig to this run's whole process group at '$1', as a terminal sends it)"
+      kill -"$sig" -- "-$pg"
+      sleep 2 ;;
+  esac
 }
 
 REPO="FTFNAnalytics/prairiepost"
@@ -105,19 +125,23 @@ flock -n 9 || fail "another upgrade-papers.sh run holds $LOCK — one roll at a 
 
 # Everything this run prints also goes to a log file on the box, and the
 # run does not stop when the terminal goes: the script runs as
-# `curl | bash` over SSH, where a dropped connection is a HUP (with a
-# terminal) or a PIPE at the next line printed (without one). Both are
-# ignored. INT and TERM are deliberate stops and are handled below.
+# `curl | bash` over SSH, where a dropped connection is a HUP to the whole
+# foreground process group (with a terminal) or a PIPE at the next line
+# printed (without one). Both are ignored — BEFORE the logger starts, so
+# it inherits that — and the logger also ignores INT and TERM: a Ctrl-C
+# is a deliberate stop of the roll, and the handler's report of what it
+# put back has to reach the log. tee -p keeps writing the file when the
+# terminal or pipe it copies to is gone. INT and TERM are handled below.
+trap '' HUP PIPE
 LOG_DIR="${PP_UPGRADE_LOG_DIR:-/var/log/prairiepost-upgrade}"
 LOG=""
 if mkdir -p "$LOG_DIR" 2>/dev/null && touch "$LOG_DIR/roll-$STAMP.log" 2>/dev/null; then
   LOG="$LOG_DIR/roll-$STAMP.log"
-  exec > >(tee -p -a "$LOG") 2>&1
+  exec > >(trap '' INT TERM HUP PIPE; exec tee -i -p -a "$LOG") 2>&1
   echo "log: $LOG"
 else
   echo "WARNING: no log file ($LOG_DIR is not writable); output goes to this terminal only" >&2
 fi
-trap '' HUP PIPE
 
 # State the interruption handler reports.
 declare -a PAUSED=()           # cron files this run renamed to .paused
@@ -129,7 +153,19 @@ MIGRATION_STARTED=0            # set just before the first --apply
 MIGRATION_RAN=0                # set when the migration loop is through
 RELOADED=0                     # set the moment systemctl reload nginx succeeds
 FINISHING=0                    # set when any group is a roll an earlier run started
+declare -A ABANDONED=()        # OLD dir -> 1 when it is the release of a stopped roll PP_UPGRADE_ABANDON names
+declare -A FIRST_STAMP=()      # OLD dir -> the stamp of the run that started the roll this run finishes
+declare -A HOLD_REASON=()      # OLD dir -> why a held group was not put back
 
+# Temporary files go on every exit, not only at the end of a full run.
+TMP=""
+PROBE_BODY=""
+cleanup_tmp() {
+  [ -n "$TMP" ] && [ -d "$TMP" ] && rm -rf -- "$TMP"
+  [ -n "$PROBE_BODY" ] && rm -f -- "$PROBE_BODY"
+  return 0
+}
+trap cleanup_tmp EXIT
 PROBE_BODY=$(mktemp)
 front_title() { # domain -> prints "<code>|<title>"
   local code title
@@ -236,13 +272,22 @@ schema_moved_lines() { # one line per schema this roll moved (rose, or unknown)
     echo "  $(schema_note "$id") (the schema behind ${SCHEMA_LABEL[$id]:-?})."
   done
 }
-any_schema_moved() { # true when any schema rose, or may have — or when this run is finishing an earlier one
+schema_moved() { # true when any schema rose, or may have
   local id
-  [ "$FINISHING" = 1 ] && return 0
   for id in "${!SCHEMA_CHANGE[@]}"; do
     [ "${SCHEMA_CHANGE[$id]}" = "same" ] || return 0
   done
   return 1
+}
+any_schema_moved() { # true when this run's .bak copies are no way back: a schema moved, or the run finished or replaced an earlier roll
+  schema_moved && return 0
+  [ "$FINISHING" = 1 ] && return 0
+  [ "${#ABANDONED[@]}" -gt 0 ] && return 0
+  return 1
+}
+not_a_fallback_line() { # the reason the old release is no fallback — said only when a schema did move
+  if schema_moved; then echo "  $NOT_A_FALLBACK."; fi
+  return 0
 }
 any_schema_rose() { # true when a rise was actually read
   local id
@@ -251,18 +296,36 @@ any_schema_rose() { # true when a rise was actually read
   done
   return 1
 }
-group_change() { # OLD dir -> same | rose | unknown | finishing, for the schema that group serves from
+group_change() { # OLD dir -> same | rose | unknown | finishing | abandoned, for the schema that group serves from
   local id="${DIR_IDENT[$1]:-}" c
   c="same"
   [ -n "$id" ] && c="${SCHEMA_CHANGE[$id]:-same}"
   if [ "$c" = "same" ] && [ -n "${UNFINISHED[$1]:-}" ]; then c="finishing"; fi
+  if [ "$c" = "same" ] && [ -n "${ABANDONED[$1]:-}" ]; then c="abandoned"; fi
   echo "$c"
 }
-finishing_lines() { # what is true of a run that finishes a roll an earlier run started
-  [ "$FINISHING" = 1 ] || return 0
-  echo "  This run finished a roll an earlier run started: the vhost and cron files already named the new release"
-  echo "  when it began, so its own .bak.$STAMP copies are of those files and put nothing back. The earlier run's"
-  echo "  copies name the old release, which cannot serve a schema that has moved."
+first_stamps() { # the stamps of the runs whose rolls this run finished
+  local o
+  for o in "${!FIRST_STAMP[@]}"; do echo "${FIRST_STAMP[$o]}"; done | sort -u | tr '\n' ' ' | sed 's/ $//'
+}
+finishing_lines() { # what is true of a run that finishes a roll an earlier run started, or replaces an abandoned one
+  local o
+  if [ "$FINISHING" = 1 ]; then
+    echo "  This run finished a roll an earlier run started${FIRST_STAMP[*]:+ (stamp $(first_stamps))}: the vhost and cron files already"
+    echo "  named the new release when it began, so its own .bak.$STAMP copies are of those files and put nothing back."
+    if schema_moved; then
+      echo "  The earlier run's copies name the release before it, which cannot serve a schema that has moved."
+    else
+      echo "  Neither run raised the schema, so the earlier run's copies, <vhost>.bak.<that stamp> and"
+      echo "  <cronfile>.bak.<that stamp>, are a true way back for a group of it: copy them over each of the"
+      echo "  group's vhost and cron files, then nginx -t && systemctl reload nginx."
+    fi
+  fi
+  if [ "${#ABANDONED[@]}" -gt 0 ]; then
+    echo "  This run replaced the release of a roll abandoned with PP_UPGRADE_ABANDON ($(for o in "${!ABANDONED[@]}"; do basename "$o"; done | sort | tr '\n' ' ' | sed 's/ $//')). No run"
+    echo "  verified that release, so this run's .bak.$STAMP copies, which name it, are no way back either."
+  fi
+  return 0
 }
 nginx_test() { # the configuration test; a fixture reaches this only to fail it
   if [ "$FIXTURE" = "1" ]; then
@@ -278,13 +341,13 @@ on_signal() { # INT or TERM mid-roll: undo what can be undone, say where things 
     echo
     echo "INTERRUPTED by SIG$sig during: $PHASE"
     if [ "$MIGRATION_STARTED" = 0 ] && [ "$FINISHING" = 0 ] && [ "${#ALL_VHOST_BACKUPS[@]}" -gt 0 ]; then
-      # Before the migration the .bak copies are true pre-roll files and
-      # nginx still runs the old release: put them back, so no reload
-      # from elsewhere can load the new release against the old schema.
+      # Before the migration the .bak copies are true pre-run files and
+      # nginx still runs what it ran: put them back, so no reload from
+      # elsewhere can load the new release against the old schema.
       for VH in "${ALL_VHOST_BACKUPS[@]}"; do cp "$VH.bak.$STAMP" "$VH"; done
       for cf in "${PAUSED[@]}"; do rm -f "$cf.paused"; done
       for cf in "${ALL_CRON_BACKUPS[@]}"; do cp "$cf.bak.$STAMP" "$cf"; done
-      echo "   every vhost and cron file restored to the old release; the schema was not touched; nginx was not reloaded: nothing changed"
+      echo "   every vhost and cron file restored to what it named before this run; the schema was not touched; nginx was not reloaded: nothing changed"
       echo "   Run this script again when ready; it starts over."
     else
       for cf in "${PAUSED[@]}"; do
@@ -304,8 +367,8 @@ on_signal() { # INT or TERM mid-roll: undo what can be undone, say where things 
       if any_schema_moved; then
         schema_moved_lines
         finishing_lines
-        echo "   $NOT_A_FALLBACK."
-        [ "$RELOADED" = 1 ] || echo "   So until a run finishes, every paper is answering 503."
+        not_a_fallback_line
+        if schema_moved && [ "$RELOADED" != 1 ]; then echo "   So until a run finishes, every paper is answering 503."; fi
       elif [ "$MIGRATION_RAN" = 1 ]; then
         echo "   schema: the migration step ran and the stored version did not change"
       elif [ "$MIGRATION_STARTED" = 1 ]; then
@@ -343,6 +406,18 @@ else
         | php -r '$d=json_decode(stream_get_contents(STDIN),true); echo substr($d["commit"]["sha"]??"",0,12);')
 fi
 [ -n "$SHA" ] || fail "couldn't resolve the branch head"
+# A roll that was stopped and cannot be finished at its own commit (its
+# migration needs a code change) blocks every other commit — see the
+# mapping step. PP_UPGRADE_ABANDON=<that roll's commit id> lets this roll
+# replace it. Nothing else reads it.
+ABANDON="${PP_UPGRADE_ABANDON:-}"
+if [ -n "$ABANDON" ]; then
+  case "$ABANDON" in
+    *[!0-9a-f]*|?????????????????????????????????????????*) fail "PP_UPGRADE_ABANDON must be the lowercase hex commit id of the stopped roll, 12 to 40 characters: got '$ABANDON' — nothing changed" ;;
+  esac
+  [ "${#ABANDON}" -ge 12 ] || fail "PP_UPGRADE_ABANDON must be the lowercase hex commit id of the stopped roll, 12 to 40 characters: got '$ABANDON' — nothing changed"
+  [ "${ABANDON:0:12}" != "$SHA" ] || fail "PP_UPGRADE_ABANDON names the commit this run is rolling ($SHA): a stopped roll at this commit is finished, not abandoned — run again without it. Nothing changed"
+fi
 if [ -n "$PIN" ] && [ -n "${PP_RELEASE_TARBALL:-}" ]; then
   echo "release: $SHA (pinned by PP_UPGRADE_SHA; the pre-staged tarball is checked against it once extracted)"
 elif [ -n "$PIN" ]; then
@@ -366,13 +441,21 @@ for link in "$EN_DIR"/*; do
   OLD=$(grep -Eo "root[[:space:]]+$WWW/prairiepost-[A-Za-z0-9._-]+" "$VH" | head -1 | awk '{print $2}')
   [ -n "$OLD" ] && [ -d "$OLD" ] || { echo "-- $base: no prairiepost root, skipped"; continue; }
   [ -f "$OLD/config.php" ] || { echo "-- $base: no config.php at $OLD, skipped"; continue; }
-  if [ -f "$OLD/.pp-roll-baseline" ] && [ ! -f "$OLD/.pp-roll-complete" ]; then
-    # A roll started into this directory and no run finished it. Only a
-    # run at that same commit can finish it; anything else would roll
-    # over a box nobody verified and strand what that roll paused.
+  if [ -f "$OLD/.pp-roll-baseline" ] && [ ! -f "$OLD/.pp-roll-complete" ] && [ ! -f "$OLD/.pp-roll-held" ]; then
+    # A roll started into this directory and was STOPPED: no run finished
+    # it, and none ended by holding it. Only a run at that same commit can
+    # finish it; anything else would roll over a box nobody verified.
+    # (A HELD release — a roll that ran to the end and kept a failing
+    # group on the new release — is a release like any other here: a roll
+    # of the fix replaces it.)
     case "$OLD" in
       "$WWW/prairiepost-$SHA-"*) ;;
-      *) fail "$base names $OLD, a release a roll started into and no run finished. Finish that roll first: run this script again pinned to its commit (PP_UPGRADE_SHA, the one in the directory name), and only then roll to $SHA" ;;
+      *) if [ -n "$ABANDON" ] && [ "${OLD#"$WWW/prairiepost-${ABANDON:0:12}-"}" != "$OLD" ]; then
+           ABANDONED[$OLD]=1
+         else
+           [ -n "$ABANDON" ] && echo "   PP_UPGRADE_ABANDON names ${ABANDON:0:12}, which is not the commit of $OLD" >&2
+           fail "$base names $OLD, a release a roll started into and no run finished — nothing changed. Finish that roll first: run this script again pinned to its commit (PP_UPGRADE_SHA, the one in the directory name), and only then roll to $SHA. If that roll cannot be finished at its own commit (its migration needs a code change), name it to be abandoned: PP_UPGRADE_ABANDON=<its full commit id> — docs/MIGRATION-COMPAT.md, \"A stopped roll that cannot be finished\""
+         fi ;;
     esac
   fi
   DOMAIN=$(grep -Eo 'server_name[[:space:]]+[^;]+' "$VH" | head -1 | awk '{print $2}')
@@ -382,6 +465,12 @@ for link in "$EN_DIR"/*; do
   echo "-- $base ($DOMAIN) serves from $OLD"
 done
 [ "${#DIR_VHOSTS[@]}" -gt 0 ] || fail "no papers found"
+if [ -n "$ABANDON" ] && [ "${#ABANDONED[@]}" -eq 0 ]; then
+  fail "PP_UPGRADE_ABANDON names ${ABANDON:0:12}, but no vhost names a stopped roll of that commit (a release with a saved baseline and neither a completion nor a held mark) — nothing changed. Unset it"
+fi
+for OLD in "${!ABANDONED[@]}"; do
+  echo "   $(basename "$OLD"): the release of a stopped roll, ABANDONED by PP_UPGRADE_ABANDON — this roll replaces it, holds its domains to the baseline that roll saved, and never puts them back on it"
+done
 
 say "Capture every domain's title BEFORE any change (the tenant baseline)"
 declare -A TITLE_BEFORE=()
@@ -406,6 +495,20 @@ for OLD in "${!DIR_DOMAINS[@]}"; do
       echo "   $DOMAIN answered $code with no title — it will be held to $code afterwards"
     fi
   done
+done
+# The domains of an abandoned roll are held to what that roll saved
+# before it changed anything, not to what they answer now (after a rise,
+# the gate's 503).
+for OLD in "${!ABANDONED[@]}"; do
+  BF="$OLD/.pp-roll-baseline"
+  n=0
+  while IFS='|' read -r D C CSS T; do
+    case "$D" in ''|'#'*) continue ;; esac
+    case " ${DIR_DOMAINS[$OLD]} " in *" $D "*) ;; *) continue ;; esac
+    CODE_BEFORE[$D]="$C"; CSS_BEFORE[$D]="$CSS"; TITLE_BEFORE[$D]="$T"
+    n=$((n + 1))
+  done < "$BF"
+  echo "   $(basename "$OLD"): its domains are held to the baseline the abandoned roll saved ($n domains, $BF)"
 done
 
 say "Fetch the release template once"
@@ -543,11 +646,14 @@ for OLD in "${!DIR_VHOSTS[@]}"; do
     FINISHING=1
   else
     echo "-- ${vhosts[*]}: $OLD -> $NEW"
+    if [ -f "$OLD/.pp-roll-held" ]; then
+      echo "   $OLD ended HELD ($(head -1 "$OLD/.pp-roll-held" 2>/dev/null)): this roll replaces it. Its domains are held to what they answer as this roll starts — docs/MIGRATION-COMPAT.md, \"What a second roll can and cannot do\""
+    fi
     if [ -d "$NEW" ]; then
       # Left by an earlier roll into this commit (so a roll back to it).
       # Whole, because a tree is only ever renamed into place. Its marks
       # are that roll's; this roll must earn its own.
-      rm -f "$NEW/.pp-roll-complete" "$NEW/.pp-roll-baseline" "$NEW/.pp-roll-before"
+      rm -f "$NEW/.pp-roll-complete" "$NEW/.pp-roll-held" "$NEW/.pp-roll-baseline" "$NEW/.pp-roll-before"
       echo "   $NEW exists from an earlier roll: its completion mark is cleared; this roll must finish on its own"
     else
       # Copy under a temporary name and rename, so the directory either
@@ -686,20 +792,33 @@ for OLD in "${!DIR_NEW[@]}"; do
       echo "   the schema behind $(basename "$NEWDIR"): stored version NOT READABLE (php tools/migrate.php --status gave no state line)"
     fi
   fi
-  # Every group's release records the version the roll into it found —
-  # the "before" a later run finishing that roll is judged against, not
-  # what is stored by then: the step may have run in between.
+  # A roll this run finishes, or one it replaces as abandoned, recorded
+  # the version it found. That is the "before" this roll is judged
+  # against, not what is stored now: the step may have run in between.
+  BEFORE_FILE=""; WHO=""
   if [ -n "${UNFINISHED[$OLD]:-}" ] && [ -f "$NEWDIR/.pp-roll-before" ]; then
-    SAVED_BEFORE=$(sed -n 's/^version_before=//p' "$NEWDIR/.pp-roll-before" | head -1)
-    SAVED_BY=$(sed -n 's/^stamp=//p' "$NEWDIR/.pp-roll-before" | head -1)
+    BEFORE_FILE="$NEWDIR/.pp-roll-before"; WHO="the run that started this roll"
+  elif [ -n "${ABANDONED[$OLD]:-}" ] && [ -f "$OLD/.pp-roll-before" ]; then
+    BEFORE_FILE="$OLD/.pp-roll-before"; WHO="the abandoned roll into $(basename "$OLD")"
+  fi
+  if [ -n "$BEFORE_FILE" ]; then
+    SAVED_BEFORE=$(sed -n 's/^version_before=//p' "$BEFORE_FILE" | head -1)
+    SAVED_BY=$(sed -n 's/^stamp=//p' "$BEFORE_FILE" | head -1)
+    [ -n "${UNFINISHED[$OLD]:-}" ] && [ -n "$SAVED_BY" ] && FIRST_STAMP[$OLD]="$SAVED_BY"
     case "$SAVED_BEFORE" in
       ''|*[!0-9a-z]*) ;;
       *) SCHEMA_BEFORE[$IDENT]="$SAVED_BEFORE"
-         echo "   $(basename "$NEWDIR"): the run that started this roll (stamp ${SAVED_BY:-?}) found stored version $SAVED_BEFORE; it is ${SCHEMA_NOW[$IDENT]:-not readable} now" ;;
+         echo "   $(basename "$NEWDIR"): $WHO (stamp ${SAVED_BY:-?}) found stored version $SAVED_BEFORE; it is ${SCHEMA_NOW[$IDENT]:-not readable} now" ;;
     esac
-  else
-    printf 'version_before=%s\nstate_before=%s\nstamp=%s\nold=%s\n' "${SCHEMA_NOW[$IDENT]:-}" "${SCHEMA_STATE[$IDENT]:-}" "$STAMP" "$OLD" > "$NEWDIR/.pp-roll-before"
   fi
+done
+# Every release this run builds records the version its roll started
+# from — after the loop, so a group sharing a schema with a finished or
+# abandoned roll records where THAT roll started.
+for OLD in "${!DIR_NEW[@]}"; do
+  [ -n "${UNFINISHED[$OLD]:-}" ] && [ -f "${DIR_NEW[$OLD]}/.pp-roll-before" ] && continue
+  id="${DIR_IDENT[$OLD]}"
+  printf 'version_before=%s\nstate_before=%s\nstamp=%s\nold=%s\n' "${SCHEMA_BEFORE[$id]:-}" "${SCHEMA_STATE[$id]:-}" "$STAMP" "$OLD" > "${DIR_NEW[$OLD]}/.pp-roll-before"
 done
 
 if [ "$PENDING" = "1" ]; then
@@ -773,7 +892,8 @@ for OLD in "${!DIR_NEW[@]}"; do
       # is put back, and the message says what state the box is in.
       echo "MIGRATION FAILED — after the stored schema version had already risen; nothing was reloaded." >&2
       schema_moved_lines >&2
-      echo "  $NOT_A_FALLBACK." >&2
+      finishing_lines >&2
+      not_a_fallback_line >&2
       echo "  So nothing is put back: the vhost and cron files stay on the new release." >&2
       resume_crons >&2
       fail "the schema migration failed part-way and the old release is not a fallback. Until the migration is finished neither release can serve: the schema is ahead of the old one and not yet complete for the new one. From the new release, (cd $NEWDIR && php tools/migrate.php --status) names the obstacle and the repair: once it is out of the way, --apply reruns the failed step on PostgreSQL and SQLite, and a schema --status calls partial needs --apply --resume-partial. Then run this roll again at the same release — it finishes what this run started (test, reload, verify, resume). Do NOT copy the .bak.$STAMP files back (docs/MIGRATION-COMPAT.md)."
@@ -816,7 +936,7 @@ elif ! nginx_test; then
     echo "nginx test FAILED — after the schema migration. Nothing is put back:" >&2
     schema_moved_lines >&2
     finishing_lines >&2
-    echo "  $NOT_A_FALLBACK." >&2
+    not_a_fallback_line >&2
     echo "  nginx is still running its previous configuration (the old release), so that is what the papers get until it loads the new one." >&2
     echo "  The vhost and cron files stay on the new release." >&2
     say "Resume scheduled writers (on the new release — the only one this schema can run)"
@@ -852,15 +972,27 @@ fixture_die after-reload
 say "Verify every domain serves 200 AND its own masthead (the baseline title)"
 RESTORED=0
 declare -A RESTORED_GROUPS=()
-hold_group() { # OLD dir — the group failed verification and its schema moved (or this run finished its roll): do NOT put it back
-  local old="$1" cf
-  if [ -n "${UNFINISHED[$old]:-}" ]; then
-    echo "     NOT restoring release group ($old): this run finished a roll an earlier run started, and $(schema_note "${DIR_IDENT[$old]:-}")."
-  else
-    echo "     NOT restoring release group ($old): $(schema_note "${DIR_IDENT[$old]:-}")."
-  fi
-  echo "     $NOT_A_FALLBACK —"
-  echo "     putting this group back would take down EVERY domain it serves (${DIR_DOMAINS[$old]# }), not only the one that failed."
+hold_group() { # OLD dir — the group failed verification and putting it back is no way back: do NOT put it back
+  local old="$1" cf c reason
+  c="$(group_change "$old")"
+  case "$c" in
+    rose|unknown)
+      if [ -n "${UNFINISHED[$old]:-}" ]; then reason="this run finished a roll an earlier run started, and $(schema_note "${DIR_IDENT[$old]:-}")"
+      elif [ -n "${ABANDONED[$old]:-}" ]; then reason="it replaced an abandoned roll, and $(schema_note "${DIR_IDENT[$old]:-}")"
+      else reason="$(schema_note "${DIR_IDENT[$old]:-}")"
+      fi
+      echo "     NOT restoring release group ($old): $reason."
+      echo "     $NOT_A_FALLBACK —"
+      echo "     putting this group back would take down EVERY domain it serves (${DIR_DOMAINS[$old]# }), not only the one that failed."
+      reason="$reason; the release before it cannot serve the schema, so putting the group back is 503 on every domain it serves" ;;
+    finishing)
+      reason="this run finished a roll an earlier run started (stamp ${FIRST_STAMP[$old]:-?}), so its own copies name this same release. Neither run raised the schema, so the release before that roll can still serve it: to put the group back, copy <vhost>.bak.${FIRST_STAMP[$old]:-<that stamp>} over each of its vhosts and <cronfile>.bak.${FIRST_STAMP[$old]:-<that stamp>} over each of its cron files, then nginx -t && systemctl reload nginx"
+      echo "     NOT restoring release group ($old): $reason." ;;
+    abandoned)
+      reason="it was rolled from $(basename "$old"), the release of a roll abandoned with PP_UPGRADE_ABANDON; no run verified that release, so it is no fallback"
+      echo "     NOT restoring release group ($old): $reason." ;;
+  esac
+  HOLD_REASON[$old]="$reason"
   echo "     It stays on ${DIR_NEW[$old]}. Each FAIL above is what that domain is serving now, and goes on serving."
   # Its scheduled writers resume here, on the new release: no other
   # release can run them against this schema, and a cron file left
@@ -1002,46 +1134,58 @@ fi
 # run can tell "already on this release" from "named by the vhosts but
 # never reloaded and verified". A held group gets no mark: a run told to
 # try again verifies it again instead of reporting nothing to do.
+# A held group gets .pp-roll-held: the roll ran to the end, it was not
+# stopped, so it does not block a roll of another commit (the fix).
 for OLD in "${!DIR_NEW[@]}"; do
   [ -n "${RESTORED_GROUPS[$OLD]:-}" ] && continue
   held=0
   for H in "${HELD_GROUPS[@]}"; do [ "$H" = "$OLD" ] && held=1; done
-  [ "$held" = 1 ] && continue
+  if [ "$held" = 1 ]; then
+    printf 'held by upgrade-papers.sh run %s (%s): verification failed and the group was kept on this release\n' \
+      "$STAMP" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" > "${DIR_NEW[$OLD]}/.pp-roll-held"
+    continue
+  fi
+  rm -f "${DIR_NEW[$OLD]}/.pp-roll-held"
   printf 'upgrade-papers.sh run %s (%s): nginx reloaded onto this release and every domain of it passed verification\n' \
     "$STAMP" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" > "${DIR_NEW[$OLD]}/.pp-roll-complete"
 done
-rm -rf "$TMP"
-rm -f "$PROBE_BODY"
 
 if [ "${#HELD_GROUPS[@]}" -gt 0 ]; then
-  say "NOT done — verification failed, and there is no release to go back to"
+  say "NOT done — verification failed, and a group is held on the new release"
   echo "Held on the new release, NOT restored:"
   for OLD in "${HELD_GROUPS[@]}"; do
     echo "  ${DIR_NEW[$OLD]}  (vhosts: ${DIR_VHOSTS[$OLD]# }; domains: ${DIR_DOMAINS[$OLD]# })"
+    echo "     why: ${HOLD_REASON[$OLD]:-?}."
   done
-  schema_moved_lines
-  finishing_lines
-  echo "  $NOT_A_FALLBACK."
   echo "What is true now: those groups answer from the new release. A domain marked FAIL above is"
   echo "serving exactly what its FAIL line says, in public, until someone acts. Domains marked PASS"
   echo "are fine. Scheduled writers are running again, on the new release."
-  echo "Do NOT copy the .bak.$STAMP files back for a group: that is 503 on every domain it serves."
-  echo "Send this output back. The choices from here — leave the domain up while a fix is rolled,"
-  echo "or take that one domain down — are in docs/MIGRATION-COMPAT.md, \"When a roll that raised"
-  echo "the schema version fails\". A run at the same release verifies these groups again."
+  echo "From here — docs/MIGRATION-COMPAT.md, \"When a roll that raised the schema version fails\":"
+  echo "  - a run at this same release verifies these groups again;"
+  echo "  - a roll of another commit (the fix) is not refused. It holds each domain to what it answers"
+  echo "    when THAT roll starts, so a domain still failing then reads its repair as a failure and its"
+  echo "    group goes back to this release (or stays held, if the fix raises the schema again). Take"
+  echo "    that one domain down first and the rest of its group moves to the fix without it."
+  echo "Send this output back."
   exit 1
 fi
 
 say "Done"
-if any_schema_moved; then
+if schema_moved; then
   echo "Old release directories stay on disk, but they are NOT a rollback for this roll:"
   schema_moved_lines
   finishing_lines
-  echo "  $NOT_A_FALLBACK."
+  not_a_fallback_line
   echo "  The .bak.$STAMP files beside each vhost and cron file are a record of what was there."
   echo "  Copying them back takes those papers down; it does not undo the roll."
   echo "If something is wrong, recovery goes forward: a new roll pinned to a commit built for the"
   echo "stored version, or the operator's database restore. Both are in docs/MIGRATION-COMPAT.md."
+  exit 0
+fi
+if any_schema_moved; then
+  echo "Old release directories stay on disk. The schema did not move, but this run's .bak.$STAMP copies"
+  echo "are no way back:"
+  finishing_lines
   exit 0
 fi
 echo "Old release directories stay on disk. Rollback for any release group:"
