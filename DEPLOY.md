@@ -360,7 +360,14 @@ whatever it started with it:
 (or `tmux` / `nohup`, as the box has). The log is
 `/var/log/prairiepost-upgrade/roll-<stamp>.log`. If the roll stops
 after the migration, fix what stopped it and run it again at the same
-pin: it finishes the roll instead of starting over.
+pin: it finishes the roll instead of starting over. If its migration
+cannot succeed at that commit, the fix is another commit, and a stopped
+roll blocks every other one until it is named:
+`PP_UPGRADE_ABANDON=<the stopped roll's full sha>` beside the fix's
+`PP_UPGRADE_SHA`. If the roll ends "NOT done", it held a group on the
+new release: send the output back; a roll of the fix is not refused,
+and `docs/MIGRATION-COMPAT.md`, "When a roll that raised the schema
+version fails", gives the moves.
 
     cd "$REL" && php tools/make-agent.php create --name evidence-kermode --sites kermode-chronicle --draft-only
 
