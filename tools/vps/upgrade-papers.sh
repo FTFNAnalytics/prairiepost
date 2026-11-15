@@ -588,6 +588,18 @@ answer_words() { # status code, title, stylesheet set -> that answer on one line
 will_finish() { # OLD dir -> true when this run will finish a roll into it (the test the upgrade loop makes)
   case "$1" in "$WWW/prairiepost-$SHA-"*) [ ! -f "$1/.pp-roll-complete" ] ;; *) return 1 ;; esac
 }
+will_skip() { # OLD dir -> true when its group is already complete on this release, so this run verifies none of its domains
+  case "$1" in "$WWW/prairiepost-$SHA-"*) [ -f "$1/.pp-roll-complete" ] ;; *) return 1 ;; esac
+}
+age_words() { # seconds -> how long ago, in words
+  local s="$1"
+  if   [ "$s" -lt 0 ];     then echo "$((-s)) seconds in the future"
+  elif [ "$s" -ge 86400 ]; then echo "$((s / 86400)) days $(((s % 86400) / 3600)) hours ago"
+  elif [ "$s" -ge 3600 ];  then echo "$((s / 3600)) hours $(((s % 3600) / 60)) minutes ago"
+  elif [ "$s" -ge 60 ];    then echo "$((s / 60)) minutes ago"
+  else echo "$s seconds ago"
+  fi
+}
 saved_record() { # baseline file, domain -> sets SR_CODE SR_CSS SR_TITLE from that file's line for the domain
   local d c css t
   SR_CODE=""; SR_CSS=""; SR_TITLE=""
@@ -613,16 +625,18 @@ suggest_baseline() { # domains... -> names the newest saved record in which any 
       case "$s" in ''|*[!0-9]*) continue ;; esac
       printf '%s %s\n' "$s" "$f"
     done | sort -rn -k1,1)
-  for f in "${cands[@]}"; do
+  local best_n=0
+  for f in "${cands[@]}"; do   # newest first, so a tie keeps the newer record
     f="${f#* }"
     n=0
     for d in "$@"; do
       grep -q "^$d|200|[^|]*|<title>" "$f" 2>/dev/null && n=$((n + 1))
     done
-    if [ "$n" -gt 0 ]; then best="$f"; break; fi
+    if [ "$n" -gt "$best_n" ]; then best="$f"; best_n="$n"; fi
+    [ "$best_n" -lt "$#" ] || break
   done
   if [ -n "$best" ]; then
-    echo "         The newest of them in which these answered 200 with a title ($n of $#): $best"
+    echo "         The record in which the most of these (the newest, if several tie) answered 200 with a title ($best_n of $#): $best"
   else
     echo "         None of them records a 200 with a title for these domains."
   fi
@@ -704,9 +718,30 @@ RECOVERY_UNLISTED=""     # the domains it does not record
 if [ -n "$RECOVERY_FILE" ]; then
   say "Recovery baseline (PP_UPGRADE_BASELINE): hold domains to $RECOVERY_FILE"
   for line in "${REC_SAYS[@]}"; do echo "   the file says: $line"; done
+  # How old the record is, and whether rolls have run since: a variable
+  # left exported after a recovery holds every later roll to this file.
+  REC_STAMP=$(sed -n 's/^# written .*(stamp \([0-9][0-9]*\)).*/\1/p' "$RECOVERY_FILE" | head -1)
+  if [ -n "$REC_STAMP" ]; then
+    echo "   taken at stamp $REC_STAMP ($(date -u -d "@$REC_STAMP" +%Y-%m-%dT%H:%M:%SZ 2>/dev/null || echo '?'), $(age_words $((STAMP - REC_STAMP))))"
+    later=$(for f in "$WWW"/prairiepost-*/.pp-roll-baseline.*; do
+        [ -f "$f" ] || continue
+        st="${f##*.pp-roll-baseline.}"; st="${st%%-*}"
+        case "$st" in ''|*[!0-9]*) continue ;; esac
+        [ "$st" -gt "$REC_STAMP" ] && echo "$st"
+      done | sort -un)
+    if [ -n "$later" ]; then
+      newest=$(tail -n 1 <<< "$later")
+      echo "   NOTE: records kept by later rolls on this box: $(wc -l <<< "$later") (the newest at stamp $newest, $(date -u -d "@$newest" +%Y-%m-%dT%H:%M:%SZ 2>/dev/null || echo '?'))."
+      echo "         If PP_UPGRADE_BASELINE was left set from an earlier recovery, unset it: it holds every roll to this file."
+    fi
+  else
+    echo "   the file carries no stamp (written by hand?): its age is unknown"
+  fi
   differs=0
+  SKIPPED=""   # domains of groups already complete on this release: this run verifies none of them
   for DOMAIN in $(all_domains); do
     old="${DOMAIN_OLD[$DOMAIN]}"
+    if will_skip "$old"; then SKIPPED="$SKIPPED $DOMAIN"; continue; fi
     live="${LIVE_WORDS[$DOMAIN]:-no answer}"
     # What the domain would be held to without the named file.
     if [ "${BASE_SRC[$DOMAIN]:-}" = "abandoned" ]; then
@@ -751,7 +786,8 @@ if [ -n "$RECOVERY_FILE" ]; then
   for r_domain in "${!REC_CODE[@]}"; do
     [ -n "${DOMAIN_OLD[$r_domain]:-}" ] || echo "   (the file also names $r_domain, which no prairiepost vhost here serves: ignored)"
   done
-  echo "   Held to the recovery baseline:$RECOVERY_HELD ($differs of them to something other than they would be held to without it)."
+  [ -z "$SKIPPED" ] || echo "   not verified by this roll (already complete on $SHA):$SKIPPED"
+  echo "   Held to the recovery baseline:${RECOVERY_HELD:- none} ($differs of them to something other than they would be held to without it)."
   echo "   Held as they would be without it:${RECOVERY_UNLISTED:- none}."
 fi
 
@@ -1305,19 +1341,24 @@ old_ready() { # OLD dir -> false only when that release SAYS it is not built for
   return 1
 }
 recovery_pointer() { # after a failed verification: what a later roll can be told
-  local o
+  local o r
   [ "$PROBES" = "1" ] || return 0
   echo "A roll holds each domain to what it answered when the roll STARTED. If a domain marked FAIL was"
   echo "already failing then, its FAIL may be the repair itself. A roll can be held to a baseline saved"
   echo "while the domain was healthy instead: PP_UPGRADE_BASELINE=<file> on the same roll"
   echo "(docs/MIGRATION-COMPAT.md, \"The recovery baseline\"). Each roll keeps one, .pp-roll-baseline.<stamp>, in the release it built."
-  if [ -n "$RECOVERY_FILE" ]; then
-    echo "This roll was held to: $RECOVERY_FILE"
-  else
-    for o in "${!RESTORED_GROUPS[@]}"; do
-      [ -n "${RECORD[$o]:-}" ] && echo "This roll's own, taken before it changed anything: ${RECORD[$o]}"
-    done | sort -u
-  fi
+  [ -z "$RECOVERY_FILE" ] || echo "This roll was held to: $RECOVERY_FILE"
+  # Never this roll's own record: a group is restored because a domain
+  # failed against what this roll captured, so that record holds the
+  # domain to the failure and cannot mend it. The candidate is the record
+  # of the release the group went back to, kept by the roll that built it
+  # before that roll changed anything — for a held release, the held
+  # roll's, the one the replacement line named. A release with no record:
+  # no line.
+  for o in "${!RESTORED_GROUPS[@]}"; do
+    r="$(record_of "$o")"
+    [ -n "$r" ] && [ "$r" != "$RECOVERY_FILE" ] && echo "The record of $(basename "$o"), where this group went back, kept before the roll into it changed anything: $r"
+  done | sort -u
 }
 held_to_summary() { # which baseline each verified domain was held to — printed when any was held to something other than its own answer
   local o d rec="" fin="" ab="" own="" ff="" af=""
