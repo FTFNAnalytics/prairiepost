@@ -48,6 +48,20 @@
 # INT and TERM stop it — except between the migration step and the
 # reload, where nothing does.
 #
+# "Serve afterwards what it served before" cannot mend a domain that was
+# already failing when the roll started: its repair is a change, and
+# reads as a failure. So every roll also keeps a RECORD of its saved
+# baseline, .pp-roll-baseline.<stamp> beside .pp-roll-baseline, which no
+# later roll removes, and a roll can be told to hold domains to one of
+# those records instead of to what they answer when it starts:
+#     PP_UPGRADE_BASELINE=/var/www/prairiepost-<sha>-<label>/.pp-roll-baseline.<stamp>
+# Nothing reads a record unless that variable names it — a roll without
+# it behaves exactly as before — and the output says, for every domain,
+# which baseline it was held to. A domain the named file records is held
+# to that record even in a roll this run finishes or one it replaces
+# under PP_UPGRADE_ABANDON: the precedence is set out where the file is
+# applied, and in docs/MIGRATION-COMPAT.md, "The recovery baseline".
+#
 # Also creates the network's shared /uploads directory, merged from every
 # release and symlinked in, so campaign creatives and syndicated images
 # resolve on every domain.
@@ -68,6 +82,18 @@ FIXTURE="${PP_UPGRADE_FIXTURE:-0}"
 # when PP_UPGRADE_FIXTURE=1.
 FIXTURE_NGINX_FAIL=""
 [ "$FIXTURE" = "1" ] && FIXTURE_NGINX_FAIL="${PP_UPGRADE_FIXTURE_NGINX_FAIL:-}"
+# A fixture has no TLS stack either, so by default it takes no baseline
+# and verifies with a CLI boot of each new release. Given
+# PP_UPGRADE_FIXTURE_HTTP_PORT — a loopback port where the fixture answers
+# plain HTTP for every domain, from whichever release directory that
+# domain's vhost file names at that moment — it runs the real thing
+# instead: the baseline capture and the per-domain comparison below, with
+# only the probe's transport changed. Read only when PP_UPGRADE_FIXTURE=1.
+FIXTURE_HTTP_PORT=""
+[ "$FIXTURE" = "1" ] && FIXTURE_HTTP_PORT="${PP_UPGRADE_FIXTURE_HTTP_PORT:-}"
+case "$FIXTURE_HTTP_PORT" in *[!0-9]*) echo "FATAL: PP_UPGRADE_FIXTURE_HTTP_PORT is not a port number" >&2; exit 1 ;; esac
+PROBES=1   # 0 only in a fixture with no HTTP stand-in: no domain can be probed
+[ "$FIXTURE" = "1" ] && [ -z "$FIXTURE_HTTP_PORT" ] && PROBES=0
 # Two more fixture-only knobs, read the same way. PP_UPGRADE_FIXTURE_STATUS_FAIL=N
 # makes the first N reads of the stored version AFTER the migration step
 # return nothing (a runner that cannot answer). PP_UPGRADE_FIXTURE_DIE=<point>
@@ -167,15 +193,25 @@ cleanup_tmp() {
 }
 trap cleanup_tmp EXIT
 PROBE_BODY=$(mktemp)
+front_page() { # domain, curl options... -> the probe itself: one GET of that domain's front page
+  local domain="$1"; shift
+  if [ -n "$FIXTURE_HTTP_PORT" ]; then
+    # Fixture stand-in: the same request in clear, at the fixture's port.
+    curl -s -m 15 "$@" --resolve "$domain:$FIXTURE_HTTP_PORT:127.0.0.1" "http://$domain:$FIXTURE_HTTP_PORT/"
+    return
+  fi
+  curl -sk -m 15 "$@" --resolve "$domain:443:127.0.0.1" "https://$domain/"
+}
+
 front_title() { # domain -> prints "<code>|<title>"
   local code title
-  code=$(curl -sk -m 15 -o "$PROBE_BODY" -w "%{http_code}" --resolve "$1:443:127.0.0.1" "https://$1/")
+  code=$(front_page "$1" -o "$PROBE_BODY" -w "%{http_code}")
   title=$(grep -o "<title>[^<]*</title>" "$PROBE_BODY" | head -1)
   printf '%s|%s' "$code" "$title"
 }
 
 front_css() { # domain -> prints the sorted set of /assets/css/*.css the front page links
-  curl -sk -m 15 --resolve "$1:443:127.0.0.1" "https://$1/" \
+  front_page "$1" \
     | grep -o '/assets/css/[a-z0-9._-]*\.css' | sort -u | tr '\n' ' '
 }
 
@@ -390,6 +426,46 @@ on_signal() { # INT or TERM mid-roll: undo what can be undone, say where things 
 arm_traps() { trap 'on_signal INT' INT; trap 'on_signal TERM' TERM; }
 arm_traps
 
+# A recovery baseline an operator names (PP_UPGRADE_BASELINE): read and
+# checked HERE, before the roll resolves, probes or writes anything, so
+# that "nothing changed" is true of every refusal below.
+RECOVERY_FILE="${PP_UPGRADE_BASELINE:-}"
+declare -A REC_CODE=()    # the named baseline's records: domain -> status code,
+declare -A REC_TITLE=()   #   -> <title> (kept only for a 200),
+declare -A REC_CSS=()     #   -> stylesheet set (likewise)
+REC_SAYS=()               # the file's own opening comment lines, printed where it is applied
+BAD="PP_UPGRADE_BASELINE ($RECOVERY_FILE)"
+if [ -n "$RECOVERY_FILE" ]; then
+  [ "$PROBES" = "1" ] || fail "PP_UPGRADE_BASELINE is set but this fixture has no HTTP stand-in to probe — nothing changed"
+  [ -f "$RECOVERY_FILE" ] && [ -r "$RECOVERY_FILE" ] || fail "PP_UPGRADE_BASELINE names a file that cannot be read: $RECOVERY_FILE — nothing changed"
+  lineno=0
+  while IFS= read -r line || [ -n "$line" ]; do
+    lineno=$((lineno + 1))
+    line="${line%$'\r'}"
+    case "$line" in
+      '#'*) [ "$lineno" -le 2 ] && REC_SAYS+=("${line#\# }")
+            continue ;;
+      '')   continue ;;
+      *'|'*'|'*'|'*) : ;;
+      *)    fail "$BAD, line $lineno: not 'domain|status code|stylesheet set|<title>' — nothing changed" ;;
+    esac
+    IFS='|' read -r r_domain r_code r_css r_title <<< "$line"
+    case "$r_domain" in ''|*[!A-Za-z0-9.-]*) fail "$BAD, line $lineno: '$r_domain' is not a domain — nothing changed" ;; esac
+    case "$r_code" in [0-9][0-9][0-9]) : ;; *) fail "$BAD, line $lineno ($r_domain): status code '$r_code' is not three digits — nothing changed" ;; esac
+    case "$r_css" in *[!a-z0-9._/\ -]*) fail "$BAD, line $lineno ($r_domain): the stylesheet set is not a list of /assets/css/ paths — nothing changed" ;; esac
+    case "$r_title" in ''|'<title>'*'</title>') : ;; *) fail "$BAD, line $lineno ($r_domain): the title is neither empty nor a whole <title> element — nothing changed" ;; esac
+    [ -z "${REC_CODE[$r_domain]:-}" ] || fail "$BAD, line $lineno: $r_domain is named twice — nothing changed"
+    # As the capture keeps them: a title and a stylesheet set only for a
+    # 200, the set sorted the way front_css sorts it.
+    if [ "$r_code" != "200" ]; then r_css=""; r_title=""; fi
+    [ -n "$r_css" ] && r_css="$(printf '%s\n' $r_css | sort -u | tr '\n' ' ')"
+    REC_CODE[$r_domain]="$r_code"
+    REC_TITLE[$r_domain]="$r_title"
+    REC_CSS[$r_domain]="$r_css"
+  done < "$RECOVERY_FILE"
+  [ "${#REC_CODE[@]}" -gt 0 ] || fail "$BAD holds no record — nothing changed"
+fi
+
 say "Resolve the branch head"
 PIN=""
 if [ -n "${PP_UPGRADE_SHA:-}" ]; then
@@ -472,13 +548,121 @@ for OLD in "${!ABANDONED[@]}"; do
   echo "   $(basename "$OLD"): the release of a stopped roll, ABANDONED by PP_UPGRADE_ABANDON — this roll replaces it, holds its domains to the baseline that roll saved, and never puts them back on it"
 done
 
+# ---------------------------------------------------------------------
+# Which baseline each domain is held to. Without PP_UPGRADE_BASELINE:
+#   - a domain of a roll this run FINISHES: the baseline the run that
+#     started that roll saved (.pp-roll-baseline in its release);
+#   - a domain of a group replacing an ABANDONED roll: the baseline the
+#     abandoned roll saved;
+#   - any other domain: what it answers as this roll starts.
+# With it, the named file WINS, domain by domain: a domain it records is
+# held to that record in all three cases; a domain it does not record is
+# held exactly as above. The rule is the operator's explicit word over
+# the script's own default. A saved baseline is a capture, and a capture
+# taken while a domain was already failing holds it to the failure: a
+# roll stopped after starting from such a box could never be verified
+# healthy at its own commit if its own baseline won.
+# ---------------------------------------------------------------------
+declare -A DOMAIN_OLD=()   # domain -> the release directory its vhost names
+declare -A BASE_SRC=()     # domain -> recovery | finishing | abandoned (unset: its own answer at the start)
+declare -A BASE_FILE=()    # domain -> the file behind BASE_SRC
+declare -A RB_TAG=()       # domain -> the words its PASS/FAIL line carries when it is held to the named file
+declare -A RECORD=()       # OLD dir -> the record of the baseline this run saved into its new release
+for OLD in "${!DIR_DOMAINS[@]}"; do
+  for D in ${DIR_DOMAINS[$OLD]}; do DOMAIN_OLD[$D]="$OLD"; done
+done
+all_domains() { # every domain behind a prairiepost vhost, one per line, sorted
+  printf '%s\n' "${!DOMAIN_OLD[@]}" | LC_ALL=C sort
+}
+sorted_words() { # words... -> " a b c", sorted (nothing for none)
+  [ "$#" -gt 0 ] || return 0
+  printf ' %s' $(printf '%s\n' "$@" | LC_ALL=C sort)
+}
+answer_words() { # status code, title, stylesheet set -> that answer on one line
+  if [ "$1" = "200" ] && [ -n "$2" ]; then
+    printf '200 %s [%s]' "$2" "$3"
+  else
+    printf '%s' "${1:-no answer}"
+  fi
+}
+will_finish() { # OLD dir -> true when this run will finish a roll into it (the test the upgrade loop makes)
+  case "$1" in "$WWW/prairiepost-$SHA-"*) [ ! -f "$1/.pp-roll-complete" ] ;; *) return 1 ;; esac
+}
+will_skip() { # OLD dir -> true when its group is already complete on this release, so this run verifies none of its domains
+  case "$1" in "$WWW/prairiepost-$SHA-"*) [ -f "$1/.pp-roll-complete" ] ;; *) return 1 ;; esac
+}
+age_words() { # seconds -> how long ago, in words
+  local s="$1"
+  if   [ "$s" -lt 0 ];     then echo "$((-s)) seconds in the future"
+  elif [ "$s" -ge 86400 ]; then echo "$((s / 86400)) days $(((s % 86400) / 3600)) hours ago"
+  elif [ "$s" -ge 3600 ];  then echo "$((s / 3600)) hours $(((s % 3600) / 60)) minutes ago"
+  elif [ "$s" -ge 60 ];    then echo "$((s / 60)) minutes ago"
+  else echo "$s seconds ago"
+  fi
+}
+saved_record() { # baseline file, domain -> sets SR_CODE SR_CSS SR_TITLE from that file's line for the domain
+  local d c css t
+  SR_CODE=""; SR_CSS=""; SR_TITLE=""
+  [ -f "$1" ] || return 1
+  while IFS='|' read -r d c css t; do
+    [ "$d" = "$2" ] || continue
+    SR_CODE="$c"; SR_CSS="$css"; SR_TITLE="$t"
+    return 0
+  done < "$1"
+  return 1
+}
+record_of() { # release dir -> prints the RECORD of the baseline saved in it (or that baseline itself), or nothing
+  local s
+  [ -f "$1/.pp-roll-baseline" ] || return 0
+  s=$(sed -n 's/^# written .*(stamp \([0-9][0-9]*\)).*/\1/p' "$1/.pp-roll-baseline" | head -1)
+  if [ -n "$s" ] && [ -f "$1/.pp-roll-baseline.$s" ]; then echo "$1/.pp-roll-baseline.$s"; else echo "$1/.pp-roll-baseline"; fi
+}
+suggest_baseline() { # domains... -> names the newest saved record in which any of them answered 200 with a title
+  local f s n d best="" cands=()
+  mapfile -t cands < <(for f in "$WWW"/prairiepost-*/.pp-roll-baseline.*; do
+      [ -f "$f" ] || continue
+      s="${f##*.pp-roll-baseline.}"; s="${s%%-*}"
+      case "$s" in ''|*[!0-9]*) continue ;; esac
+      printf '%s %s\n' "$s" "$f"
+    done | sort -rn -k1,1)
+  local best_n=0
+  for f in "${cands[@]}"; do   # newest first, so a tie keeps the newer record
+    f="${f#* }"
+    n=0
+    for d in "$@"; do
+      grep -q "^$d|200|[^|]*|<title>" "$f" 2>/dev/null && n=$((n + 1))
+    done
+    if [ "$n" -gt "$best_n" ]; then best="$f"; best_n="$n"; fi
+    [ "$best_n" -lt "$#" ] || break
+  done
+  if [ -n "$best" ]; then
+    echo "         The record in which the most of these (the newest, if several tie) answered 200 with a title ($best_n of $#): $best"
+  else
+    echo "         None of them records a 200 with a title for these domains."
+  fi
+}
+if [ -n "$RECOVERY_FILE" ]; then
+  # Still before anything is probed or written: a file that names none of
+  # this box's domains is the wrong file.
+  named=0
+  for D in $(all_domains); do
+    [ -n "${REC_CODE[$D]:-}" ] && named=$((named + 1))
+  done
+  [ "$named" -gt 0 ] || fail "$BAD names none of this box's domains — nothing changed"
+fi
+
 say "Capture every domain's title BEFORE any change (the tenant baseline)"
 declare -A TITLE_BEFORE=()
 declare -A CSS_BEFORE=()
 declare -A CODE_BEFORE=()
-[ "$FIXTURE" = "1" ] && echo "   (fixture: no TLS stack — the post-migration CLI smoke stands in)"
+declare -A GATE_BEFORE=()   # domain -> 1 when its answer was the readiness gate's own 503 page
+if [ "$PROBES" = "0" ]; then
+  echo "   (fixture: no TLS stack — the post-migration CLI smoke stands in)"
+elif [ "$FIXTURE" = "1" ]; then
+  echo "   (fixture: probing plain HTTP on 127.0.0.1:$FIXTURE_HTTP_PORT in place of TLS on 443)"
+fi
 for OLD in "${!DIR_DOMAINS[@]}"; do
-  [ "$FIXTURE" = "1" ] && break
+  [ "$PROBES" = "0" ] && break
   for DOMAIN in ${DIR_DOMAINS[$OLD]}; do
     IFS='|' read -r code title <<< "$(front_title "$DOMAIN")"
     CODE_BEFORE[$DOMAIN]="$code"
@@ -493,8 +677,21 @@ for OLD in "${!DIR_DOMAINS[@]}"; do
       # domain that redirected before must still redirect, not suddenly
       # answer 200. curl is not following redirects here on purpose.
       echo "   $DOMAIN answered $code with no title — it will be held to $code afterwards"
+      # The readiness gate's own page (pp_db_unavailable in
+      # app/bootstrap.php, the "being updated" reason) is only NOTED: the
+      # domain is held to its 503 like any other answer. A tenant with no
+      # site row gets the same page with other words and is not marked.
+      if [ "$code" = "503" ] && grep -q "This site is being updated" "$PROBE_BODY" 2>/dev/null; then
+        GATE_BEFORE[$DOMAIN]=1
+      fi
     fi
   done
+done
+# What each domain answered as this roll started, in words, before any
+# saved baseline is laid over the capture (the output quotes it).
+declare -A LIVE_WORDS=()
+for DOMAIN in "${!CODE_BEFORE[@]}"; do
+  LIVE_WORDS[$DOMAIN]="$(answer_words "${CODE_BEFORE[$DOMAIN]:-}" "${TITLE_BEFORE[$DOMAIN]:-}" "${CSS_BEFORE[$DOMAIN]:-}")"
 done
 # The domains of an abandoned roll are held to what that roll saved
 # before it changed anything, not to what they answer now (after a rise,
@@ -506,10 +703,113 @@ for OLD in "${!ABANDONED[@]}"; do
     case "$D" in ''|'#'*) continue ;; esac
     case " ${DIR_DOMAINS[$OLD]} " in *" $D "*) ;; *) continue ;; esac
     CODE_BEFORE[$D]="$C"; CSS_BEFORE[$D]="$CSS"; TITLE_BEFORE[$D]="$T"
+    BASE_SRC[$D]="abandoned"; BASE_FILE[$D]="$BF"
     n=$((n + 1))
   done < "$BF"
   echo "   $(basename "$OLD"): its domains are held to the baseline the abandoned roll saved ($n domains, $BF)"
 done
+
+# The recovery baseline, if one is named: each domain it records is held
+# to that record — over a finishing roll's or an abandoned roll's own
+# baseline as well (the precedence above). Only the reference changes;
+# what a failing group gets is what it gets on any other roll.
+RECOVERY_HELD=""         # the domains held to the named file
+RECOVERY_UNLISTED=""     # the domains it does not record
+if [ -n "$RECOVERY_FILE" ]; then
+  say "Recovery baseline (PP_UPGRADE_BASELINE): hold domains to $RECOVERY_FILE"
+  for line in "${REC_SAYS[@]}"; do echo "   the file says: $line"; done
+  # How old the record is, and whether rolls have run since: a variable
+  # left exported after a recovery holds every later roll to this file.
+  REC_STAMP=$(sed -n 's/^# written .*(stamp \([0-9][0-9]*\)).*/\1/p' "$RECOVERY_FILE" | head -1)
+  if [ -n "$REC_STAMP" ]; then
+    echo "   taken at stamp $REC_STAMP ($(date -u -d "@$REC_STAMP" +%Y-%m-%dT%H:%M:%SZ 2>/dev/null || echo '?'), $(age_words $((STAMP - REC_STAMP))))"
+    later=$(for f in "$WWW"/prairiepost-*/.pp-roll-baseline.*; do
+        [ -f "$f" ] || continue
+        st="${f##*.pp-roll-baseline.}"; st="${st%%-*}"
+        case "$st" in ''|*[!0-9]*) continue ;; esac
+        [ "$st" -gt "$REC_STAMP" ] && echo "$st"
+      done | sort -un)
+    if [ -n "$later" ]; then
+      newest=$(tail -n 1 <<< "$later")
+      echo "   NOTE: records kept by later rolls on this box: $(wc -l <<< "$later") (the newest at stamp $newest, $(date -u -d "@$newest" +%Y-%m-%dT%H:%M:%SZ 2>/dev/null || echo '?'))."
+      echo "         If PP_UPGRADE_BASELINE was left set from an earlier recovery, unset it: it holds every roll to this file."
+    fi
+  else
+    echo "   the file carries no stamp (written by hand?): its age is unknown"
+  fi
+  differs=0
+  SKIPPED=""   # domains of groups already complete on this release: this run verifies none of them
+  for DOMAIN in $(all_domains); do
+    old="${DOMAIN_OLD[$DOMAIN]}"
+    if will_skip "$old"; then SKIPPED="$SKIPPED $DOMAIN"; continue; fi
+    live="${LIVE_WORDS[$DOMAIN]:-no answer}"
+    # What the domain would be held to without the named file.
+    if [ "${BASE_SRC[$DOMAIN]:-}" = "abandoned" ]; then
+      def="$(answer_words "${CODE_BEFORE[$DOMAIN]:-}" "${TITLE_BEFORE[$DOMAIN]:-}" "${CSS_BEFORE[$DOMAIN]:-}")"
+      def_what="the baseline the abandoned roll saved"; def_same="which is also the baseline the abandoned roll saved"
+    elif will_finish "$old" && saved_record "$old/.pp-roll-baseline" "$DOMAIN"; then
+      def="$(answer_words "$SR_CODE" "$SR_TITLE" "$SR_CSS")"
+      def_what="the baseline the run that started this roll saved"; def_same="which is also the baseline the run that started this roll saved"
+    else
+      def="$live"
+      def_what="what it answers now"; def_same="which is what it answers now"
+    fi
+    if [ -z "${REC_CODE[$DOMAIN]:-}" ]; then
+      RECOVERY_UNLISTED="$RECOVERY_UNLISTED $DOMAIN"
+      echo "   $DOMAIN: NOT in that file — held to $def_what: $def"
+      continue
+    fi
+    rec="$(answer_words "${REC_CODE[$DOMAIN]}" "${REC_TITLE[$DOMAIN]}" "${REC_CSS[$DOMAIN]}")"
+    BASE_SRC[$DOMAIN]="recovery"; BASE_FILE[$DOMAIN]="$RECOVERY_FILE"
+    RECOVERY_HELD="$RECOVERY_HELD $DOMAIN"
+    if [ "$rec" = "$live" ]; then
+      RB_TAG[$DOMAIN]=" [recovery baseline, which is what it answered when this roll started]"
+    else
+      RB_TAG[$DOMAIN]=" [recovery baseline; when this roll started it answered $live]"
+    fi
+    if [ "$rec" = "$def" ]; then
+      echo "   $DOMAIN: held to the RECOVERY baseline: $rec — $def_same"
+    else
+      differs=$((differs + 1))
+      echo "   $DOMAIN: held to the RECOVERY baseline: $rec"
+      echo "      and NOT to $def_what: $def"
+    fi
+    if [ "${REC_CODE[$DOMAIN]}" = "200" ] && [ -z "${REC_TITLE[$DOMAIN]}" ]; then
+      echo "      (the record has no title: any 200 passes for this domain, as it does for a domain captured without one)"
+    elif [ "${REC_CODE[$DOMAIN]}" = "200" ] && [ -z "${REC_CSS[$DOMAIN]}" ]; then
+      echo "      (the record has no stylesheet set: the set is not compared for this domain)"
+    fi
+    CODE_BEFORE[$DOMAIN]="${REC_CODE[$DOMAIN]}"
+    TITLE_BEFORE[$DOMAIN]="${REC_TITLE[$DOMAIN]}"
+    CSS_BEFORE[$DOMAIN]="${REC_CSS[$DOMAIN]}"
+  done
+  for r_domain in "${!REC_CODE[@]}"; do
+    [ -n "${DOMAIN_OLD[$r_domain]:-}" ] || echo "   (the file also names $r_domain, which no prairiepost vhost here serves: ignored)"
+  done
+  [ -z "$SKIPPED" ] || echo "   not verified by this roll (already complete on $SHA):$SKIPPED"
+  echo "   Held to the recovery baseline:${RECOVERY_HELD:- none} ($differs of them to something other than they would be held to without it)."
+  echo "   Held as they would be without it:${RECOVERY_UNLISTED:- none}."
+fi
+
+# Said once, before anything changes: a domain answering the gate's 503
+# that nothing else holds (no named file, no finishing or abandoned
+# roll's baseline) is held to that 503 — its repair will read as a FAIL.
+GATE_HELD=""
+for DOMAIN in $(all_domains); do
+  [ -n "${GATE_BEFORE[$DOMAIN]:-}" ] || continue
+  [ -n "${BASE_SRC[$DOMAIN]:-}" ] && continue
+  will_finish "${DOMAIN_OLD[$DOMAIN]}" && continue
+  GATE_HELD="$GATE_HELD $DOMAIN"
+done
+if [ -n "$GATE_HELD" ]; then
+  echo "   NOTE: the 503 from these is the readiness gate's own page (\"This site is being updated\"):$GATE_HELD"
+  echo "         The release answering for them does not match the stored schema version."
+  echo "         This roll holds each of them to that 503, as it holds every domain to what it answered at the start:"
+  echo "         200 afterwards will read as a FAIL for them."
+  echo "         If 200 is what they should answer, name a baseline saved when they did: PP_UPGRADE_BASELINE=<file>"
+  echo "         (docs/MIGRATION-COMPAT.md, \"The recovery baseline\"). Each roll keeps one, .pp-roll-baseline.<stamp>, in the release it built."
+  suggest_baseline $GATE_HELD
+fi
 
 say "Fetch the release template once"
 TMP=$(mktemp -d)
@@ -611,14 +911,35 @@ declare -A DIR_NEW=()
 declare -A DIR_CRONS=()
 declare -A UNFINISHED=()   # OLD dir -> 1 when the vhosts already named this release but no roll finished it
 write_baseline_file() { # new dir, old dir — what every domain answered before this roll, in the release it builds
+  local rec
   {
     echo "# prairiepost upgrade baseline: what each domain's front page answered BEFORE the roll that wrote this file changed anything."
     echo "# written $(date -u +%Y-%m-%dT%H:%M:%SZ) (stamp $STAMP) by upgrade-papers.sh, rolling $2 to $SHA"
     echo "# one line per domain:  domain|status code|stylesheet set|<title>   (the title and the stylesheet set are kept only for a 200)"
+    # A domain this roll holds to another baseline carries that record,
+    # because it is what a run finishing this roll must hold it to — and
+    # the file says so, so that nobody reads it as that domain's answer.
+    for D in $(all_domains); do
+      case "${BASE_SRC[$D]:-}" in
+        recovery)  echo "# $D: held by this roll to PP_UPGRADE_BASELINE (${BASE_FILE[$D]}), not to what it answered when the roll started" ;;
+        abandoned) echo "# $D: held by this roll to the baseline of the abandoned roll (${BASE_FILE[$D]}), not to what it answered when the roll started" ;;
+      esac
+    done
     for D in "${!CODE_BEFORE[@]}"; do
       printf '%s|%s|%s|%s\n' "$D" "${CODE_BEFORE[$D]:-}" "${CSS_BEFORE[$D]:-}" "${TITLE_BEFORE[$D]:-}"
     done | LC_ALL=C sort
   } > "$1/.pp-roll-baseline"
+  # The RECORD: the same file under the roll's stamp. A later roll into
+  # this directory replaces .pp-roll-baseline; nothing removes the record,
+  # and nothing reads it unless a roll is told to (PP_UPGRADE_BASELINE).
+  rec="$1/.pp-roll-baseline.$STAMP"
+  [ -e "$rec" ] && rec="$1/.pp-roll-baseline.$STAMP-$$"
+  if cp "$1/.pp-roll-baseline" "$rec" 2>/dev/null; then
+    RECORD[$2]="$rec"
+    echo "   baseline saved: $rec (a record: nothing reads it unless a later roll is told to)"
+  else
+    echo "   WARNING: the record of this roll's baseline could not be written ($rec). The roll goes on; $1/.pp-roll-baseline is in place."
+  fi
 }
 for OLD in "${!DIR_VHOSTS[@]}"; do
   vhosts=(${DIR_VHOSTS[$OLD]})
@@ -648,6 +969,11 @@ for OLD in "${!DIR_VHOSTS[@]}"; do
     echo "-- ${vhosts[*]}: $OLD -> $NEW"
     if [ -f "$OLD/.pp-roll-held" ]; then
       echo "   $OLD ended HELD ($(head -1 "$OLD/.pp-roll-held" 2>/dev/null)): this roll replaces it. Its domains are held to what they answer as this roll starts — docs/MIGRATION-COMPAT.md, \"What a second roll can and cannot do\""
+      if [ -n "$RECOVERY_FILE" ]; then
+        echo "   (except where PP_UPGRADE_BASELINE records them — above)"
+      elif [ -n "$(record_of "$OLD")" ]; then
+        echo "   To hold them instead to what they answered before the held roll changed anything: PP_UPGRADE_BASELINE=$(record_of "$OLD")"
+      fi
     fi
     if [ -d "$NEW" ]; then
       # Left by an earlier roll into this commit (so a roll back to it).
@@ -1003,35 +1329,96 @@ hold_group() { # OLD dir — the group failed verification and putting it back i
   done
   HELD_GROUPS+=("$old")
 }
+OLD_SAYS=""
+old_ready() { # OLD dir -> false only when that release SAYS it is not built for the version stored now; sets $OLD_SAYS
+  local state version target
+  read -r state version target <<< "$(schema_stored "$1")"
+  OLD_SAYS=""
+  # No state line (a release from before the runner) is not an answer,
+  # and nothing is claimed from it.
+  [ -n "${state:-}" ] && [ "$state" != "ready" ] || return 0
+  OLD_SAYS="its own runner says $state: stored version $version, built for $target"
+  return 1
+}
+recovery_pointer() { # after a failed verification: what a later roll can be told
+  local o r
+  [ "$PROBES" = "1" ] || return 0
+  echo "A roll holds each domain to what it answered when the roll STARTED. If a domain marked FAIL was"
+  echo "already failing then, its FAIL may be the repair itself. A roll can be held to a baseline saved"
+  echo "while the domain was healthy instead: PP_UPGRADE_BASELINE=<file> on the same roll"
+  echo "(docs/MIGRATION-COMPAT.md, \"The recovery baseline\"). Each roll keeps one, .pp-roll-baseline.<stamp>, in the release it built."
+  [ -z "$RECOVERY_FILE" ] || echo "This roll was held to: $RECOVERY_FILE"
+  # Never this roll's own record: a group is restored because a domain
+  # failed against what this roll captured, so that record holds the
+  # domain to the failure and cannot mend it. The candidate is the record
+  # of the release the group went back to, kept by the roll that built it
+  # before that roll changed anything — for a held release, the held
+  # roll's, the one the replacement line named. A release with no record:
+  # no line.
+  for o in "${!RESTORED_GROUPS[@]}"; do
+    r="$(record_of "$o")"
+    [ -n "$r" ] && [ "$r" != "$RECOVERY_FILE" ] && echo "The record of $(basename "$o"), where this group went back, kept before the roll into it changed anything: $r"
+  done | sort -u
+}
+held_to_summary() { # which baseline each verified domain was held to — printed when any was held to something other than its own answer
+  local o d rec="" fin="" ab="" own="" ff="" af=""
+  [ "$PROBES" = "1" ] || return 0
+  for o in "${!DIR_NEW[@]}"; do
+    for d in ${DIR_DOMAINS[$o]}; do
+      case "${BASE_SRC[$d]:-}" in
+        recovery)  rec="$rec $d" ;;
+        finishing) fin="$fin $d"; ff="$ff ${BASE_FILE[$d]}" ;;
+        abandoned) ab="$ab $d";   af="$af ${BASE_FILE[$d]}" ;;
+        *)         own="$own $d" ;;
+      esac
+    done
+  done
+  [ -n "$rec$fin$ab" ] || return 0
+  say "Which baseline each domain was held to"
+  [ -n "$rec" ] && echo "  the recovery baseline $RECOVERY_FILE:$(sorted_words $rec)"
+  [ -n "$fin" ] && echo "  the baseline the run that started this roll saved ($(sorted_words $(printf '%s\n' $ff | sort -u) | sed 's/^ //')):$(sorted_words $fin)"
+  [ -n "$ab" ]  && echo "  the baseline the abandoned roll saved ($(sorted_words $(printf '%s\n' $af | sort -u) | sed 's/^ //')):$(sorted_words $ab)"
+  echo "  what it answered when this roll started:$( [ -n "$own" ] && sorted_words $own || echo ' none')"
+}
 # A run finishing an earlier roll must not hold the domains to what they
 # answered when IT started — after a rise that is the gate's 503, and
 # after a stop during verification it is the new release itself, wrong
 # masthead included. It holds them to what the run that started the roll
 # saved before anything changed.
+# A domain PP_UPGRADE_BASELINE records keeps that record here too (the
+# precedence where the file is applied).
 for OLD in "${!UNFINISHED[@]}"; do
   BF="${DIR_NEW[$OLD]}/.pp-roll-baseline"
+  rec_kept=""
   if [ -f "$BF" ]; then
     n=0
     while IFS='|' read -r D C CSS T; do
       case "$D" in ''|'#'*) continue ;; esac
+      if [ "${BASE_SRC[$D]:-}" = "recovery" ]; then rec_kept="$rec_kept $D"; continue; fi
       CODE_BEFORE[$D]="$C"; CSS_BEFORE[$D]="$CSS"; TITLE_BEFORE[$D]="$T"
+      BASE_SRC[$D]="finishing"; BASE_FILE[$D]="$BF"
       n=$((n + 1))
     done < "$BF"
-    echo "   $(basename "${DIR_NEW[$OLD]}"): its domains are held to the baseline the run that started this roll saved ($n domains, $BF), not to what they answered when this run began"
+    if [ "$n" -gt 0 ] || [ -z "$rec_kept" ]; then
+      echo "   $(basename "${DIR_NEW[$OLD]}"): its domains are held to the baseline the run that started this roll saved ($n domains, $BF), not to what they answered when this run began"
+    fi
   else
     echo "   WARNING: $(basename "${DIR_NEW[$OLD]}") has no saved baseline ($BF); its domains are held to answering 200, and their mastheads cannot be checked"
     for DOMAIN in ${DIR_DOMAINS[$OLD]}; do
+      if [ "${BASE_SRC[$DOMAIN]:-}" = "recovery" ]; then rec_kept="$rec_kept $DOMAIN"; continue; fi
       CODE_BEFORE[$DOMAIN]="200"; TITLE_BEFORE[$DOMAIN]=""; CSS_BEFORE[$DOMAIN]=""
     done
   fi
+  [ -z "$rec_kept" ] || echo "   $(basename "${DIR_NEW[$OLD]}"): held to PP_UPGRADE_BASELINE, NOT to the baseline the run that started this roll saved, because the named file records them:$rec_kept"
 done
 for OLD in "${!DIR_NEW[@]}"; do
   group_ok=1
   DOMAINS_TO_CHECK="${DIR_DOMAINS[$OLD]}"
-  if [ "$FIXTURE" = "1" ]; then
-    # No TLS stack in a fixture: the post-migration smoke is a CLI boot of
-    # the candidate against its real config — the readiness gate plus the
-    # tenant resolution ARE the candidate behaving.
+  if [ "$PROBES" = "0" ]; then
+    # No TLS stack in a fixture, and no HTTP stand-in given: the
+    # post-migration smoke is a CLI boot of the candidate against its real
+    # config — the readiness gate plus the tenant resolution ARE the
+    # candidate behaving.
     if SLUG=$( (cd "${DIR_NEW[$OLD]}" && php -r 'require "app/bootstrap.php"; db(); echo current_site()["slug"];') 2>&1 ); then
       echo "PASS (fixture) $(basename "${DIR_NEW[$OLD]}") boots ready as tenant '$SLUG'"
     else
@@ -1046,13 +1433,25 @@ for OLD in "${!DIR_NEW[@]}"; do
     IFS='|' read -r code title <<< "$(front_title "$DOMAIN")"
     expected="${TITLE_BEFORE[$DOMAIN]}"
     want_code="${CODE_BEFORE[$DOMAIN]:-200}"
+    # A domain held to the named recovery baseline says so on its own
+    # line, with what it answered when this roll started. For every other
+    # domain $rb is empty and each line is word for word what it was.
+    rb="${RB_TAG[$DOMAIN]:-}"
     if [ "$code" != "$want_code" ]; then
-      echo "FAIL $DOMAIN answered $code, served $want_code before"
+      if [ -n "$rb" ]; then
+        echo "FAIL $DOMAIN answered $code, the recovery baseline says $want_code$rb"
+      else
+        echo "FAIL $DOMAIN answered $code, served $want_code before"
+      fi
       group_ok=0
     elif [ "$code" != "200" ]; then
-      echo "PASS $DOMAIN -> $code (unchanged)"
+      if [ -n "$rb" ]; then
+        echo "PASS $DOMAIN -> $code$rb"
+      else
+        echo "PASS $DOMAIN -> $code (unchanged)"
+      fi
     elif [ -n "$expected" ] && [ "$title" != "$expected" ]; then
-      echo "FAIL $DOMAIN wrong tenant — got $title, expected $expected"
+      echo "FAIL $DOMAIN wrong tenant — got $title, expected $expected$rb"
       group_ok=0
     else
       css_now="$(front_css "$DOMAIN")"
@@ -1062,7 +1461,11 @@ for OLD in "${!DIR_NEW[@]}"; do
         # template tree still answers 200 with the right masthead. The
         # stylesheet set is served from the release itself — losing it is
         # template loss, and template loss rolls back like a wrong tenant.
-        echo "FAIL $DOMAIN stylesheet set changed — was [$css_was] now [$css_now]"
+        if [ -n "$rb" ]; then
+          echo "FAIL $DOMAIN stylesheet set is not the recovery baseline's — baseline [$css_was] now [$css_now]$rb"
+        else
+          echo "FAIL $DOMAIN stylesheet set changed — was [$css_was] now [$css_now]"
+        fi
         group_ok=0
       else
         missing=""
@@ -1070,10 +1473,10 @@ for OLD in "${!DIR_NEW[@]}"; do
           [ -f "${DIR_NEW[$OLD]}$f" ] || missing="$missing $f"
         done
         if [ -n "$missing" ]; then
-          echo "FAIL $DOMAIN references stylesheets absent from the new release:$missing"
+          echo "FAIL $DOMAIN references stylesheets absent from the new release:$missing$rb"
           group_ok=0
         else
-          echo "PASS $DOMAIN -> ${title:-200}"
+          echo "PASS $DOMAIN -> ${title:-200}$rb"
         fi
       fi
     fi
@@ -1089,6 +1492,12 @@ for OLD in "${!DIR_NEW[@]}"; do
     for cf in ${DIR_CRONS[$OLD]:-}; do
       cp "$cf.bak.$STAMP" "$cf"
     done
+    # Restoring is "back where it came from", and this roll did not move
+    # the schema — but the group may have come INTO the roll on a release
+    # built for another version (its vhosts copied back after a rise).
+    # That release is asked, and its answer printed: the restore is then
+    # a return to the gate's 503, which is where the roll found the group.
+    old_ready "$OLD" || echo "     NOTE: $OLD is not built for the stored schema version (${OLD_SAYS}). Back on it, every domain of this group answers the readiness gate's 503."
     RESTORED_GROUPS[$OLD]=1
     RESTORED=1
   fi
@@ -1110,10 +1519,12 @@ if [ "$RESTORED" = "1" ]; then
     fi
   done
   echo "WARN: at least one release group was restored — send this output back for a look."
+  recovery_pointer
 else
   say "Resume scheduled writers"
   resume_crons
 fi
+held_to_summary
 
 say "Fallback: the hub's uploads, if it was skipped above (no config.php)"
 HUBVH=$(readlink -f "$EN_DIR/civismedia" 2>/dev/null || true)
@@ -1166,6 +1577,20 @@ if [ "${#HELD_GROUPS[@]}" -gt 0 ]; then
   echo "    when THAT roll starts, so a domain still failing then reads its repair as a failure and its"
   echo "    group goes back to this release (or stays held, if the fix raises the schema again). Take"
   echo "    that one domain down first and the rest of its group moves to the fix without it."
+  NEXT_BASELINE="$RECOVERY_FILE"
+  if [ -z "$NEXT_BASELINE" ]; then
+    for OLD in "${HELD_GROUPS[@]}"; do
+      NEXT_BASELINE="${RECORD[$OLD]:-$(record_of "${DIR_NEW[$OLD]}")}"
+      [ -n "$NEXT_BASELINE" ] && break
+    done
+  fi
+  if [ -n "$NEXT_BASELINE" ] && [ "$PROBES" = "1" ]; then
+    echo "  - to MEND a domain marked FAIL, the roll that carries the fix has to be told what that domain"
+    echo "    SHOULD answer. The baseline this roll held the domains to is on disk, so it can be held to it too:"
+    echo "      PP_UPGRADE_BASELINE=$NEXT_BASELINE"
+    echo "    It is the right file only if every domain in it was healthy when it was taken"
+    echo "    (docs/MIGRATION-COMPAT.md, \"The recovery baseline\")."
+  fi
   echo "Send this output back."
   exit 1
 fi
@@ -1187,6 +1612,23 @@ if any_schema_moved; then
   echo "are no way back:"
   finishing_lines
   exit 0
+fi
+# This roll did not move the schema. That makes an old directory a
+# rollback only if it is built for the version that is stored. A group
+# that came INTO this roll from a release built for another version — the
+# box a recovery baseline is for — has nothing behind it: its .bak files
+# name the release that was answering 503. Each old release is asked.
+NOT_BUILT=()
+for OLD in "${!DIR_NEW[@]}"; do
+  old_ready "$OLD" || NOT_BUILT+=("$OLD — $OLD_SAYS (vhosts: ${DIR_VHOSTS[$OLD]# })")
+done
+if [ "${#NOT_BUILT[@]}" -gt 0 ]; then
+  echo "Old release directories stay on disk, but these are NOT a rollback. They are not built for the"
+  echo "stored schema version, and a vhost pointed at one answers 503:"
+  for line in "${NOT_BUILT[@]}"; do echo "  $line"; done
+  echo "  Do NOT copy the .bak.$STAMP files of those vhosts back."
+  [ "${#NOT_BUILT[@]}" -lt "${#DIR_NEW[@]}" ] || exit 0
+  echo "For the other release groups:"
 fi
 echo "Old release directories stay on disk. Rollback for any release group:"
 echo "  cp <vhost>.bak.$STAMP <vhost>   (each of its vhosts)"

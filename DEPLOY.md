@@ -367,7 +367,9 @@ roll blocks every other one until it is named:
 `PP_UPGRADE_SHA`. If the roll ends "NOT done", it held a group on the
 new release: send the output back; a roll of the fix is not refused,
 and `docs/MIGRATION-COMPAT.md`, "When a roll that raised the schema
-version fails", gives the moves.
+version fails", gives the moves. To mend the domain that failed, hold
+the fix to the record the held roll saved: the closing text prints the
+`PP_UPGRADE_BASELINE=…` line ("The recovery baseline").
 
     cd "$REL" && php tools/make-agent.php create --name evidence-kermode --sites kermode-chronicle --draft-only
 
@@ -414,7 +416,7 @@ it beside each token's scope.
 
 | Symptom | Cause → fix |
 |---|---|
-| Every paper answers 503 "This site is being updated" after a roll | The database is at a newer schema than the release nginx is serving (`php tools/migrate.php --status` from that release prints `ahead`). The roll never puts a group back once a step has raised the version, so one of two things happened. (1) The roll stopped before nginx loaded the new release — a failed `nginx -t` after the migration, a migration that failed part-way, a failed reload, or a stopped run; its output and `/var/log/prairiepost-upgrade/roll-<stamp>.log` say which. Fix that, then run the roll again at the same release (`PP_UPGRADE_SHA=<the same full sha>`): a release the vhosts already name but no run finished is finished, not skipped, and its domains are judged against the baseline the first run saved, not against the 503 they answer now. (2) Someone copied the `.bak` vhost files back → point those vhosts at the release built for the stored version again by hand; a roll will not do it, because it holds each domain to what it answered when it started. See `docs/MIGRATION-COMPAT.md`, "When a roll raises the stored version" |
+| Every paper answers 503 "This site is being updated" after a roll | The database is at a newer schema than the release nginx is serving (`php tools/migrate.php --status` from that release prints `ahead`). The roll never puts a group back once a step has raised the version, so one of two things happened. (1) The roll stopped before nginx loaded the new release — a failed `nginx -t` after the migration, a migration that failed part-way, a failed reload, or a stopped run; its output and `/var/log/prairiepost-upgrade/roll-<stamp>.log` say which. Fix that, then run the roll again at the same release (`PP_UPGRADE_SHA=<the same full sha>`): a release the vhosts already name but no run finished is finished, not skipped, and its domains are judged against the baseline the first run saved, not against the 503 they answer now. (2) Someone copied the `.bak` vhost files back → roll again onto the release built for the stored version with `PP_UPGRADE_BASELINE=<file>` naming the record kept by the roll that raised the version (`.pp-roll-baseline.<stamp>` in the release directory it built), or point those vhosts at that release by hand and reload. An ordinary roll will not do it: it holds each domain to the 503 it answered when it started, puts the group back, and says so before it changes anything, naming the record to use (the one in which the most of those domains answered 200, the newest if several tie). Unset `PP_UPGRADE_BASELINE` once the recovery is done. See `docs/MIGRATION-COMPAT.md`, "The recovery baseline" |
 | `SQLSTATE[08006]` on connect | Outbound 5432 blocked → hosting support opens it; or wrong host (use the pooler) |
 | Front page 500s on first boot | Check `debug => true` temporarily; usually a missing PHP extension (`pdo_pgsql`, `gd`) |
 | Pretty URLs 404 but `/index.php` works | `mod_rewrite`/`.htaccess` not honoured → enable AllowOverride |
