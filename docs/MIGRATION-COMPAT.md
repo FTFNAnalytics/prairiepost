@@ -267,7 +267,13 @@ captured it while the domain was healthy.
   NOT to …` under it when that differs from what the domain would be
   held to without the file), on every PASS and FAIL line (`[recovery
   baseline; when this roll started it answered 503]`), and in a closing
-  list, "Which baseline each domain was held to".
+  list, "Which baseline each domain was held to". Only the domains the
+  roll verifies are listed; a group already complete on the release is
+  named once, as not verified. The roll also prints how old the named
+  record is, from the stamp in its header, and a NOTE when later rolls
+  have kept records since: a variable left exported after a recovery
+  holds every later roll to that file, so unset it once the recovery is
+  done.
 - **A release the roll builds carries the records it was held to.** Its
   `.pp-roll-baseline` holds a domain held to the named file at that
   file's record, so a run that finishes this roll holds it the same
@@ -307,11 +313,19 @@ domain it names was healthy.
 - After a roll that ended "NOT done" with a group held: the record in
   the held release. The roll's closing text prints the line to use, and
   a roll that replaces a held release prints it again.
+- After a roll that put a group back (a domain FAILED and the version
+  did not rise): the record of the release the group went back to,
+  which the roll's closing pointer names — for a held release, the held
+  roll's record again. Never that roll's own record: the group went
+  back because a domain failed against what that roll captured, so its
+  record holds the domain to the failure. When the release the group
+  went back to has no record, the pointer names none.
 - After vhost files were copied back onto an old release, so that the
   papers answer the gate's 503: the record kept by the roll that raised
-  the version. An ordinary roll on such a box names the newest record
-  in which those domains answered 200 with a title.
-- Read the file before using it. "The newest with a 200" is not
+  the version. An ordinary roll on such a box names the record in which
+  the most of those domains answered 200 with a title, the newest if
+  several tie.
+- Read the file before using it. "The most domains with a 200" is not
   "healthy": a roll that started while a paper served without its
   stylesheet recorded exactly that, and a roll held to it fails the
   repaired paper. The same is true of the record a finishing roll ends
