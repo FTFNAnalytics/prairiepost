@@ -256,7 +256,8 @@ captured it while the domain was healthy.
 - **`PP_UPGRADE_BASELINE=<file>` holds a roll to one.** Each domain the
   file records is held to its record there: the same status code,
   `<title>` and stylesheet set, compared the same way. A domain it does
-  not record is held as it would be without it (next paragraph). The
+  not record is held as it would be without it ("Which baseline wins",
+  below). The
   file is read and checked at the top of the script, before the branch
   head is resolved or anything is written. One that is missing or
   malformed, or that names none of the box's domains, stops the roll
