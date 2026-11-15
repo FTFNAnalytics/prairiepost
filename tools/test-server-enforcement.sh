@@ -90,7 +90,8 @@ run_matrix() { # server-label port broken-port
   for path in "/app/helpers.php" "/app/config.site.php" "/data/app.sqlite" \
               "/tools/reset-password.php" "/tools/migrate.php" "/tools/backup.sh" \
               "/tests/run.php" "/vendor/ezyang/htmlpurifier/library/HTMLPurifier.php" \
-              "/docs/MIGRATION-COMPAT.md" "/.git/config" "/.htaccess" \
+              "/docs/MIGRATION-COMPAT.md" "/docs/design/prairie-dispatch-brand-guide.html" \
+              "/.git/config" "/.htaccess" \
               "/composer.json" "/composer.lock" "/router.php" "/CLAUDE.md"; do
     c=$(req "$P" "$path")
     ok "$L denies $path ($c)" "[ $c -ge 400 ] && ! grep -q SENTINEL-GIT-CONFIG '$W/body' && ! grep -q '<?php' '$W/body'"

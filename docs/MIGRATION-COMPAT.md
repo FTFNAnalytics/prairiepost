@@ -65,20 +65,102 @@ the old release:
 | Where the roll fails | The version did not change | The version rose |
 | --- | --- | --- |
 | `nginx -t` BEFORE the migration (run only when a step is pending, with the rewritten vhost files in place) | not run | every vhost and cron file restored, the schema untouched: "nothing changed" is true, and the old release serves |
-| The migration | files restored; the old release serves | possible only when an earlier step of the same roll had committed: nothing is put back, and neither release can serve until the migration is finished from the new release directory |
-| `nginx -t` after the migration | files restored; "nothing changed" | nothing is put back. nginx is still running the old release, so every paper answers 503 until the error is fixed and nginx reloads onto the new one |
+| The migration | files restored; the old release serves | possible only when an earlier step of the same roll had committed: nothing is put back, and neither release can serve until the migration is finished from the new release directory; then the roll is run again at the same release, and finishes (test, reload, verify against the saved baseline) |
+| `nginx -t` after the migration | files restored; "nothing changed" | nothing is put back. nginx is still running the old release, so every paper answers 503 until the error is fixed and the roll is run again at the same release, which finishes it (test, reload, verify against the saved baseline) |
 | A domain fails the masthead check | its release group is restored — vhosts and cron files — and the old release serves | the group is HELD on the new release and the roll exits non-zero. The domain that failed goes on serving what failed; the other domains of the group are untouched |
 | Nothing fails: the closing text | offers the repoint as a rollback | says the old directories are not one |
 
-A reading the script could not take counts as a rise wherever the new
-release is known to be ready, because "it did not change" would then be
-a guess. Every cell is exercised by `tools/test-release-flow.sh`
-(scenarios 2 and 4 to 10), which CI runs. In those scenarios the
-verification stage is a CLI boot of each new release. Scenarios 11 to
-14 run the masthead guard itself — the capture before the roll and the
-per-domain comparison after it — against a stand-in that answers plain
-HTTP from whichever release directory each vhost file names. No fixture
-has nginx or TLS.
+A reading the script could not take is retried. If it never comes, it
+counts as unchanged only when nothing was pending and the step exited
+0 — a no-op cannot have moved the version — and as a rise otherwise,
+because "it did not change" would then be a guess. Every cell is
+exercised by `tools/test-release-flow.sh` (scenarios 2 and 4 to 27),
+which CI runs; in those scenarios its verification stage is a CLI boot
+of each new release, not the masthead probe. Scenarios 28 to 33 run the
+masthead guard itself — the capture before the roll and the per-domain
+comparison after it — against a stand-in that answers plain HTTP from
+whichever release directory each vhost file names, including a
+finishing run's verification against a saved baseline (32) and a
+replacement under `PP_UPGRADE_ABANDON` (33). No fixture has nginx or
+TLS, and no server has run any of it.
+
+**One roll at a time, and a stopped roll is finished, not repeated.**
+The script takes a lock (`/run/lock/prairiepost-upgrade.lock`); a
+second run refuses while the first holds it. Everything it prints also
+goes to `/var/log/prairiepost-upgrade/roll-<stamp>.log`. A lost
+connection does not stop it: HUP and PIPE are ignored for the whole
+run, by the script and by its logger, so a hangup sent to the whole
+terminal session stops neither the roll nor the log (start it detached
+all the same — `DEPLOY.md` says how — and read the log). The logger
+ignores INT and TERM as well, so the report a stopped roll prints
+reaches the log. INT and TERM are deliberate stops, and are ignored too
+between the migration step and the reload, where a stop would be every
+paper on 503 until the next run. Stopped before the migration, the
+handler puts every vhost and cron file back and says nothing changed;
+stopped after it, the handler resumes the cron files the run paused
+and prints where things stand: whether the files name the new release,
+what the schema did (it asks the runner if the step was in flight),
+whether nginx reloaded.
+
+Each roll leaves three small files in the release directory it builds:
+`.pp-roll-baseline` (what every domain answered before the roll changed
+anything — one line per domain, `domain|status code|stylesheet
+set|<title>`), `.pp-roll-before` (the stored schema version the roll
+found, and which run found it) and, once nginx has reloaded onto the
+release and every domain of a group passed, `.pp-roll-complete` for
+that group — or, for a group the roll held after a failed verification,
+`.pp-roll-held`. Beside `.pp-roll-baseline` the roll keeps a RECORD of
+the same file, `.pp-roll-baseline.<stamp>`, which no later roll removes
+(a roll back into the directory replaces `.pp-roll-baseline` itself)
+and nothing reads unless a roll is told to ("The recovery baseline",
+below). A later run at the same commit that finds the vhosts
+naming a release with no `.pp-roll-complete` FINISHES that roll instead
+of saying there is nothing to do: it migrates whatever is pending,
+tests, reloads, and verifies every domain against the SAVED baseline —
+never against the 503 the domains may be answering when it starts, and
+never against the new release itself. Such a run judges the roll by the
+version the first run found, puts nothing back (its own `.bak` copies
+are of files that already named the new release), offers no rollback,
+and holds a group that fails. So whatever stopped a roll after the
+migration — a failed `nginx -t`, a part-finished migration, a failed
+reload, a signal, a lost terminal — the answer is the same: fix what
+stopped it, then run the roll again at the same release.
+
+A STOPPED roll — a release with a saved baseline and neither mark —
+blocks every other commit: a run pinned to a different commit while a
+vhost names such a release refuses before it touches anything. A HELD
+roll does not: it ran to the end, and a roll of the fix may replace it
+(next section). A cron file an earlier run left `.paused`
+with no active copy comes back on the next run whatever release it
+names; a roll into a directory an earlier roll completed clears that
+directory's old mark first; the release tree is copied under a
+temporary name and renamed into place, so a stop inside the copy leaves
+nothing a later run would build on.
+
+Pinning means `PP_UPGRADE_SHA=<the full 40-character commit sha>`: it
+names the release directory, fetches that commit's tarball, and refuses
+a pre-staged `PP_RELEASE_TARBALL` that is not that commit; `PP_BRANCH`
+alone follows a branch head. Pin every roll, and re-run a stopped roll
+at the same pin.
+
+### A stopped roll that cannot be finished
+
+Sometimes a stopped roll cannot be finished at its own commit: its
+migration fails on a fault that needs a code change. The fix is another
+commit, and a stopped roll blocks every other commit. To let the fix
+replace it, name the stopped roll's commit:
+
+    PP_UPGRADE_SHA=<the fix, full sha> PP_UPGRADE_ABANDON=<the stopped roll's full sha> bash upgrade-papers.sh
+
+Only a release that is genuinely stopped (a saved baseline, neither
+mark) can be named; an override that names anything else, or the
+commit being rolled, is refused with nothing changed. The run then
+treats each release group the stopped roll left exactly as a finishing
+run would: it holds its domains to the baseline the stopped roll saved,
+judges the schema by the version the stopped roll found, never puts a
+group back on the abandoned release (no run verified it), and offers no
+rollback. The fixture runs this (scenario 26) and a sandbox ran it over
+the masthead probe; no server has.
 
 ### When a roll that raised the schema version fails
 
@@ -90,15 +172,19 @@ takes the one that leaves the most papers up:
   changed). After a rise that is 503 on every domain the group serves —
   twenty-four papers for one failing masthead — and an ordinary roll
   then holds each of them to that 503 ("What a second roll can and
-  cannot do", below). The script no longer does this, and nobody should
-  do it by hand for a group.
+  cannot do", below). The script no longer does this, and nobody should do it
+  by hand for a group.
 - **Hold the group on the new release** (what it does now). Every
   domain that passed keeps serving. The one that failed keeps serving
   whatever failed its check — another paper's masthead, a changed set
   of stylesheets, a different status code — in public, until someone
   acts.
 
-From a held roll the operator has these moves:
+The held roll ends "NOT done" (exit 1), says for each held group why it
+was not put back, and leaves `.pp-roll-held` in its release. A run at
+the same commit verifies the held groups again. A roll of another
+commit — the fix — is NOT refused: a held release is an old release
+like any other. From a held roll the operator has these moves:
 
 1. **Leave the domain up.** Right when what failed is tolerable, and
    all there is to do when the guard objected to something intended,
@@ -116,22 +202,16 @@ From a held roll the operator has these moves:
        cp <vhost>.bak.<stamp> <vhost>
        nginx -t && systemctl reload nginx
 
-   An ordinary roll leaves the domain down: it holds it to its 503 and
-   puts its group of one back. It comes back with the roll that carries
-   the fix, held to the recovery baseline (below), or by hand: once a
-   fixed release is on the box, point this vhost's `root` at that
-   release directory and reload. Not rehearsed on a server. The fixture
-   runs the take-down, the ordinary roll that leaves the domain down
-   and the recovery roll that brings it back (scenario 14), against its
-   HTTP stand-in.
-
-   One caution while a domain is down. Each ordinary roll restores that
-   domain's group of one, and a roll that restores any group deletes
-   the paused cron files of the groups that passed — a known fault of
-   the restore path, not fixed here, which the fixture prints as a note
-   in scenarios 6 and 14. After any roll that printed `restoring
-   release group`, look in `/etc/cron.d` before assuming the scheduled
-   jobs are still there.
+   Then roll the fix: the rest of the group moves to it. An ordinary
+   roll leaves the domain down: it holds it to its 503 and puts its
+   group of one back. It comes back with a roll held to the recovery
+   baseline (below), or by hand: once the fixed release is on the box,
+   point this vhost's `root` at that release directory and reload. Not
+   rehearsed on a server. The fixture runs the take-down, the ordinary
+   roll that leaves the domain down and the recovery roll that brings
+   it back, over its HTTP stand-in (scenario 31); before that, PR 73's
+   check ran the first two on Linux in a sandbox with stand-ins for
+   nginx and the probes.
 3. **Restore the database.** Rule 2, and not a way to get one paper
    back.
 
@@ -142,18 +222,22 @@ every domain that is healthy when it starts. For a domain that is
 failing when it starts, the repair itself reads as a failure — 200
 where it answered 503, the right stylesheet set where it served the
 wrong one — and, because the second roll does not raise the version,
-the script puts that domain's release group back where it came from. If
-the failing domain is still in the papers' group, that undoes the fix
-for all of them (no outage: they return to the first new release). If
-it was taken down first (move 2) it is a group of one: the other papers
-move to the fixed release and that domain stays on 503. Either way an
-ordinary roll does not mend the failing domain, and it is meant not to:
-a domain taken down on purpose answers the same 503, and no roll may
-bring it back unasked. The fixture runs each of these (the assertions
-marked GAP in scenarios 12 and 13 of `tools/test-release-flow.sh`, and
-scenario 14). The roll also says so itself: a domain answering the
-gate's 503 is named before anything changes, and a failed verification
-ends with a pointer to what follows.
+the script puts that domain's release group back where it came from:
+the held release, which serves the schema. If the failing domain is
+still in the papers' group, that undoes the fix for all of them (no
+outage: they return to the held release). If it was taken down first
+(move 2) it is a group of one: the other papers move to the fixed
+release and that domain stays on 503. Either way an ordinary roll does
+not mend the failing domain, and it is meant not to: a domain taken
+down on purpose answers the same 503, and no roll may bring it back
+unasked. The fixture runs each of these over its HTTP stand-in (the
+assertions marked GAP in scenarios 29 and 30 of
+`tools/test-release-flow.sh`, and scenario 31); PR 73's check ran them
+in a sandbox and, through the CLI boot, in scenario 25. The roll also
+says so itself: a held release being replaced names the record its
+roll saved, a domain answering the gate's 503 is named before anything
+changes, and a failed verification ends with a pointer to what
+follows.
 
 ### The recovery baseline
 
@@ -161,69 +245,101 @@ What mends such a domain is a roll that has been told what the domain
 SHOULD answer. The script cannot work that out, but an earlier roll
 captured it while the domain was healthy.
 
-- **Every roll saves the baseline it captured**, before it changes
-  anything: `/var/lib/prairiepost-upgrade/baseline-<stamp>.txt`, one
-  line per domain, `domain|status code|stylesheet set|<title>`, under a
+- **Every roll keeps a record of its baseline**, written before the
+  roll changes the release's vhosts: `.pp-roll-baseline.<stamp>` in
+  each release directory it builds, beside `.pp-roll-baseline`, the
+  same lines, `domain|status code|stylesheet set|<title>`, under a
   header that says when it was written and which release the roll was
-  going to. The roll prints the path (`saved: …`). The file is a
-  record. No roll reads one unless it is told to, and none is ever
-  overwritten.
-- **`PP_UPGRADE_BASELINE=<file>` holds a roll to one of them.** Each
-  domain the file names is held to its record there instead of to what
-  it answers when the roll starts: the same status code, `<title>` and
-  stylesheet set, compared the same way. A domain the file does not
-  name is held to what it answers now, as always. The file is read and
-  checked before anything changes. One that is missing or malformed,
-  or that names none of the box's domains, stops the roll there.
+  going to. The roll prints the path (`baseline saved: …`). The record
+  is never removed or overwritten, and no roll reads one unless it is
+  told to.
+- **`PP_UPGRADE_BASELINE=<file>` holds a roll to one.** Each domain the
+  file records is held to its record there: the same status code,
+  `<title>` and stylesheet set, compared the same way. A domain it does
+  not record is held as it would be without it (next paragraph). The
+  file is read and checked at the top of the script, before the branch
+  head is resolved or anything is written. One that is missing or
+  malformed, or that names none of the box's domains, stops the roll
+  there.
 - **The output says which baseline each domain was held to**: where
   the baseline is taken (`held to the RECOVERY baseline: …`, with `and
-  NOT to what it answers now: …` under it when the two differ), on
-  every PASS and FAIL line (`[recovery baseline; when this roll started
-  it answered 503]`), and in a closing list.
+  NOT to …` under it when that differs from what the domain would be
+  held to without the file), on every PASS and FAIL line (`[recovery
+  baseline; when this roll started it answered 503]`), and in a closing
+  list, "Which baseline each domain was held to".
+- **A release the roll builds carries the records it was held to.** Its
+  `.pp-roll-baseline` holds a domain held to the named file at that
+  file's record, so a run that finishes this roll holds it the same
+  way, and the header says so for each such domain (as it does for a
+  domain held to an abandoned roll's baseline).
 
 It is the ordinary roll with one more variable in its environment. Only
 the reference changes: nothing about the comparison, and nothing about
 what a failing group gets.
 
-**Which file.** The one saved by the last roll that STARTED on a
-healthy box.
+**Which baseline wins.** Without the variable a domain is held to:
 
-- After a roll that ended "NOT done" with a group held: that roll's own
-  file. Its closing text prints the line to use.
+- in a roll this run FINISHES, the baseline the run that started that
+  roll saved;
+- in a group replacing a roll abandoned under `PP_UPGRADE_ABANDON`, the
+  baseline the abandoned roll saved;
+- anywhere else, what it answers as this roll starts.
+
+With it, the named file wins, domain by domain, in all three cases. A
+domain it records is held to that record; a domain it does not record
+is held as above. The operator's explicit word wins over the script's
+own default, and for a reason the fixture shows (scenario 32): a saved
+baseline is a capture, and a roll stopped after it started from a box
+where a paper was already failing saved that failure. Finished as it
+stands, it holds the repaired paper to the failure and holds its group
+(a finishing run puts nothing back); if its own baseline won, no run at
+its commit could ever verify that paper healthy. The output prints
+both sides: `held to the RECOVERY baseline: …` and, under it, `and NOT
+to the baseline the run that started this roll saved: …` (or `… the
+abandoned roll saved: …`, scenario 33). A finishing run writes no
+baseline of its own, so a finishing run stopped again and run without
+the variable goes back to its first run's baseline.
+
+**Which file.** A record saved by a roll that STARTED while every
+domain it names was healthy.
+
+- After a roll that ended "NOT done" with a group held: the record in
+  the held release. The roll's closing text prints the line to use, and
+  a roll that replaces a held release prints it again.
 - After vhost files were copied back onto an old release, so that the
-  papers answer the gate's 503: the file saved by the roll that raised
-  the version, the one before the copy-back. An ordinary roll on such a
-  box names the newest saved baseline in which those domains answered
-  200 with a title.
+  papers answer the gate's 503: the record kept by the roll that raised
+  the version. An ordinary roll on such a box names the newest record
+  in which those domains answered 200 with a title.
 - Read the file before using it. "The newest with a 200" is not
-  "healthy": a roll that started while a paper was serving without its
-  stylesheet saved exactly that, and a roll held to it fails the
-  repaired paper.
-- A box with no file from a healthy start (it broke before the first
-  roll by a script that saves them) can be given one by hand, in the
-  same format. What each domain should answer is in the output of its
-  last good roll, which prints every title and stylesheet set.
+  "healthy": a roll that started while a paper served without its
+  stylesheet recorded exactly that, and a roll held to it fails the
+  repaired paper. The same is true of the record a finishing roll ends
+  with: it is the baseline its first run saved.
+- A box with no record from a healthy start can be given a file by
+  hand, in the same format. What each domain should answer is in the
+  output of its last good roll, which prints every title and
+  stylesheet set.
 
 **What it does not change.**
 
 - An ordinary roll. With the variable unset there is no difference in
-  what is captured, compared or printed, apart from the saved file and
-  its one `saved:` line.
+  what is captured, compared or printed, apart from the record and its
+  one `baseline saved:` line per release.
 - What a failing group gets. A domain that does not match its record
   FAILS, and its release group is restored — or held, if this roll
-  raised the version — as on any roll. On a box that came into the roll
-  on the gate's 503, "restored" means back to 503 for every domain of
-  that group, and the roll prints that the release it is restoring to
-  is not built for the stored version. Correct the record or the
-  release and roll again.
+  raised the version or is finishing or replacing an abandoned roll —
+  as on any roll. On a box that came into the roll on the gate's 503,
+  "restored" means back to 503 for every domain of that group, and the
+  roll prints that the release it is restoring to is not built for the
+  stored version. Correct the record or the release and roll again.
 - A tenant with no site row. It answers 503 "This site is not
   provisioned here", and on a release built for another version it
   answers the gate's 503 like every other domain. Its record says 503,
   so it is held to 503. Nothing reads a 503 as "should be 200".
 - A domain taken down on purpose (move 2). It stays down through every
-  ordinary roll. Only a roll whose named baseline holds a healthy
-  record for it brings it back, and only if it then answers as that
-  record says.
+  ordinary roll. Only a roll whose named file holds a healthy record
+  for it brings it back, and only if it then answers as that record
+  says.
 
 **Limits.**
 
@@ -242,8 +358,9 @@ healthy box.
   rolling it as its own group. To rejoin it, point its vhost's `root`
   at the papers' directory and reload.
 - A box where nginx never loaded the new release (the roll said `nginx
-  test failed AFTER the migration`) is not a case for a roll. Fix the
-  nginx error and reload.
+  test failed AFTER the migration`) is not a case for a recovery
+  baseline: fix the error and run the roll again at the same release,
+  which finishes it.
 - Run by the fixture only, on SQLite, against a stand-in that serves
   what the vhost files name. Not exercised: real nginx and TLS,
   PostgreSQL, the production box.
@@ -327,14 +444,15 @@ schema, so it applies to all of them at once.
 **What recovery actually is.**
 
 1. **Fix forward.** A second roll, pinned to a commit built for schema
-   22. The schema is already at 22, so `tools/migrate.php --apply`
+   22 (`PP_UPGRADE_SHA=<full sha>`, which names the release directory
+   and fetches that commit's tarball). The schema is already at 22, so `tools/migrate.php --apply`
    reports nothing pending and only the code switches. For a release
    group whose domains are all healthy when it starts, that is the
    ordinary roll. If a domain was the problem — it failed the first
    roll's masthead check and its group was held, or it is on 503 — the
    second roll has to be told what that domain should answer, or it
    reads the repair as a failure and puts it back: run it with
-   `PP_UPGRADE_BASELINE` naming the baseline the first roll saved. The
+   `PP_UPGRADE_BASELINE` naming the record the first roll saved. The
    first roll's "NOT done" text prints that line ("The recovery
    baseline", above). Plan for the second roll, and keep the first
    roll's output.
@@ -355,12 +473,12 @@ network does not make.
 
 **So, before the roll:** confirm the pre-roll backup is the verified
 recovery point (the script's preflight insists on a fresh one), pin the
-roll to the exact commit, and have the fix-forward ready — a second
+roll to the exact commit (`PP_UPGRADE_SHA=<full sha>`), and have the
+fix-forward ready — a second
 pinned roll — instead of counting on the old release. If the roll ends
 "NOT done", it has held a group: send the output back and choose from
 "When a roll that raised the schema version fails" before touching a
-vhost. That output also names the saved baseline the fixing roll will
-need.
+vhost. That output also names the record the fixing roll will need.
 
 ## Forward repair
 

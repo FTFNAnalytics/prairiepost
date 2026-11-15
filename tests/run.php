@@ -12,6 +12,7 @@ if (PHP_SAPI !== 'cli') {
 }
 
 $fail = 0;
+$skips = 0;
 $files = glob(__DIR__ . '/*.test.php') ?: [];
 sort($files);
 foreach ($files as $file) {
@@ -25,7 +26,25 @@ foreach ($files as $file) {
         foreach ($lines as $l) {
             echo "    $l\n";
         }
+        continue;
+    }
+    // A passing file can still have skipped part of itself, and says so on
+    // a line that starts with SKIP. A database-backed file also prints an
+    // "engine:" line naming the server it really ran on. Both used to be
+    // thrown away with the rest of a passing file's output, so a run could
+    // read as fully green while whole cases had not run.
+    foreach ($lines as $l) {
+        $isSkip = str_starts_with($l, 'SKIP');
+        if ($isSkip) {
+            $skips++;
+        }
+        if ($isSkip || str_starts_with($l, 'engine:')) {
+            echo "    $l\n";
+        }
     }
 }
 echo $fail ? "\n$fail file(s) FAILED\n" : "\nall " . count($files) . " test files pass\n";
+if ($skips > 0) {
+    echo "$skips SKIP line(s) above: those parts did not run in this environment\n";
+}
 exit($fail ? 1 : 0);

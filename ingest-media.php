@@ -23,43 +23,30 @@
  *           4xx {ok: false, error}  — the reason, never a coercion
  */
 require __DIR__ . '/app/bootstrap.php';
+require __DIR__ . '/app/ingest.php';
 
 header('Content-Type: application/json; charset=utf-8');
 header('X-Robots-Tag: noindex');
 
-function pp_media_out(int $code, array $body): never
-{
-    http_response_code($code);
-    echo json_encode($body, JSON_UNESCAPED_SLASHES);
-    exit;
-}
-
 if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') {
-    pp_media_out(405, ['ok' => false, 'error' => 'POST one image per call']);
+    pp_ingest_respond(405, ['ok' => false, 'error' => 'POST one image per call']);
 }
 
-/* --- Authentication: token -> agent row, fail closed ---------------------- */
-$auth = (string) ($_SERVER['HTTP_AUTHORIZATION'] ?? $_SERVER['REDIRECT_HTTP_AUTHORIZATION'] ?? '');
-if (!preg_match('/^Bearer\s+(\S{20,200})$/i', $auth, $m)) {
-    pp_media_out(401, ['ok' => false, 'error' => 'missing bearer token']);
-}
-$stmt = db()->prepare('SELECT * FROM ingest_agents WHERE token_hash = ?');
-$stmt->execute([hash('sha256', $m[1])]);
-$agent = $stmt->fetch();
-if (!$agent || (int) $agent['enabled'] !== 1) {
-    // A revoked agent and an unknown token answer identically.
-    pp_media_out(401, ['ok' => false, 'error' => 'unknown or revoked token']);
-}
-// A draft-only token parks files here like any other. An upload is data
-// under /uploads and publishes nothing: the publish decision lives in
-// /api/ingest and /api/ingest-publish, where draft_only is enforced.
+/* --- Authentication: token -> agent, fail closed (app/ingest.php) --------- */
+$agent = pp_ingest_authenticate();
+// A draft-only token parks files here like any other, so this endpoint
+// never asks pp_ingest_require_publish(). An upload is data under /uploads
+// and publishes nothing: the publish decision lives in /api/ingest and
+// /api/ingest-publish, where the capability is enforced.
 
 /* --- Rate limit: uploads per token per hour, from the audit trail --------- */
+// Counted under the name pp_ingest_audit() stores: 'hermes:' and the token's
+// name, cut to audit_log.user_name.
 $limit = 60;
 $stmt = db()->prepare("SELECT COUNT(*) FROM audit_log WHERE user_name = ? AND action = 'ingest-media' AND created_at > ?");
-$stmt->execute(['hermes:' . $agent['name'], date('Y-m-d H:i:s', time() - 3600)]);
+$stmt->execute([mb_substr('hermes:' . $agent['name'], 0, 120), date('Y-m-d H:i:s', time() - 3600)]);
 if ((int) $stmt->fetchColumn() >= $limit) {
-    pp_media_out(429, ['ok' => false, 'error' => "rate limit: at most {$limit} uploads per hour for this token"]);
+    pp_ingest_respond(429, ['ok' => false, 'error' => "rate limit: at most {$limit} uploads per hour for this token"]);
 }
 
 /* --- The bytes: multipart `file`, or the raw request body ----------------- */
@@ -69,10 +56,10 @@ $bytes = '';
 if (!empty($_FILES['file'])) {
     $f = $_FILES['file'];
     if (($f['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_OK) {
-        pp_media_out(422, ['ok' => false, 'error' => 'the upload failed (code ' . (int) ($f['error'] ?? -1) . ')']);
+        pp_ingest_respond(422, ['ok' => false, 'error' => 'the upload failed (code ' . (int) ($f['error'] ?? -1) . ')']);
     }
     if ((int) $f['size'] > $maxBytes) {
-        pp_media_out(422, ['ok' => false, 'error' => 'the image is over 8 MB']);
+        pp_ingest_respond(422, ['ok' => false, 'error' => 'the image is over 8 MB']);
     }
     $bytes = (string) file_get_contents((string) $f['tmp_name']);
     $baseName = (string) ($_POST['name'] ?? pathinfo((string) $f['name'], PATHINFO_FILENAME));
@@ -81,7 +68,7 @@ if (!empty($_FILES['file'])) {
     // oversized stream is refused without buffering all of it.
     $bytes = (string) file_get_contents('php://input', false, null, 0, $maxBytes + 1);
     if (strlen($bytes) > $maxBytes) {
-        pp_media_out(422, ['ok' => false, 'error' => 'the image is over 8 MB']);
+        pp_ingest_respond(422, ['ok' => false, 'error' => 'the image is over 8 MB']);
     }
     $baseName = (string) ($_GET['name'] ?? '');
 }
@@ -89,14 +76,13 @@ $baseName = mb_substr(trim(strip_tags($baseName)), 0, 80) ?: 'agent-image';
 
 [$path, $err] = pp_store_image_bytes($bytes, $baseName);
 if ($path === null) {
-    pp_media_out(422, ['ok' => false, 'error' => (string) $err]);
+    pp_ingest_respond(422, ['ok' => false, 'error' => (string) $err]);
 }
 
 $now = now();
 db()->prepare('UPDATE ingest_agents SET last_used_at = ? WHERE id = ?')->execute([$now, (int) $agent['id']]);
-db()->prepare('INSERT INTO audit_log (site_id, user_id, user_name, action, target, detail, ip, created_at)
-    VALUES (0, 0, ?, ?, ?, ?, ?, ?)')
-    ->execute(['hermes:' . $agent['name'], 'ingest-media', $path,
-        strlen($bytes) . ' bytes', (string) ($_SERVER['REMOTE_ADDR'] ?? ''), $now]);
+// The file is stored by now, so this row only observes. Site 0: an upload
+// belongs to no paper until a filing names it.
+pp_ingest_audit(0, $agent['name'], 'ingest-media', $path, strlen($bytes) . ' bytes', 0, $now);
 
-pp_media_out(201, ['ok' => true, 'path' => $path, 'bytes' => strlen($bytes)]);
+pp_ingest_respond(201, ['ok' => true, 'path' => $path, 'bytes' => strlen($bytes)]);

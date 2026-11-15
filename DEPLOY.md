@@ -349,6 +349,28 @@ tokens keep their behaviour, but once it has run the old release is
 not a fallback — it answers 503 — so recovery is a second roll
 forward, never a repoint.
 
+Start every roll detached from the SSH session, pinned to the full
+commit id, and read its log rather than the terminal — the script
+ignores a lost connection, but a session that is killed outright takes
+whatever it started with it:
+
+    systemd-run --unit=pp-roll-$(date +%s) --wait --pipe \
+      env PP_UPGRADE_SHA=<full 40-character sha> bash /root/upgrade-papers.sh
+
+(or `tmux` / `nohup`, as the box has). The log is
+`/var/log/prairiepost-upgrade/roll-<stamp>.log`. If the roll stops
+after the migration, fix what stopped it and run it again at the same
+pin: it finishes the roll instead of starting over. If its migration
+cannot succeed at that commit, the fix is another commit, and a stopped
+roll blocks every other one until it is named:
+`PP_UPGRADE_ABANDON=<the stopped roll's full sha>` beside the fix's
+`PP_UPGRADE_SHA`. If the roll ends "NOT done", it held a group on the
+new release: send the output back; a roll of the fix is not refused,
+and `docs/MIGRATION-COMPAT.md`, "When a roll that raised the schema
+version fails", gives the moves. To mend the domain that failed, hold
+the fix to the record the held roll saved: the closing text prints the
+`PP_UPGRADE_BASELINE=…` line ("The recovery baseline").
+
     cd "$REL" && php tools/make-agent.php create --name evidence-kermode --sites kermode-chronicle --draft-only
 
 Expected output: `Agent:  evidence-kermode`, `Sites:  kermode-chronicle`,
@@ -394,7 +416,7 @@ it beside each token's scope.
 
 | Symptom | Cause → fix |
 |---|---|
-| Every paper answers 503 "This site is being updated" after a roll | The database is at a newer schema than the release nginx is serving (`php tools/migrate.php --status` from that release prints `ahead`). The roll itself no longer puts a group back once a step has raised the version, so either nginx never loaded the new release — the roll's output says `nginx test failed AFTER the migration`: fix that error, then `nginx -t && systemctl reload nginx` — or someone copied the `.bak` vhost files back → roll again onto the release built for the stored version, with `PP_UPGRADE_BASELINE=<file>` naming the baseline saved by the roll that raised the version (`/var/lib/prairiepost-upgrade/baseline-<stamp>.txt`); or point those vhosts at that release again by hand and reload. An ordinary roll will not do it: it holds each domain to the 503 it answered when it started, puts the group back, and says so before it changes anything, naming the saved baseline to use. See `docs/MIGRATION-COMPAT.md`, "The recovery baseline" |
+| Every paper answers 503 "This site is being updated" after a roll | The database is at a newer schema than the release nginx is serving (`php tools/migrate.php --status` from that release prints `ahead`). The roll never puts a group back once a step has raised the version, so one of two things happened. (1) The roll stopped before nginx loaded the new release — a failed `nginx -t` after the migration, a migration that failed part-way, a failed reload, or a stopped run; its output and `/var/log/prairiepost-upgrade/roll-<stamp>.log` say which. Fix that, then run the roll again at the same release (`PP_UPGRADE_SHA=<the same full sha>`): a release the vhosts already name but no run finished is finished, not skipped, and its domains are judged against the baseline the first run saved, not against the 503 they answer now. (2) Someone copied the `.bak` vhost files back → roll again onto the release built for the stored version with `PP_UPGRADE_BASELINE=<file>` naming the record kept by the roll that raised the version (`.pp-roll-baseline.<stamp>` in the release directory it built), or point those vhosts at that release by hand and reload. An ordinary roll will not do it: it holds each domain to the 503 it answered when it started, puts the group back, and says so before it changes anything, naming the newest record to use. See `docs/MIGRATION-COMPAT.md`, "The recovery baseline" |
 | `SQLSTATE[08006]` on connect | Outbound 5432 blocked → hosting support opens it; or wrong host (use the pooler) |
 | Front page 500s on first boot | Check `debug => true` temporarily; usually a missing PHP extension (`pdo_pgsql`, `gd`) |
 | Pretty URLs 404 but `/index.php` works | `mod_rewrite`/`.htaccess` not honoured → enable AllowOverride |

@@ -49,6 +49,7 @@
  *           4xx {ok: false, error} — the reason, never a coercion
  */
 require __DIR__ . '/app/bootstrap.php';
+require __DIR__ . '/app/ingest.php';
 
 header('Content-Type: application/json; charset=utf-8');
 header('X-Robots-Tag: noindex');
@@ -68,82 +69,60 @@ function pp_hermes_setting(int $siteId, string $key, string $default = ''): stri
     return $v !== '' ? $v : $default;
 }
 
-function pp_hermes_out(int $code, array $body): never
-{
-    http_response_code($code);
-    echo json_encode($body, JSON_UNESCAPED_SLASHES);
-    exit;
-}
-
 if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') {
-    pp_hermes_out(405, ['ok' => false, 'error' => 'POST one JSON story per call']);
+    pp_ingest_respond(405, ['ok' => false, 'error' => 'POST one JSON story per call']);
 }
 
-/* --- Authentication: token -> agent row, fail closed ---------------------- */
-$auth = (string) ($_SERVER['HTTP_AUTHORIZATION'] ?? $_SERVER['REDIRECT_HTTP_AUTHORIZATION'] ?? '');
-if (!preg_match('/^Bearer\s+(\S{20,200})$/i', $auth, $m)) {
-    pp_hermes_out(401, ['ok' => false, 'error' => 'missing bearer token']);
-}
-$stmt = db()->prepare('SELECT * FROM ingest_agents WHERE token_hash = ?');
-$stmt->execute([hash('sha256', $m[1])]);
-$agent = $stmt->fetch();
-if (!$agent || (int) $agent['enabled'] !== 1) {
-    // A revoked agent and an unknown token answer identically.
-    pp_hermes_out(401, ['ok' => false, 'error' => 'unknown or revoked token']);
-}
-$agentSites = array_filter(array_map('trim', explode(',', (string) $agent['sites'])));
-$agentDesks = array_filter(array_map('trim', explode(',', (string) $agent['desks'])));
-// The capability, read from the token row and nowhere else: a request can
-// neither claim nor shed it.
-$agentDraftOnly = (int) ($agent['draft_only'] ?? 0) === 1;
+/* --- Authentication: token -> agent, fail closed (app/ingest.php) --------- */
+$agent = pp_ingest_authenticate();
 
 /* --- Payload -------------------------------------------------------------- */
 $raw = file_get_contents('php://input', false, null, 0, 512 * 1024);
 $in = json_decode((string) $raw, true);
 if (!is_array($in)) {
-    pp_hermes_out(400, ['ok' => false, 'error' => 'body must be a JSON object']);
+    pp_ingest_respond(400, ['ok' => false, 'error' => 'body must be a JSON object']);
 }
 
 $siteSlug = slugify((string) ($in['site'] ?? ''));
-if ($siteSlug === '' || !in_array($siteSlug, $agentSites, true)) {
-    pp_hermes_out(403, ['ok' => false, 'error' => 'this token is not scoped to that site']);
+if ($siteSlug === '' || !in_array($siteSlug, $agent['sites'], true)) {
+    pp_ingest_respond(403, ['ok' => false, 'error' => 'this token is not scoped to that site']);
 }
 $siteRow = db()->prepare('SELECT * FROM sites WHERE slug = ?');
 $siteRow->execute([$siteSlug]);
 $site = $siteRow->fetch();
 if (!$site) {
-    pp_hermes_out(403, ['ok' => false, 'error' => 'that site does not exist yet — it is created at launch, not by ingest']);
+    pp_ingest_respond(403, ['ok' => false, 'error' => 'that site does not exist yet — it is created at launch, not by ingest']);
 }
 $siteId = (int) $site['id'];
 
 $deskSlug = slugify((string) ($in['desk'] ?? ''));
-if ($deskSlug === '' || ($agentDesks && !in_array($deskSlug, $agentDesks, true))) {
-    pp_hermes_out(403, ['ok' => false, 'error' => 'this token is not scoped to that desk']);
+if ($deskSlug === '' || ($agent['desks'] && !in_array($deskSlug, $agent['desks'], true))) {
+    pp_ingest_respond(403, ['ok' => false, 'error' => 'this token is not scoped to that desk']);
 }
 $deskRow = db()->prepare('SELECT id, slug FROM categories WHERE slug = ?');
 $deskRow->execute([$deskSlug]);
 $desk = $deskRow->fetch();
 if (!$desk) {
-    pp_hermes_out(422, ['ok' => false, 'error' => "unknown desk '{$deskSlug}' — desks are created at launch, not by ingest"]);
+    pp_ingest_respond(422, ['ok' => false, 'error' => "unknown desk '{$deskSlug}' — desks are created at launch, not by ingest"]);
 }
 
 $title = trim(strip_tags((string) ($in['title'] ?? '')));
 $lede  = trim(strip_tags((string) ($in['lede'] ?? '')));
 $body  = trim(sanitize_html((string) ($in['body'] ?? '')));
 if ($title === '' || mb_strlen($title) > 255) {
-    pp_hermes_out(422, ['ok' => false, 'error' => 'title is required, at most 255 characters']);
+    pp_ingest_respond(422, ['ok' => false, 'error' => 'title is required, at most 255 characters']);
 }
 if ($lede === '' || mb_strlen($lede) > 1000) {
-    pp_hermes_out(422, ['ok' => false, 'error' => 'lede is required, at most 1000 characters']);
+    pp_ingest_respond(422, ['ok' => false, 'error' => 'lede is required, at most 1000 characters']);
 }
 if ($body === '' || strlen($body) > 200000) {
-    pp_hermes_out(422, ['ok' => false, 'error' => 'body is required, at most 200 KB after sanitization']);
+    pp_ingest_respond(422, ['ok' => false, 'error' => 'body is required, at most 200 KB after sanitization']);
 }
 $dateline = trim(strip_tags((string) ($in['dateline'] ?? '')));
 $tags = trim(strip_tags((string) ($in['tags'] ?? '')));
 $externalId = trim((string) ($in['external_id'] ?? ''));
 if (mb_strlen($externalId) > 120) {
-    pp_hermes_out(422, ['ok' => false, 'error' => 'external_id is at most 120 characters']);
+    pp_ingest_respond(422, ['ok' => false, 'error' => 'external_id is at most 120 characters']);
 }
 
 // Optional image, two forms. An `/uploads/…` path is one this install
@@ -159,20 +138,20 @@ $imageCaption = mb_substr(trim(strip_tags((string) ($in['image_caption'] ?? ''))
 $imageCredit = mb_substr(trim(strip_tags((string) ($in['image_credit'] ?? ''))), 0, 120);
 $imageIsUpload = (bool) preg_match('#^/uploads/\d{4}/\d{2}/[a-z0-9][a-z0-9-]*\.(jpg|jpeg|png|webp|gif)$#', $imageUrl);
 if ($imageIsUpload && !is_file(PP_ROOT . $imageUrl)) {
-    pp_hermes_out(422, ['ok' => false, 'error' => 'image names an /uploads/ path that does not exist — upload it first via /api/ingest-media']);
+    pp_ingest_respond(422, ['ok' => false, 'error' => 'image names an /uploads/ path that does not exist — upload it first via /api/ingest-media']);
 }
 if ($imageUrl !== '' && !$imageIsUpload && (strlen($imageUrl) > 600 || !preg_match('#^https?://#i', $imageUrl))) {
-    pp_hermes_out(422, ['ok' => false, 'error' => 'image must be an http(s) URL, or an /uploads/ path returned by /api/ingest-media']);
+    pp_ingest_respond(422, ['ok' => false, 'error' => 'image must be an http(s) URL, or an /uploads/ path returned by /api/ingest-media']);
 }
 
 $sources = [];
 foreach ((array) ($in['sources'] ?? []) as $i => $src) {
     if (!is_array($src)) {
-        pp_hermes_out(422, ['ok' => false, 'error' => "sources[$i] must be an object"]);
+        pp_ingest_respond(422, ['ok' => false, 'error' => "sources[$i] must be an object"]);
     }
     $url = trim((string) ($src['url'] ?? ''));
     if (!preg_match('#^https?://#i', $url) || strlen($url) > 600) {
-        pp_hermes_out(422, ['ok' => false, 'error' => "sources[$i].url must be http(s), at most 600 characters"]);
+        pp_ingest_respond(422, ['ok' => false, 'error' => "sources[$i].url must be http(s), at most 600 characters"]);
     }
     $sources[] = [
         'url' => $url,
@@ -180,7 +159,7 @@ foreach ((array) ($in['sources'] ?? []) as $i => $src) {
         'retrieved_at' => trim((string) ($src['retrieved_at'] ?? '')) ?: null,
     ];
     if (count($sources) > 20) {
-        pp_hermes_out(422, ['ok' => false, 'error' => 'at most 20 sources per story']);
+        pp_ingest_respond(422, ['ok' => false, 'error' => 'at most 20 sources per story']);
     }
 }
 
@@ -189,7 +168,7 @@ $limit = max(1, (int) pp_hermes_setting($siteId, 'ingest_hourly_limit', '60'));
 $stmt = db()->prepare("SELECT COUNT(*) FROM posts WHERE filed_by = ? AND created_at > ?");
 $stmt->execute([$agent['name'], date('Y-m-d H:i:s', time() - 3600)]);
 if ((int) $stmt->fetchColumn() >= $limit) {
-    pp_hermes_out(429, ['ok' => false, 'error' => "rate limit: at most {$limit} filings per hour for this token"]);
+    pp_ingest_respond(429, ['ok' => false, 'error' => "rate limit: at most {$limit} filings per hour for this token"]);
 }
 
 /* --- Dedup: an exact re-file is confirmed, never duplicated --------------- */
@@ -201,7 +180,7 @@ $stmt = db()->prepare('SELECT p.id, p.slug FROM posts p
     WHERE p.content_hash = ? LIMIT 1');
 $stmt->execute([$siteId, $hash]);
 if ($dup = $stmt->fetch()) {
-    pp_hermes_out(200, ['ok' => true, 'duplicate' => true, 'id' => (int) $dup['id'], 'slug' => $dup['slug']]);
+    pp_ingest_respond(200, ['ok' => true, 'duplicate' => true, 'id' => (int) $dup['id'], 'slug' => $dup['slug']]);
 }
 
 /* --- Slug: allocated here, auto-suffixed, never silently skipped ---------- */
@@ -217,7 +196,7 @@ for ($n = 2; ; $n++) {
         break;
     }
     if ($n > 99) {
-        pp_hermes_out(422, ['ok' => false, 'error' => 'could not allocate a slug — 98 collisions on this title']);
+        pp_ingest_respond(422, ['ok' => false, 'error' => 'could not allocate a slug — 98 collisions on this title']);
     }
     $slug = $base . '-' . $n;
 }
@@ -232,10 +211,10 @@ $readyOnImage = !empty($in['publish_on_image']);
 // A draft-only token can give neither publish instruction: the wire-desk
 // exception is withheld here and the ready flag below, so its filing is
 // a plain draft for the newsroom — never queued for the image agent.
-$status = ($isWire && !$agentDraftOnly) ? 'published' : 'draft';
+$status = ($isWire && $agent['may_publish']) ? 'published' : 'draft';
 $awaitingImage = 0;   // resolved below, once the image outcome is known
 $draftReason = '';
-if ($agentDraftOnly) {
+if (!$agent['may_publish']) {
     $withheld = [];
     if ($isWire) {
         $withheld[] = 'wire-desk auto-publish withheld';
@@ -273,7 +252,7 @@ if ($imageIsUpload) {
 // The ready flag resolves only NOW, when the image outcome is known: a
 // filing that brought usable art publishes at once; one still waiting
 // stays a draft that /api/ingest-publish may flip when the art arrives.
-if ($readyOnImage && !$agentDraftOnly && $status !== 'published') {
+if ($readyOnImage && $agent['may_publish'] && $status !== 'published') {
     if ($imagePath !== '') {
         $status = 'published';
     } else {
@@ -331,7 +310,7 @@ pp_ingest_audit($siteId, (string) $agent['name'], 'ingest', $slug,
     $status === 'published'
         ? ($isWire ? 'wire desk, published' : 'ready flag + image, published')
         : ($awaitingImage ? 'filed as draft, awaiting image (publishes on attach)'
-            : ($agentDraftOnly
+            : (!$agent['may_publish']
                 ? 'filed as draft (draft-only token' . ($isWire ? '; wire desk withheld' : '')
                     . ($readyOnImage ? '; publish_on_image not honoured' : '') . ')'
                 : 'filed as draft')),
@@ -350,4 +329,4 @@ if ($status === 'published') {
 if ($imageUrl !== '') {
     $out['image'] = $imagePath !== '' ? $imagePath : $imageNote;
 }
-pp_hermes_out(201, $out);
+pp_ingest_respond(201, $out);
