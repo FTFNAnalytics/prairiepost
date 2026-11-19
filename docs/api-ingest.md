@@ -87,6 +87,17 @@ vhost will ever execute PHP.
   row.
 - `external_id` makes re-files idempotent: an exact re-file answers
   `200 {"ok":true,"duplicate":true,…}` instead of creating a copy.
+- **There is no update call.** Once a story is filed it belongs to the
+  newsroom: a re-file with the same `external_id` is confirmed against
+  the stored story and changes nothing in it, even after an editor has
+  rewritten it (the answer carries the story's current `slug`). When
+  what you filed has changed, file a **new** draft under a new
+  `external_id` that names the earlier story by its `id` and says what
+  changed. The earlier story, its revision history, the editor's note
+  and its tags are left exactly as they were, whether it is still a
+  draft or already published; a correction reaches readers only when
+  an editor records it on the story. `tests/correction-note.test.php`
+  holds this.
 - Rate limit: at most 60 filings per key per hour by default (the
   paper's `ingest_hourly_limit` setting).
 - `"publish_on_image": true` is the filing agent's **ready checkbox**:
