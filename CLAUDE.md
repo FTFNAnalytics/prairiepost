@@ -353,6 +353,29 @@ holding a capability it should not have.
   routes to the same 14 legacy blocks (backups at
   /root/nginx-mini-routes-20260928T020338Z); all 25 domains fail
   closed 401 on both.
+- **The story-lookup lane is BUILT (20 Nov), not yet rolled.** Schema
+  step 23 (ingest_receipts with UNIQUE (site_id, source_story_id);
+  ingest_agents.lookup_scope, default '' = no lookup; the random
+  ingest_ref_key settings row, minted by the migration so the
+  endpoint never writes). POST /api/ingest accepts an optional
+  source_story_id: the database constraint — not a read-then-write
+  check — makes two simultaneous submissions one article; an
+  identical retry returns the original receipt, a different payload
+  under a used id is 409 and never touches editorial edits.
+  POST /api/ingest/lookup is read-only (writes NOTHING, not even
+  last_used_at) behind the separate article:lookup grant
+  (make-agent --lookup own|all; the hub key form has the select):
+  receipt id first, then the bounded exact-headline +
+  canonical-source-URL comparison; answers match {ref, status,
+  url?} / review_required / not_found; every out-of-scope request —
+  wrong paper, wrong desk, wrong serving hostname — gets the same
+  three-word 403. /api/ingest-queue is unchanged. Contract:
+  docs/api-ingest.md §5; compat row: docs/MIGRATION-COMPAT.md
+  step 23. The launch needs a roll (schema 23 migrates) plus the
+  /api/ingest/lookup route added to the 14 legacy nginx blocks
+  (generated blocks route through router.php and need nothing), and
+  keys for Kermode and Portage minted with --lookup=all on owner
+  order.
 - **Test residue awaiting owner cleanup (admin UI, never SQL):** on
   Surrey — draft #315 (`routes-check-agent-ingest-v2-draft`), and
   story #316 (`routes-check-publish-on-image-test`) which the 28 Sep

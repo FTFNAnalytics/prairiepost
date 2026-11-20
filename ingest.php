@@ -33,6 +33,7 @@
  *            image?, image_caption?, image_credit?,
  *            publish_on_image?,
  *            dateline?, tags?, suggested_slug?, external_id?,
+ *            source_story_id?,
  *            sources?: [{url, title?, retrieved_at?}]}
  *           `image` is an https URL the server fetches itself, or an
  *           /uploads/… path returned by POST /api/ingest-media.
@@ -42,10 +43,19 @@
  *           filing carries one, otherwise when a second agent attaches
  *           one through POST /api/ingest-publish. Flagged stories
  *           waiting for art are listed by GET /api/ingest-queue.
+ *           `source_story_id` is the filer's stable id for the source
+ *           story. The database enforces uniqueness on
+ *           (site, source_story_id) — two simultaneous submissions
+ *           create exactly one article. An identical retry is answered
+ *           with the original receipt (200, duplicate: true); a
+ *           DIFFERENT payload under an already-used id is refused 409
+ *           and never overwrites what an editor may have changed.
+ *           Genuine updates stay on the newsroom's editorial path.
  * Response: 201 {ok, id, slug, status, reason?}
  *           `reason` is present when a draft-only token's filing was kept
  *           as a draft (it says what was withheld).
  *           200 {ok, duplicate: true, id, slug} on an exact re-file
+ *           409 {ok: false, error} — source_story_id taken by different content
  *           4xx {ok: false, error} — the reason, never a coercion
  */
 require __DIR__ . '/app/bootstrap.php';
@@ -124,6 +134,12 @@ $externalId = trim((string) ($in['external_id'] ?? ''));
 if (mb_strlen($externalId) > 120) {
     pp_ingest_respond(422, ['ok' => false, 'error' => 'external_id is at most 120 characters']);
 }
+// The filer's stable id for the source story. Visible characters only —
+// it lands in a UNIQUE column, audit rows and support conversations.
+$sourceStoryId = trim((string) ($in['source_story_id'] ?? ''));
+if ($sourceStoryId !== '' && (mb_strlen($sourceStoryId) > 120 || preg_match('/[\x00-\x1f\x7f]/', $sourceStoryId))) {
+    pp_ingest_respond(422, ['ok' => false, 'error' => 'source_story_id is at most 120 visible characters']);
+}
 
 // Optional image, two forms. An `/uploads/…` path is one this install
 // minted itself — /api/ingest-media returns exactly this shape, and the
@@ -160,6 +176,57 @@ foreach ((array) ($in['sources'] ?? []) as $i => $src) {
     ];
     if (count($sources) > 20) {
         pp_ingest_respond(422, ['ok' => false, 'error' => 'at most 20 sources per story']);
+    }
+}
+
+/* --- source_story_id: retries are safe, the DATABASE enforces it ----------
+   The payload fingerprint is the request as the agent sent it (after
+   validation, before any fetch), so an identical retry hashes identically
+   whatever happened to the image in between. The fast path below answers
+   retries before the rate limit and before any image work; the UNIQUE
+   constraint on ingest_receipts (site_id, source_story_id) is what makes
+   two SIMULTANEOUS first submissions create exactly one article — the
+   loser's insert fails and is answered from the winner's receipt. */
+$payloadHash = hash('sha256', json_encode([
+    $siteSlug, $deskSlug, $title, $lede, $body,
+    $imageUrl, $imageCaption, $imageCredit, !empty($in['publish_on_image']),
+    $dateline, $tags, trim((string) ($in['suggested_slug'] ?? '')),
+    array_column($sources, 'url'),
+], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE));
+
+/**
+ * Answer from an existing receipt and stop: the original receipt for an
+ * identical retry, 409 for different content under the same id. Editorial
+ * edits are never overwritten — this path writes nothing.
+ */
+function pp_ssid_answer(array $receipt, string $payloadHash, string $siteSlug, array $agent): never
+{
+    if (!hash_equals((string) $receipt['payload_hash'], $payloadHash)) {
+        pp_ingest_audit((int) $receipt['site_id'], (string) $agent['name'], 'ingest-conflict',
+            mb_substr((string) $receipt['source_story_id'], 0, 160),
+            'refused 409: source_story_id already filed with different content (post #' . (int) $receipt['post_id'] . ' untouched)',
+            (int) $receipt['post_id']);
+        pp_ingest_respond(409, ['ok' => false,
+            'error' => 'source_story_id already filed with different content — the stored article was not changed; corrections go through the newsroom']);
+    }
+    $out = ['ok' => true, 'duplicate' => true,
+        'id' => (int) $receipt['post_id'], 'slug' => (string) $receipt['slug']];
+    $p = db()->prepare('SELECT status, slug FROM posts WHERE id = ?');
+    $p->execute([(int) $receipt['post_id']]);
+    if ($row = $p->fetch()) {
+        $out['status'] = (string) $row['status'];
+        if ($row['status'] === 'published') {
+            $out['url'] = pp_story_public_url($siteSlug, (string) $row['slug']);
+        }
+    }
+    pp_ingest_respond(200, $out);
+}
+
+if ($sourceStoryId !== '') {
+    $stmt = db()->prepare('SELECT * FROM ingest_receipts WHERE site_id = ? AND source_story_id = ?');
+    $stmt->execute([$siteId, $sourceStoryId]);
+    if ($receipt = $stmt->fetch()) {
+        pp_ssid_answer($receipt, $payloadHash, $siteSlug, $agent);
     }
 }
 
@@ -261,20 +328,45 @@ if ($readyOnImage && $agent['may_publish'] && $status !== 'published') {
 }
 
 $pdo = db();
-$pdo->prepare('INSERT INTO posts
-    (title, slug, category_id, byline, dateline, lede, body,
-     meta_description, post_type, origin, status, awaiting_image,
-     image, image_caption, image_credit,
-     filed_by, content_hash, published_at, created_at, updated_at)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)')
-    ->execute([
-        $title, $slug, (int) $desk['id'], $byline, $dateline, $lede, $body,
-        excerpt($lede, 155), 'story', 'hermes', $status, $awaitingImage,
-        $imagePath, $imagePath !== '' ? $imageCaption : '', $imagePath !== '' ? $imageCredit : '',
-        $agent['name'], $hash, $status === 'published' ? $now : null, $now, $now,
-    ]);
-$postId = pp_last_id('posts');
-$pdo->prepare('INSERT INTO post_sites (post_id, site_id) VALUES (?, ?)')->execute([$postId, $siteId]);
+// The filing and its receipt commit together: if the receipt loses a race
+// on UNIQUE (site_id, source_story_id), the whole filing rolls back and
+// the request is answered from the winner's receipt — one article, ever.
+$pdo->beginTransaction();
+try {
+    $pdo->prepare('INSERT INTO posts
+        (title, slug, category_id, byline, dateline, lede, body,
+         meta_description, post_type, origin, status, awaiting_image,
+         image, image_caption, image_credit,
+         filed_by, content_hash, published_at, created_at, updated_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)')
+        ->execute([
+            $title, $slug, (int) $desk['id'], $byline, $dateline, $lede, $body,
+            excerpt($lede, 155), 'story', 'hermes', $status, $awaitingImage,
+            $imagePath, $imagePath !== '' ? $imageCaption : '', $imagePath !== '' ? $imageCredit : '',
+            $agent['name'], $hash, $status === 'published' ? $now : null, $now, $now,
+        ]);
+    $postId = pp_last_id('posts');
+    $pdo->prepare('INSERT INTO post_sites (post_id, site_id) VALUES (?, ?)')->execute([$postId, $siteId]);
+    if ($sourceStoryId !== '') {
+        $pdo->prepare('INSERT INTO ingest_receipts (site_id, source_story_id, post_id, slug, payload_hash, filed_by, created_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?)')
+            ->execute([$siteId, $sourceStoryId, $postId, $slug, $payloadHash, $agent['name'], $now]);
+    }
+    $pdo->commit();
+} catch (PDOException $e) {
+    $pdo->rollBack();
+    // 23xxx is the integrity-constraint class on all three engines. With a
+    // source_story_id in play that is the lost race: answer from the
+    // winner's receipt exactly as the fast path would have.
+    if ($sourceStoryId !== '' && str_starts_with((string) $e->getCode(), '23')) {
+        $stmt = $pdo->prepare('SELECT * FROM ingest_receipts WHERE site_id = ? AND source_story_id = ?');
+        $stmt->execute([$siteId, $sourceStoryId]);
+        if ($receipt = $stmt->fetch()) {
+            pp_ssid_answer($receipt, $payloadHash, $siteSlug, $agent);
+        }
+    }
+    throw $e;
+}
 
 $insSrc = $pdo->prepare('INSERT INTO story_sources (post_id, url, title, retrieved_at, created_at) VALUES (?, ?, ?, ?, ?)');
 foreach ($sources as $src) {

@@ -3,7 +3,7 @@
  * Every ingest endpoint against every kind of credential, over real HTTP on
  * a disposable database.
  *
- * Four endpoints answer the ingest bearer token. Each must fail closed for
+ * Five endpoints answer the ingest bearer token. Each must fail closed for
  * a token that is missing, unknown or revoked, and each must give a
  * draft-only token its documented answer (docs/api-ingest.md):
  * /api/ingest-media stores the upload, /api/ingest files a draft whatever
@@ -71,13 +71,13 @@ $siteId = (int) $pdo->query("SELECT id FROM sites WHERE slug = 'prairiedispatch'
 $pdo->prepare('INSERT INTO settings (site_id, skey, svalue) VALUES (?, ?, ?)')
     ->execute([$siteId, 'wire_desks', 'local-news']);
 
-$mint = function (string $name, string $sites, string $desks, int $enabled, int $draftOnly) use ($pdo): string {
+$mint = function (string $name, string $sites, string $desks, int $enabled, int $draftOnly, string $lookup = '') use ($pdo): string {
     $t = 'hermes_' . bin2hex(random_bytes(28));
-    $pdo->prepare('INSERT INTO ingest_agents (name, token_hash, sites, desks, enabled, draft_only, created_at) VALUES (?,?,?,?,?,?,?)')
-        ->execute([$name, hash('sha256', $t), $sites, $desks, $enabled, $draftOnly, now()]);
+    $pdo->prepare('INSERT INTO ingest_agents (name, token_hash, sites, desks, enabled, draft_only, lookup_scope, created_at) VALUES (?,?,?,?,?,?,?,?)')
+        ->execute([$name, hash('sha256', $t), $sites, $desks, $enabled, $draftOnly, $lookup, now()]);
     return $t;
 };
-$standard         = $mint('authtest-standard', 'prairiedispatch', '', 1, 0);
+$standard         = $mint('authtest-standard', 'prairiedispatch', '', 1, 0, 'all');
 $draftOnly        = $mint('authtest-draft-only', 'prairiedispatch', '', 1, 1);
 $revoked          = $mint('authtest-revoked', 'prairiedispatch', '', 0, 0);
 $revokedDraftOnly = $mint('authtest-revoked-draft-only', 'prairiedispatch', '', 0, 1);
@@ -107,11 +107,14 @@ $codes = [];   // every HTTP status this suite saw — none may be 5xx
  * none. Returns [status, decoded body (null when it is not JSON), raw body,
  * content type].
  */
-function api(int $port, string $method, string $path, ?string $authorization, $body = null, string $ctype = 'application/json'): array
+function api(int $port, string $method, string $path, ?string $authorization, $body = null, string $ctype = 'application/json', array $extraHeaders = []): array
 {
     global $codes;
     $ch = curl_init('http://127.0.0.1:' . $port . $path);
     $headers = $authorization !== null ? ['Authorization: ' . $authorization] : [];
+    foreach ($extraHeaders as $h) {
+        $headers[] = $h;
+    }
     curl_setopt_array($ch, [CURLOPT_RETURNTRANSFER => true, CURLOPT_TIMEOUT => 15,
                             CURLOPT_CUSTOMREQUEST => $method]);
     if ($body !== null) {
@@ -205,18 +208,27 @@ $endpoints = [
         'send' => fn (?string $authorization) => api($port, 'POST', '/api/ingest-publish', $authorization,
             ['story' => $GLOBALS['waitSlug'], 'image' => $GLOBALS['art']]),
     ],
+    // Read-only, and host-checked: the request must arrive on the paper's
+    // own hostname (the Host header below is the fixture's domains row).
+    '/api/ingest/lookup' => [
+        'file' => 'ingest-lookup.php', 'method' => 'POST', 'other_method' => 'GET',
+        'method_error' => 'POST one lookup per call',
+        'send' => fn (?string $authorization) => api($port, 'POST', '/api/ingest/lookup', $authorization,
+            ['site' => 'prairiedispatch', 'desk' => 'environment', 'headline' => 'No such coverage anywhere'],
+            'application/json', ['Host: paper.test']),
+    ],
 ];
 
 // What the tree routes. router.php and .htaccess are two of the three homes
 // a route has (the third is each paper's nginx block, which is not in a
 // checkout to read).
 $routed = [];
-preg_match_all("#'(/api/ingest[a-z-]*)/?'\s*=>\s*'/([a-z-]+\.php)'#", (string) file_get_contents($root . '/router.php'), $mm, PREG_SET_ORDER);
+preg_match_all("#'(/api/ingest[a-z-]*(?:/[a-z-]+)?)/?'\s*=>\s*'/([a-z-]+\.php)'#", (string) file_get_contents($root . '/router.php'), $mm, PREG_SET_ORDER);
 foreach ($mm as $m) {
     $routed[$m[1]] = $m[2];
 }
 $rewritten = [];
-preg_match_all('#^RewriteRule \^api/(ingest[a-z-]*)/\?\$ ([a-z-]+\.php) #m', (string) file_get_contents($root . '/.htaccess'), $mm, PREG_SET_ORDER);
+preg_match_all('#^RewriteRule \^api/(ingest[a-z-]*(?:/[a-z-]+)?)/\?\$ ([a-z-]+\.php) #m', (string) file_get_contents($root . '/.htaccess'), $mm, PREG_SET_ORDER);
 foreach ($mm as $m) {
     $rewritten['/api/' . $m[1]] = $m[2];
 }
@@ -389,6 +401,19 @@ $draftOnlyAnswer = [
            && $a['detail'] === 'REFUSED: draft-only token attempted attach-and-publish; story left as a draft, art not attached',
            'the refusal is audited once, against the paper, naming the token and the story (got ' . json_encode($a) . ')');
     },
+    // Lookup checks its own separate grant, not draft_only: this token was
+    // minted without lookup_scope, so it is refused outright — and the
+    // refusal reveals nothing about any story. (A draft-only token minted
+    // WITH the grant may look up; tests/ingest-lookup.test.php proves it.)
+    '/api/ingest/lookup' => function () use (&$endpoints, $draftOnly, $json): void {
+        [$code, $j, $raw, $type] = $endpoints['/api/ingest/lookup']['send']("Bearer $draftOnly");
+        ok($code === 403 && $type === $json && $j === [
+            'ok' => false,
+            'error' => 'this token has no lookup permission',
+            'reason' => 'article:lookup is granted at minting (lookup_scope own|all); without it this surface answers nothing',
+        ], "/api/ingest/lookup refuses a token without the grant: 403 {ok, error, reason} (got $code " . json_encode($j) . ')');
+        ok(!str_contains($raw, 'result'), 'the refusal carries no lookup result');
+    },
 ];
 foreach ($endpoints as $route => $e) {
     ok(isset($draftOnlyAnswer[$route]), "$route has a draft-only answer written down in this file");
@@ -482,6 +507,10 @@ ok($code === 200 && $type === $json && $j === [
 $p = post($waitSlug);
 ok($p && $p['status'] === 'published' && (int) $p['awaiting_image'] === 0 && $p['image'] === $art && $p['published_at'] !== null,
    'the row is published with the art attached');
+
+[$code, $j, , $type] = $endpoints['/api/ingest/lookup']['send']("Bearer $standard");
+ok($code === 200 && $type === $json && $j === ['ok' => true, 'result' => 'not_found'],
+   "a standard token with the grant looks up an uncovered headline: 200 not_found (got $code " . json_encode($j) . ')');
 
 /* ---- 7. Invariants ---------------------------------------------------------- */
 ok(scalar("SELECT COUNT(*) FROM posts WHERE filed_by IN ('authtest-revoked', 'authtest-revoked-draft-only')") === 0,

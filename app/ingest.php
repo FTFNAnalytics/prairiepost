@@ -3,12 +3,14 @@
  * The ingest endpoints' shared ground: who is calling, what they may do,
  * and how they are answered.
  *
- * Four endpoints answer the ingest bearer token —
+ * Five endpoints answer the ingest bearer token —
  *
  *   POST /api/ingest          ingest.php          file one story
  *   POST /api/ingest-media    ingest-media.php    upload a featured image
  *   GET  /api/ingest-queue    ingest-queue.php    stories waiting for art
  *   POST /api/ingest-publish  ingest-publish.php  attach the art and publish
+ *   POST /api/ingest/lookup   ingest-lookup.php   read-only: has this story
+ *                                                 already been filed?
  *
  * — and each used to carry its own copy of the token check, its own reading
  * of the token's papers, desks and draft_only flag, and its own JSON
@@ -58,13 +60,20 @@ function pp_ingest_respond(int $code, array $body): never
  *   sites        slugs of the papers it may write to; empty means none
  *   desks        slugs of the desks it is held to; empty means any desk
  *   may_publish  false for a draft-only token
+ *   lookup       the token's article-lookup grant: '' (none — the
+ *                default), 'own' (its own filings, plus published
+ *                stories), or 'all' (the full editorial queue within its
+ *                papers and desks). Read from the token row and nowhere
+ *                else, and stated as the GRANTED value so code that
+ *                misreads it fails closed: a missing or misspelt key is
+ *                not a grant.
  *
  * may_publish is read from the token row and nowhere else: a request can
  * neither claim the capability nor shed the restriction. It is stated
  * positively so that code which misreads it fails closed — a key that is
  * missing or misspelt is not `true`.
  *
- * @return array{id: int, name: string, sites: list<string>, desks: list<string>, may_publish: bool}
+ * @return array{id: int, name: string, sites: list<string>, desks: list<string>, may_publish: bool, lookup: string}
  */
 function pp_ingest_authenticate(): array
 {
@@ -80,12 +89,14 @@ function pp_ingest_authenticate(): array
         pp_ingest_respond(401, ['ok' => false, 'error' => 'unknown or revoked token']);
     }
     $list = static fn (string $csv): array => array_values(array_filter(array_map('trim', explode(',', $csv))));
+    $lookup = (string) ($row['lookup_scope'] ?? '');
     return [
         'id' => (int) $row['id'],
         'name' => (string) $row['name'],
         'sites' => $list((string) $row['sites']),
         'desks' => $list((string) $row['desks']),
         'may_publish' => (int) ($row['draft_only'] ?? 0) !== 1,
+        'lookup' => in_array($lookup, ['own', 'all'], true) ? $lookup : '',
     ];
 }
 
