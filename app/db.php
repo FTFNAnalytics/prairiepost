@@ -61,8 +61,21 @@ function pp_schema_ddl(string $driver): array
             desks TEXT NOT NULL DEFAULT '',
             enabled INTEGER NOT NULL DEFAULT 1,
             draft_only INTEGER NOT NULL DEFAULT 0,
+            lookup_scope VARCHAR(10) NOT NULL DEFAULT '',
             created_at $dt NOT NULL,
             last_used_at $dt
+        )$suffix",
+
+        "CREATE TABLE ingest_receipts (
+            id $id,
+            site_id INTEGER NOT NULL,
+            source_story_id VARCHAR(120) NOT NULL,
+            post_id INTEGER NOT NULL,
+            slug VARCHAR(191) NOT NULL DEFAULT '',
+            payload_hash VARCHAR(64) NOT NULL,
+            filed_by VARCHAR(120) NOT NULL DEFAULT '',
+            created_at $dt NOT NULL,
+            CONSTRAINT uq_ingest_receipt UNIQUE (site_id, source_story_id)
         )$suffix",
 
         "CREATE TABLE media_clients (
@@ -561,6 +574,11 @@ function pp_install(PDO $pdo, string $driver): void
     }
     $pdo->prepare('INSERT INTO settings (site_id, skey, svalue) VALUES (0, ?, ?)')
         ->execute(['schema_version', (string) PP_SCHEMA_VERSION]);
+    // The per-install key behind the lookup lane's opaque article
+    // references (step 23 mints it on upgrades): the read-only endpoint
+    // must never write, so the key exists before its first request.
+    $pdo->prepare('INSERT INTO settings (site_id, skey, svalue) VALUES (0, ?, ?)')
+        ->execute(['ingest_ref_key', bin2hex(random_bytes(32))]);
 }
 
 /** Current stored schema version; 1 = the pre-network schema. */
@@ -1406,6 +1424,42 @@ function pp_migrations(): array
             // so the newsroom is the only publisher of what such a token files.
             $pdo->exec('ALTER TABLE ingest_agents ADD COLUMN draft_only INTEGER NOT NULL DEFAULT 0');
             $pdo->exec("UPDATE settings SET svalue = '22' WHERE site_id = 0 AND skey = 'schema_version'");
+        },
+
+        23 => function (PDO $pdo, string $driver): void {
+            // The story-lookup lane: an optional, stable source_story_id on
+            // POST /api/ingest with uniqueness ENFORCED by the database on
+            // (site_id, source_story_id) — two simultaneous submissions
+            // cannot create two articles — and a read-only
+            // POST /api/ingest/lookup behind a separate, fail-closed
+            // lookup permission (ingest_agents.lookup_scope: '' none,
+            // 'own' the token's own filings plus published stories,
+            // 'all' the full editorial queue within the token's papers
+            // and desks). The receipt row remembers which article a
+            // source story became, so an identical retry is answered with
+            // the original receipt and a different payload under the same
+            // id is a 409, never an overwrite of editorial edits.
+            $id = $driver === 'mysql' ? 'INT UNSIGNED AUTO_INCREMENT PRIMARY KEY'
+                : ($driver === 'pgsql' ? 'INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY' : 'INTEGER PRIMARY KEY AUTOINCREMENT');
+            $dt = $driver === 'pgsql' ? 'TIMESTAMP' : 'DATETIME';
+            $suffix = $driver === 'mysql' ? ' ENGINE=InnoDB DEFAULT CHARSET=utf8mb4' : '';
+            $pdo->exec("CREATE TABLE ingest_receipts (
+                id $id,
+                site_id INTEGER NOT NULL,
+                source_story_id VARCHAR(120) NOT NULL,
+                post_id INTEGER NOT NULL,
+                slug VARCHAR(191) NOT NULL DEFAULT '',
+                payload_hash VARCHAR(64) NOT NULL,
+                filed_by VARCHAR(120) NOT NULL DEFAULT '',
+                created_at $dt NOT NULL,
+                CONSTRAINT uq_ingest_receipt UNIQUE (site_id, source_story_id)
+            )$suffix");
+            $pdo->exec("ALTER TABLE ingest_agents ADD COLUMN lookup_scope VARCHAR(10) NOT NULL DEFAULT ''");
+            // The per-install key that makes lookup's article references
+            // opaque. Minted HERE so the read-only endpoint never writes.
+            $pdo->prepare('INSERT INTO settings (site_id, skey, svalue) VALUES (0, ?, ?)')
+                ->execute(['ingest_ref_key', bin2hex(random_bytes(32))]);
+            $pdo->exec("UPDATE settings SET svalue = '23' WHERE site_id = 0 AND skey = 'schema_version'");
         },
 
     ];

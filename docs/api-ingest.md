@@ -67,6 +67,7 @@ vhost will ever execute PHP.
         "dateline": "OTTAWA",
         "tags": "council, transit",
         "external_id": "your-cms-id-123",
+        "source_story_id": "noon-2026-11-20-001",
         "sources": [{"url": "https://…", "title": "…"}]
       }'
 
@@ -87,6 +88,19 @@ vhost will ever execute PHP.
   row.
 - `external_id` makes re-files idempotent: an exact re-file answers
   `200 {"ok":true,"duplicate":true,…}` instead of creating a copy.
+- `source_story_id` (optional, ≤ 120 visible characters) is the
+  stronger form: your stable id for the source story, unique per
+  paper and **enforced by the database** — `UNIQUE (site,
+  source_story_id)` — so two simultaneous submissions create exactly
+  one article, whichever request wins. An **identical** retry answers
+  the original receipt: `200 {"ok":true,"duplicate":true,"id":…,
+  "slug":…,"status":…}` (plus `url` once published). A **different**
+  payload under an already-used id answers
+  `409 {"ok":false,"error":…}` and changes nothing — an editor's
+  edits are never overwritten from this path. Do not guess ids for
+  stories filed before ids existed: look them up (section 5) instead.
+  Genuine updates stay on the newsroom's editorial path, exactly as
+  for `external_id` below.
 - **There is no update call.** Once a story is filed it belongs to the
   newsroom: a re-file with the same `external_id` is confirmed against
   the stored story and changes nothing in it, even after an editor has
@@ -164,6 +178,63 @@ The story is not touched: the art is not attached and it keeps waiting
 for a key that may publish, or for its newsroom. The refusal is
 recorded in the paper's audit log.
 
+## 5. Has this story already been filed? `POST /api/ingest/lookup` (read-only)
+
+For a filing job that must not refile what the newsroom already has —
+whether it arrived through this API, was hand-entered by an editor, or
+predates stable story ids. **Separate permission**: the key must be
+minted with the `article:lookup` grant (`lookup_scope`): `own` answers
+over the key's own filings plus published stories; `all` answers over
+the full editorial queue — ordinary drafts, review, scheduled and
+published, whoever created them — within the key's papers and desks,
+and is what finding editor-created or other filers' drafts requires. A
+key without the grant is refused 403 outright.
+
+    curl -X POST https://<paper-domain>/api/ingest/lookup \
+      -H "Authorization: Bearer $KEY" \
+      -H "Content-Type: application/json" \
+      -d '{
+        "site": "<site-slug>",
+        "desk": "local-news",
+        "headline": "Council weighs the harbour cleanup",
+        "source_story_id": "noon-2026-11-20-001",
+        "source_url": "https://city.example/agenda/4411"
+      }'
+
+    → 200 {"ok":true,"result":"match",
+           "article":{"ref":"ar_…","status":"published",
+                      "url":"https://<paper-domain>/story/…"}}
+    → 200 {"ok":true,"result":"review_required"}
+    → 200 {"ok":true,"result":"not_found"}
+
+- **Scope is one paper and one desk per call**, checked three ways on
+  the server: the `site` must be among the key's papers, must be the
+  paper the request's hostname serves, and the `desk` must be within
+  the key's desks. Every scope failure answers the same
+  `403 {"ok":false,"error":"out of scope"}`, whether or not the site,
+  desk or story exists — an out-of-scope request learns nothing.
+- `source_story_id` is checked **first**, against the receipts the
+  filing path stores, regardless of artwork or editorial status. Only
+  then the bounded legacy comparison: the **exact normalized
+  headline** (lowercased, whitespace collapsed) together with the
+  **canonical primary-source URL** where both sides have one. A URL
+  alone, or a merely similar headline, is never a match.
+- `review_required` means legacy coverage could not be ruled out —
+  exact headline but no URL to confirm, conflicting URL evidence, a
+  receipt whose article an editor moved to another desk, or a scan
+  that hit its bound. Hand it to a person; do not file.
+- For a verified match the answer is **small and closed**: an opaque
+  `ref` (stable per article, resolvable only by the server), the
+  editorial `status` (`draft`, `scheduled`, `published`), and the
+  public `url` when published. Never draft copy, editor details, or
+  any listing.
+- This endpoint **writes nothing** — no audit row, not even
+  `last_used_at` — and no answer from it authorizes a filing: auth
+  errors, timeouts and ambiguous matches must be treated as "do not
+  file"; if you file anyway, the `source_story_id` uniqueness above is
+  what still guarantees one article. `/api/ingest-queue` remains the
+  artwork queue, unchanged.
+
 ## Responses you must handle
 
 | Code | Meaning |
@@ -171,8 +242,8 @@ recorded in the paper's audit log.
 | 201 | Created (draft). `slug` and `id` identify it in the newsroom. |
 | 200 + `duplicate` | This exact story was already filed; nothing new was created. |
 | 401 | Missing, unknown or revoked key. |
-| 403 | The key is not scoped to that site or desk — or the key is draft-only: on `/api/ingest-publish` the body carries `status: "draft"` and `reason` and the story is untouched; on `/api/ingest-queue` the body carries `reason` and no stories. |
-| 409 | `/api/ingest-publish` only: the story is not waiting (already published, unflagged, or changed state mid-request). Fetch the queue again. |
+| 403 | The key is not scoped to that site or desk — or the key is draft-only: on `/api/ingest-publish` the body carries `status: "draft"` and `reason` and the story is untouched; on `/api/ingest-queue` the body carries `reason` and no stories. On `/api/ingest/lookup`: the key has no lookup grant, or the request is out of scope (`"out of scope"`, revealing nothing). |
+| 409 | `/api/ingest-publish`: the story is not waiting (already published, unflagged, or changed state mid-request) — fetch the queue again. `/api/ingest`: the `source_story_id` was already filed with different content — the stored article is untouched; corrections go through the newsroom. |
 | 422 | The payload broke a rule; `error` says which. Fix and resend. |
 | 429 | Hourly rate limit; wait and resend. |
 
@@ -181,10 +252,10 @@ recorded in the paper's audit log.
 - Routes live in three homes: `router.php`, `.htaccess`, and each
   paper's nginx block. A new paper's block comes from
   `tools/vps/make-vhost.sh`; legacy blocks need `/api/ingest`,
-  `/api/ingest-media`, `/api/ingest-queue` and `/api/ingest-publish`
-  added in a routes pass. The bare `.php` endpoints answer everywhere
-  regardless.
-- The four endpoints share one token check: `pp_ingest_authenticate()`
+  `/api/ingest-media`, `/api/ingest-queue`, `/api/ingest-publish`
+  and `/api/ingest/lookup` added in a routes pass. The bare `.php`
+  endpoints answer everywhere regardless.
+- The five endpoints share one token check: `pp_ingest_authenticate()`
   in `app/ingest.php` turns the bearer key into an agent (id, name,
   papers, desks, whether it may publish), and
   `pp_ingest_require_publish()` is the 403 a draft-only key gets. A new

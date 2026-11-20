@@ -33,6 +33,7 @@ RewriteRule ^contact/?$ contact.php [L,QSA]
 RewriteRule ^api/monitor/?$ monitor-ingest.php [L,QSA,E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
 # The Hermes ingest APIs (bearer): stories, featured images, the
 # publish-on-image queue and its attach-and-publish call.
+RewriteRule ^api/ingest/lookup/?$ ingest-lookup.php [L,QSA,E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
 RewriteRule ^api/ingest/?$ ingest.php [L,QSA,E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
 RewriteRule ^api/ingest-media/?$ ingest-media.php [L,QSA,E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
 RewriteRule ^api/ingest-queue/?$ ingest-queue.php [L,QSA,E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]

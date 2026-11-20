@@ -67,12 +67,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             redirect('api-keys.php');
         }
         $draftOnly = !empty($_POST['draft_only']) ? 1 : 0;
+        // The lookup grant is a closed list: anything else mints NO lookup.
+        $lookup = (string) ($_POST['lookup_scope'] ?? '');
+        if (!in_array($lookup, ['', 'own', 'all'], true)) {
+            $lookup = '';
+        }
         $token = 'hermes_' . bin2hex(random_bytes(28));
-        db()->prepare('INSERT INTO ingest_agents (name, token_hash, sites, desks, enabled, draft_only, created_at)
-            VALUES (?, ?, ?, ?, 1, ?, ?)')
-            ->execute([$name, hash('sha256', $token), implode(',', $picked), implode(',', $desks), $draftOnly, now()]);
+        db()->prepare('INSERT INTO ingest_agents (name, token_hash, sites, desks, enabled, draft_only, lookup_scope, created_at)
+            VALUES (?, ?, ?, ?, 1, ?, ?, ?)')
+            ->execute([$name, hash('sha256', $token), implode(',', $picked), implode(',', $desks), $draftOnly, $lookup, now()]);
         pp_audit('apikey.created', $name, 'sites: ' . implode(', ', $picked) . ($desks ? ' · desks: ' . implode(', ', $desks) : '')
-            . ($draftOnly ? ' · draft-only' : ''));
+            . ($draftOnly ? ' · draft-only' : '') . ($lookup !== '' ? ' · lookup: ' . $lookup : ''));
         // No redirect on purpose: the raw key exists only in this response.
         $freshToken = $token;
         $freshName = $name;
@@ -123,6 +128,15 @@ flash_show();
     <div class="formrow">
       <label style="font-weight:400"><input type="checkbox" name="draft_only" value="1"> <strong>Draft-only</strong> — this key can never publish: wire desks and <code>publish_on_image</code> are withheld for it, and <code>/api/ingest-publish</code> refuses it. Required for an external evidence feed.</label>
     </div>
+    <div class="formrow">
+      <label>Story lookup (<code>POST /api/ingest/lookup</code>, read-only)
+        <select name="lookup_scope">
+          <option value="">None — the lookup endpoint refuses this key (default)</option>
+          <option value="own">Own — this key's own filings, plus published stories</option>
+          <option value="all">All — the full editorial queue within its papers and desks (sees editor-created and other filers' drafts)</option>
+        </select>
+      </label>
+    </div>
     <fieldset style="border:0;padding:0;margin:12px 0">
       <legend style="font-weight:600;margin-bottom:6px">Papers this key may file to</legend>
       <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:4px 16px">
@@ -139,13 +153,14 @@ flash_show();
   <h2>Existing keys</h2>
   <?php if (!$keys): ?><p class="pagesub">No keys yet.</p><?php else: ?>
   <table class="tbl">
-    <tr><th>Name</th><th>Papers</th><th>Desks</th><th>Publishes</th><th>Status</th><th>Created</th><th>Last used</th><th></th></tr>
+    <tr><th>Name</th><th>Papers</th><th>Desks</th><th>Publishes</th><th>Lookup</th><th>Status</th><th>Created</th><th>Last used</th><th></th></tr>
     <?php foreach ($keys as $k): ?>
     <tr>
       <td><?= e($k['name']) ?></td>
       <td><?= e(str_replace(',', ', ', (string) $k['sites'])) ?></td>
       <td><?= e($k['desks'] !== '' ? str_replace(',', ', ', (string) $k['desks']) : 'any') ?></td>
       <td><?= (int) ($k['draft_only'] ?? 0) === 1 ? '<strong>never</strong> (draft-only)' : 'wire desks + ready flag' ?></td>
+      <td><?= e((string) ($k['lookup_scope'] ?? '') !== '' ? (string) $k['lookup_scope'] : 'none') ?></td>
       <td><?= (int) $k['enabled'] === 1 ? 'active' : '<strong>revoked</strong>' ?></td>
       <td><?= e(substr((string) $k['created_at'], 0, 10)) ?></td>
       <td><?= e($k['last_used_at'] ? substr((string) $k['last_used_at'], 0, 16) : 'never') ?></td>

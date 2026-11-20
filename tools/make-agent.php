@@ -6,6 +6,7 @@
  *
  *   php tools/make-agent.php create --name hermes-bleuet \
  *       --sites bleuet-blanc [--desks actualites,economie] [--draft-only]
+ *       [--lookup own|all]
  *   php tools/make-agent.php list
  *   php tools/make-agent.php revoke --name hermes-bleuet
  *   php tools/make-agent.php enable --name hermes-bleuet
@@ -14,6 +15,15 @@
  * a real site). --desks is optional; empty means any existing desk on the
  * scoped sites. Revocation is the kill switch: a revoked token answers
  * 401 on the next request, identically to a token that never existed.
+ *
+ * --lookup grants the separate article:lookup permission
+ * (ingest_agents.lookup_scope) behind the read-only
+ * POST /api/ingest/lookup: 'own' answers over the token's own filings
+ * plus published stories, 'all' over the full editorial queue within the
+ * token's papers and desks — which is what finding editor-created or
+ * other filers' drafts requires. Omitted means NO lookup: the endpoint
+ * refuses the token outright. Like draft_only, the grant is a property
+ * of the credential, set at minting, never of a request.
  *
  * --draft-only mints a credential that can file but never publish
  * (ingest_agents.draft_only = 1): the paper's wire_desks exception and
@@ -37,7 +47,7 @@ require dirname(__DIR__) . '/app/bootstrap.php';
 
 $cmd = $argv[1] ?? '';
 
-const PP_AGENT_USAGE = 'Usage: php tools/make-agent.php create --name <n> --sites <a,b> [--desks <c,d>] [--draft-only]'
+const PP_AGENT_USAGE = 'Usage: php tools/make-agent.php create --name <n> --sites <a,b> [--desks <c,d>] [--draft-only] [--lookup own|all]'
     . ' | list | revoke --name <n> | enable --name <n>';
 
 /** Stop having changed nothing: the reason on stderr, a non-zero exit. */
@@ -54,7 +64,7 @@ function pp_agent_refuse(string $message): never
 // subcommand it was given to is an error too, never a silent no-op. All of
 // this runs before the database is opened, so a refusal writes nothing.
 $allowed = [
-    'create' => ['name', 'sites', 'desks', 'draft-only'],
+    'create' => ['name', 'sites', 'desks', 'draft-only', 'lookup'],
     'list'   => [],
     'revoke' => ['name'],
     'enable' => ['name'],
@@ -67,10 +77,10 @@ if (isset($allowed[$cmd])) {
         if ($arg === '--draft-only') {
             $key = 'draft-only';
             $value = true;
-        } elseif (preg_match('/^--(name|sites|desks)=(.*)$/s', $arg, $m)) {
+        } elseif (preg_match('/^--(name|sites|desks|lookup)=(.*)$/s', $arg, $m)) {
             $key = $m[1];
             $value = $m[2];
-        } elseif (preg_match('/^--(name|sites|desks)$/', $arg, $m)) {
+        } elseif (preg_match('/^--(name|sites|desks|lookup)$/', $arg, $m)) {
             $key = $m[1];
             if (!isset($argv[$i + 1])) {
                 pp_agent_refuse("--{$key} needs a value.");
@@ -142,13 +152,24 @@ switch ($cmd) {
             exit("Agent '{$name}' already exists. Revoke it and create a new name, or keep its token.\n");
         }
         $draftOnly = !empty($opt['draft-only']) ? 1 : 0;
+        // The lookup grant is strict like every argument here: a value this
+        // tool does not recognise mints nothing, so a typo can never widen
+        // (or silently drop) a permission.
+        $lookup = (string) ($opt['lookup'] ?? '');
+        if (!in_array($lookup, ['', 'own', 'all'], true)) {
+            pp_agent_refuse("--lookup takes exactly 'own' or 'all' (got '{$lookup}').");
+        }
         $token = 'hermes_' . bin2hex(random_bytes(28));
-        $pdo->prepare('INSERT INTO ingest_agents (name, token_hash, sites, desks, enabled, draft_only, created_at)
-            VALUES (?, ?, ?, ?, 1, ?, ?)')
-            ->execute([$name, hash('sha256', $token), implode(',', $sites), implode(',', $desks), $draftOnly, now()]);
+        $pdo->prepare('INSERT INTO ingest_agents (name, token_hash, sites, desks, enabled, draft_only, lookup_scope, created_at)
+            VALUES (?, ?, ?, ?, 1, ?, ?, ?)')
+            ->execute([$name, hash('sha256', $token), implode(',', $sites), implode(',', $desks), $draftOnly, $lookup, now()]);
         echo "Agent:  {$name}\n";
         echo 'Sites:  ' . implode(', ', $sites) . "\n";
         echo 'Desks:  ' . ($desks ? implode(', ', $desks) : '(any existing desk)') . "\n";
+        echo 'Lookup: ' . ($lookup !== '' ? $lookup . ($lookup === 'all'
+            ? ' — /api/ingest/lookup answers over the full editorial queue within its papers and desks'
+            : ' — /api/ingest/lookup answers over its own filings plus published stories')
+            : 'none — /api/ingest/lookup refuses this token') . "\n";
         echo 'Mode:   ' . ($draftOnly
             ? "DRAFT-ONLY — files drafts; wire desks and publish_on_image never publish for this token, /api/ingest-publish refuses it"
             : 'standard — wire desks publish at once; publish_on_image is honoured') . "\n";
@@ -157,12 +178,13 @@ switch ($cmd) {
         break;
 
     case 'list':
-        foreach ($pdo->query('SELECT name, sites, desks, enabled, draft_only, created_at, last_used_at FROM ingest_agents ORDER BY name') as $a) {
+        foreach ($pdo->query('SELECT name, sites, desks, enabled, draft_only, lookup_scope, created_at, last_used_at FROM ingest_agents ORDER BY name') as $a) {
             printf(
-                "%-24s %-9s %-10s sites=%s desks=%s created=%s last_used=%s\n",
+                "%-24s %-9s %-10s lookup=%-4s sites=%s desks=%s created=%s last_used=%s\n",
                 $a['name'],
                 $a['enabled'] ? 'active' : 'REVOKED',
                 (int) $a['draft_only'] === 1 ? 'draft-only' : 'standard',
+                (string) ($a['lookup_scope'] ?? '') !== '' ? $a['lookup_scope'] : 'none',
                 $a['sites'],
                 $a['desks'] !== '' ? $a['desks'] : '(any)',
                 substr((string) $a['created_at'], 0, 10),

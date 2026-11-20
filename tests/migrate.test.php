@@ -82,6 +82,10 @@ foreach (['idx_post_tags_tag', 'idx_news_items_source', 'idx_audit_log_site'] as
 }
 $pdo->exec('ALTER TABLE posts DROP COLUMN awaiting_image');
 $pdo->exec('ALTER TABLE ingest_agents DROP COLUMN draft_only');
+// Step 23's leftovers: the receipts table, the lookup column, the ref key.
+$pdo->exec('DROP TABLE ingest_receipts');
+$pdo->exec('ALTER TABLE ingest_agents DROP COLUMN lookup_scope');
+$pdo->prepare("DELETE FROM settings WHERE site_id = 0 AND skey = 'ingest_ref_key'")->execute();
 $pdo->prepare("UPDATE settings SET svalue = '18' WHERE site_id = 0 AND skey = 'schema_version'")->execute();
 $pdo->prepare('INSERT INTO posts (title, slug, body, status, author_id, created_at, updated_at) VALUES (?,?,?,?,?,?,?)')
     ->execute(['Upgrade survivor', 'upgrade-survivor-' . bin2hex(random_bytes(3)), '<p>x</p>', 'published', 1, date('Y-m-d H:i:s'), date('Y-m-d H:i:s')]);
@@ -125,6 +129,9 @@ foreach (['idx_post_tags_tag' => 'post_tags', 'idx_news_items_source' => 'news_i
 }
 $p2->exec('ALTER TABLE posts DROP COLUMN awaiting_image');
 $p2->exec('ALTER TABLE ingest_agents DROP COLUMN draft_only');
+$p2->exec('DROP TABLE ingest_receipts');
+$p2->exec('ALTER TABLE ingest_agents DROP COLUMN lookup_scope');
+$p2->prepare("DELETE FROM settings WHERE site_id = 0 AND skey = 'ingest_ref_key'")->execute();
 $p2->prepare("UPDATE settings SET svalue = '18' WHERE site_id = 0 AND skey = 'schema_version'")->execute();
 $p2->exec('DELETE FROM schema_migrations');
 $p2->exec('INSERT INTO schema_migrations (version, name, checksum, status, started_at, finished_at) '
