@@ -220,9 +220,11 @@ key without the grant is refused 403 outright.
   **canonical primary-source URL** where both sides have one. A URL
   alone, or a merely similar headline, is never a match.
 - `review_required` means legacy coverage could not be ruled out —
-  exact headline but no URL to confirm, conflicting URL evidence, a
-  receipt whose article an editor moved to another desk, or a scan
-  that hit its bound. Hand it to a person; do not file.
+  exact headline but no URL to confirm, conflicting URL evidence,
+  more than one story carrying full evidence (ambiguity never picks
+  a winner), a receipt whose article an editor moved to another desk
+  or off the paper, or a scan that hit its bound. Hand it to a
+  person; do not file.
 - For a verified match the answer is **small and closed**: an opaque
   `ref` (stable per article, resolvable only by the server), the
   editorial `status` (`draft`, `scheduled`, `published`), and the

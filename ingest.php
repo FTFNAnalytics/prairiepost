@@ -352,6 +352,33 @@ try {
             VALUES (?, ?, ?, ?, ?, ?, ?)')
             ->execute([$siteId, $sourceStoryId, $postId, $slug, $payloadHash, $agent['name'], $now]);
     }
+
+    // Sources and tags commit WITH the story and its receipt: a receipt
+    // must never vouch for a story that was only partly saved, or a retry
+    // would answer `duplicate` for a filing missing its provenance.
+    $insSrc = $pdo->prepare('INSERT INTO story_sources (post_id, url, title, retrieved_at, created_at) VALUES (?, ?, ?, ?, ?)');
+    foreach ($sources as $src) {
+        $insSrc->execute([$postId, $src['url'], $src['title'], $src['retrieved_at'], $now]);
+    }
+    if ($tags !== '') {
+        $selTag = $pdo->prepare('SELECT id FROM tags WHERE slug = ?');
+        $insTag = $pdo->prepare('INSERT INTO tags (name, slug) VALUES (?, ?)');
+        $insPT  = $pdo->prepare('INSERT INTO post_tags (post_id, tag_id) VALUES (?, ?)');
+        foreach (array_slice(array_filter(array_map('trim', explode(',', $tags))), 0, 10) as $name) {
+            $tslug = slugify($name);
+            if ($tslug === '') {
+                continue;
+            }
+            $selTag->execute([$tslug]);
+            $tag = $selTag->fetch();
+            $tagId = $tag ? (int) $tag['id'] : null;
+            if ($tagId === null) {
+                $insTag->execute([mb_substr($name, 0, 120), $tslug]);
+                $tagId = pp_last_id('tags');
+            }
+            $insPT->execute([$postId, $tagId]);
+        }
+    }
     $pdo->commit();
 } catch (PDOException $e) {
     $pdo->rollBack();
@@ -366,31 +393,6 @@ try {
         }
     }
     throw $e;
-}
-
-$insSrc = $pdo->prepare('INSERT INTO story_sources (post_id, url, title, retrieved_at, created_at) VALUES (?, ?, ?, ?, ?)');
-foreach ($sources as $src) {
-    $insSrc->execute([$postId, $src['url'], $src['title'], $src['retrieved_at'], $now]);
-}
-
-if ($tags !== '') {
-    $selTag = $pdo->prepare('SELECT id FROM tags WHERE slug = ?');
-    $insTag = $pdo->prepare('INSERT INTO tags (name, slug) VALUES (?, ?)');
-    $insPT  = $pdo->prepare('INSERT INTO post_tags (post_id, tag_id) VALUES (?, ?)');
-    foreach (array_slice(array_filter(array_map('trim', explode(',', $tags))), 0, 10) as $name) {
-        $tslug = slugify($name);
-        if ($tslug === '') {
-            continue;
-        }
-        $selTag->execute([$tslug]);
-        $tag = $selTag->fetch();
-        $tagId = $tag ? (int) $tag['id'] : null;
-        if ($tagId === null) {
-            $insTag->execute([mb_substr($name, 0, 120), $tslug]);
-            $tagId = pp_last_id('tags');
-        }
-        $insPT->execute([$postId, $tagId]);
-    }
 }
 
 $pdo->prepare('UPDATE ingest_agents SET last_used_at = ? WHERE id = ?')->execute([$now, (int) $agent['id']]);

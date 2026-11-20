@@ -36,11 +36,13 @@
  * then the bounded legacy comparison for older or hand-entered stories:
  * the exact normalized headline (lowercased, whitespace collapsed) and
  * the canonical primary-source URL where both sides have one. A source
- * URL alone, or a merely similar headline, is never a match. When legacy
- * coverage cannot be ruled out — exact headline but no URL to confirm,
- * conflicting URL evidence, a receipt whose article moved desks, or a
- * scan that hit its bound — the answer is review_required, not
- * not_found.
+ * URL alone, or a merely similar headline, is never a match — and
+ * neither is a crowd: two stories both carrying full evidence are
+ * ambiguity, not a winner to pick. When legacy coverage cannot be ruled
+ * out — exact headline but no URL to confirm, conflicting URL evidence,
+ * more than one full match, a receipt whose article moved desks or off
+ * this paper, or a scan that hit its bound — the answer is
+ * review_required, not not_found.
  *
  * Request:  Authorization: Bearer <token>
  *           JSON body: {site, desk, headline, source_story_id?, source_url?}
@@ -161,16 +163,19 @@ if ($sourceStoryId !== '') {
     $stmt = db()->prepare('SELECT * FROM ingest_receipts WHERE site_id = ? AND source_story_id = ?');
     $stmt->execute([$siteId, $sourceStoryId]);
     if ($receipt = $stmt->fetch()) {
-        $p = db()->prepare('SELECT id, slug, status, category_id, filed_by FROM posts WHERE id = ?');
-        $p->execute([(int) $receipt['post_id']]);
+        $p = db()->prepare('SELECT p.id, p.slug, p.status, p.category_id, p.filed_by,
+                                   (SELECT COUNT(*) FROM post_sites ps WHERE ps.post_id = p.id AND ps.site_id = ?) AS on_site
+                              FROM posts p WHERE p.id = ?');
+        $p->execute([$siteId, (int) $receipt['post_id']]);
         $post = $p->fetch();
         // The receipt is certain knowledge that this id was filed here. When
-        // what it points at cannot be shown whole within THIS desk and THIS
-        // token's grant — the article was removed, an editor moved it to
-        // another desk, or an 'own' grant meets another filer's unpublished
-        // work — the answer is review_required: it cannot be ruled out, and
-        // nothing more is revealed.
-        if (!$post || (int) $post['category_id'] !== $deskId) {
+        // what it points at cannot be shown whole within THIS paper, THIS
+        // desk and THIS token's grant — the article was removed, an editor
+        // moved it to another desk or off this paper, or an 'own' grant
+        // meets another filer's unpublished work — the answer is
+        // review_required: it cannot be ruled out, and nothing more is
+        // revealed.
+        if (!$post || (int) $post['on_site'] !== 1 || (int) $post['category_id'] !== $deskId) {
             $answer('review_required');
         }
         if ($agent['lookup'] === 'own' && $post['status'] !== 'published'
@@ -239,6 +244,7 @@ $urlsOf = static function (array $post) use ($canonical): array {
 };
 
 $uncertain = $truncated;   // a scan that hit its bound cannot rule anything out
+$fullMatches = [];
 foreach ($rows as $post) {
     $titleHit = $normalize((string) $post['title']) === $wantTitle;
     if (!$titleHit && $wantUrl === '') {
@@ -247,10 +253,15 @@ foreach ($rows as $post) {
     $urls = $urlsOf($post);
     $urlHit = $wantUrl !== '' && in_array($wantUrl, $urls, true);
     if ($titleHit && $urlHit) {
-        $answerMatch($post);               // both lines of evidence agree
-    }
-    if ($titleHit || $urlHit) {
+        $fullMatches[] = $post;            // both lines of evidence agree
+    } elseif ($titleHit || $urlHit) {
         $uncertain = true;                 // one line of evidence, not two
     }
 }
-$answer($uncertain ? 'review_required' : 'not_found');
+// Exactly one story carrying both lines of evidence is a match. Two or
+// more is ambiguity, and an ambiguous answer must never pick a winner:
+// the brief's rule is review_required, handed to a person.
+if (count($fullMatches) === 1) {
+    $answerMatch($fullMatches[0]);
+}
+$answer(($fullMatches || $uncertain) ? 'review_required' : 'not_found');
