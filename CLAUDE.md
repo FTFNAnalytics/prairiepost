@@ -211,15 +211,19 @@ agent. Never give the news agent a shell command or the VPS agent a
 filing step — each such mix has produced a stopped run or an agent
 holding a capability it should not have.
 
-## Current operational state (as of the Brandon roll, 29 Sep 2026)
+## Current operational state (as of the story-lookup roll, 21 Nov 2026)
 
-- **Release in production: `d68a89fa67c4`** (branch commit
-  `d68a89fa67c491ea046a39a2ea4186a61e2464ea`), serving BOTH release
-  groups: `/var/www/prairiepost-d68a89fa67c4-shared` (the papers) and
-  `/var/www/prairiepost-d68a89fa67c4-civismedia` (the hub). The
-  branch HEAD is one commit ahead (`f3991ea`, the Steeltown and
-  Toronto Telegraph foundations) — INERT files that serve nothing
-  until seeded; they ride the next roll, no urgency. Both
+- **Release in production: `4ff557d2b737`** (branch commit
+  `4ff557d2b737482a2915f00f62ec322308ae70ed`), serving BOTH release
+  groups: `/var/www/prairiepost-4ff557d2b737-shared` (the papers) and
+  `/var/www/prairiepost-4ff557d2b737-civismedia` (the hub). The
+  21 Nov roll found production on `680a0ff84e44` at schema 22 — a
+  16 Nov roll this file had no record of had already applied step 22
+  — which is lesson 5 working: the agent acted on
+  `migrate.php --status`, not on this file, and only step 23
+  applied. Recovery past steps 22/23 is FORWARD ONLY: no rollback
+  by repointing (docs/MIGRATION-COMPAT.md). The 25 domains split
+  14 legacy nginx blocks + 11 generated (router.php) blocks. Both
   groups roll together; `upgrade-papers.sh` upgrades every prairiepost
   group and migrates their shared schema exactly once. Never write a
   brief that forbids touching the hub release (that stale rule aborted
@@ -266,10 +270,13 @@ holding a capability it should not have.
   third wire source (the CBC national feed) printed no "source added"
   line because the URL was already in the shared sources table —
   seeder dedupe by design, not a defect.
-- **Schema version 21, journaled** (step 21: `posts.awaiting_image`,
-  the publish-on-image flag). `tools/migrate.php` is the only
-  mutator, the app refuses (503/exit 2) on a non-ready schema, and
-  the roll migrates before any traffic switch.
+- **Schema version 23, journaled** (step 21: `posts.awaiting_image`;
+  step 22: `ingest_agents.draft_only`, NEWS1; step 23: the
+  story-lookup lane — `ingest_receipts` with
+  UNIQUE (site_id, source_story_id), `ingest_agents.lookup_scope`,
+  the `ingest_ref_key` settings row). `tools/migrate.php` is the
+  only mutator, the app refuses (503/exit 2) on a non-ready schema,
+  and the roll migrates before any traffic switch.
 - **The Phase 1+2 hardening is live**: HTML Purifier sanitizer,
   editorial authorization, SSRF-safe transport, CLI-only first admin,
   per-site opt-in indexing (every page noindex until enabled — none
@@ -280,7 +287,7 @@ holding a capability it should not have.
 - **Backups**: nightly cron invokes the RELEASE's own
   `tools/backup.sh` (repointed by each roll); manifest-backed sets
   under `/var/backups/civis` (latest verified
-  `20260929-075915-81b61e1d`); discovery scoped to
+  `20261121-031701-2a02ecf4`); discovery scoped to
   `/var/www/prairiepost-*` roots, so foreign tenants read as
   out-of-scope by design. Off-site transfer is NOT configured — an
   owner step (hook + key).
@@ -353,38 +360,52 @@ holding a capability it should not have.
   routes to the same 14 legacy blocks (backups at
   /root/nginx-mini-routes-20260928T020338Z); all 25 domains fail
   closed 401 on both.
-- **The story-lookup lane is BUILT (20 Nov), not yet rolled.** Schema
-  step 23 (ingest_receipts with UNIQUE (site_id, source_story_id);
-  ingest_agents.lookup_scope, default '' = no lookup; the random
-  ingest_ref_key settings row, minted by the migration so the
-  endpoint never writes). POST /api/ingest accepts an optional
-  source_story_id: the database constraint — not a read-then-write
-  check — makes two simultaneous submissions one article; an
-  identical retry returns the original receipt, a different payload
-  under a used id is 409 and never touches editorial edits.
+- **The story-lookup lane is LIVE (21 Nov, release 4ff557d2b737).**
   POST /api/ingest/lookup is read-only (writes NOTHING, not even
   last_used_at) behind the separate article:lookup grant
-  (make-agent --lookup own|all; the hub key form has the select):
-  receipt id first, then the bounded exact-headline +
-  canonical-source-URL comparison; answers match {ref, status,
-  url?} / review_required / not_found; every out-of-scope request —
-  wrong paper, wrong desk, wrong serving hostname — gets the same
-  three-word 403. /api/ingest-queue is unchanged. Contract:
-  docs/api-ingest.md §5; compat row: docs/MIGRATION-COMPAT.md
-  step 23. The launch needs a roll (schema 23 migrates) plus the
-  /api/ingest/lookup route added to the 14 legacy nginx blocks
-  (generated blocks route through router.php and need nothing), and
-  keys for Kermode and Portage minted with --lookup=all on owner
-  order.
+  (lookup_scope '' none / own / all; make-agent --lookup, or the hub
+  key form). Scope is one paper and desk per call, checked against
+  the key's papers, its desks, AND the serving hostname; every scope
+  failure answers the same 403 {"ok":false,"error":"out of scope"},
+  existence notwithstanding. Matching: the stored source_story_id
+  first (the receipts the filing path keeps), then the bounded
+  exact-normalized-headline + canonical-source-URL comparison — one
+  line of evidence, two full matches (ambiguity picks no winner), a
+  receipt whose article moved desks or off the paper, or a bound
+  hit all answer review_required, never not_found. A match returns
+  only {ref, status, url?}. POST /api/ingest takes an optional
+  source_story_id: UNIQUE (site_id, source_story_id) in the
+  DATABASE makes two simultaneous submissions one article (story,
+  receipt, sources and tags commit in ONE transaction); an
+  identical retry returns the original receipt, a different payload
+  under a used id is 409 and never touches editorial edits.
+  /api/ingest-queue unchanged; no publish-permission changes. The
+  21 Nov routes pass added /api/ingest/lookup to the 14 legacy
+  blocks (root-only backups at
+  /root/routes-pass-lookup-20261121T181222Z/); the 11 generated
+  blocks route through router.php and needed nothing; all 25
+  domains fail closed 401 on the route. Keys `noon-kermode`
+  (kermode-chronicle) and `noon-portage` (portage-press) are minted
+  --lookup=all --draft-only, NO desk list yet (the owner had named
+  none; desk-explicit is one revoke + create), tokens root-only
+  under /root/hermes-tokens/. Live proofs: both papers returned a
+  full-evidence `match` with the published URL, and each key asking
+  about the other paper got the three-word 403. The noon job stays
+  disconnected pending the owner's review of those receipts.
+  Contract: docs/api-ingest.md §5; compat: docs/MIGRATION-COMPAT.md
+  step 23. Not separately re-confirmed on 21 Nov: per-site indexing
+  still off (nothing in the roll touches it).
 - **Test residue awaiting owner cleanup (admin UI, never SQL):** on
   Surrey — draft #315 (`routes-check-agent-ingest-v2-draft`), and
   story #316 (`routes-check-publish-on-image-test`) which the 28 Sep
   live proof PUBLISHED through the lane and is publicly visible until
   an editor unpublishes or deletes it; plus two tiny test PNGs under
   /uploads/2026/09/.
-- Hermes tokens: unchanged (`hermes-quebec`, `hermes-mississauga`,
-  root-only under `/root/hermes-tokens/`). No token exists for Surrey
-  or any newer paper. No paper has its newsletter enabled.
+- Ingest tokens: `hermes-quebec`, `hermes-mississauga` (filing),
+  and since 21 Nov `noon-kermode` and `noon-portage` (draft-only,
+  lookup=all, per-paper, desk-unbound) — all root-only under
+  `/root/hermes-tokens/`. No token exists for Surrey or any other
+  paper. No paper has its newsletter enabled.
 
 
 ## Known debt, in the order it should be paid
