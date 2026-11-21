@@ -65,6 +65,14 @@ foreach (pp_schema_ddl('pgsql') as $stmt) {
 $lines[] = rtrim(pp_journal_ddl('pgsql')) . ';';
 $lines[] = '';
 $lines[] = "INSERT INTO settings (site_id, skey, svalue) VALUES (0, 'schema_version', '" . $version . "');";
+// The lookup lane's per-install reference key, exactly as pp_install()
+// and migration step 23 mint it — without this row a database
+// bootstrapped from this file reports ready at v23 while
+// /api/ingest/lookup (which never writes) answers 500.
+// gen_random_uuid() draws from pg_strong_random on Postgres 13+;
+// two of them, hyphens stripped, give the same 64 hex characters.
+$lines[] = "INSERT INTO settings (site_id, skey, svalue)";
+$lines[] = "VALUES (0, 'ingest_ref_key', replace(gen_random_uuid()::text || gen_random_uuid()::text, '-', ''));";
 $lines[] = "INSERT INTO schema_migrations (version, name, checksum, status, started_at, finished_at)";
 $lines[] = "VALUES (" . $version . ", 'bootstrapped from supabase/schema.sql', '', 'installed', now(), now());";
 $lines[] = '';

@@ -584,5 +584,7 @@ CREATE TABLE schema_migrations (
     );
 
 INSERT INTO settings (site_id, skey, svalue) VALUES (0, 'schema_version', '23');
+INSERT INTO settings (site_id, skey, svalue)
+VALUES (0, 'ingest_ref_key', replace(gen_random_uuid()::text || gen_random_uuid()::text, '-', ''));
 INSERT INTO schema_migrations (version, name, checksum, status, started_at, finished_at)
 VALUES (23, 'bootstrapped from supabase/schema.sql', '', 'installed', now(), now());

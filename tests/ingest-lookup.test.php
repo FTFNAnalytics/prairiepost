@@ -275,6 +275,39 @@ ok(scalar('SELECT COUNT(*) FROM posts WHERE title = ?', ['The Simultaneous Story
    && scalar('SELECT COUNT(*) FROM ingest_receipts WHERE source_story_id = ?', ['race-001']) === 1,
    '5. two simultaneous submissions created exactly one article and one receipt');
 
+/* ---- 3b. Review fixes (PR 78 review): ambiguity, membership, atomicity ----- */
+// TWO legacy stories both carrying full evidence: ambiguity never picks a
+// winner.
+$mkPost($siteA, $deskEnv, 'Twice-Covered Announcement', 'twice-covered-announcement', 'draft',
+    ['source_url' => 'https://city.example/release/77']);
+$mkPost($siteA, $deskEnv, 'Twice-Covered Announcement', 'twice-covered-announcement-2', 'published',
+    ['source_url' => 'https://city.example/release/77']);
+[$code, $j] = $lookup($all, ['site' => 'prairiedispatch', 'desk' => 'environment',
+    'headline' => 'Twice-Covered Announcement', 'source_url' => 'https://city.example/release/77']);
+ok($code === 200 && $j === ['ok' => true, 'result' => 'review_required'],
+   '3b. two full matches: review_required, never the first one picked (got ' . json_encode($j) . ')');
+// A receipt whose article was taken off this paper: certain knowledge
+// that cannot be shown whole here.
+fresh()->prepare('DELETE FROM post_sites WHERE post_id = ? AND site_id = ?')->execute([$wireId, $siteA]);
+[$code, $j] = $lookup($all, ['site' => 'prairiedispatch', 'desk' => 'local-news',
+    'headline' => 'Wire Story With A Stable Id', 'source_story_id' => 'noon-2026-11-20-001']);
+ok($code === 200 && $j === ['ok' => true, 'result' => 'review_required'],
+   '3b. a receipt whose article left the paper: review_required (got ' . json_encode($j) . ')');
+fresh()->prepare('INSERT INTO post_sites (post_id, site_id) VALUES (?, ?)')->execute([$wireId, $siteA]);
+// A receipted filing is COMPLETE: its sources and tags committed with the
+// story and the receipt, so `duplicate` never vouches for a partial save.
+[$code, $j] = $file($all, ['title' => 'Fully Provisioned Filing', 'source_story_id' => 'noon-2026-11-20-002',
+    'tags' => 'council, transit', 'sources' => [['url' => 'https://city.example/minutes/1'], ['url' => 'https://city.example/minutes/2']]]);
+$fullId = is_array($j) ? (int) ($j['id'] ?? 0) : 0;
+ok($code === 201 && scalar('SELECT COUNT(*) FROM ingest_receipts WHERE source_story_id = ?', ['noon-2026-11-20-002']) === 1
+   && scalar('SELECT COUNT(*) FROM story_sources WHERE post_id = ?', [$fullId]) === 2
+   && scalar('SELECT COUNT(*) FROM post_tags WHERE post_id = ?', [$fullId]) === 2,
+   '3b. the receipt vouches for a complete story: both sources and both tags are there (got ' . json_encode($j) . ')');
+// The generated Postgres bootstrap seeds the lookup ref key: a database
+// built from supabase/schema.sql must not report ready and then 500.
+ok(str_contains((string) file_get_contents(dirname(__DIR__) . '/supabase/schema.sql'), "'ingest_ref_key'"),
+   '3b. supabase/schema.sql seeds ingest_ref_key alongside its version stamp');
+
 /* ---- 6. Lookups write nothing ---------------------------------------------- */
 $audits = scalar('SELECT COUNT(*) FROM audit_log');
 $receipts = scalar('SELECT COUNT(*) FROM ingest_receipts');
