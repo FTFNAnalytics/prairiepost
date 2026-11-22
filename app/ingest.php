@@ -3,7 +3,7 @@
  * The ingest endpoints' shared ground: who is calling, what they may do,
  * and how they are answered.
  *
- * Five endpoints answer the ingest bearer token —
+ * Seven endpoints answer the ingest bearer token —
  *
  *   POST /api/ingest          ingest.php          file one story
  *   POST /api/ingest-media    ingest-media.php    upload a featured image
@@ -11,6 +11,11 @@
  *   POST /api/ingest-publish  ingest-publish.php  attach the art and publish
  *   POST /api/ingest/lookup   ingest-lookup.php   read-only: has this story
  *                                                 already been filed?
+ *   POST /api/ingest/update   ingest-update.php   change the headline, lede,
+ *                                                 body or image of a story
+ *                                                 that is already PUBLISHED
+ *   GET  /api/ingest/stories  ingest-stories.php  read a paper's stories:
+ *                                                 a list, or one in full
  *
  * — and each used to carry its own copy of the token check, its own reading
  * of the token's papers, desks and draft_only flag, and its own JSON
@@ -67,13 +72,25 @@ function pp_ingest_respond(int $code, array $body): never
  *                else, and stated as the GRANTED value so code that
  *                misreads it fails closed: a missing or misspelt key is
  *                not a grant.
+ *   may_update_published  true only for a key minted with the
+ *                update_published grant: it may change the headline,
+ *                lede, body and image of a PUBLISHED story through
+ *                /api/ingest/update. Independent of may_publish — a
+ *                draft-only key can hold it, and then edits what is
+ *                already live while still never publishing anything new.
+ *                Stated positively so a misread fails closed.
+ *   read         the token's story-read grant: '' (none — the default),
+ *                'published' (the paper's live stories) or 'all' (every
+ *                story in the editorial queue too: drafts, review and
+ *                scheduled, whoever made them). Like lookup, stated as
+ *                the GRANTED value so a misread fails closed.
  *
  * may_publish is read from the token row and nowhere else: a request can
  * neither claim the capability nor shed the restriction. It is stated
  * positively so that code which misreads it fails closed — a key that is
  * missing or misspelt is not `true`.
  *
- * @return array{id: int, name: string, sites: list<string>, desks: list<string>, may_publish: bool, lookup: string}
+ * @return array{id: int, name: string, sites: list<string>, desks: list<string>, may_publish: bool, lookup: string, may_update_published: bool, read: string}
  */
 function pp_ingest_authenticate(): array
 {
@@ -97,7 +114,47 @@ function pp_ingest_authenticate(): array
         'desks' => $list((string) $row['desks']),
         'may_publish' => (int) ($row['draft_only'] ?? 0) !== 1,
         'lookup' => in_array($lookup, ['own', 'all'], true) ? $lookup : '',
+        'may_update_published' => (int) ($row['update_published'] ?? 0) === 1,
+        'read' => in_array((string) ($row['read_scope'] ?? ''), ['published', 'all'], true) ? (string) $row['read_scope'] : '',
     ];
+}
+
+/**
+ * The per-install key behind opaque article references, or '' when the
+ * schema has not provisioned it. Minted by the migration and by a fresh
+ * install — never by a request.
+ */
+function pp_ingest_ref_key(): string
+{
+    $k = db()->prepare("SELECT svalue FROM settings WHERE site_id = 0 AND skey = 'ingest_ref_key'");
+    $k->execute();
+    return (string) ($k->fetchColumn() ?: '');
+}
+
+/**
+ * An article's opaque reference on one paper: stable, resolvable only by
+ * this server, meaningless anywhere else. /api/ingest/lookup hands it out;
+ * /api/ingest/update accepts it back.
+ */
+function pp_ingest_article_ref(int $siteId, int $postId, string $refKey): string
+{
+    return 'ar_' . substr(hash_hmac('sha256', $siteId . '/' . $postId, $refKey), 0, 24);
+}
+
+/**
+ * A story's version: changes whenever its updated_at or any field the
+ * update lane can change moves. GET /api/ingest/stories hands it out and
+ * POST /api/ingest/update checks it (if_version), so an agent can read a
+ * story, edit it, and refuse to overwrite anything changed in between.
+ * Needs id, updated_at, title, lede, body, image, image_caption,
+ * image_credit.
+ */
+function pp_ingest_story_version(array $p): string
+{
+    return 'v_' . substr(hash('sha256', implode("\x1f", [
+        (int) $p['id'], (string) $p['updated_at'], (string) $p['title'], (string) ($p['lede'] ?? ''),
+        (string) ($p['body'] ?? ''), (string) $p['image'], (string) $p['image_caption'], (string) ($p['image_credit'] ?? ''),
+    ])), 0, 16);
 }
 
 /**

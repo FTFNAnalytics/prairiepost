@@ -203,7 +203,9 @@ and a brief must never mix their steps:
   else — no SSH, no shell, no database access. It reaches the network
   only through `POST /api/ingest`, which is write-only and files drafts.
   Everything it knows about the wire comes from exports the VPS agent
-  produces (`tools/wire-map.php`); there is no read API.
+  produces (`tools/wire-map.php`). The ingest surface's reads —
+  lookup, and (since step 24) GET /api/ingest/stories — answer only
+  keys minted with that endpoint's grant, never by default.
 
 The dependency runs one way: when a task needs both (deploy, then file),
 brief the VPS agent first, wait for its report, then brief the news
@@ -395,6 +397,24 @@ holding a capability it should not have.
   Contract: docs/api-ingest.md §5; compat: docs/MIGRATION-COMPAT.md
   step 23. Not separately re-confirmed on 21 Nov: per-site indexing
   still off (nothing in the roll touches it).
+- **The published-story update and story-read lanes are BUILT
+  (22 Nov), not yet rolled.** Schema step 24
+  (`ingest_agents.update_published`, default 0;
+  `ingest_agents.read_scope`, default ''; `post_revisions.image_credit`,
+  nullable). POST /api/ingest/update changes headline, lede, body and
+  image (+caption/credit) of a PUBLISHED story for keys holding the
+  grant — see the Phase 1 invariant exception below and
+  docs/api-ingest.md §6. GET /api/ingest/stories lists a paper's
+  stories or returns one in full (with the `version` the update's
+  if_version checks) for keys with read_scope 'published' (live only)
+  or 'all' (drafts, review and scheduled too, editors' included) —
+  docs/api-ingest.md §7; it returns no author accounts, editor names,
+  review notes, internal ids or draft slugs, and writes nothing.
+  Rolling both needs: a pinned roll (step 24 migrates), a routes pass
+  adding /api/ingest/update and /api/ingest/stories to the 14 legacy
+  blocks (the 11 generated blocks need nothing), and re-minting the
+  agents' keys with --update-published and --read (grants are set at
+  minting, like every other).
 - **Test residue awaiting owner cleanup (admin UI, never SQL):** on
   Surrey — draft #315 (`routes-check-agent-ingest-v2-draft`), and
   story #316 (`routes-check-publish-on-image-test`) which the 28 Sep
@@ -489,6 +509,16 @@ Full detail and evidence: `docs/build/phase-01-handoff.md`.
   `pp_post_write_denied()` against the PERSISTED row and, for authors,
   write through `pp_guarded_post_update()` with a state condition —
   published/scheduled stories change only at an editor's desk.
+  **ONE owner-ordered exception (Nov 2026):** `POST /api/ingest/update`
+  lets a key minted with `update_published` change the title, lede,
+  body and image/caption/credit of a PUBLISHED story within its
+  papers, hostname and desks — never slug, status, dates, byline,
+  desk, tags, meta description or correction; body through
+  `sanitize_html()`; a compare-and-swap write; the pre-update state and
+  every agent change snapshotted into `post_revisions` (with
+  `image_credit`, so an editor's restore is exact) and audited. Do not
+  widen it — any new field or status needs the owner's order, and a
+  row in `tests/ingest-update.test.php`.
 - **Untrusted URLs** are fetched only through `http_get()`/`pp_http_get()`
   (app/transport.php): destination policy, per-hop redirect validation,
   pinned connections, streamed size caps. Never hand a user-supplied URL

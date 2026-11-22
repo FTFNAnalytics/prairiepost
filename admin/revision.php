@@ -35,7 +35,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'resto
     // The revision body is sanitized on the way back in: history rows
     // written before the parser-based sanitizer may carry markup the old
     // regex let through, and a restore must not resurrect it.
-    $wrote = pp_guarded_post_update((int) $post['id'], [
+    $restore = [
         'title'            => (string) $rev['title'],
         'lede'             => (string) ($rev['lede'] ?? ''),
         'body'             => sanitize_html((string) ($rev['body'] ?? '')),
@@ -44,7 +44,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'resto
         'image'            => (string) $rev['image'],
         'image_caption'    => (string) $rev['image_caption'],
         'updated_at'       => now(),
-    ], is_editor($user) ? null : ['draft', 'in_review']);
+    ];
+    // The credit travels with its picture. Revisions written before schema
+    // 24 never recorded one (NULL): restoring those leaves the current
+    // credit alone, as restores always did.
+    if (($rev['image_credit'] ?? null) !== null) {
+        $restore['image_credit'] = (string) $rev['image_credit'];
+    }
+    $wrote = pp_guarded_post_update((int) $post['id'], $restore, is_editor($user) ? null : ['draft', 'in_review']);
     if (!$wrote) {
         flash_set('Not restored: an editor published or scheduled this story while you had the revision open.', true);
         redirect('post-edit.php?id=' . (int) $post['id']);
