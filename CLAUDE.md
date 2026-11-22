@@ -203,7 +203,9 @@ and a brief must never mix their steps:
   else — no SSH, no shell, no database access. It reaches the network
   only through `POST /api/ingest`, which is write-only and files drafts.
   Everything it knows about the wire comes from exports the VPS agent
-  produces (`tools/wire-map.php`); there is no read API.
+  produces (`tools/wire-map.php`). The ingest surface's reads —
+  lookup, and (since step 24) GET /api/ingest/stories — answer only
+  keys minted with that endpoint's grant, never by default.
 
 The dependency runs one way: when a task needs both (deploy, then file),
 brief the VPS agent first, wait for its report, then brief the news
@@ -395,16 +397,24 @@ holding a capability it should not have.
   Contract: docs/api-ingest.md §5; compat: docs/MIGRATION-COMPAT.md
   step 23. Not separately re-confirmed on 21 Nov: per-site indexing
   still off (nothing in the roll touches it).
-- **The published-story update lane is BUILT (22 Nov), not yet
-  rolled.** Schema step 24 (`ingest_agents.update_published`, default
-  0; `post_revisions.image_credit`, nullable). POST /api/ingest/update
-  changes headline, lede, body and image (+caption/credit) of a
-  PUBLISHED story for keys holding the grant — see the Phase 1
-  invariant exception below and docs/api-ingest.md §6. Rolling it
-  needs: a pinned roll (step 24 migrates), a routes pass adding
-  /api/ingest/update to the 14 legacy blocks (the 11 generated blocks
-  need nothing), and re-minting the agents' keys with
-  --update-published (the grant is set at minting, like every other).
+- **The published-story update and story-read lanes are BUILT
+  (22 Nov), not yet rolled.** Schema step 24
+  (`ingest_agents.update_published`, default 0;
+  `ingest_agents.read_scope`, default ''; `post_revisions.image_credit`,
+  nullable). POST /api/ingest/update changes headline, lede, body and
+  image (+caption/credit) of a PUBLISHED story for keys holding the
+  grant — see the Phase 1 invariant exception below and
+  docs/api-ingest.md §6. GET /api/ingest/stories lists a paper's
+  stories or returns one in full (with the `version` the update's
+  if_version checks) for keys with read_scope 'published' (live only)
+  or 'all' (drafts, review and scheduled too, editors' included) —
+  docs/api-ingest.md §7; it returns no author accounts, editor names,
+  review notes, internal ids or draft slugs, and writes nothing.
+  Rolling both needs: a pinned roll (step 24 migrates), a routes pass
+  adding /api/ingest/update and /api/ingest/stories to the 14 legacy
+  blocks (the 11 generated blocks need nothing), and re-minting the
+  agents' keys with --update-published and --read (grants are set at
+  minting, like every other).
 - **Test residue awaiting owner cleanup (admin UI, never SQL):** on
   Surrey — draft #315 (`routes-check-agent-ingest-v2-draft`), and
   story #316 (`routes-check-publish-on-image-test`) which the 28 Sep

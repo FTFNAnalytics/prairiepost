@@ -86,8 +86,9 @@ $pdo->exec('ALTER TABLE ingest_agents DROP COLUMN draft_only');
 $pdo->exec('DROP TABLE ingest_receipts');
 $pdo->exec('ALTER TABLE ingest_agents DROP COLUMN lookup_scope');
 $pdo->prepare("DELETE FROM settings WHERE site_id = 0 AND skey = 'ingest_ref_key'")->execute();
-// Step 24's: the update grant and the revision credit column.
+// Step 24's: the update and read grants, and the revision credit column.
 $pdo->exec('ALTER TABLE ingest_agents DROP COLUMN update_published');
+$pdo->exec('ALTER TABLE ingest_agents DROP COLUMN read_scope');
 $pdo->exec('ALTER TABLE post_revisions DROP COLUMN image_credit');
 $pdo->prepare("UPDATE settings SET svalue = '18' WHERE site_id = 0 AND skey = 'schema_version'")->execute();
 $pdo->prepare('INSERT INTO posts (title, slug, body, status, author_id, created_at, updated_at) VALUES (?,?,?,?,?,?,?)')
@@ -136,6 +137,7 @@ $p2->exec('DROP TABLE ingest_receipts');
 $p2->exec('ALTER TABLE ingest_agents DROP COLUMN lookup_scope');
 $p2->prepare("DELETE FROM settings WHERE site_id = 0 AND skey = 'ingest_ref_key'")->execute();
 $p2->exec('ALTER TABLE ingest_agents DROP COLUMN update_published');
+$p2->exec('ALTER TABLE ingest_agents DROP COLUMN read_scope');
 $p2->exec('ALTER TABLE post_revisions DROP COLUMN image_credit');
 $p2->prepare("UPDATE settings SET svalue = '18' WHERE site_id = 0 AND skey = 'schema_version'")->execute();
 $p2->exec('DELETE FROM schema_migrations');

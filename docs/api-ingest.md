@@ -303,6 +303,56 @@ but can edit what is already live.
   current `version`. Review before resending.
 - Rate limit: 60 updates per key per hour (`429`).
 
+## 7. Read a paper's stories: `GET /api/ingest/stories`
+
+Lists a paper's stories, or returns one in full. **Separate grant**,
+set at minting (`--read published|all`, or the hub key form's "Read
+stories" select): `published` reads the paper's live stories; `all`
+reads every story in the editorial queue too — drafts, review and
+scheduled, whoever made them, editors included. A key without it is
+refused 403. This is the read half of section 6: read a story, edit
+it, and send its `version` back as `if_version`.
+
+    # The list (newest first, 50 by default, at most 100 per page)
+    curl "https://<paper-domain>/api/ingest/stories?site=<site-slug>&status=all&limit=50" \
+      -H "Authorization: Bearer $KEY"
+
+    → 200 {"ok":true,"stories":[
+             {"ref":"ar_…","status":"published","desk":"politics","title":"…",
+              "url":"https://<paper-domain>/story/…","published_at":"…",
+              "updated_at":"…","image":"/uploads/…","version":"v_…"},
+             {"ref":"ar_…","status":"draft","desk":"local-news","title":"…",
+              "published_at":null,"updated_at":"…","image":"","version":"v_…"}],
+           "next":"c_…"}
+
+    # One story, in full — by ref or by public URL
+    curl "https://<paper-domain>/api/ingest/stories?site=<site-slug>&ref=ar_…" \
+      -H "Authorization: Bearer $KEY"
+
+    → 200 {"ok":true,"story":{"ref":"ar_…","status":"published","desk":"…",
+           "title":"…","lede":"…","body":"<p>…</p>","byline":"…","dateline":"…",
+           "image":"/uploads/…","image_caption":"…","image_credit":"…",
+           "correction":"…","tags":["…"],"sources":["https://…"],
+           "source_story_id":"…","url":"https://…","published_at":"…",
+           "updated_at":"…","version":"v_…"}}
+
+- **Filters (list):** `desk` (one desk; omitted = every desk the key
+  holds), `status` = `published` | `draft` | `in_review` |
+  `scheduled` | `unpublished` (the three not-yet-live states) | `all`
+  (default — everything the grant covers), `updated_since`
+  (`YYYY-MM-DD HH:MM:SS`, for syncing), `limit` (1–100), and `cursor`
+  — pass the previous page's `next` until it is absent.
+- **Scope** is the other reads': the key's papers, the paper this
+  hostname serves, the key's desks — and the statuses the grant
+  covers. Asking outside it is the same `403 {"ok":false,"error":"out
+  of scope"}`. A story the key may not read answers `404`, exactly as
+  one that does not exist.
+- **What it never returns:** author accounts, editor names, review
+  notes, the filing key's name, internal ids, or a draft's slug. Only
+  published stories carry a `url`. `source_story_id` appears when the
+  story was filed with one.
+- **Writes nothing** — no audit row, not even `last_used_at`.
+
 ## Responses you must handle
 
 | Code | Meaning |
@@ -310,7 +360,8 @@ but can edit what is already live.
 | 201 | Created (draft). `slug` and `id` identify it in the newsroom. |
 | 200 + `duplicate` | This exact story was already filed; nothing new was created. |
 | 401 | Missing, unknown or revoked key. |
-| 403 | The key is not scoped to that site or desk — or the key is draft-only: on `/api/ingest-publish` the body carries `status: "draft"` and `reason` and the story is untouched; on `/api/ingest-queue` the body carries `reason` and no stories. On `/api/ingest/lookup` and `/api/ingest/update`: the key lacks that endpoint's grant, or the request is out of scope (`"out of scope"`, revealing nothing). |
+| 403 | The key is not scoped to that site or desk — or the key is draft-only: on `/api/ingest-publish` the body carries `status: "draft"` and `reason` and the story is untouched; on `/api/ingest-queue` the body carries `reason` and no stories. On `/api/ingest/lookup`, `/api/ingest/update` and `/api/ingest/stories`: the key lacks that endpoint's grant, or the request is out of scope (`"out of scope"`, revealing nothing). |
+| 404 | `/api/ingest/update` and `/api/ingest/stories`: no story with that reference that this key may see (absent and out-of-reach answer alike). |
 | 409 | `/api/ingest-publish`: the story is not waiting (already published, unflagged, or changed state mid-request) — fetch the queue again. `/api/ingest`: the `source_story_id` was already filed with different content — the stored article is untouched; corrections go through the newsroom. `/api/ingest/update`: the story is not published, is carried by another paper, changed mid-request, or no longer matches your `if_version` — nothing was written. |
 | 422 | The payload broke a rule; `error` says which. Fix and resend. |
 | 429 | Hourly rate limit; wait and resend. |
@@ -321,10 +372,10 @@ but can edit what is already live.
   paper's nginx block. A new paper's block comes from
   `tools/vps/make-vhost.sh`; legacy blocks need `/api/ingest`,
   `/api/ingest-media`, `/api/ingest-queue`, `/api/ingest-publish`,
-  `/api/ingest/lookup` and `/api/ingest/update` added in a routes
-  pass. The bare `.php`
+  `/api/ingest/lookup`, `/api/ingest/update` and
+  `/api/ingest/stories` added in a routes pass. The bare `.php`
   endpoints answer everywhere regardless.
-- The six endpoints share one token check: `pp_ingest_authenticate()`
+- The seven endpoints share one token check: `pp_ingest_authenticate()`
   in `app/ingest.php` turns the bearer key into an agent (id, name,
   papers, desks, whether it may publish), and
   `pp_ingest_require_publish()` is the 403 a draft-only key gets. A new

@@ -233,11 +233,7 @@ if (isset($changes['image']) && $changes['image'] !== $current('image')) {
 }
 $diff = array_filter($changes, static fn ($v, $k) => $v !== $current($k), ARRAY_FILTER_USE_BOTH);
 
-$versionOf = static fn (array $p): string => 'v_' . substr(hash('sha256', implode("\x1f", [
-    (int) $p['id'], (string) $p['updated_at'], (string) $p['title'], (string) ($p['lede'] ?? ''),
-    (string) ($p['body'] ?? ''), (string) $p['image'], (string) $p['image_caption'], (string) ($p['image_credit'] ?? ''),
-])), 0, 16);
-$version = $versionOf($post);
+$version = pp_ingest_story_version($post);
 $publicUrl = pp_story_public_url($siteSlug, (string) $post['slug']);
 
 $ifVersion = trim((string) ($in['if_version'] ?? ''));
@@ -319,7 +315,7 @@ $after = $s->fetch();
 $s->closeCursor();
 
 $out = ['ok' => true, 'ref' => $articleRef, 'status' => 'published', 'url' => $publicUrl,
-    'updated' => $fields, 'version' => $after ? $versionOf($after) : ''];
+    'updated' => $fields, 'version' => $after ? pp_ingest_story_version($after) : ''];
 if (isset($diff['image'])) {
     $out['previous_image'] = $current('image');
 }

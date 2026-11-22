@@ -73,13 +73,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $lookup = '';
         }
         $updatePublished = !empty($_POST['update_published']) ? 1 : 0;
+        // The read grant is a closed list: anything else mints NO reading.
+        $read = (string) ($_POST['read_scope'] ?? '');
+        if (!in_array($read, ['', 'published', 'all'], true)) {
+            $read = '';
+        }
         $token = 'hermes_' . bin2hex(random_bytes(28));
-        db()->prepare('INSERT INTO ingest_agents (name, token_hash, sites, desks, enabled, draft_only, lookup_scope, update_published, created_at)
-            VALUES (?, ?, ?, ?, 1, ?, ?, ?, ?)')
-            ->execute([$name, hash('sha256', $token), implode(',', $picked), implode(',', $desks), $draftOnly, $lookup, $updatePublished, now()]);
+        db()->prepare('INSERT INTO ingest_agents (name, token_hash, sites, desks, enabled, draft_only, lookup_scope, update_published, read_scope, created_at)
+            VALUES (?, ?, ?, ?, 1, ?, ?, ?, ?, ?)')
+            ->execute([$name, hash('sha256', $token), implode(',', $picked), implode(',', $desks), $draftOnly, $lookup, $updatePublished, $read, now()]);
         pp_audit('apikey.created', $name, 'sites: ' . implode(', ', $picked) . ($desks ? ' · desks: ' . implode(', ', $desks) : '')
             . ($draftOnly ? ' · draft-only' : '') . ($lookup !== '' ? ' · lookup: ' . $lookup : '')
-            . ($updatePublished ? ' · may update published stories' : ''));
+            . ($updatePublished ? ' · may update published stories' : '') . ($read !== '' ? ' · reads: ' . $read : ''));
         // No redirect on purpose: the raw key exists only in this response.
         $freshToken = $token;
         $freshName = $name;
@@ -134,6 +139,15 @@ flash_show();
       <label style="font-weight:400"><input type="checkbox" name="update_published" value="1"> <strong>May update published stories</strong> — <code>POST /api/ingest/update</code> can change the headline, lede, body and image of a story that is already live on its papers and desks (never its URL, status, byline or correction note). Every change is kept in the story's history, where an editor can restore it, and in the audit log. Leave unticked unless this agent should edit live pages.</label>
     </div>
     <div class="formrow">
+      <label>Read stories (<code>GET /api/ingest/stories</code>)
+        <select name="read_scope">
+          <option value="">None — the read endpoint refuses this key (default)</option>
+          <option value="published">Published — live stories on its papers and desks</option>
+          <option value="all">All — published stories AND every draft, review and scheduled story, editors' included</option>
+        </select>
+      </label>
+    </div>
+    <div class="formrow">
       <label>Story lookup (<code>POST /api/ingest/lookup</code>, read-only)
         <select name="lookup_scope">
           <option value="">None — the lookup endpoint refuses this key (default)</option>
@@ -158,7 +172,7 @@ flash_show();
   <h2>Existing keys</h2>
   <?php if (!$keys): ?><p class="pagesub">No keys yet.</p><?php else: ?>
   <table class="tbl">
-    <tr><th>Name</th><th>Papers</th><th>Desks</th><th>Publishes</th><th>Lookup</th><th>Updates live</th><th>Status</th><th>Created</th><th>Last used</th><th></th></tr>
+    <tr><th>Name</th><th>Papers</th><th>Desks</th><th>Publishes</th><th>Lookup</th><th>Reads</th><th>Updates live</th><th>Status</th><th>Created</th><th>Last used</th><th></th></tr>
     <?php foreach ($keys as $k): ?>
     <tr>
       <td><?= e($k['name']) ?></td>
@@ -166,6 +180,7 @@ flash_show();
       <td><?= e($k['desks'] !== '' ? str_replace(',', ', ', (string) $k['desks']) : 'any') ?></td>
       <td><?= (int) ($k['draft_only'] ?? 0) === 1 ? '<strong>never</strong> (draft-only)' : 'wire desks + ready flag' ?></td>
       <td><?= e((string) ($k['lookup_scope'] ?? '') !== '' ? (string) $k['lookup_scope'] : 'none') ?></td>
+      <td><?= e((string) ($k['read_scope'] ?? '') !== '' ? (string) $k['read_scope'] : 'none') ?></td>
       <td><?= (int) ($k['update_published'] ?? 0) === 1 ? '<strong>yes</strong>' : 'no' ?></td>
       <td><?= (int) $k['enabled'] === 1 ? 'active' : '<strong>revoked</strong>' ?></td>
       <td><?= e(substr((string) $k['created_at'], 0, 10)) ?></td>

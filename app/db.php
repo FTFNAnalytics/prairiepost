@@ -63,6 +63,7 @@ function pp_schema_ddl(string $driver): array
             draft_only INTEGER NOT NULL DEFAULT 0,
             lookup_scope VARCHAR(10) NOT NULL DEFAULT '',
             update_published INTEGER NOT NULL DEFAULT 0,
+            read_scope VARCHAR(10) NOT NULL DEFAULT '',
             created_at $dt NOT NULL,
             last_used_at $dt
         )$suffix",
@@ -1478,7 +1479,13 @@ function pp_migrations(): array
             // put the old photo back under the new photographer's name.
             // NULL on every existing row means "not recorded" — a restore
             // of such a row leaves the current credit alone, as before.
+            //
+            // ingest_agents.read_scope is the read grant behind
+            // GET /api/ingest/stories: '' none (default), 'published' the
+            // paper's live stories, 'all' every story in the editorial
+            // queue too — drafts, review and scheduled, whoever made them.
             $pdo->exec('ALTER TABLE ingest_agents ADD COLUMN update_published INTEGER NOT NULL DEFAULT 0');
+            $pdo->exec("ALTER TABLE ingest_agents ADD COLUMN read_scope VARCHAR(10) NOT NULL DEFAULT ''");
             $pdo->exec('ALTER TABLE post_revisions ADD COLUMN image_credit VARCHAR(120)');
             $pdo->exec("UPDATE settings SET svalue = '24' WHERE site_id = 0 AND skey = 'schema_version'");
         },

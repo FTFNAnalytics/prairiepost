@@ -41,6 +41,7 @@ CREATE TABLE ingest_agents (
             draft_only INTEGER NOT NULL DEFAULT 0,
             lookup_scope VARCHAR(10) NOT NULL DEFAULT '',
             update_published INTEGER NOT NULL DEFAULT 0,
+            read_scope VARCHAR(10) NOT NULL DEFAULT '',
             created_at TIMESTAMP NOT NULL,
             last_used_at TIMESTAMP
         );
