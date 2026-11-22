@@ -6,7 +6,7 @@
  *
  *   php tools/make-agent.php create --name hermes-bleuet \
  *       --sites bleuet-blanc [--desks actualites,economie] [--draft-only]
- *       [--lookup own|all]
+ *       [--lookup own|all] [--update-published]
  *   php tools/make-agent.php list
  *   php tools/make-agent.php revoke --name hermes-bleuet
  *   php tools/make-agent.php enable --name hermes-bleuet
@@ -24,6 +24,15 @@
  * other filers' drafts requires. Omitted means NO lookup: the endpoint
  * refuses the token outright. Like draft_only, the grant is a property
  * of the credential, set at minting, never of a request.
+ *
+ * --update-published grants the one exception to "published stories
+ * change only at an editor's desk" (ingest_agents.update_published):
+ * POST /api/ingest/update may change the headline, lede, body and image
+ * of a PUBLISHED story within the token's papers and desks — never its
+ * URL, status, dates, byline, desk or correction note; every change is
+ * snapshotted into the story's history and audited. Independent of
+ * --draft-only: a draft-only token holding it still publishes nothing
+ * new, but can edit what is already live. Omitted means no such power.
  *
  * --draft-only mints a credential that can file but never publish
  * (ingest_agents.draft_only = 1): the paper's wire_desks exception and
@@ -47,7 +56,7 @@ require dirname(__DIR__) . '/app/bootstrap.php';
 
 $cmd = $argv[1] ?? '';
 
-const PP_AGENT_USAGE = 'Usage: php tools/make-agent.php create --name <n> --sites <a,b> [--desks <c,d>] [--draft-only] [--lookup own|all]'
+const PP_AGENT_USAGE = 'Usage: php tools/make-agent.php create --name <n> --sites <a,b> [--desks <c,d>] [--draft-only] [--lookup own|all] [--update-published]'
     . ' | list | revoke --name <n> | enable --name <n>';
 
 /** Stop having changed nothing: the reason on stderr, a non-zero exit. */
@@ -64,7 +73,7 @@ function pp_agent_refuse(string $message): never
 // subcommand it was given to is an error too, never a silent no-op. All of
 // this runs before the database is opened, so a refusal writes nothing.
 $allowed = [
-    'create' => ['name', 'sites', 'desks', 'draft-only', 'lookup'],
+    'create' => ['name', 'sites', 'desks', 'draft-only', 'lookup', 'update-published'],
     'list'   => [],
     'revoke' => ['name'],
     'enable' => ['name'],
@@ -77,6 +86,9 @@ if (isset($allowed[$cmd])) {
         if ($arg === '--draft-only') {
             $key = 'draft-only';
             $value = true;
+        } elseif ($arg === '--update-published') {
+            $key = 'update-published';
+            $value = true;
         } elseif (preg_match('/^--(name|sites|desks|lookup)=(.*)$/s', $arg, $m)) {
             $key = $m[1];
             $value = $m[2];
@@ -86,6 +98,8 @@ if (isset($allowed[$cmd])) {
                 pp_agent_refuse("--{$key} needs a value.");
             }
             $value = (string) $argv[++$i];
+        } elseif (preg_match('/^-{1,2}update[-_]?published/i', $arg)) {
+            pp_agent_refuse("Unrecognised argument '{$arg}'. The flag is spelled exactly --update-published and takes no value.");
         } elseif (preg_match('/^-{1,2}draft[-_]?only/i', $arg)) {
             pp_agent_refuse("Unrecognised argument '{$arg}'. The flag is spelled exactly --draft-only and takes no value.");
         } else {
@@ -159,10 +173,11 @@ switch ($cmd) {
         if (!in_array($lookup, ['', 'own', 'all'], true)) {
             pp_agent_refuse("--lookup takes exactly 'own' or 'all' (got '{$lookup}').");
         }
+        $updatePublished = !empty($opt['update-published']) ? 1 : 0;
         $token = 'hermes_' . bin2hex(random_bytes(28));
-        $pdo->prepare('INSERT INTO ingest_agents (name, token_hash, sites, desks, enabled, draft_only, lookup_scope, created_at)
-            VALUES (?, ?, ?, ?, 1, ?, ?, ?)')
-            ->execute([$name, hash('sha256', $token), implode(',', $sites), implode(',', $desks), $draftOnly, $lookup, now()]);
+        $pdo->prepare('INSERT INTO ingest_agents (name, token_hash, sites, desks, enabled, draft_only, lookup_scope, update_published, created_at)
+            VALUES (?, ?, ?, ?, 1, ?, ?, ?, ?)')
+            ->execute([$name, hash('sha256', $token), implode(',', $sites), implode(',', $desks), $draftOnly, $lookup, $updatePublished, now()]);
         echo "Agent:  {$name}\n";
         echo 'Sites:  ' . implode(', ', $sites) . "\n";
         echo 'Desks:  ' . ($desks ? implode(', ', $desks) : '(any existing desk)') . "\n";
@@ -170,6 +185,9 @@ switch ($cmd) {
             ? ' — /api/ingest/lookup answers over the full editorial queue within its papers and desks'
             : ' — /api/ingest/lookup answers over its own filings plus published stories')
             : 'none — /api/ingest/lookup refuses this token') . "\n";
+        echo 'Update: ' . ($updatePublished
+            ? 'YES — /api/ingest/update may change the headline, lede, body and image of PUBLISHED stories in its scope'
+            : 'no — published stories stay the newsroom\'s') . "\n";
         echo 'Mode:   ' . ($draftOnly
             ? "DRAFT-ONLY — files drafts; wire desks and publish_on_image never publish for this token, /api/ingest-publish refuses it"
             : 'standard — wire desks publish at once; publish_on_image is honoured') . "\n";
@@ -178,13 +196,14 @@ switch ($cmd) {
         break;
 
     case 'list':
-        foreach ($pdo->query('SELECT name, sites, desks, enabled, draft_only, lookup_scope, created_at, last_used_at FROM ingest_agents ORDER BY name') as $a) {
+        foreach ($pdo->query('SELECT name, sites, desks, enabled, draft_only, lookup_scope, update_published, created_at, last_used_at FROM ingest_agents ORDER BY name') as $a) {
             printf(
-                "%-24s %-9s %-10s lookup=%-4s sites=%s desks=%s created=%s last_used=%s\n",
+                "%-24s %-9s %-10s lookup=%-4s update=%-3s sites=%s desks=%s created=%s last_used=%s\n",
                 $a['name'],
                 $a['enabled'] ? 'active' : 'REVOKED',
                 (int) $a['draft_only'] === 1 ? 'draft-only' : 'standard',
                 (string) ($a['lookup_scope'] ?? '') !== '' ? $a['lookup_scope'] : 'none',
+                (int) ($a['update_published'] ?? 0) === 1 ? 'yes' : 'no',
                 $a['sites'],
                 $a['desks'] !== '' ? $a['desks'] : '(any)',
                 substr((string) $a['created_at'], 0, 10),

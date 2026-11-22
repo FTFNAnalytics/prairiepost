@@ -62,6 +62,7 @@ function pp_schema_ddl(string $driver): array
             enabled INTEGER NOT NULL DEFAULT 1,
             draft_only INTEGER NOT NULL DEFAULT 0,
             lookup_scope VARCHAR(10) NOT NULL DEFAULT '',
+            update_published INTEGER NOT NULL DEFAULT 0,
             created_at $dt NOT NULL,
             last_used_at $dt
         )$suffix",
@@ -511,6 +512,7 @@ function pp_schema_ddl(string $driver): array
             correction TEXT,
             image VARCHAR(255) NOT NULL DEFAULT '',
             image_caption VARCHAR(255) NOT NULL DEFAULT '',
+            image_credit VARCHAR(120),
             saved_by VARCHAR(120) NOT NULL DEFAULT '',
             reason VARCHAR(40) NOT NULL DEFAULT 'edit',
             created_at $dt NOT NULL
@@ -1460,6 +1462,25 @@ function pp_migrations(): array
             $pdo->prepare('INSERT INTO settings (site_id, skey, svalue) VALUES (0, ?, ?)')
                 ->execute(['ingest_ref_key', bin2hex(random_bytes(32))]);
             $pdo->exec("UPDATE settings SET svalue = '23' WHERE site_id = 0 AND skey = 'schema_version'");
+        },
+
+        24 => function (PDO $pdo, string $driver): void {
+            // The published-story update lane (owner-ordered, Nov 2026): a
+            // key minted with update_published = 1 may change the headline,
+            // lede, body and featured image of a PUBLISHED story through
+            // POST /api/ingest/update — the one exception to "published
+            // stories change only at an editor's desk". Default 0: no key
+            // gains the power by this step.
+            //
+            // post_revisions.image_credit makes that exception reversible
+            // exactly: revision history recorded the image and caption but
+            // not the credit, so restoring a pre-swap revision would have
+            // put the old photo back under the new photographer's name.
+            // NULL on every existing row means "not recorded" — a restore
+            // of such a row leaves the current credit alone, as before.
+            $pdo->exec('ALTER TABLE ingest_agents ADD COLUMN update_published INTEGER NOT NULL DEFAULT 0');
+            $pdo->exec('ALTER TABLE post_revisions ADD COLUMN image_credit VARCHAR(120)');
+            $pdo->exec("UPDATE settings SET svalue = '24' WHERE site_id = 0 AND skey = 'schema_version'");
         },
 
     ];

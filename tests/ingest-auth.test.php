@@ -3,7 +3,7 @@
  * Every ingest endpoint against every kind of credential, over real HTTP on
  * a disposable database.
  *
- * Five endpoints answer the ingest bearer token. Each must fail closed for
+ * Six endpoints answer the ingest bearer token. Each must fail closed for
  * a token that is missing, unknown or revoked, and each must give a
  * draft-only token its documented answer (docs/api-ingest.md):
  * /api/ingest-media stores the upload, /api/ingest files a draft whatever
@@ -71,13 +71,15 @@ $siteId = (int) $pdo->query("SELECT id FROM sites WHERE slug = 'prairiedispatch'
 $pdo->prepare('INSERT INTO settings (site_id, skey, svalue) VALUES (?, ?, ?)')
     ->execute([$siteId, 'wire_desks', 'local-news']);
 
-$mint = function (string $name, string $sites, string $desks, int $enabled, int $draftOnly, string $lookup = '') use ($pdo): string {
+$mint = function (string $name, string $sites, string $desks, int $enabled, int $draftOnly, string $lookup = '', int $update = 0) use ($pdo): string {
     $t = 'hermes_' . bin2hex(random_bytes(28));
-    $pdo->prepare('INSERT INTO ingest_agents (name, token_hash, sites, desks, enabled, draft_only, lookup_scope, created_at) VALUES (?,?,?,?,?,?,?,?)')
-        ->execute([$name, hash('sha256', $t), $sites, $desks, $enabled, $draftOnly, $lookup, now()]);
+    $pdo->prepare('INSERT INTO ingest_agents (name, token_hash, sites, desks, enabled, draft_only, lookup_scope, update_published, created_at) VALUES (?,?,?,?,?,?,?,?,?)')
+        ->execute([$name, hash('sha256', $t), $sites, $desks, $enabled, $draftOnly, $lookup, $update, now()]);
     return $t;
 };
-$standard         = $mint('authtest-standard', 'prairiedispatch', '', 1, 0, 'all');
+// The standard token holds every grant, so in every refusal below the
+// credential is the only thing wrong with the call.
+$standard         = $mint('authtest-standard', 'prairiedispatch', '', 1, 0, 'all', 1);
 $draftOnly        = $mint('authtest-draft-only', 'prairiedispatch', '', 1, 1);
 $revoked          = $mint('authtest-revoked', 'prairiedispatch', '', 0, 0);
 $revokedDraftOnly = $mint('authtest-revoked-draft-only', 'prairiedispatch', '', 0, 1);
@@ -215,6 +217,16 @@ $endpoints = [
         'method_error' => 'POST one lookup per call',
         'send' => fn (?string $authorization) => api($port, 'POST', '/api/ingest/lookup', $authorization,
             ['site' => 'prairiedispatch', 'desk' => 'environment', 'headline' => 'No such coverage anywhere'],
+            'application/json', ['Host: paper.test']),
+    ],
+    // Changes a PUBLISHED story, so it is host-checked like lookup. By
+    // section 6 the waiting story has been published; this retitles it.
+    '/api/ingest/update' => [
+        'file' => 'ingest-update.php', 'method' => 'POST', 'other_method' => 'GET',
+        'method_error' => 'POST one update per call',
+        'send' => fn (?string $authorization) => api($port, 'POST', '/api/ingest/update', $authorization,
+            ['site' => 'prairiedispatch', 'desk' => 'environment',
+             'url' => 'https://paper.test/story/' . $GLOBALS['waitSlug'], 'title' => 'Retitled by the auth suite'],
             'application/json', ['Host: paper.test']),
     ],
 ];
@@ -414,6 +426,19 @@ $draftOnlyAnswer = [
         ], "/api/ingest/lookup refuses a token without the grant: 403 {ok, error, reason} (got $code " . json_encode($j) . ')');
         ok(!str_contains($raw, 'result'), 'the refusal carries no lookup result');
     },
+    // Updating a live story is its own grant, independent of draft_only:
+    // this token was minted without it, so it is refused before anything
+    // is read, and the story is untouched.
+    '/api/ingest/update' => function () use (&$endpoints, $draftOnly, &$waitSlug, $json): void {
+        [$code, $j, , $type] = $endpoints['/api/ingest/update']['send']("Bearer $draftOnly");
+        ok($code === 403 && $type === $json && $j === [
+            'ok' => false,
+            'error' => 'this token has no update permission',
+            'reason' => 'update_published is granted at minting (--update-published); without it this surface changes nothing',
+        ], "/api/ingest/update refuses a token without the grant: 403 {ok, error, reason} (got $code " . json_encode($j) . ')');
+        $p = one('SELECT title FROM posts WHERE slug = ?', [$waitSlug]);
+        ok($p && $p['title'] === 'Waiting for art on the first paper', 'the refused update changed nothing');
+    },
 ];
 foreach ($endpoints as $route => $e) {
     ok(isset($draftOnlyAnswer[$route]), "$route has a draft-only answer written down in this file");
@@ -511,6 +536,14 @@ ok($p && $p['status'] === 'published' && (int) $p['awaiting_image'] === 0 && $p[
 [$code, $j, , $type] = $endpoints['/api/ingest/lookup']['send']("Bearer $standard");
 ok($code === 200 && $type === $json && $j === ['ok' => true, 'result' => 'not_found'],
    "a standard token with the grant looks up an uncovered headline: 200 not_found (got $code " . json_encode($j) . ')');
+
+[$code, $j, , $type] = $endpoints['/api/ingest/update']['send']("Bearer $standard");
+ok($code === 200 && $type === $json && is_array($j) && ($j['ok'] ?? false) === true
+   && ($j['updated'] ?? null) === ['title'] && ($j['status'] ?? '') === 'published'
+   && ($j['url'] ?? '') === 'https://paper.test/story/' . $waitSlug,
+   "a standard token with the grant retitles the now-published story: 200, only the title changed, the URL kept (got $code " . json_encode($j) . ')');
+$p = one('SELECT title, slug, status FROM posts WHERE slug = ?', [$waitSlug]);
+ok($p && $p['title'] === 'Retitled by the auth suite' && $p['status'] === 'published', 'the live row carries the new headline under the same slug');
 
 /* ---- 7. Invariants ---------------------------------------------------------- */
 ok(scalar("SELECT COUNT(*) FROM posts WHERE filed_by IN ('authtest-revoked', 'authtest-revoked-draft-only')") === 0,

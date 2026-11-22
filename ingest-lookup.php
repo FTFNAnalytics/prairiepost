@@ -138,9 +138,7 @@ if ($sourceUrl !== '' && (strlen($sourceUrl) > 600 || !preg_match('#^https?://#i
 
 // The per-install key behind opaque article references (minted by the
 // schema, never here: this endpoint writes nothing).
-$k = db()->prepare("SELECT svalue FROM settings WHERE site_id = 0 AND skey = 'ingest_ref_key'");
-$k->execute();
-$refKey = (string) ($k->fetchColumn() ?: '');
+$refKey = pp_ingest_ref_key();
 if ($refKey === '') {
     pp_ingest_respond(500, ['ok' => false, 'error' => 'lookup is not provisioned — run tools/migrate.php --apply']);
 }
@@ -148,7 +146,7 @@ if ($refKey === '') {
 /** The small, closed answer for a verified match. */
 $answerMatch = static function (array $post) use ($refKey, $siteId, $siteSlug): never {
     $article = [
-        'ref' => 'ar_' . substr(hash_hmac('sha256', $siteId . '/' . (int) $post['id'], $refKey), 0, 24),
+        'ref' => pp_ingest_article_ref($siteId, (int) $post['id'], $refKey),
         'status' => (string) $post['status'],
     ];
     if ($post['status'] === 'published') {
