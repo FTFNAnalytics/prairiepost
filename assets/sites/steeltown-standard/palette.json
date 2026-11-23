@@ -19,5 +19,15 @@
   "chrome": {
     "template": "steeltown",
     "nav": ["local-news", "sports", "community", "opinion"]
+  },
+  "admin": {
+    "accent": "#073674",
+    "spot": "#A8353A",
+    "strip": ["#231F20", "#E7D2AD"],
+    "band": ["#FFFFFF", "#073674"],
+    "nav": ["#073674", "#FFFFFF", "#FCB525", "#231F20"],
+    "mark": "mark.svg",
+    "wordmark": {"font": "'Archivo Narrow', 'Archivo', 'Arial Narrow', sans-serif", "weight": 700, "case": "uppercase", "spacing": "0.01em"},
+    "fonts": {"heading": "'Archivo Narrow', 'Archivo', 'Arial Narrow', sans-serif", "body": "'Source Serif 4', Georgia, serif"}
   }
 }

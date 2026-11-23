@@ -24,5 +24,14 @@
   "chrome": {
     "template": "cariboo",
     "nav": ["local-news", "communities", "business", "environment", "education", "opinion"]
+  },
+  "admin": {
+    "accent": "#1A3C34",
+    "spot": "#C9A227",
+    "band": ["#FFFFFF", "#1A3C34"],
+    "nav": ["#1A3C34", "#FFFFFF", "#C9A227", "#1A3C34"],
+    "mark": "mark.svg",
+    "wordmark": {"font": "'Source Serif 4', Georgia, serif", "weight": 600},
+    "fonts": {"heading": "'Source Serif 4', Georgia, serif", "body": "'Source Sans 3', 'Helvetica Neue', Arial, sans-serif"}
   }
 }

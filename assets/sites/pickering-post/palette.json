@@ -27,5 +27,14 @@
     "template": "pickering",
     "trending": false,
     "nav": ["local-news", "community", "events", "sports", "opinion"]
+  },
+  "admin": {
+    "accent": "#006786",
+    "spot": "#D6006C",
+    "band": ["#FFFFFF", "#004961"],
+    "nav": ["#004961", "#FFFFFF"],
+    "mark": "favicon.svg",
+    "wordmark": {"font": "'Source Serif 4', Georgia, serif", "weight": 600, "spacing": "-0.025em", "color": "#006786"},
+    "fonts": {"heading": "'Source Serif 4', Georgia, serif", "body": "'Source Serif 4', Georgia, serif"}
   }
 }

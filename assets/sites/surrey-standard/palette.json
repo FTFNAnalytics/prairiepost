@@ -23,5 +23,14 @@
   "chrome": {
     "template": "surrey",
     "nav": ["local-news", "city-hall", "development", "education", "sports", "opinion"]
+  },
+  "admin": {
+    "accent": "#0A2540",
+    "spot": "#C2D82E",
+    "band": ["#0A2540", "#FFFFFF"],
+    "nav": ["#0A2540", "#FFFFFF", "#C2D82E", "#0A2540"],
+    "mark": "mark-reversed.svg",
+    "wordmark": {"font": "'Playfair Display', Georgia, serif", "weight": 700, "spacing": "0.01em"},
+    "fonts": {"heading": "'Playfair Display', Georgia, serif", "body": "'Inter', 'Helvetica Neue', Arial, sans-serif"}
   }
 }

@@ -21,5 +21,14 @@
   "chrome": {
     "template": "brandon",
     "nav": ["local-news", "sports", "community", "opinion"]
+  },
+  "admin": {
+    "accent": "#7A6110",
+    "spot": "#9C3B22",
+    "band": ["#FFFFFF", "#111111"],
+    "nav": ["#F7E5AD", "#111111", "#111111", "#FFFFFF"],
+    "mark": "mark.svg",
+    "wordmark": {"font": "'Playfair Display', Georgia, serif", "weight": 800, "case": "uppercase", "spacing": "0.04em"},
+    "fonts": {"heading": "'Inter', 'Helvetica Neue', Arial, sans-serif", "body": "'Inter', 'Helvetica Neue', Arial, sans-serif"}
   }
 }

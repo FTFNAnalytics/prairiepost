@@ -22,5 +22,15 @@
   "chrome": {
     "template": "portage",
     "nav": ["local-news", "sports", "politics", "business", "arts", "opinion"]
+  },
+  "admin": {
+    "accent": "#041E42",
+    "spot": "#AC162C",
+    "strip": ["#FFFFFF", "#4B5563"],
+    "band": ["#041E42", "#FFFFFF"],
+    "nav": ["#041E42", "#FFFFFF", "#AC162C", "#FFFFFF"],
+    "mark": "mark-reversed.svg",
+    "wordmark": {"font": "'Inter', 'Helvetica Neue', Arial, sans-serif", "weight": 800, "spacing": "-0.01em"},
+    "fonts": {"heading": "'Inter', 'Helvetica Neue', Arial, sans-serif", "body": "'Inter', 'Helvetica Neue', Arial, sans-serif"}
   }
 }

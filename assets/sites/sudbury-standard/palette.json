@@ -26,5 +26,15 @@
     "hero_title": "Latest from Sudbury",
     "lead_kicker": "The Argument",
     "place": "Sudbury, Ontario"
+  },
+  "admin": {
+    "accent": "#0F3B8C",
+    "spot": "#C2362B",
+    "strip": ["#0F3B8C", "#FFFFFF"],
+    "band": ["#FFFFFF", "#0F3B8C"],
+    "nav": ["#EDEFF3", "#0F3B8C", "#0F3B8C", "#FFFFFF"],
+    "mark": "mark.svg",
+    "wordmark": {"font": "'Playfair Display', Georgia, serif", "weight": 800},
+    "fonts": {"heading": "'Playfair Display', Georgia, serif", "body": "'Source Sans 3', 'Helvetica Neue', Arial, sans-serif"}
   }
 }

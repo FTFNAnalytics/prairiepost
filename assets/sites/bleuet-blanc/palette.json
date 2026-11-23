@@ -38,5 +38,15 @@
     "lang": "fr",
     "trending": false,
     "nav": ["actualites", "politique", "economie", "regions", "culture-qc", "societe"]
+  },
+  "admin": {
+    "accent": "#095797",
+    "spot": "#D6006C",
+    "strip": ["#063C69", "#FFFFFF"],
+    "band": ["#FFFFFF", "#095797"],
+    "nav": ["#095797", "#FFFFFF"],
+    "mark": "mark.svg",
+    "wordmark": {"font": "'Source Serif 4', Georgia, serif", "weight": 600, "spacing": "-0.025em", "color": "#0088B0"},
+    "fonts": {"heading": "'Source Serif 4', Georgia, serif", "body": "'Source Serif 4', Georgia, serif"}
   }
 }

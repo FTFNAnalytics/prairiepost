@@ -40,5 +40,15 @@
       "label": "Opinion",
       "href": "/desk/opinion"
     }
-  ]
+  ],
+  "admin": {
+    "accent": "#0A2240",
+    "spot": "#C14A10",
+    "strip": ["#04142A", "#BBD3EA"],
+    "band": ["#0A2240", "#FFFFFF"],
+    "nav": ["#102C52", "#FFFFFF", "#F26522", "#04142A"],
+    "mark": "mark.svg",
+    "wordmark": {"font": "'Source Serif 4', Georgia, serif", "weight": 700, "case": "uppercase", "spacing": "0.03em"},
+    "fonts": {"heading": "'Source Serif 4', Georgia, serif", "body": "'Source Serif 4', Georgia, serif"}
+  }
 }

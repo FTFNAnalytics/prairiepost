@@ -27,5 +27,14 @@
     "nav": ["news", "politics", "energy", "agriculture", "business", "sports", "opinion", "weather"],
     "crosshead": "Across the Peace Country",
     "events_label": "This week in Grande Prairie"
+  },
+  "admin": {
+    "accent": "#2D1B4E",
+    "spot": "#0F5C4C",
+    "strip": ["#0D0730", "#E5E2F0"],
+    "band": ["#0D0730", "#FFFFFF"],
+    "nav": ["#FFFFFF", "#0B1E3D", "#2D1B4E", "#FFFFFF"],
+    "logo": "logo-header.png",
+    "fonts": {"heading": "'Source Serif 4', Georgia, serif", "body": "'Newsreader', Georgia, serif"}
   }
 }

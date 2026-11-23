@@ -23,5 +23,15 @@
   "chrome": {
     "template": "telegraph",
     "nav": ["local-news", "sports", "business", "culture", "opinion"]
+  },
+  "admin": {
+    "accent": "#00205B",
+    "spot": "#A23A2E",
+    "strip": ["#0C2340", "#A8B2C1"],
+    "band": ["#FFFFFF", "#00205B"],
+    "nav": ["#00205B", "#FFFFFF"],
+    "mark": "mark.svg",
+    "wordmark": {"font": "'Archivo Narrow', 'Archivo', 'Arial Narrow', sans-serif", "weight": 700, "case": "uppercase", "spacing": "0.02em"},
+    "fonts": {"heading": "'Archivo', 'Helvetica Neue', Arial, sans-serif", "body": "'Source Serif 4', Georgia, serif"}
   }
 }

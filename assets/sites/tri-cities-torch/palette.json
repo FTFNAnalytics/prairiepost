@@ -36,5 +36,15 @@
       "sports": "inlet",
       "opinion": "feature"
     }
+  },
+  "admin": {
+    "accent": "#2B1A52",
+    "spot": "#B4453C",
+    "strip": ["#160C2B", "#FFFFFF"],
+    "band": ["#F2F2F4", "#2B1A52"],
+    "nav": ["#2B1A52", "#FFFFFF", "#C9A227", "#2B1A52"],
+    "mark": "mark.svg",
+    "wordmark": {"font": "'Poppins', 'Helvetica Neue', Arial, sans-serif", "weight": 700, "spacing": "-0.02em"},
+    "fonts": {"heading": "'Poppins', 'Helvetica Neue', Arial, sans-serif", "body": "'Source Sans 3', 'Helvetica Neue', Arial, sans-serif"}
   }
 }

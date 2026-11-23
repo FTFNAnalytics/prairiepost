@@ -29,5 +29,13 @@
     "gta_desk": "gta",
     "gta_head": "Around the GTA",
     "mast_note": "Independent · reader-funded"
+  },
+  "admin": {
+    "accent": "#0B6E4F",
+    "spot": "#B03A2B",
+    "band": ["#F3F2F2", "#201E1D"],
+    "mark": "mark.svg",
+    "wordmark": {"font": "'Source Serif 4', Georgia, serif", "weight": 800, "spacing": "-0.01em"},
+    "fonts": {"heading": "'Source Serif 4', Georgia, serif", "body": "'Source Serif 4', Georgia, serif"}
   }
 }

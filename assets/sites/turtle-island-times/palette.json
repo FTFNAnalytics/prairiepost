@@ -24,5 +24,15 @@
     "template": "turtleisland",
     "trending": false,
     "nav": ["news", "land-water", "language", "culture", "governance"]
+  },
+  "admin": {
+    "accent": "#004961",
+    "spot": "#A8451F",
+    "strip": ["#0A303E", "#F3F2F2"],
+    "band": ["#004961", "#F3F2F2"],
+    "nav": ["#A8451F", "#FFFFFF"],
+    "mark": "mark-reversed.svg",
+    "wordmark": {"font": "'Source Serif 4', Georgia, serif", "weight": 600, "spacing": "-0.02em"},
+    "fonts": {"heading": "'Source Serif 4', Georgia, serif", "body": "'Source Serif 4', Georgia, serif"}
   }
 }

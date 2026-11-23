@@ -46,6 +46,12 @@ $files = [
   "chrome": {
     "template": "$tpl",
     "nav": []
+  },
+  "admin": {
+    "accent": "#1F4E79",
+    "spot": "#9C3B22",
+    "band": ["#F7F6F3", "#20242B"],
+    "fonts": {"heading": "'Source Serif 4', Georgia, serif", "body": "'Source Serif 4', Georgia, serif"}
   }
 }
 JSON,
@@ -148,3 +154,5 @@ foreach ($files as $rel => $body) {
 echo "Scaffolded '$name' ($slug / t-$tpl) as files only — nothing shared was touched.\n";
 echo "Next: fill the launch pack, build $tpl.css and the five view files, then\n";
 echo "run the baseline (PLAN.md phase 0.1) before opening the PR.\n";
+echo "At brand time, replace palette.json's \"admin\" block with the paper's own newsroom\n";
+echo "theme (app/admin-theme.php documents it; tests/admin-brand.test.php checks it).\n";

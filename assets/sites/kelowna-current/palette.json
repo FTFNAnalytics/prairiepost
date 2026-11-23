@@ -39,5 +39,15 @@
     "life_head": "Okanagan Life",
     "life_sub": "Food, wine, art, water, outdoors and the people shaping the cultural life of the valley.",
     "news_head": "Start with the province in focus."
+  },
+  "admin": {
+    "accent": "#1C6F8A",
+    "spot": "#B4533F",
+    "strip": ["#0C3448", "#FFFFFF"],
+    "band": ["#FBFAF5", "#17242A"],
+    "nav": ["#1C6F8A", "#FFFFFF"],
+    "mark": "favicon.svg",
+    "wordmark": {"font": "'Newsreader', Georgia, serif", "weight": 600, "spacing": "-0.02em"},
+    "fonts": {"heading": "'Newsreader', Georgia, serif", "body": "'Inter', 'Helvetica Neue', Arial, sans-serif"}
   }
 }
