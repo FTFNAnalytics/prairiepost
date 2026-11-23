@@ -31,7 +31,7 @@ $more = related_posts($post['category_id'] ? (int) $post['category_id'] : null, 
 
     <?php if ($post['image']): ?>
     <figure class="hero">
-      <img src="<?= e($post['image']) ?>" alt="<?= e($post['image_caption'] ?: $post['title']) ?>">
+      <img src="<?= e($post['image']) ?>" alt="<?= e(($post['image_alt'] ?? '') ?: ($post['image_caption'] ?: $post['title'])) ?>">
       <?php if ($post['image_caption'] !== '' || $post['image_credit'] !== ''): ?>
       <figcaption class="sd-measure"><?= e($post['image_caption']) ?><?php if ($post['image_credit'] !== ''): ?> <em><?= e($post['image_credit']) ?></em><?php endif; ?></figcaption>
       <?php endif; ?>

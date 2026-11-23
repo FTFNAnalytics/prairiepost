@@ -3,7 +3,7 @@
  * The ingest endpoints' shared ground: who is calling, what they may do,
  * and how they are answered.
  *
- * Seven endpoints answer the ingest bearer token —
+ * Eight endpoints answer the ingest bearer token —
  *
  *   POST /api/ingest          ingest.php          file one story
  *   POST /api/ingest-media    ingest-media.php    upload a featured image
@@ -16,6 +16,9 @@
  *                                                 that is already PUBLISHED
  *   GET  /api/ingest/stories  ingest-stories.php  read a paper's stories:
  *                                                 a list, or one in full
+ *   PATCH /api/ingest/drafts/{ref}  ingest-drafts.php  edit an existing
+ *                                                 DRAFT: cover, text,
+ *                                                 tags, sources, SEO
  *
  * — and each used to carry its own copy of the token check, its own reading
  * of the token's papers, desks and draft_only flag, and its own JSON
@@ -79,6 +82,10 @@ function pp_ingest_respond(int $code, array $body): never
  *                draft-only key can hold it, and then edits what is
  *                already live while still never publishing anything new.
  *                Stated positively so a misread fails closed.
+ *   may_edit_drafts  true only for a key minted with the edit_drafts
+ *                grant: PATCH /api/ingest/drafts/{ref} may change an
+ *                existing story whose status is exactly 'draft' — never its
+ *                status. Stated positively so a misread fails closed.
  *   read         the token's story-read grant: '' (none — the default),
  *                'published' (the paper's live stories) or 'all' (every
  *                story in the editorial queue too: drafts, review and
@@ -90,7 +97,7 @@ function pp_ingest_respond(int $code, array $body): never
  * positively so that code which misreads it fails closed — a key that is
  * missing or misspelt is not `true`.
  *
- * @return array{id: int, name: string, sites: list<string>, desks: list<string>, may_publish: bool, lookup: string, may_update_published: bool, read: string}
+ * @return array{id: int, name: string, sites: list<string>, desks: list<string>, may_publish: bool, lookup: string, may_update_published: bool, read: string, may_edit_drafts: bool}
  */
 function pp_ingest_authenticate(): array
 {
@@ -116,6 +123,7 @@ function pp_ingest_authenticate(): array
         'lookup' => in_array($lookup, ['own', 'all'], true) ? $lookup : '',
         'may_update_published' => (int) ($row['update_published'] ?? 0) === 1,
         'read' => in_array((string) ($row['read_scope'] ?? ''), ['published', 'all'], true) ? (string) $row['read_scope'] : '',
+        'may_edit_drafts' => (int) ($row['edit_drafts'] ?? 0) === 1,
     ];
 }
 
@@ -142,19 +150,56 @@ function pp_ingest_article_ref(int $siteId, int $postId, string $refKey): string
 }
 
 /**
- * A story's version: changes whenever its updated_at or any field the
- * update lane can change moves. GET /api/ingest/stories hands it out and
- * POST /api/ingest/update checks it (if_version), so an agent can read a
- * story, edit it, and refuse to overwrite anything changed in between.
- * Needs id, updated_at, title, lede, body, image, image_caption,
- * image_credit.
+ * A story's version: changes whenever anything an agent may read or edit
+ * moves — its status, desk, text, cover fields, SEO description, tags or
+ * sources, or its updated_at. GET /api/ingest/stories hands it out; the
+ * two edit endpoints REQUIRE it back (if_version) and recheck it under
+ * the write lock, so an edit never lands on a story that changed since
+ * the agent read it.
+ *
+ * $post needs: id, updated_at, status, category_id, title, lede, body,
+ * image, image_alt, image_caption, image_credit, meta_description.
+ * $tags: tag names; $sources: [{url, title}] in stored order.
  */
-function pp_ingest_story_version(array $p): string
+function pp_ingest_story_version(array $post, array $tags, array $sources): string
 {
-    return 'v_' . substr(hash('sha256', implode("\x1f", [
-        (int) $p['id'], (string) $p['updated_at'], (string) $p['title'], (string) ($p['lede'] ?? ''),
-        (string) ($p['body'] ?? ''), (string) $p['image'], (string) $p['image_caption'], (string) ($p['image_credit'] ?? ''),
-    ])), 0, 16);
+    sort($tags, SORT_STRING);
+    return 'v_' . substr(hash('sha256', json_encode([
+        (int) $post['id'], (string) $post['updated_at'], (string) $post['status'], (int) ($post['category_id'] ?? 0),
+        (string) $post['title'], (string) ($post['lede'] ?? ''), (string) ($post['body'] ?? ''),
+        (string) $post['image'], (string) ($post['image_alt'] ?? ''), (string) $post['image_caption'],
+        (string) ($post['image_credit'] ?? ''), (string) ($post['meta_description'] ?? ''),
+        array_values($tags), array_values($sources),
+    ], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)), 0, 16);
+}
+
+/**
+ * Tag names and sources for many stories at once (the reader's list,
+ * one query each): [post_id => list<string>], [post_id => list<{url,title}>].
+ */
+function pp_ingest_tags_and_sources(array $postIds): array
+{
+    $tags = $sources = [];
+    foreach ($postIds as $id) {
+        $tags[(int) $id] = [];
+        $sources[(int) $id] = [];
+    }
+    if (!$postIds) {
+        return [$tags, $sources];
+    }
+    $marks = implode(',', array_fill(0, count($postIds), '?'));
+    $t = db()->prepare("SELECT pt.post_id, t.name FROM post_tags pt JOIN tags t ON t.id = pt.tag_id
+        WHERE pt.post_id IN ($marks) ORDER BY t.name");
+    $t->execute(array_values($postIds));
+    foreach ($t->fetchAll() as $r) {
+        $tags[(int) $r['post_id']][] = (string) $r['name'];
+    }
+    $src = db()->prepare("SELECT post_id, url, title FROM story_sources WHERE post_id IN ($marks) ORDER BY id");
+    $src->execute(array_values($postIds));
+    foreach ($src->fetchAll() as $r) {
+        $sources[(int) $r['post_id']][] = ['url' => (string) $r['url'], 'title' => (string) $r['title']];
+    }
+    return [$tags, $sources];
 }
 
 /**

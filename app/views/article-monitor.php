@@ -37,7 +37,7 @@ $mmUpdated = ($post['updated_at'] ?? '') > ($post['published_at'] ?? '') ? $post
 
     <?php if ($post['image']): ?>
     <figure>
-      <img src="<?= e($post['image']) ?>" alt="<?= e($post['image_caption'] ?: $post['title']) ?>">
+      <img src="<?= e($post['image']) ?>" alt="<?= e(($post['image_alt'] ?? '') ?: ($post['image_caption'] ?: $post['title'])) ?>">
       <?php if ($post['image_caption'] || $post['image_credit']): ?>
       <figcaption><?= e($post['image_caption']) ?><?= $post['image_credit'] ? ' — ' . e($post['image_credit']) : '' ?></figcaption>
       <?php endif; ?>

@@ -1049,7 +1049,7 @@ function pp_guarded_update_failure(int $postId): string
 function pp_post_snapshot(int $postId, string $reason, string $by = '', int $minIntervalSec = 0): void
 {
     try {
-        $stmt = db()->prepare('SELECT title, lede, body, meta_description, correction, image, image_caption, image_credit FROM posts WHERE id = ?');
+        $stmt = db()->prepare('SELECT title, lede, body, meta_description, correction, image, image_caption, image_credit, image_alt FROM posts WHERE id = ?');
         $stmt->execute([$postId]);
         $post = $stmt->fetch();
         if (!$post) {
@@ -1063,8 +1063,8 @@ function pp_post_snapshot(int $postId, string $reason, string $by = '', int $min
                 return;
             }
         }
-        db()->prepare('INSERT INTO post_revisions (post_id, title, lede, body, meta_description, correction, image, image_caption, image_credit, saved_by, reason, created_at)
-                       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)')
+        db()->prepare('INSERT INTO post_revisions (post_id, title, lede, body, meta_description, correction, image, image_caption, image_credit, image_alt, saved_by, reason, created_at)
+                       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)')
             ->execute([
                 $postId,
                 (string) $post['title'],
@@ -1075,6 +1075,7 @@ function pp_post_snapshot(int $postId, string $reason, string $by = '', int $min
                 (string) $post['image'],
                 (string) $post['image_caption'],
                 (string) ($post['image_credit'] ?? ''),
+                (string) ($post['image_alt'] ?? ''),
                 mb_substr($by, 0, 120),
                 mb_substr($reason, 0, 40),
                 now(),

@@ -9,6 +9,12 @@ server {
     root __RELEASE_ROOT__;
     index index.php;
 
+    # Request bodies up to 10 MB: nginx's own default is 1 MB, which
+    # refused a 1.6 MB agent upload with an HTML 413 before PHP ever saw
+    # it. The app caps an image at 8 MB and answers anything larger with a
+    # JSON 413; PHP's limits are raised to match by the release's .user.ini.
+    client_max_body_size 10m;
+
     # Application internals are never served: code, runtime data, server-
     # side tools and tests, vendored dependencies, runbooks. cron/ stays
     # reachable by design — each script 403s without the cron secret.

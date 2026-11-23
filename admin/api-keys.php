@@ -73,18 +73,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $lookup = '';
         }
         $updatePublished = !empty($_POST['update_published']) ? 1 : 0;
+        $editDrafts = !empty($_POST['edit_drafts']) ? 1 : 0;
         // The read grant is a closed list: anything else mints NO reading.
         $read = (string) ($_POST['read_scope'] ?? '');
         if (!in_array($read, ['', 'published', 'all'], true)) {
             $read = '';
         }
         $token = 'hermes_' . bin2hex(random_bytes(28));
-        db()->prepare('INSERT INTO ingest_agents (name, token_hash, sites, desks, enabled, draft_only, lookup_scope, update_published, read_scope, created_at)
-            VALUES (?, ?, ?, ?, 1, ?, ?, ?, ?, ?)')
-            ->execute([$name, hash('sha256', $token), implode(',', $picked), implode(',', $desks), $draftOnly, $lookup, $updatePublished, $read, now()]);
+        db()->prepare('INSERT INTO ingest_agents (name, token_hash, sites, desks, enabled, draft_only, lookup_scope, update_published, read_scope, edit_drafts, created_at)
+            VALUES (?, ?, ?, ?, 1, ?, ?, ?, ?, ?, ?)')
+            ->execute([$name, hash('sha256', $token), implode(',', $picked), implode(',', $desks), $draftOnly, $lookup, $updatePublished, $read, $editDrafts, now()]);
         pp_audit('apikey.created', $name, 'sites: ' . implode(', ', $picked) . ($desks ? ' · desks: ' . implode(', ', $desks) : '')
             . ($draftOnly ? ' · draft-only' : '') . ($lookup !== '' ? ' · lookup: ' . $lookup : '')
-            . ($updatePublished ? ' · may update published stories' : '') . ($read !== '' ? ' · reads: ' . $read : ''));
+            . ($updatePublished ? ' · may update published stories' : '') . ($editDrafts ? ' · may edit drafts' : '')
+            . ($read !== '' ? ' · reads: ' . $read : ''));
         // No redirect on purpose: the raw key exists only in this response.
         $freshToken = $token;
         $freshName = $name;
@@ -136,7 +138,10 @@ flash_show();
       <label style="font-weight:400"><input type="checkbox" name="draft_only" value="1"> <strong>Draft-only</strong> — this key can never publish: wire desks and <code>publish_on_image</code> are withheld for it, and <code>/api/ingest-publish</code> refuses it. Required for an external evidence feed.</label>
     </div>
     <div class="formrow">
-      <label style="font-weight:400"><input type="checkbox" name="update_published" value="1"> <strong>May update published stories</strong> — <code>POST /api/ingest/update</code> can change the headline, lede, body and image of a story that is already live on its papers and desks (never its URL, status, byline or correction note). Every change is kept in the story's history, where an editor can restore it, and in the audit log. Leave unticked unless this agent should edit live pages.</label>
+      <label style="font-weight:400"><input type="checkbox" name="update_published" value="1"> <strong>May update published stories</strong> — <code>POST /api/ingest/update</code> can change the headline, lede, body, cover image (with its alt text, caption and credit), tags, sources, SEO description and desk of a story that is already live on its papers and desks — never its URL, publication date, status, byline or correction note. Every change is kept in the story's history, where an editor can restore it, and in the audit log. Leave unticked unless this agent should edit live pages.</label>
+    </div>
+    <div class="formrow">
+      <label style="font-weight:400"><input type="checkbox" name="edit_drafts" value="1"> <strong>May edit drafts</strong> — <code>PATCH /api/ingest/drafts/{ref}</code> can add or replace the cover of an existing draft and change its text, tags, sources and SEO description, editors' drafts included. It never publishes, schedules or approves anything, and never moves a draft between desks. To find drafts the key also needs <em>Read stories: All</em>.</label>
     </div>
     <div class="formrow">
       <label>Read stories (<code>GET /api/ingest/stories</code>)
@@ -172,7 +177,7 @@ flash_show();
   <h2>Existing keys</h2>
   <?php if (!$keys): ?><p class="pagesub">No keys yet.</p><?php else: ?>
   <table class="tbl">
-    <tr><th>Name</th><th>Papers</th><th>Desks</th><th>Publishes</th><th>Lookup</th><th>Reads</th><th>Updates live</th><th>Status</th><th>Created</th><th>Last used</th><th></th></tr>
+    <tr><th>Name</th><th>Papers</th><th>Desks</th><th>Publishes</th><th>Lookup</th><th>Reads</th><th>Updates live</th><th>Edits drafts</th><th>Status</th><th>Created</th><th>Last used</th><th></th></tr>
     <?php foreach ($keys as $k): ?>
     <tr>
       <td><?= e($k['name']) ?></td>
@@ -182,6 +187,7 @@ flash_show();
       <td><?= e((string) ($k['lookup_scope'] ?? '') !== '' ? (string) $k['lookup_scope'] : 'none') ?></td>
       <td><?= e((string) ($k['read_scope'] ?? '') !== '' ? (string) $k['read_scope'] : 'none') ?></td>
       <td><?= (int) ($k['update_published'] ?? 0) === 1 ? '<strong>yes</strong>' : 'no' ?></td>
+      <td><?= (int) ($k['edit_drafts'] ?? 0) === 1 ? '<strong>yes</strong>' : 'no' ?></td>
       <td><?= (int) $k['enabled'] === 1 ? 'active' : '<strong>revoked</strong>' ?></td>
       <td><?= e(substr((string) $k['created_at'], 0, 10)) ?></td>
       <td><?= e($k['last_used_at'] ? substr((string) $k['last_used_at'], 0, 16) : 'never') ?></td>

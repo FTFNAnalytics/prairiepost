@@ -64,6 +64,7 @@ function pp_schema_ddl(string $driver): array
             lookup_scope VARCHAR(10) NOT NULL DEFAULT '',
             update_published INTEGER NOT NULL DEFAULT 0,
             read_scope VARCHAR(10) NOT NULL DEFAULT '',
+            edit_drafts INTEGER NOT NULL DEFAULT 0,
             created_at $dt NOT NULL,
             last_used_at $dt
         )$suffix",
@@ -150,6 +151,7 @@ function pp_schema_ddl(string $driver): array
             lede TEXT,
             body TEXT,
             image VARCHAR(255) NOT NULL DEFAULT '',
+            image_alt VARCHAR(255) NOT NULL DEFAULT '',
             image_caption VARCHAR(255) NOT NULL DEFAULT '',
             image_credit VARCHAR(120) NOT NULL DEFAULT '',
             meta_description VARCHAR(255) NOT NULL DEFAULT '',
@@ -514,6 +516,7 @@ function pp_schema_ddl(string $driver): array
             image VARCHAR(255) NOT NULL DEFAULT '',
             image_caption VARCHAR(255) NOT NULL DEFAULT '',
             image_credit VARCHAR(120),
+            image_alt VARCHAR(255),
             saved_by VARCHAR(120) NOT NULL DEFAULT '',
             reason VARCHAR(40) NOT NULL DEFAULT 'edit',
             created_at $dt NOT NULL
@@ -1488,6 +1491,26 @@ function pp_migrations(): array
             $pdo->exec("ALTER TABLE ingest_agents ADD COLUMN read_scope VARCHAR(10) NOT NULL DEFAULT ''");
             $pdo->exec('ALTER TABLE post_revisions ADD COLUMN image_credit VARCHAR(120)');
             $pdo->exec("UPDATE settings SET svalue = '24' WHERE site_id = 0 AND skey = 'schema_version'");
+        },
+
+        25 => function (PDO $pdo, string $driver): void {
+            // The article-editing API (owner-ordered, Nov 2026).
+            //
+            // posts.image_alt: a cover's alternative text, separate from its
+            // caption. '' on every existing story, and the templates fall
+            // back to caption, then title, exactly as they rendered before —
+            // so nothing a reader sees changes by this step.
+            //
+            // ingest_agents.edit_drafts: the draft-edit grant behind
+            // PATCH /api/ingest/drafts/{ref}. Default 0 — no key gains it.
+            //
+            // post_revisions.image_alt: nullable like image_credit; NULL on
+            // every existing revision means "not recorded", and a restore of
+            // such a row leaves the current alt text alone.
+            $pdo->exec("ALTER TABLE posts ADD COLUMN image_alt VARCHAR(255) NOT NULL DEFAULT ''");
+            $pdo->exec('ALTER TABLE ingest_agents ADD COLUMN edit_drafts INTEGER NOT NULL DEFAULT 0');
+            $pdo->exec('ALTER TABLE post_revisions ADD COLUMN image_alt VARCHAR(255)');
+            $pdo->exec("UPDATE settings SET svalue = '25' WHERE site_id = 0 AND skey = 'schema_version'");
         },
 
     ];
