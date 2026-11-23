@@ -1039,6 +1039,165 @@ function pp_guarded_update_failure(int $postId): string
     return $stmt->fetch() === false ? 'missing' : 'state';
 }
 
+/** Most stories one bulk action may touch (the list shows 25 a page). */
+const PP_BULK_STATUS_LIMIT = 100;
+
+/**
+ * The Stories list's bulk bar: move many stories to one status at once.
+ *
+ * $seen maps each ticked story's id to the status the list SHOWED for it,
+ * and that status is the compare-and-swap condition: a story whose status
+ * moved on after the page loaded (another editor published it, say) is
+ * skipped as 'changed' and left alone, never acted on from a stale view.
+ * Otherwise each story passes exactly the checks a single save does: the
+ * write policy runs against its PERSISTED row (pp_post_write_denied:
+ * authors only reshape their own draft and in-review work, and never
+ * publish), and the write lands only while the status is still the one
+ * seen.
+ *
+ * Publishing means live now: published_at is stamped when it is empty or
+ * still in the future, and kept when it is already in the past (a story
+ * returning from draft keeps its original date). It also clears the
+ * publish-on-image flag, because a person has now published the story
+ * and the image lane must not publish it again if it later returns to
+ * draft. Then the editor's follow-ups run: on a paper's admin an
+ * unassigned story is mapped to that paper, and the agent desk's
+ * auto-queue fires. Status is not revision content, so no snapshot is
+ * taken; the audit trail records the change.
+ *
+ * Returns ['changed' => int[], 'skipped' => [reason => count],
+ * 'unmapped' => int[]]. Reasons: already, denied, missing, changed,
+ * limit. 'unmapped' lists stories published from the hub that run on no
+ * paper yet.
+ */
+function pp_bulk_set_status(array $user, array $seen, string $target): array
+{
+    $result = ['changed' => [], 'skipped' => [], 'unmapped' => []];
+    $skip = function (string $why, int $n = 1) use (&$result): void {
+        $result['skipped'][$why] = ($result['skipped'][$why] ?? 0) + $n;
+    };
+
+    $picks = [];
+    foreach ($seen as $id => $status) {
+        if ((int) $id > 0 && in_array($status, ['draft', 'in_review', 'published', 'scheduled'], true)) {
+            $picks[(int) $id] = $status;
+        }
+    }
+    $allowed = is_editor($user) ? ['published', 'in_review', 'draft'] : ['in_review', 'draft'];
+    if (!in_array($target, $allowed, true)) {
+        if ($picks) {
+            $skip('denied', count($picks));
+        }
+        return $result;
+    }
+    if (count($picks) > PP_BULK_STATUS_LIMIT) {
+        $skip('limit', count($picks) - PP_BULK_STATUS_LIMIT);
+        $picks = array_slice($picks, 0, PP_BULK_STATUS_LIMIT, true);
+    }
+
+    $read = db()->prepare('SELECT id, status, author_id, published_at FROM posts WHERE id = ?');
+    foreach ($picks as $id => $wasStatus) {
+        $read->execute([$id]);
+        $post = $read->fetch();
+        if (!$post) {
+            $skip('missing');
+            continue;
+        }
+        if ($post['status'] === $target) {
+            $skip('already');
+            continue;
+        }
+        if ($post['status'] !== $wasStatus) {
+            $skip('changed');
+            continue;
+        }
+        if (pp_post_write_denied($user, $post, 'status') !== null) {
+            $skip('denied');
+            continue;
+        }
+        $fields = ['status' => $target, 'updated_at' => now()];
+        if ($target === 'published') {
+            $at = (string) ($post['published_at'] ?? '');
+            if ($at === '' || strtotime($at) > time()) {
+                $fields['published_at'] = now();
+            }
+            $fields['awaiting_image'] = 0;
+        }
+        if (!pp_guarded_post_update($id, $fields, [$wasStatus])) {
+            $skip(pp_guarded_update_failure($id) === 'missing' ? 'missing' : 'changed');
+            continue;
+        }
+        $result['changed'][] = $id;
+
+        if ($target === 'published') {
+            if (!site_ids_for_post($id)) {
+                if (pp_is_hub()) {
+                    $result['unmapped'][] = $id;
+                } else {
+                    set_post_sites($id, [current_site_id()]);
+                }
+            }
+            require_once PP_ROOT . '/app/agents.php';
+            pp_agent_auto_enqueue($id);
+        }
+    }
+
+    if ($result['changed']) {
+        $skipped = [];
+        foreach ($result['skipped'] as $why => $n) {
+            $skipped[] = "$why $n";
+        }
+        pp_audit(
+            'stories.bulk_status',
+            count($result['changed']) . ' → ' . $target,
+            'ids ' . implode(',', $result['changed']) . ($skipped ? '; skipped ' . implode(', ', $skipped) : ''),
+            $user
+        );
+    }
+    return $result;
+}
+
+/**
+ * The flash line for a pp_bulk_set_status() result: what changed, what
+ * was skipped and why, and what still needs a person (stories published
+ * from the hub that run on no paper yet).
+ */
+function pp_bulk_status_summary(array $r, string $target): string
+{
+    $n = count($r['changed']);
+    $was = fn (int $k): string => $k === 1 ? 'was' : 'were';
+    $parts = [];
+    if ($n) {
+        $done = ['published' => 'published', 'in_review' => 'sent to review', 'draft' => 'moved to draft'][$target] ?? "set to $target";
+        $parts[] = $n . ' ' . ($n === 1 ? 'story' : 'stories') . " $done.";
+    }
+    $why = [];
+    foreach ($r['skipped'] as $reason => $k) {
+        $why[] = match ($reason) {
+            'already' => "$k " . $was($k) . ' already ' . match ($target) {
+                'published' => 'published',
+                'in_review' => 'in review',
+                default     => $k === 1 ? 'a draft' : 'drafts',
+            },
+            'denied'  => "$k " . ($k === 1 ? "isn't" : "aren't") . " yours to change (another author's, or published or scheduled by an editor)",
+            'missing' => "$k no longer " . ($k === 1 ? 'exists' : 'exist'),
+            'changed' => "$k " . $was($k) . ' changed by someone else after this list loaded (reload to see ' . ($k === 1 ? 'it' : 'them') . ')',
+            'limit'   => "$k " . $was($k) . ' over the ' . PP_BULK_STATUS_LIMIT . '-story limit for one action',
+            default   => "$k for another reason",
+        };
+    }
+    if ($why) {
+        $parts[] = ($n ? 'Skipped ' : 'Nothing changed. Skipped ') . array_sum($r['skipped']) . ': ' . implode('; ', $why) . '.';
+    }
+    if ($r['unmapped']) {
+        $u = count($r['unmapped']);
+        $who = $u === $n ? ($u === 1 ? 'It runs' : 'They run') : ($u === 1 ? '1 of them runs' : "$u of them run");
+        $parts[] = "$who on no paper yet: choose " . ($u === 1 ? 'its' : 'their') . ' papers on the Network desk to put '
+                 . ($u === 1 ? 'it' : 'them') . ' on a front page.';
+    }
+    return implode(' ', $parts);
+}
+
 /**
  * Snapshot a story's current text into its revision history. Called after
  * every content-changing write (create, save, agent approval, restore), so

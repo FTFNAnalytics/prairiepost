@@ -453,6 +453,19 @@ holding a capability it should not have.
   carry it from creation), and re-minting the agents' keys
   with the grants the owner orders (--read all --edit-drafts
   --update-published).
+- **The Stories list's bulk status change is BUILT (23 Nov), not yet
+  rolled.** A checkbox per row and a bar beside "+ New story"
+  (`admin/posts.php`, `assets/js/bulk.js`, `pp_bulk_set_status()` in
+  app/models.php): editors move up to 100 ticked stories at once to
+  published (live now), in review or draft; authors move only their own
+  drafts and in-review work, and never publish. Each write is a
+  compare-and-swap on the status the list showed, so a stale page skips
+  a story a colleague changed instead of acting on it. Publishing does
+  what the story editor does (stamps an empty or future `published_at`,
+  maps an unassigned story to the paper whose admin it is, fires the
+  agent auto-queue) and also clears `awaiting_image`; one audit row,
+  `stories.bulk_status`, per action. No schema step and no new route:
+  it reaches production with the next pinned roll.
 - **Test residue awaiting owner cleanup (admin UI, never SQL):** on
   Surrey — draft #315 (`routes-check-agent-ingest-v2-draft`), and
   story #316 (`routes-check-publish-on-image-test`) which the 28 Sep
@@ -543,10 +556,13 @@ Full detail and evidence: `docs/build/phase-01-handoff.md`.
   is HTML Purifier (parser-based, vendored under `vendor/`, pinned in
   `composer.lock`) — never reintroduce regex sanitization. JSON inside
   HTML (JSON-LD, inline `var X =`) goes through `pp_json_for_html()`.
-- **Post writes** (edit, autosave, restore, delete) ask
+- **Post writes** (edit, autosave, restore, delete, and the Stories
+  list's bulk status change) ask
   `pp_post_write_denied()` against the PERSISTED row and, for authors,
   write through `pp_guarded_post_update()` with a state condition —
-  published/scheduled stories change only at an editor's desk.
+  published/scheduled stories change only at an editor's desk. The bulk
+  change (`pp_bulk_set_status()`) conditions EVERY write, editors'
+  included, on the status the list showed.
   **ONE owner-ordered exception (Nov 2026):** `POST /api/ingest/update`
   lets a key minted with `update_published` change the title, lede,
   body and image/caption/credit of a PUBLISHED story within its
