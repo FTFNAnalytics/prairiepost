@@ -307,8 +307,9 @@ holding a capability it should not have.
   site_title "Steeltown Standard" — the brand dropped the
   foundation's "The" — desks per the package mockup Local
   News/Sports/Community/Opinion, six inaugural notes, revised
-  DEPLOY-STEELTOWN.md) and awaits only DNS to the VPS
-  (domain OWNER-CONFIRMED steeltownstandard.ca). `toronto-telegraph`
+  DEPLOY-STEELTOWN.md; domain OWNER-CONFIRMED steeltownstandard.ca).
+  Its DNS is DONE: apex and www A → the VPS, verified 23 Nov.
+  `toronto-telegraph`
   is BRAND-COMPLETE too (29 Sep, from the owner's package: the
   double-blue heritage palette — Leafs Navy #00205B, Argos Oxford
   #0C2340, Argos Cambridge #5F8FB1, soft silver — the
@@ -319,8 +320,14 @@ holding a capability it should not have.
   City/Sports/Business/Culture/Opinion via desk_labels overrides
   ("City" for local-news; "Business" for the shared category's
   "Business & Markets" name), six inaugural notes, revised
-  DEPLOY-TORONTO.md) and awaits only DNS to the VPS (domain
-  OWNER-CONFIRMED torontotelegraph.ca). Only `terminal-city-times`
+  DEPLOY-TORONTO.md; domain OWNER-CONFIRMED torontotelegraph.ca).
+  Its DNS is DONE too, verified the same day. Both papers' builds are
+  in production's tree (4ff557d2b737, and 835f90b if that roll
+  landed), so they await ONLY the launch run, one VPS brief for both:
+  `docs/briefs/launch-steeltown-toronto.md` (launch-only from the live
+  release, no pin; it checks for a stopped or running roll first, and
+  adds `client_max_body_size 10m` to the two new blocks because the
+  live release's template predates it). Only `terminal-city-times`
   (DEPLOY-TERMINALCITY.md) remains
   foundation-only, awaiting its brand package. Foundations get
   their six-story inaugural editions at brand-build time, never
@@ -435,7 +442,9 @@ holding a capability it should not have.
   25 migrate), a routes pass adding /api/ingest/update,
   /api/ingest/stories (if 835f90b's pass did not) and the regex route
   `^/api/ingest/drafts/[^/]+/?$` to the 14 legacy blocks, plus
-  `client_max_body_size 10m` on all 25, and re-minting the agents' keys
+  `client_max_body_size 10m` on every block that lacks it (all 25 as
+  of 23 Nov; blocks created by the Steeltown/Toronto launch brief
+  carry it from creation), and re-minting the agents' keys
   with the grants the owner orders (--read all --edit-drafts
   --update-published).
 - **Test residue awaiting owner cleanup (admin UI, never SQL):** on
