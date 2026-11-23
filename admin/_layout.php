@@ -1,5 +1,6 @@
 <?php
 /** The Prairie Dispatch — admin chrome. Include after bootstrap; call admin_header()/admin_footer(). */
+require_once PP_ROOT . '/app/admin-theme.php';
 
 function flash_set(string $message, bool $error = false): void
 {
@@ -84,6 +85,11 @@ function admin_header(string $title, string $active = '', string $actions = ''):
     } catch (PDOException) {
         // A dateline without a wire time is still a dateline.
     }
+    // A paper's newsroom wears the paper: its palette.json "admin" block
+    // recolours the sheet and draws its own masthead (app/admin-theme.php).
+    // The hub has no block and keeps the control room as it is.
+    $theme = pp_admin_theme();
+    $paperName = setting('site_title', 'The Prairie Dispatch');
     ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -93,9 +99,12 @@ function admin_header(string $title, string $active = '', string $actions = ''):
 <title><?= e($title) ?> — <?= pp_is_hub() ? 'Control room' : 'Newsroom' ?> — <?= e(setting('site_title', 'The Prairie Dispatch')) ?></title>
 <meta name="robots" content="noindex,nofollow">
 <link rel="icon" type="image/svg+xml" href="<?= e(site_asset('favicon.svg')) ?>">
-<link rel="stylesheet" href="/assets/css/admin.css">
+<link rel="stylesheet" href="/assets/css/admin.css?v=<?= e(pp_admin_sheet_version()) ?>">
+<?php if ($theme && $theme['css'] !== ''): ?>
+<style><?= $theme['css'] ?></style>
+<?php endif; ?>
 </head>
-<body>
+<body<?= $theme ? ' class="' . e($theme['classes']) . '"' : '' ?>>
 <header>
   <div class="nh-strip">
     <div class="wrap">
@@ -106,7 +115,19 @@ function admin_header(string $title, string $active = '', string $actions = ''):
   </div>
   <div class="nh-brand">
     <div class="wrap">
+      <?php if ($theme): ?>
+      <a class="nh-mark nh-mark--paper" href="index.php">
+        <?php if ($theme['logo']): ?>
+        <img class="nh-mark__logo" src="<?= e($theme['logo']) ?>" alt="<?= e($paperName) ?>">
+        <?php else: ?>
+        <?php if ($theme['mark']): ?><img class="nh-mark__img" src="<?= e($theme['mark']) ?>" alt=""><?php endif; ?>
+        <span class="nh-mark__name"><?= e($paperName) ?></span>
+        <?php endif; ?>
+        <span class="nh-mark__label">Newsroom</span>
+      </a>
+      <?php else: ?>
       <a class="nh-mark" href="index.php">CivisMedia <span><?= $hub ? 'Control room' : 'Newsroom' ?></span></a>
+      <?php endif; ?>
       <?php if ($actions !== ''): ?><div class="nh-actions"><?= $actions ?></div><?php endif; ?>
     </div>
   </div>

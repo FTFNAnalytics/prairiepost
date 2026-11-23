@@ -19,5 +19,14 @@
   "chrome": {
     "template": "terminalcity",
     "nav": ["local-news", "city-hall", "business", "arts", "sports", "opinion"]
+  },
+  "admin": {
+    "accent": "#8C2F1B",
+    "spot": "#B08A3C",
+    "band": ["#FBF8F0", "#262220"],
+    "nav": ["#F4EFE4", "#262220", "#8C2F1B", "#FFFFFF"],
+    "mark": "mark.svg",
+    "wordmark": {"font": "'Newsreader', Georgia, serif", "weight": 700, "spacing": "0.04em", "color": "#8C2F1B"},
+    "fonts": {"heading": "'Archivo Narrow', 'Archivo', 'Arial Narrow', sans-serif", "body": "'Newsreader', Georgia, serif"}
   }
 }

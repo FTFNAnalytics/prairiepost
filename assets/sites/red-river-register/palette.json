@@ -23,5 +23,14 @@
   "chrome": {
     "template": "redriver",
     "nav": ["local-news", "communities", "business", "sports", "opinion"]
+  },
+  "admin": {
+    "accent": "#7E3517",
+    "spot": "#3F5A22",
+    "band": ["#FAF8F2", "#1A1A1A"],
+    "nav": ["#F0E9DC", "#1A1A1A", "#7E3517", "#FFFFFF"],
+    "mark": "mark.svg",
+    "wordmark": {"font": "'Playfair Display', Georgia, serif", "weight": 700, "case": "uppercase", "spacing": "0.02em"},
+    "fonts": {"heading": "'Libre Baskerville', Georgia, serif", "body": "'Source Sans 3', 'Helvetica Neue', Arial, sans-serif"}
   }
 }

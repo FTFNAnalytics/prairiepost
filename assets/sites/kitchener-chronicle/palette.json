@@ -23,5 +23,14 @@
   "chrome": {
     "template": "kitchener",
     "nav": ["local-news", "politics", "business", "sports", "culture"]
+  },
+  "admin": {
+    "accent": "#16264D",
+    "spot": "#B98B3C",
+    "band": ["#F3F2F2", "#16264D"],
+    "nav": ["#16264D", "#FFFFFF", "#B98B3C", "#16264D"],
+    "mark": "mark.svg",
+    "wordmark": {"font": "'Source Serif 4', Georgia, serif", "weight": 600, "spacing": "-0.015em"},
+    "fonts": {"heading": "'Source Serif 4', Georgia, serif", "body": "'Source Serif 4', Georgia, serif"}
   }
 }

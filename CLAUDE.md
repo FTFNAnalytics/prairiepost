@@ -466,6 +466,23 @@ holding a capability it should not have.
   agent auto-queue) and also clears `awaiting_image`; one audit row,
   `stories.bulk_status`, per action. No schema step and no new route:
   it reaches production with the next pinned roll.
+- **Each paper's newsroom wears the paper — BUILT (23 Nov), not yet
+  rolled.** On a paper's own domain the admin takes that paper's
+  masthead (its mark or image wordmark, its name set the way its front
+  page sets it), its rail/band/nav colours, its accent and spot (buttons,
+  links, status chips) and its fonts, from the `admin` block of
+  `assets/sites/<slug>/palette.json`; `app/admin-theme.php` validates the
+  block (hex colours, plain font stacks, fixed keywords only) and writes
+  one inline `:root` rule. Every paper has a block, chosen from its
+  rendered masthead; the hub has none and renders pixel-identical.
+  `tests/admin-brand.test.php` checks every block — contrast for every
+  pairing drawn, accent and spot far enough apart that chips stay
+  distinct, and every font declared in a sheet the admin loads
+  (Playfair Display is declared in admin.css itself, lesson 9). The
+  admin sheet's URL carries a content hash, because no static asset is
+  served with Cache-Control. A new paper's block is scaffolded by
+  `tools/make-paper.php` and replaced at brand time. No schema step;
+  it reaches production with the next pinned roll.
 - **Test residue awaiting owner cleanup (admin UI, never SQL):** on
   Surrey — draft #315 (`routes-check-agent-ingest-v2-draft`), and
   story #316 (`routes-check-publish-on-image-test`) which the 28 Sep

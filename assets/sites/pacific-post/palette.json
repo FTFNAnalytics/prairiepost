@@ -27,5 +27,13 @@
     "trending": true,
     "nav": ["news", "bc-news", "environment", "politics", "business", "culture", "sports", "opinion"],
     "crosshead": "Across British Columbia"
+  },
+  "admin": {
+    "accent": "#0F6E9E",
+    "spot": "#C2591A",
+    "band": ["#FBFAF8", "#201E1D"],
+    "mark": "mark.svg",
+    "wordmark": {"font": "'Source Serif 4', Georgia, serif", "weight": 900, "case": "uppercase", "spacing": "0.015em"},
+    "fonts": {"heading": "'Source Serif 4', Georgia, serif", "body": "'Source Serif 4', Georgia, serif"}
   }
 }

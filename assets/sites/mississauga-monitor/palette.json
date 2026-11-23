@@ -29,5 +29,14 @@
   "chrome": {
     "template": "monitor",
     "nav": ["city-hall", "transit", "development", "courts", "business", "peel-region", "communities"]
+  },
+  "admin": {
+    "accent": "#006BB6",
+    "spot": "#F5821F",
+    "band": ["#FFFFFF", "#0B2D4F"],
+    "nav": ["#0B2D4F", "#FFFFFF", "#F5821F", "#0B2D4F"],
+    "mark": "mark.svg",
+    "wordmark": {"font": "'Playfair Display', Georgia, serif", "weight": 700, "spacing": "-0.01em"},
+    "fonts": {"heading": "'Playfair Display', Georgia, serif", "body": "'Inter', 'Helvetica Neue', Arial, sans-serif"}
   }
 }

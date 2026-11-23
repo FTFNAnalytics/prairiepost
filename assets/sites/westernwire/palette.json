@@ -24,5 +24,15 @@
     "template": "westernwire",
     "trending": true,
     "nav": ["news", "politics", "business", "energy", "sports", "culture", "opinion"]
+  },
+  "admin": {
+    "accent": "#245A63",
+    "spot": "#A23A2E",
+    "strip": ["#1B212B", "#DAD8D3"],
+    "band": ["#F5F4F2", "#1B212B"],
+    "nav": ["#2B3442", "#FFFFFF", "#C08A2E", "#1B212B"],
+    "mark": "mark.svg",
+    "wordmark": {"font": "'Archivo', 'Helvetica Neue', Arial, sans-serif", "weight": 600, "case": "uppercase", "spacing": "0.14em"},
+    "fonts": {"heading": "'Source Serif 4', Georgia, serif", "body": "'Source Serif 4', Georgia, serif"}
   }
 }

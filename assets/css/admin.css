@@ -6,6 +6,16 @@
    class names kept from the old sheet so every screen reskins in place. */
 @import url('/assets/css/fonts.css');  /* self-hosted; was fonts.googleapis.com */
 
+/* Playfair Display: several papers' newsroom themes (palette.json "admin")
+   name it, and fonts.css does not declare it — those papers' own sheets do,
+   and the admin loads none of them. A family named without a face here
+   would silently paint Georgia (CLAUDE.md, lesson 9), so the admin declares
+   it itself. Same files as the papers' sheets; browsers dedupe by URL. */
+@font-face{font-family:'Playfair Display';font-style:normal;font-weight:400 900;font-display:swap;
+  src:url('/assets/fonts/playfair-display-latin.woff2') format('woff2')}
+@font-face{font-family:'Playfair Display';font-style:italic;font-weight:400 900;font-display:swap;
+  src:url('/assets/fonts/playfair-display-italic-latin.woff2') format('woff2')}
+
 :root{
   --color-bg:#f3f2f2;
   --color-surface:#eae9e9;
@@ -50,22 +60,48 @@ a{color:var(--color-accent);text-underline-offset:3px}
 .pp-meta{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--color-accent-700)}
 
 /* ── The newspaper head ─────────────────────────────────────────────────── */
-.nh-strip{border-top:3px solid var(--color-text);border-bottom:1px solid var(--color-divider)}
+/* The --nh-* properties are set only on a paper's newsroom, by the inline
+   :root rule app/admin-theme.php writes from the paper's palette.json; each
+   fallback below is the control room's own value, so the hub is unchanged. */
+.nh-strip{border-top:3px solid var(--color-text);border-bottom:1px solid var(--color-divider);background:var(--nh-strip-bg,transparent)}
 .nh-strip .wrap{display:flex;justify-content:space-between;gap:16px;padding-top:7px;padding-bottom:7px;
-  font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--color-accent-700)}
+  font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--nh-strip-fg,var(--color-accent-700))}
 .nh-strip span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.nh-brand{background:var(--nh-band-bg,transparent)}
 .nh-brand .wrap{display:flex;align-items:flex-end;justify-content:space-between;gap:20px;flex-wrap:wrap;padding-top:26px;padding-bottom:18px}
 .nh-mark{font-family:var(--font-heading);font-weight:600;font-size:clamp(28px,4vw,40px);letter-spacing:-.015em;line-height:1;color:var(--color-text);text-decoration:none}
 .nh-mark span{color:var(--color-accent-600)}
 .nh-actions{display:flex;gap:10px;align-items:center}
-.nh-nav{border-top:4px solid var(--color-text);background:var(--color-accent-100)}
+.nh-nav{border-top:4px solid var(--nh-nav-rule,var(--color-text));background:var(--nh-nav-bg,var(--color-accent-100))}
 .nh-nav .wrap{display:flex;align-items:center;gap:4px 22px;flex-wrap:wrap;padding-top:10px;padding-bottom:10px}
-.nh-nav a{font-size:14px;color:var(--color-text);text-decoration:none;line-height:1.2}
+.nh-nav a{font-size:14px;color:var(--nh-nav-fg,var(--color-text));text-decoration:none;line-height:1.2}
 .nh-nav a:hover{color:var(--color-accent)}
-.nh-nav a[aria-current="page"]{background:var(--color-accent);color:var(--color-bg);padding:4px 10px;border-radius:var(--radius-md)}
-.nh-nav .who{margin-left:auto;font-size:13px;color:var(--color-neutral-600);white-space:nowrap}
+.nh-nav a[aria-current="page"]{background:var(--nh-nav-active-bg,var(--color-accent));color:var(--nh-nav-active-fg,var(--color-bg));padding:4px 10px;border-radius:var(--radius-md)}
+.nh-nav .who{margin-left:auto;font-size:13px;color:var(--nh-nav-who,var(--color-neutral-600));white-space:nowrap}
 .nh-nav .who a{color:inherit}
 .nh-hairline{border-bottom:1px solid var(--color-divider)}
+
+/* A paper's own masthead: its mark (or image wordmark), its name set the
+   way its front page sets it, and the word Newsroom after a rule. */
+.nh-mark--paper{display:inline-flex;align-items:center;flex-wrap:wrap;gap:8px 14px;color:var(--nh-band-fg,var(--color-text))}
+.nh-mark--paper .nh-mark__name{font-family:var(--nh-wm-font,var(--font-heading));font-weight:var(--nh-wm-weight,600);
+  text-transform:var(--nh-wm-case,none);letter-spacing:var(--nh-wm-spacing,-.015em);font-style:var(--nh-wm-style,normal);
+  color:var(--nh-wm-color,var(--nh-band-fg,var(--color-text)))}
+.nh-mark__img{display:block;height:1.25em;width:auto}
+.nh-mark__logo{display:block;height:56px;width:auto;max-width:min(340px,72vw)}
+.nh-mark--paper .nh-mark__label{padding-left:14px;border-left:2px solid currentColor;font-family:var(--font-body);
+  font-size:13px;font-weight:600;font-style:normal;letter-spacing:.14em;line-height:1.5;text-transform:uppercase;
+  color:var(--nh-band-fg,var(--color-text));opacity:.85}
+/* A dark nav bar: hover underlines instead of turning the accent, which
+   may be the bar's own colour. */
+.pp-nav-dark .nh-nav a:hover{color:var(--nh-nav-fg);text-decoration:underline;text-underline-offset:4px}
+.pp-nav-dark .nh-nav a[aria-current="page"]:hover{color:var(--nh-nav-active-fg);text-decoration:none}
+/* Buttons the page puts in a dark masthead row are drawn in the band's
+   inverse, so a navy "New story" can't vanish into a navy band. */
+.pp-band-dark .nh-actions .btn{background:var(--nh-band-fg);color:var(--nh-band-bg)}
+.pp-band-dark .nh-actions .btn:hover{background:color-mix(in srgb,var(--nh-band-fg) 86%,var(--nh-band-bg))}
+.pp-band-dark .nh-actions .btn--ghost{background:transparent;color:var(--nh-band-fg);border-color:color-mix(in srgb,var(--nh-band-fg) 45%,transparent)}
+.pp-band-dark .nh-actions .btn--ghost:hover{background:color-mix(in srgb,var(--nh-band-fg) 12%,transparent)}
 
 main.adminmain{padding:18px 0 70px}
 .pagetitle{font-family:var(--font-heading);font-weight:600;font-size:30px;letter-spacing:-.015em;line-height:1.12;margin:14px 0 4px}

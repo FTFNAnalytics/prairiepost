@@ -1,5 +1,13 @@
 {
   "chrome": {
     "nav": ["news", "politics", "agriculture", "business", "community", "opinion", "weather"]
+  },
+  "admin": {
+    "accent": "#17301C",
+    "spot": "#9C3B22",
+    "strip": ["#77B2D6", "#17301C"],
+    "band": ["#F1F2F0", "#17301C"],
+    "logo": "logo-primary.svg",
+    "fonts": {"heading": "'Archivo', 'Helvetica Neue', Arial, sans-serif", "body": "'Newsreader', Georgia, serif"}
   }
 }

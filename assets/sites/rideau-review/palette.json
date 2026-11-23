@@ -24,5 +24,14 @@
   "chrome": {
     "template": "rideau",
     "nav": ["local-news", "gatineau", "corridor", "politics", "culture", "opinion"]
+  },
+  "admin": {
+    "accent": "#6B1C28",
+    "spot": "#2E5A88",
+    "band": ["#FBF9F6", "#1A1A1A"],
+    "nav": ["#F1ECE4", "#1A1A1A", "#6B1C28", "#FFFFFF"],
+    "mark": "mark.svg",
+    "wordmark": {"font": "'Playfair Display', Georgia, serif", "weight": 700, "case": "uppercase", "spacing": "0.02em"},
+    "fonts": {"heading": "'Libre Baskerville', Georgia, serif", "body": "'Source Sans 3', 'Helvetica Neue', Arial, sans-serif"}
   }
 }

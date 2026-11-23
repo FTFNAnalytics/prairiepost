@@ -23,5 +23,15 @@
   "chrome": {
     "template": "bison",
     "nav": ["local-news", "politics", "business", "sports", "culture", "opinion"]
+  },
+  "admin": {
+    "accent": "#8B0000",
+    "spot": "#4A2F1A",
+    "strip": ["#FFFFFF", "#5F5A4E"],
+    "band": ["#8B0000", "#FFFFFF"],
+    "nav": ["#6B0000", "#FFFFFF"],
+    "mark": "mark-reversed.svg",
+    "wordmark": {"font": "'Montserrat', 'Helvetica Neue', Arial, sans-serif", "weight": 700, "spacing": "0.01em"},
+    "fonts": {"heading": "'Montserrat', 'Helvetica Neue', Arial, sans-serif", "body": "'Open Sans', 'Helvetica Neue', Arial, sans-serif"}
   }
 }

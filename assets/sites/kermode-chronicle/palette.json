@@ -30,5 +30,15 @@
     "nav": ["environment", "wildlife", "climate", "politics", "resources", "culture", "communities", "coast", "interior", "opinion"],
     "field_notes_label": "Field notes",
     "field_notes_link": "Read the record →"
+  },
+  "admin": {
+    "accent": "#1C5342",
+    "spot": "#8A5A17",
+    "strip": ["#0A1A28", "#A9D0B3"],
+    "band": ["#0E2233", "#FFFFFF"],
+    "nav": ["#0A1A28", "#FFFFFF", "#A9D0B3", "#0E2233"],
+    "mark": "bear-crest.png",
+    "wordmark": {"font": "'Source Serif 4', Georgia, serif", "weight": 600},
+    "fonts": {"heading": "'Source Serif 4', Georgia, serif", "body": "'Source Serif 4', Georgia, serif"}
   }
 }

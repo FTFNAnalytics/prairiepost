@@ -24,5 +24,14 @@
   "chrome": {
     "template": "lookout",
     "nav": ["local-news", "city-hall", "business", "events", "sports", "opinion"]
+  },
+  "admin": {
+    "accent": "#1E4D38",
+    "spot": "#D8B04A",
+    "band": ["#1E4D38", "#F1F5EB"],
+    "nav": ["#F9FAF4", "#1D241F", "#1E4D38", "#FFFFFF"],
+    "mark": "mark-reversed.svg",
+    "wordmark": {"font": "'Inter', 'Helvetica Neue', Arial, sans-serif", "weight": 500, "case": "uppercase", "spacing": "0.03em"},
+    "fonts": {"heading": "'Inter', 'Helvetica Neue', Arial, sans-serif", "body": "'Inter', 'Helvetica Neue', Arial, sans-serif"}
   }
 }
