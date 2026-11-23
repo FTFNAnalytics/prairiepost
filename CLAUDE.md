@@ -215,7 +215,17 @@ holding a capability it should not have.
 
 ## Current operational state (as of the story-lookup roll, 21 Nov 2026)
 
-- **Release in production: `4ff557d2b737`** (branch commit
+- **Latest known state (23 Nov, from the VPS agent's report when the
+  `7cb82fb` roll stopped at A3).** All 27 sites serve release
+  `feb2b1f4f6eb` (the merge of #84), rolled the night of 22 Nov, at
+  schema version **25**. The 22 Nov roll to `835f90b` also completed, and
+  was reported that day. Neither report reached this file, which is why
+  the first issue of the roll brief expected `4ff557d2b737` or
+  `835f90b85d2a` and stopped. That was lesson 5 working: the agent acted
+  on the server, not on this file. 27 sites is the 25 below plus, by
+  count, Steeltown and Toronto. Where the bullets below disagree, this
+  one is newer.
+- **Release in production as of 21 Nov (superseded above): `4ff557d2b737`** (branch commit
   `4ff557d2b737482a2915f00f62ec322308ae70ed`), serving BOTH release
   groups: `/var/www/prairiepost-4ff557d2b737-shared` (the papers) and
   `/var/www/prairiepost-4ff557d2b737-civismedia` (the hub). The
@@ -272,7 +282,8 @@ holding a capability it should not have.
   third wire source (the CBC national feed) printed no "source added"
   line because the URL was already in the shared sources table —
   seeder dedupe by design, not a defect.
-- **Schema version 23, journaled** (step 21: `posts.awaiting_image`;
+- **Schema version 23 as of 21 Nov (25 since the feb2b1f4f6eb roll),
+  journaled** (step 21: `posts.awaiting_image`;
   step 22: `ingest_agents.draft_only`, NEWS1; step 23: the
   story-lookup lane — `ingest_receipts` with
   UNIQUE (site_id, source_story_id), `ingest_agents.lookup_scope`,
@@ -321,9 +332,9 @@ holding a capability it should not have.
   ("City" for local-news; "Business" for the shared category's
   "Business & Markets" name), six inaugural notes, revised
   DEPLOY-TORONTO.md; domain OWNER-CONFIRMED torontotelegraph.ca).
-  Its DNS is DONE too, verified the same day. Both papers' builds are
-  in production's tree (4ff557d2b737, and 835f90b if that roll
-  landed), so they await ONLY the launch run, one VPS brief for both:
+  Its DNS is DONE too, verified the same day. The 23 Nov report counts
+  27 sites, so the launch has run; its own report hasn't reached this
+  file. It was one VPS brief for both:
   `docs/briefs/launch-steeltown-toronto.md` (launch-only from the live
   release, no pin; it checks for a stopped or running roll first, and
   adds `client_max_body_size 10m` to the two new blocks because the
@@ -410,13 +421,15 @@ holding a capability it should not have.
   Contract: docs/api-ingest.md §5; compat: docs/MIGRATION-COMPAT.md
   step 23. Not separately re-confirmed on 21 Nov: per-site indexing
   still off (nothing in the roll touches it).
-- **The article-editing API is BUILT (23 Nov), not yet rolled.** It
-  completes the 22 Nov update and story-read lanes (PR #81, merged at
-  835f90b; schema step 24: `ingest_agents.update_published`,
-  `ingest_agents.read_scope`, `post_revisions.image_credit`) — a VPS
-  brief for 835f90b was issued 22 Nov and NO REPORT HAS COME BACK, so
-  production is not known to be past schema 23; the next roll must act
-  on `migrate.php --status`, not on this line (lesson 5). Schema step
+- **The article-editing API is LIVE (release `feb2b1f4f6eb`, schema
+  25).** It completes the 22 Nov update and story-read lanes (PR #81,
+  merged at 835f90b; schema step 24: `ingest_agents.update_published`,
+  `ingest_agents.read_scope`, `post_revisions.image_credit`). The
+  835f90b roll and a later one to feb2b1f4f6eb both ran and were
+  reported to the owner, not to this file. Whether their routes passes
+  reached every block is what the 7cb82fb brief's D5 and D6 check, and
+  any roll still acts on `migrate.php --status`, not on this line
+  (lesson 5). Schema step
   25: `posts.image_alt` (default ''), `ingest_agents.edit_drafts`
   (default 0), `post_revisions.image_alt` (nullable). One engine,
   `app/ingest-edit.php`, behind two lanes, each its own grant set at
@@ -454,13 +467,17 @@ holding a capability it should not have.
   with the grants the owner orders (--read all --edit-drafts
   --update-published). **The roll brief is written:**
   `docs/briefs/roll-7cb82fb9c20a.md` (23 Nov) pins the roll to
-  `7cb82fb9c20aa53c886e80bbe7896bffe3da1bb4`, which also carries the bulk
+  `7cb82fb9c20aa53c886e80bbe7896bffe3da1bb4`, which carries the bulk
   status change and the newsroom branding below. It covers the preflight
   checks, the routes pass and upload limit on every block, and a
   ten-item verification, with every command run here first (the legacy
   routes against a real nginx). Key re-minting is left out, for the
-  owner's separate order. It runs after the Steeltown/Toronto launch;
-  the launch brief now works on either side of the roll.
+  owner's separate order. **Revision 2 (23 Nov)** followed the first
+  run's A3 stop: it is a code-only roll from `feb2b1f4f6eb` at schema 25
+  (8 commits, no migration). A3 now requires the live release to be an
+  ancestor of the pin, using the GitHub compare API, instead of naming
+  releases this file might have wrong. Write future rolls' A3 the same
+  way.
 - **The Stories list's bulk status change is BUILT (23 Nov), not yet
   rolled.** A checkbox per row and a bar beside "+ New story"
   (`admin/posts.php`, `assets/js/bulk.js`, `pp_bulk_set_status()` in
