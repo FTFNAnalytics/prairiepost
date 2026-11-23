@@ -118,7 +118,16 @@ $mkPost = function (array $sites, string $deskSlug, string $title, string $statu
 };
 
 $port = 9500 + random_int(0, 80);
+// PHP's request limits as production sets them in the release's .user.ini
+// (which php -S does not read) — except upload_max_filesize, held BELOW the
+// app's 8 MB so section 0 can show a 413 naming PHP's lower limit. Every
+// oversized body stays under post_max_size: a body over it makes PHP warn
+// at request startup, and on a PHP with Xdebug loaded (the CI runner's)
+// that took the whole test server down.
+const PP_TEST_POST_MAX = 12 * 1048576;
+const PP_TEST_UPLOAD_MAX = 4 * 1048576;
 $cmd = 'PP_CONFIG=' . escapeshellarg($config) . ' ' . escapeshellarg(PHP_BINARY)
+     . ' -d post_max_size=12M -d upload_max_filesize=4M'
      . ' -S 127.0.0.1:' . $port . ' router.php >' . escapeshellarg("$work/server.log") . ' 2>&1 & echo $!';
 $serverPid = (int) trim((string) shell_exec('cd ' . escapeshellarg($root) . ' && ' . $cmd));
 usleep(700000);
@@ -233,26 +242,17 @@ file_put_contents($tmp, $bigPng);
 ok($code === 201 && ($j['bytes'] ?? 0) === strlen($bigPng), "0. the same PNG as multipart: 201 (got $code " . json_encode($j) . ')');
 $storedFiles[] = (string) ($j['path'] ?? '');
 // Over the limit: a JSON 413 that names the limit this server enforces —
-// the smaller of the app's 8 MB and PHP's own (this test server runs PHP's
-// defaults; production's .user.ini raises them above 8 MB).
-$iniBytes = static function (string $v): int {
-    preg_match('/^(\d+)\s*([kmg]?)$/i', trim($v), $m);
-    return $m ? (int) $m[1] * ['' => 1, 'k' => 1024, 'm' => 1048576, 'g' => 1073741824][strtolower($m[2])] : 0;
-};
-$postMax = $iniBytes((string) ini_get('post_max_size'));
-$uploadMax = $iniBytes((string) ini_get('upload_max_filesize'));
-$rawLimit = min(8 * 1048576, $postMax ?: PHP_INT_MAX);
+// the smaller of the app's 8 MB and PHP's own.
+$rawLimit = min(8 * 1048576, PP_TEST_POST_MAX);
 [$code, $j] = api('POST', '/api/ingest-media', $agent, str_repeat("\0", $rawLimit + 1), 'paper-a.test', 'image/png');
 ok($code === 413 && ($j['ok'] ?? null) === false && ($j['max_bytes'] ?? 0) === $rawLimit
    && str_contains((string) ($j['error'] ?? ''), 'over the upload limit'),
-   "0. a raw body one byte over the limit: JSON 413 with max_bytes $rawLimit (got $code " . json_encode($j) . ')');
-$multiLimit = min($rawLimit, $uploadMax ?: PHP_INT_MAX);
-if ($multiLimit + 4096 < ($postMax ?: PHP_INT_MAX)) {
-    file_put_contents($tmp, str_repeat("\0", $multiLimit + 1));
-    [$code, $j] = api('POST', '/api/ingest-media', $agent, ['file' => new CURLFile($tmp, 'image/png', 'huge.png')], 'paper-a.test', null);
-    ok($code === 413 && ($j['max_bytes'] ?? 0) === $multiLimit,
-       "0. a multipart file over PHP's upload_max_filesize: JSON 413 naming that lower limit, $multiLimit (got $code " . json_encode($j) . ')');
-}
+   "0. a raw body one byte over the app's 8 MB: JSON 413 with max_bytes $rawLimit (got $code " . json_encode($j) . ')');
+$multiLimit = min($rawLimit, PP_TEST_UPLOAD_MAX);
+file_put_contents($tmp, str_repeat("\0", $multiLimit + 1));
+[$code, $j] = api('POST', '/api/ingest-media', $agent, ['file' => new CURLFile($tmp, 'image/png', 'huge.png')], 'paper-a.test', null);
+ok($code === 413 && ($j['max_bytes'] ?? 0) === $multiLimit,
+   "0. a multipart file over PHP's upload_max_filesize: JSON 413 naming that lower limit, $multiLimit (got $code " . json_encode($j) . ')');
 @unlink($tmp);
 
 // Ordinary covers for the workflow, through the same lane.
