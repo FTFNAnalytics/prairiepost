@@ -599,8 +599,10 @@ function pp_ingest_edit(array $agent, string $mode, string $pathRef = ''): never
         $set[] = 'updated_at = ?';
         $args[] = $now;
         $upd = $pdo->prepare('UPDATE posts SET ' . implode(', ', $set)
-            . ' WHERE id = ? AND status = ? AND category_id = ? AND updated_at = ?');
-        $upd->execute([...$args, $postId, $wanted, $deskId, (string) $post['updated_at']]);
+            . ' WHERE id = ? AND status = ? AND category_id = ? AND updated_at = ?'
+            // The paper, in the write itself: the story must still be on it.
+            . ' AND EXISTS (SELECT 1 FROM post_sites ps WHERE ps.post_id = posts.id AND ps.site_id = ?)');
+        $upd->execute([...$args, $postId, $wanted, $deskId, (string) $post['updated_at'], $siteId]);
         if ($upd->rowCount() !== 1) {
             pp_ingest_edit_rollback($pdo);
             $inFlight();
