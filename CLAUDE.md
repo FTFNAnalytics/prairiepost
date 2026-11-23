@@ -452,7 +452,15 @@ holding a capability it should not have.
   of 23 Nov; blocks created by the Steeltown/Toronto launch brief
   carry it from creation), and re-minting the agents' keys
   with the grants the owner orders (--read all --edit-drafts
-  --update-published).
+  --update-published). **The roll brief is written:**
+  `docs/briefs/roll-7cb82fb9c20a.md` (23 Nov) pins the roll to
+  `7cb82fb9c20aa53c886e80bbe7896bffe3da1bb4`, which also carries the bulk
+  status change and the newsroom branding below. It covers the preflight
+  checks, the routes pass and upload limit on every block, and a
+  ten-item verification, with every command run here first (the legacy
+  routes against a real nginx). Key re-minting is left out, for the
+  owner's separate order. It runs after the Steeltown/Toronto launch;
+  the launch brief now works on either side of the roll.
 - **The Stories list's bulk status change is BUILT (23 Nov), not yet
   rolled.** A checkbox per row and a bar beside "+ New story"
   (`admin/posts.php`, `assets/js/bulk.js`, `pp_bulk_set_status()` in
