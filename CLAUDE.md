@@ -326,6 +326,12 @@ holding a capability it should not have.
   their six-story inaugural editions at brand-build time, never
   earlier. The wider slate (Rideau siblings, Atlantic papers)
   awaits packages.
+- **The expansion name slate is in `NETWORK-EXPANSION.md`** (chosen
+  23 Nov 2026): twelve mastheads for the North, Atlantic Canada,
+  Quebec and Saskatchewan, with their domains, the reasons, the open
+  questions and every rejected name. Nothing is registered or built
+  yet. Read it before proposing names for a new region; record new
+  name decisions there, never only in a chat.
 - **Deploys are pinned**: the VPS agent resolves the release branch
   head via the API, requires the exact full SHA from the brief, and
   fetches `upgrade-papers.sh` at that SHA. Rolls are preceded by a
