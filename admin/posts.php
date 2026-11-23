@@ -1,5 +1,5 @@
 <?php
-/** Stories list: filter, edit, feature, delete. */
+/** Stories list: filter, edit, feature, delete, and change many stories' status at once. */
 require dirname(__DIR__) . '/app/bootstrap.php';
 require __DIR__ . '/_layout.php';
 $user = require_login();
@@ -9,6 +9,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     csrf_check();
     $id = (int) ($_POST['id'] ?? 0);
     $action = (string) ($_POST['action'] ?? '');
+    if ($action === 'bulk_status') {
+        // stories[<id>] = the status this list showed for it: the bulk write
+        // lands only on stories still in that state (see pp_bulk_set_status).
+        $newStatus = (string) ($_POST['new_status'] ?? '');
+        $seen = is_array($_POST['stories'] ?? null) ? $_POST['stories'] : [];
+        if (!in_array($newStatus, ['published', 'in_review', 'draft'], true) || !$seen) {
+            flash_set('Tick at least one story and choose a status, then Apply.', true);
+        } elseif ($newStatus === 'published' && !$editor) {
+            flash_set('Only editors can publish. Send your stories to review and an editor will take them from there.', true);
+        } else {
+            $r = pp_bulk_set_status($user, $seen, $newStatus);
+            flash_set(pp_bulk_status_summary($r, $newStatus), !$r['changed']);
+        }
+    }
     $target = null;
     if ($id) {
         $stmt = db()->prepare('SELECT * FROM posts WHERE id = ?');
@@ -34,6 +48,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
     redirect('posts.php?' . http_build_query(array_filter([
         'status' => $_GET['status'] ?? '', 'category' => $_GET['category'] ?? '', 'q' => $_GET['q'] ?? '',
+        'page' => $_GET['page'] ?? '',
     ])));
 }
 
@@ -77,12 +92,39 @@ $stmt = db()->prepare('SELECT p.*, c.name AS category_name, c.color AS category_
 $stmt->execute($params);
 $posts = $stmt->fetchAll();
 
+// Rows the bulk bar may offer: the same write policy a single save asks.
+// Authors see only their own stories, and only drafts and in-review work
+// is theirs to move; editors may move anything.
+$bulkable = [];
+foreach ($posts as $p) {
+    if (pp_post_write_denied($user, $p, 'status') === null) {
+        $bulkable[(int) $p['id']] = true;
+    }
+}
+
 admin_header('Stories', 'posts');
 flash_show();
 ?>
 
 <div class="headrow">
   <h1 class="pagetitle">Stories</h1>
+  <?php if ($bulkable): ?>
+  <?php /* The row checkboxes join this form through their form="bulk"
+           attribute: the rows already hold their own Make hero / Delete
+           forms, and a form inside a form is dropped by the browser. */ ?>
+  <form method="post" id="bulk" class="bulkbar" aria-label="Change the status of the selected stories">
+    <?= csrf_field() ?>
+    <input type="hidden" name="action" value="bulk_status">
+    <span class="bulkbar__count" id="bulk-count" aria-live="polite">Tick stories to change several at once</span>
+    <select name="new_status" aria-label="New status for the selected stories">
+      <option value="">Change status to…</option>
+      <?php if ($editor): ?><option value="published">Published — live now</option><?php endif; ?>
+      <option value="in_review">In review</option>
+      <option value="draft">Draft</option>
+    </select>
+    <button class="btn btn--small" type="submit">Apply</button>
+  </form>
+  <?php endif; ?>
   <a class="btn" href="post-edit.php">+ New story</a>
 </div>
 <p class="pagesub"><?= $total ?> <?= $total === 1 ? 'story' : 'stories' ?><?= $editor ? ' in the system.' : ' of yours.' ?></p>
@@ -106,9 +148,17 @@ flash_show();
 
 <div class="panel">
   <table class="tbl">
-    <tr><th>Story</th><th>Desk</th><th>Status</th><th>When</th><th></th></tr>
+    <tr>
+      <th class="tbl__check"><?php if ($bulkable): ?><input type="checkbox" id="bulk-all" aria-label="Select every story on this page"><?php endif; ?></th>
+      <th>Story</th><th>Desk</th><th>Status</th><th>When</th><th></th>
+    </tr>
     <?php foreach ($posts as $p): ?>
     <tr>
+      <td class="tbl__check">
+        <?php if (isset($bulkable[(int) $p['id']])): ?>
+        <input type="checkbox" name="stories[<?= (int) $p['id'] ?>]" value="<?= e($p['status']) ?>" form="bulk" aria-label="Select “<?= e($p['title']) ?>”">
+        <?php endif; ?>
+      </td>
       <td>
         <a class="rowtitle" href="post-edit.php?id=<?= (int) $p['id'] ?>"><?= e($p['title']) ?></a>
         <?php if ($p['placement'] === 'hero'): ?> <span class="chip chip--scheduled">Hero</span>
@@ -144,4 +194,5 @@ flash_show();
 </div>
 <?php endif; ?>
 
+<?php if ($bulkable): ?><script src="/assets/js/bulk.js"></script><?php endif; ?>
 <?php admin_footer(); ?>
