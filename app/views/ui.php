@@ -162,7 +162,11 @@ function standard_card(array $p, array $o = []): string
 
 /**
  * Page head + masthead + nav.
- * $meta keys: title, description, canonical, og_image, og_type, jsonld (array).
+ * $meta keys: title, description, canonical, og_image, og_type, jsonld (array),
+ *   private (bool) — a page that takes credentials (the newsroom sign-in):
+ *       always noindex, and never the pasted analytics snippet, so no
+ *       third-party script runs beside a password field;
+ *   styles (list) — extra first-party stylesheets, /assets/css/<name>.css only.
  */
 function page_header(array $meta = [], string $activeDesk = ''): void
 {
@@ -179,6 +183,9 @@ function page_header(array $meta = [], string $activeDesk = ''): void
     }
     $ogImage = $meta['og_image'] ?? (site_url() . site_asset('og-default.png'));
     $ogType  = $meta['og_type'] ?? 'website';
+    $private = !empty($meta['private']);
+    $styles  = array_values(array_filter((array) ($meta['styles'] ?? []),
+        static fn ($css) => is_string($css) && preg_match('#^/assets/css/[a-z0-9-]+\.css$#', $css) === 1));
     ?>
 <!DOCTYPE html>
 <html lang="<?= e(pp_lang()) ?>">
@@ -186,7 +193,7 @@ function page_header(array $meta = [], string $activeDesk = ''): void
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title><?= e($title) ?></title>
-<?php if (!pp_indexing_enabled()): ?><meta name="robots" content="noindex, nofollow">
+<?php if ($private || !pp_indexing_enabled()): ?><meta name="robots" content="noindex, nofollow">
 <?php endif; ?><?php if ($description !== ''): ?><meta name="description" content="<?= e($description) ?>">
 <?php endif; ?><link rel="canonical" href="<?= e($canonical) ?>">
 <link rel="icon" type="image/svg+xml" href="<?= e(site_asset('favicon.svg')) ?>">
@@ -202,7 +209,8 @@ $ppCssFile = ['echo-v3' => 'broadsheet'][$ppTpl] ?? $ppTpl;
 $ppHasChrome = $ppTpl !== '' && is_file(PP_ROOT . '/app/views/chrome/' . $ppTpl . '-head.php');
 if ($ppHasChrome && is_file(PP_ROOT . '/assets/css/' . $ppCssFile . '.css')): ?><link rel="stylesheet" href="/assets/css/<?= e($ppCssFile) ?>.css">
 <?php endif; ?><?php if (site_asset('brand.css') !== '/assets/img/brand.css'): ?><link rel="stylesheet" href="<?= e(site_asset('brand.css')) ?>">
-<?php endif; ?>
+<?php endif; ?><?php foreach ($styles as $css): ?><link rel="stylesheet" href="<?= e($css) ?>">
+<?php endforeach; ?>
 <meta property="og:site_name" content="<?= e($siteTitle) ?>">
 <meta property="og:title" content="<?= e($meta['title'] ?? $siteTitle) ?>">
 <?php if ($description !== ''): ?><meta property="og:description" content="<?= e($description) ?>">
@@ -213,7 +221,7 @@ if ($ppHasChrome && is_file(PP_ROOT . '/assets/css/' . $ppCssFile . '.css')): ?>
 <?php if (!empty($meta['jsonld'])): ?>
 <script type="application/ld+json"><?= pp_json_for_html($meta['jsonld']) ?></script>
 <?php endif; ?>
-<?php $analytics = setting('analytics_code'); if ($analytics !== '') { echo $analytics . "\n"; } ?>
+<?php $analytics = $private ? '' : setting('analytics_code'); if ($analytics !== '') { echo $analytics . "\n"; } ?>
 </head>
 <body class="<?= trim((pp_chrome('cards') === 'panel' ? 'cards-panel ' : '') . ($ppHasChrome ? ($ppTpl === 'echo-v3' ? 't-dark' : 't-' . $ppTpl) : '')) ?>">
 <a class="pp-meta" href="#content" style="position:absolute;left:-9999px" onfocus="this.style.left='8px';this.style.top='8px'" onblur="this.style.left='-9999px'">Skip to the news</a>

@@ -63,4 +63,16 @@ return [
     'This story was compiled by a monitoring system from the public records below and reviewed under this newsroom\'s editorial policy.'
         => 'Ce texte a été composé par un système de veille à partir des documents publics ci-dessous, sous la politique éditoriale de la rédaction.',
     'retrieved' => 'consulté le',
+    // --- the newsroom sign-in (admin/login.php) -------------------------
+    'Passphrase'          => 'Phrase de passe',
+    'That session ended — sign in again to continue.'
+        => 'Votre session a pris fin. Connectez-vous de nouveau pour continuer.',
+    'Too many attempts. Wait fifteen minutes, then try again.'
+        => 'Trop de tentatives. Attendez quinze minutes, puis réessayez.',
+    'That email and passphrase don\'t match an account. Check both and try again.'
+        => 'Ce courriel et cette phrase de passe ne correspondent à aucun compte. Vérifiez-les, puis réessayez.',
+    'No accounts exist yet. The founding administrator is created on the server console, never from this page:'
+        => 'Aucun compte n’existe encore. L’administrateur fondateur est créé sur la console du serveur, jamais depuis cette page :',
+    'No accounts exist yet. The founding administrator is created on the server: php tools/setup-admin.php'
+        => 'Aucun compte n’existe encore. L’administrateur fondateur est créé sur le serveur : php tools/setup-admin.php',
 ];

@@ -52,6 +52,50 @@ if (current_user()) {
     redirect('index.php');
 }
 
+// A paper's sign-in wears the paper: its own masthead, footer, type and
+// palette around the form, so the newsroom signs in on the paper it works
+// for. The CivisMedia hub keeps the control room's own page below. The
+// page is private — always noindex, and never the pasted analytics
+// snippet (page_header's `private`), so no third-party script runs beside
+// the password field.
+if (!pp_is_hub()) {
+    require PP_ROOT . '/app/views/ui.php';
+    $palette = pp_brand_palette();
+    $raw = (array) (pp_brand_file()['palette'] ?? []);
+    $hex = static fn ($v): bool => is_string($v) && preg_match('/^#[0-9A-Fa-f]{6}$/', $v) === 1;
+    // The signal colour is the paper's own red when its palette names one;
+    // otherwise the rule over the card is drawn in its ink.
+    $signal = $hex($raw['red'] ?? null) ? $raw['red'] : $palette['ink'];
+    // Secondary text in the paper's own muted grey, else a tint of its ink
+    // (signin.css) — never the network default.
+    $vars = '--si-ink:' . $palette['ink'] . ';--si-signal:' . $signal
+        . ($hex($raw['muted'] ?? null) ? ';--si-muted:' . $raw['muted'] : '');
+    page_header(['title' => pp_t('Newsroom sign-in'), 'private' => true, 'styles' => ['/assets/css/signin.css']]);
+    ?>
+<div class="pp-signin-wrap">
+  <section class="pp-signin" style="<?= e($vars) ?>" aria-labelledby="pp-signin-title">
+    <p class="pp-signin__kicker"><?= e(setting('site_title', 'The Prairie Dispatch')) ?></p>
+    <h1 id="pp-signin-title"><?= e(pp_t('Newsroom sign-in')) ?></h1>
+    <?php if ($firstRun): ?>
+    <p class="pp-signin__note"><?= e(pp_t('No accounts exist yet. The founding administrator is created on the server console, never from this page:')) ?> <code>php tools/setup-admin.php</code></p>
+    <?php endif; ?>
+    <?php if ($error): ?><div class="pp-signin__flash pp-signin__flash--error" role="alert"><?= e(pp_t($error)) ?></div>
+    <?php elseif (isset($_GET['expired'])): ?><div class="pp-signin__flash"><?= e(pp_t('That session ended — sign in again to continue.')) ?></div><?php endif; ?>
+    <form method="post">
+      <?= csrf_field() ?>
+      <label for="email"><?= e(pp_t('Email')) ?></label>
+      <input type="email" id="email" name="email" required autocomplete="username">
+      <label for="password"><?= e(pp_t('Passphrase')) ?></label>
+      <input type="password" id="password" name="password" required autocomplete="current-password">
+      <button type="submit"><?= e(pp_t('Sign in')) ?></button>
+    </form>
+  </section>
+</div>
+<?php
+    page_footer();
+    exit;
+}
+
 ?>
 <!DOCTYPE html>
 <html lang="en">
