@@ -51,9 +51,11 @@ A2. **Releases in service.** For every enabled block in
 
 A3. **The 22 Nov roll.** A brief issued 22 Nov rolled commit `835f90b`
     (release name `prairiepost-835f90b85d2a-<label>`), and no report came
-    back. Before it, production was `prairiepost-4ff557d2b737-<label>`.
-    Report which release is in service, by name. Either is fine for this
-    launch: both contain both papers' brand builds.
+    back. Before it, production was `prairiepost-4ff557d2b737-<label>`,
+    and the roll brief written 23 Nov (`docs/briefs/roll-7cb82fb9c20a.md`)
+    makes it `prairiepost-7cb82fb9c20a-<label>`. Report which release is
+    in service, by name. Any of the three is fine for this launch: all
+    contain both papers' brand builds.
 
 A4. **No stopped roll.** In every root from A2: if `.pp-roll-baseline`
     exists and neither `.pp-roll-complete` nor `.pp-roll-held` does, a roll
@@ -93,9 +95,12 @@ amendments:
 - **Step 2, the block:** `$SOCKET` is the bare path after `unix:` in
   `rideaureview.ca`'s `fastcgi_pass`. Generate the block with
   `$REL/tools/vps/make-vhost.sh` exactly as the runbook shows. **Then,
-  before `nginx -t`, add the upload-size directive.** `$REL`'s template
-  predates it, so without it nginx refuses any request body over 1 MB,
-  newsroom photo uploads included. Insert these lines directly after the
+  before `nginx -t`, make sure the block has the upload-size directive.**
+  Releases from `7cb82fb9c20a` on generate it themselves: if the
+  generated file already contains `client_max_body_size`, add nothing
+  (nginx refuses a duplicate). If it doesn't, `$REL`'s template predates
+  it, and without it nginx refuses any request body over 1 MB, newsroom
+  photo uploads included. Insert these lines directly after the
   generated `index index.php;` line, and change nothing else in the file:
 
         # Request bodies up to 10 MB: nginx's own default is 1 MB, which
