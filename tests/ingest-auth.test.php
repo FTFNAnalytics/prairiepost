@@ -3,7 +3,7 @@
  * Every ingest endpoint against every kind of credential, over real HTTP on
  * a disposable database.
  *
- * Seven endpoints answer the ingest bearer token. Each must fail closed for
+ * Eight endpoints answer the ingest bearer token. Each must fail closed for
  * a token that is missing, unknown or revoked, and each must give a
  * draft-only token its documented answer (docs/api-ingest.md):
  * /api/ingest-media stores the upload, /api/ingest files a draft whatever
@@ -52,6 +52,8 @@ function ok(bool $cond, string $label): void
 putenv('PP_CONFIG=' . $config);
 define('PP_TEST_BOOT', 1);
 require $root . '/app/bootstrap.php';
+require $root . '/app/ingest.php';
+require $root . '/app/ingest-edit.php';
 $pdo = db();
 // Say which engine this really ran on; tests/run.php prints the line for a
 // passing file. Section 5b holds an assertion only PostgreSQL can fail.
@@ -71,15 +73,15 @@ $siteId = (int) $pdo->query("SELECT id FROM sites WHERE slug = 'prairiedispatch'
 $pdo->prepare('INSERT INTO settings (site_id, skey, svalue) VALUES (?, ?, ?)')
     ->execute([$siteId, 'wire_desks', 'local-news']);
 
-$mint = function (string $name, string $sites, string $desks, int $enabled, int $draftOnly, string $lookup = '', int $update = 0, string $read = '') use ($pdo): string {
+$mint = function (string $name, string $sites, string $desks, int $enabled, int $draftOnly, string $lookup = '', int $update = 0, string $read = '', int $editDrafts = 0) use ($pdo): string {
     $t = 'hermes_' . bin2hex(random_bytes(28));
-    $pdo->prepare('INSERT INTO ingest_agents (name, token_hash, sites, desks, enabled, draft_only, lookup_scope, update_published, read_scope, created_at) VALUES (?,?,?,?,?,?,?,?,?,?)')
-        ->execute([$name, hash('sha256', $t), $sites, $desks, $enabled, $draftOnly, $lookup, $update, $read, now()]);
+    $pdo->prepare('INSERT INTO ingest_agents (name, token_hash, sites, desks, enabled, draft_only, lookup_scope, update_published, read_scope, edit_drafts, created_at) VALUES (?,?,?,?,?,?,?,?,?,?,?)')
+        ->execute([$name, hash('sha256', $t), $sites, $desks, $enabled, $draftOnly, $lookup, $update, $read, $editDrafts, now()]);
     return $t;
 };
 // The standard token holds every grant, so in every refusal below the
 // credential is the only thing wrong with the call.
-$standard         = $mint('authtest-standard', 'prairiedispatch', '', 1, 0, 'all', 1, 'all');
+$standard         = $mint('authtest-standard', 'prairiedispatch', '', 1, 0, 'all', 1, 'all', 1);
 $draftOnly        = $mint('authtest-draft-only', 'prairiedispatch', '', 1, 1);
 $revoked          = $mint('authtest-revoked', 'prairiedispatch', '', 0, 0);
 $revokedDraftOnly = $mint('authtest-revoked-draft-only', 'prairiedispatch', '', 0, 1);
@@ -162,6 +164,16 @@ function post(string $slug): array|false
 {
     return one('SELECT id, status, awaiting_image, image, published_at, filed_by FROM posts WHERE slug = ?', [$slug]);
 }
+/** The story's current version, as the reader would hand it out. */
+function ver(int $id): string
+{
+    return $id > 0 ? (string) (pp_ingest_edit_load(fresh(), $id)['version'] ?? '') : '';
+}
+/** The opaque reference the reader hands out for a story on this paper. */
+function refOf(int $id): string
+{
+    return pp_ingest_article_ref((int) $GLOBALS['siteId'], $id, pp_ingest_ref_key());
+}
 function uploadsOnDisk(string $root): int
 {
     return count(glob($root . '/uploads/*/*/*') ?: []);
@@ -177,6 +189,7 @@ $json = 'application/json; charset=utf-8';
 $art = '';
 $waitSlug = '';
 $waitId = 0;
+$plainId = 0;
 $filing = fn (array $over): array => array_merge([
     'site' => 'prairiedispatch', 'desk' => 'environment',
     'lede' => 'A lede long enough to pass the gate.',
@@ -226,7 +239,20 @@ $endpoints = [
         'method_error' => 'POST one update per call',
         'send' => fn (?string $authorization) => api($port, 'POST', '/api/ingest/update', $authorization,
             ['site' => 'prairiedispatch', 'desk' => 'environment',
-             'url' => 'https://paper.test/story/' . $GLOBALS['waitSlug'], 'title' => 'Retitled by the auth suite'],
+             'url' => 'https://paper.test/story/' . $GLOBALS['waitSlug'], 'title' => 'Retitled by the auth suite',
+             'if_version' => ver((int) $GLOBALS['waitId'])],
+            'application/json', ['Host: paper.test']),
+    ],
+    // Edits an existing DRAFT in place, at a path carrying its reference.
+    // Host-checked like the other story lanes; this adds a cover to the
+    // ordinary newsroom draft and leaves it a draft.
+    '/api/ingest/drafts/{ref}' => [
+        'file' => 'ingest-drafts.php', 'method' => 'PATCH', 'other_method' => 'POST',
+        'path' => '/api/ingest/drafts/ar_000000000000000000000000',
+        'method_error' => 'PATCH one draft edit per call, at /api/ingest/drafts/{ref}',
+        'send' => fn (?string $authorization) => api($port, 'PATCH', '/api/ingest/drafts/' . refOf((int) $GLOBALS['plainId']), $authorization,
+            ['site' => 'prairiedispatch', 'desk' => 'environment', 'image' => $GLOBALS['art'],
+             'image_alt' => 'A test pattern', 'if_version' => ver((int) $GLOBALS['plainId'])],
             'application/json', ['Host: paper.test']),
     ],
     // The read: lists this paper's stories. Host-checked like lookup.
@@ -246,10 +272,20 @@ preg_match_all("#'(/api/ingest[a-z-]*(?:/[a-z-]+)?)/?'\s*=>\s*'/([a-z-]+\.php)'#
 foreach ($mm as $m) {
     $routed[$m[1]] = $m[2];
 }
+// …and the routes with a reference in the path, written as {ref}.
+preg_match_all('~preg_match\(\'#\^(/api/ingest[a-z/-]*)/\[\^/\]\+/\?\$#\', \$path\)\) \{\s*require __DIR__ \. \'/([a-z-]+\.php)\'~',
+    (string) file_get_contents($root . '/router.php'), $mm, PREG_SET_ORDER);
+foreach ($mm as $m) {
+    $routed[$m[1] . '/{ref}'] = $m[2];
+}
 $rewritten = [];
 preg_match_all('#^RewriteRule \^api/(ingest[a-z-]*(?:/[a-z-]+)?)/\?\$ ([a-z-]+\.php) #m', (string) file_get_contents($root . '/.htaccess'), $mm, PREG_SET_ORDER);
 foreach ($mm as $m) {
     $rewritten['/api/' . $m[1]] = $m[2];
+}
+preg_match_all('#^RewriteRule \^api/(ingest[a-z/-]*)/\[\^/\]\+/\?\$ ([a-z-]+\.php) #m', (string) file_get_contents($root . '/.htaccess'), $mm, PREG_SET_ORDER);
+foreach ($mm as $m) {
+    $rewritten['/api/' . $m[1] . '/{ref}'] = $m[2];
 }
 $onDisk = array_map('basename', glob($root . '/ingest*.php') ?: []);
 $known = array_map(fn (array $e): string => $e['file'], $endpoints);
@@ -294,10 +330,11 @@ $otherWaitSlug = (string) ($j['slug'] ?? '');
 [$code, $j] = api($port, 'POST', '/api/ingest', "Bearer $standard", $filing(['title' => 'An ordinary newsroom draft']));
 ok($code === 201 && is_array($j) && ($j['status'] ?? '') === 'draft' && !isset($j['awaiting_image']), "setup: an unflagged draft exists (got $code)");
 $plainSlug = (string) ($j['slug'] ?? '');
+$plainId = (int) ($j['id'] ?? 0);
 
 /* ---- 2. The method is checked before the token, on every endpoint ---------- */
 foreach ($endpoints as $route => $e) {
-    [$code, $j, , $type] = api($port, $e['other_method'], $route, null);
+    [$code, $j, , $type] = api($port, $e['other_method'], $e['path'] ?? $route, null);
     ok($code === 405 && $j === ['ok' => false, 'error' => $e['method_error']] && $type === $json,
        "$route answers {$e['other_method']} with 405 and its own message, token or no token (got $code " . json_encode($j) . ')');
 }
@@ -457,6 +494,18 @@ $draftOnlyAnswer = [
         ], "/api/ingest/stories refuses a token without the grant: 403 {ok, error, reason} (got $code " . json_encode($j) . ')');
         ok(!str_contains($raw, 'stories'), 'the refusal carries no stories');
     },
+    // Editing a draft is its own grant as well: refused before anything is
+    // read, and the draft keeps no cover.
+    '/api/ingest/drafts/{ref}' => function () use (&$endpoints, $draftOnly, &$plainId, $json): void {
+        [$code, $j, , $type] = $endpoints['/api/ingest/drafts/{ref}']['send']("Bearer $draftOnly");
+        ok($code === 403 && $type === $json && $j === [
+            'ok' => false,
+            'error' => 'this token has no draft-edit permission',
+            'reason' => 'edit_drafts is granted at minting (--edit-drafts); without it this surface changes nothing',
+        ], "/api/ingest/drafts/{ref} refuses a token without the grant: 403 {ok, error, reason} (got $code " . json_encode($j) . ')');
+        $p = one('SELECT image, image_alt, status FROM posts WHERE id = ?', [$plainId]);
+        ok($p && $p['image'] === '' && $p['image_alt'] === '' && $p['status'] === 'draft', 'the refused draft edit changed nothing');
+    },
 ];
 foreach ($endpoints as $route => $e) {
     ok(isset($draftOnlyAnswer[$route]), "$route has a draft-only answer written down in this file");
@@ -562,6 +611,15 @@ ok($code === 200 && $type === $json && is_array($j) && ($j['ok'] ?? false) === t
    "a standard token with the grant retitles the now-published story: 200, only the title changed, the URL kept (got $code " . json_encode($j) . ')');
 $p = one('SELECT title, slug, status FROM posts WHERE slug = ?', [$waitSlug]);
 ok($p && $p['title'] === 'Retitled by the auth suite' && $p['status'] === 'published', 'the live row carries the new headline under the same slug');
+
+[$code, $j, , $type] = $endpoints['/api/ingest/drafts/{ref}']['send']("Bearer $standard");
+ok($code === 200 && $type === $json && is_array($j) && ($j['ok'] ?? false) === true
+   && ($j['updated'] ?? null) === ['image', 'image_alt'] && ($j['status'] ?? '') === 'draft'
+   && ($j['ref'] ?? '') === refOf($plainId) && !isset($j['url']),
+   "a standard token with the grant adds a cover to the newsroom draft: 200, still a draft, no url (got $code " . json_encode($j) . ')');
+$p = one('SELECT image, image_alt, status, published_at FROM posts WHERE id = ?', [$plainId]);
+ok($p && $p['image'] === $art && $p['image_alt'] === 'A test pattern' && $p['status'] === 'draft' && $p['published_at'] === null,
+   'the draft carries the cover and is still an unpublished draft');
 
 [$code, $j, , $type] = $endpoints['/api/ingest/stories']['send']("Bearer $standard");
 $titles = is_array($j) ? array_column((array) ($j['stories'] ?? []), 'title') : [];

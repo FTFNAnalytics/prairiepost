@@ -4,9 +4,13 @@
  * in full.
  *
  * Owner-ordered (Nov 2026): an agent must be able to see every story on
- * its papers, published or not. It is the read half of the update lane:
- * to change a live article safely an agent reads it here, edits, and
- * sends the `version` back to /api/ingest/update as `if_version`.
+ * its papers, published or not. It is the read half of the two edit
+ * lanes: to change a story safely an agent reads it here, edits, and
+ * sends the `version` back as `if_version` — to /api/ingest/update for a
+ * published story, to PATCH /api/ingest/drafts/{ref} for a draft. The
+ * version covers everything those lanes may change (status, desk, text,
+ * cover fields, SEO description, tags, sources), so any change to any of
+ * them makes an older version stale.
  *
  * Permission is its own grant, set at minting
  * (ingest_agents.read_scope; make-agent --read, or the hub key form):
@@ -38,9 +42,11 @@
  *                               published_at, updated_at, image, version}],
  *                next?}
  *           200 {ok, story: {ref, status, desk, title, lede, body, byline,
- *                            dateline, image, image_caption, image_credit,
- *                            correction, tags, sources, source_story_id?,
- *                            url?, published_at, updated_at, version}}
+ *                            dateline, image, image_alt, image_caption,
+ *                            image_credit, meta_description, correction,
+ *                            tags, sources: [{url, title}],
+ *                            awaiting_image?, source_story_id?, url?,
+ *                            published_at, updated_at, version}}
  *           401/403/404/422 {ok: false, error, ...}
  */
 require __DIR__ . '/app/bootstrap.php';
@@ -133,8 +139,9 @@ $scopeSql = static function (array $statuses) use ($siteId, $deskIds): array {
     $sql .= ' AND p.status IN (' . implode(',', array_fill(0, count($statuses), '?')) . ')';
     return [$sql, [...$args, ...$statuses]];
 };
-$cols = 'p.id, p.slug, p.status, p.title, p.lede, p.body, p.byline, p.dateline, p.image, p.image_caption,
-         p.image_credit, p.correction, p.published_at, p.updated_at, c.slug AS desk';
+$cols = 'p.id, p.slug, p.status, p.category_id, p.awaiting_image, p.title, p.lede, p.body, p.byline, p.dateline,
+         p.image, p.image_alt, p.image_caption, p.image_credit, p.meta_description, p.correction,
+         p.published_at, p.updated_at, c.slug AS desk';
 $publicUrl = static fn (array $p): ?string => $p['status'] === 'published' ? pp_story_public_url($siteSlug, (string) $p['slug']) : null;
 
 /* --- One story, in full ---------------------------------------------------- */
@@ -179,12 +186,9 @@ if ($ref !== '' || $url !== '') {
         pp_ingest_respond(404, ['ok' => false, 'error' => 'no story with that reference that this key may read']);
     }
     $id = (int) $post['id'];
-    $t = db()->prepare('SELECT t.name FROM post_tags pt JOIN tags t ON t.id = pt.tag_id WHERE pt.post_id = ? ORDER BY t.name');
-    $t->execute([$id]);
-    $tags = array_column($t->fetchAll(), 'name');
-    $src = db()->prepare('SELECT url FROM story_sources WHERE post_id = ? ORDER BY id');
-    $src->execute([$id]);
-    $sources = array_column($src->fetchAll(), 'url');
+    [$tagsBy, $sourcesBy] = pp_ingest_tags_and_sources([$id]);
+    $tags = $tagsBy[$id];
+    $sources = $sourcesBy[$id];
     $r = db()->prepare('SELECT source_story_id FROM ingest_receipts WHERE site_id = ? AND post_id = ?');
     $r->execute([$siteId, $id]);
     $ssid = $r->fetchColumn();
@@ -199,12 +203,17 @@ if ($ref !== '' || $url !== '') {
         'byline' => (string) $post['byline'],
         'dateline' => (string) $post['dateline'],
         'image' => (string) $post['image'],
+        'image_alt' => (string) ($post['image_alt'] ?? ''),
         'image_caption' => (string) $post['image_caption'],
         'image_credit' => (string) ($post['image_credit'] ?? ''),
+        'meta_description' => (string) ($post['meta_description'] ?? ''),
         'correction' => (string) ($post['correction'] ?? ''),
         'tags' => $tags,
         'sources' => $sources,
     ];
+    if ((int) ($post['awaiting_image'] ?? 0) === 1) {
+        $story['awaiting_image'] = true;
+    }
     if ($ssid !== false) {
         $story['source_story_id'] = (string) $ssid;
     }
@@ -213,7 +222,7 @@ if ($ref !== '' || $url !== '') {
     }
     $story['published_at'] = $post['published_at'] !== null ? (string) $post['published_at'] : null;
     $story['updated_at'] = (string) $post['updated_at'];
-    $story['version'] = pp_ingest_story_version($post);
+    $story['version'] = pp_ingest_story_version($post, $tags, $sources);
     pp_ingest_respond(200, ['ok' => true, 'story' => $story]);
 }
 
@@ -264,6 +273,7 @@ $s->closeCursor();
 
 $more = count($rows) > $limit;
 $rows = array_slice($rows, 0, $limit);
+[$tagsBy, $sourcesBy] = pp_ingest_tags_and_sources(array_map(static fn ($p) => (int) $p['id'], $rows));
 $stories = [];
 foreach ($rows as $p) {
     $item = [
@@ -278,7 +288,7 @@ foreach ($rows as $p) {
     $item['published_at'] = $p['published_at'] !== null ? (string) $p['published_at'] : null;
     $item['updated_at'] = (string) $p['updated_at'];
     $item['image'] = (string) $p['image'];
-    $item['version'] = pp_ingest_story_version($p);
+    $item['version'] = pp_ingest_story_version($p, $tagsBy[(int) $p['id']], $sourcesBy[(int) $p['id']]);
     $stories[] = $item;
 }
 $out = ['ok' => true, 'stories' => $stories];

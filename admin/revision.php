@@ -51,6 +51,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'resto
     if (($rev['image_credit'] ?? null) !== null) {
         $restore['image_credit'] = (string) $rev['image_credit'];
     }
+    // Alt text likewise (schema 25): NULL on older revisions = not recorded.
+    if (($rev['image_alt'] ?? null) !== null) {
+        $restore['image_alt'] = (string) $rev['image_alt'];
+    }
     $wrote = pp_guarded_post_update((int) $post['id'], $restore, is_editor($user) ? null : ['draft', 'in_review']);
     if (!$wrote) {
         flash_set('Not restored: an editor published or scheduled this story while you had the revision open.', true);

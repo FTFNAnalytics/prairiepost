@@ -203,8 +203,9 @@ $liveRef = pp_ingest_article_ref($siteA, $live, pp_ingest_ref_key());
 [$code, $j, $raw] = $read($all, 'site=paper-a&ref=' . $liveRef);
 $st = (array) ($j['story'] ?? []);
 ok($code === 200 && array_keys($st) === ['ref', 'status', 'desk', 'title', 'lede', 'body', 'byline', 'dateline', 'image',
-    'image_caption', 'image_credit', 'correction', 'tags', 'sources', 'url', 'published_at', 'updated_at', 'version']
-   && $st['body'] === '<p>Body 1</p>' && $st['tags'] === ['Council'] && $st['sources'] === ['https://city.example/release/9']
+    'image_alt', 'image_caption', 'image_credit', 'meta_description', 'correction', 'tags', 'sources', 'url', 'published_at', 'updated_at', 'version']
+   && $st['body'] === '<p>Body 1</p>' && $st['tags'] === ['Council']
+   && $st['sources'] === [['url' => 'https://city.example/release/9', 'title' => 'Release']]
    && $st['url'] === 'https://paper-a.test/story/a-live-story',
    "4. one story in full: the documented fields, body, tags, sources, public url (got $code " . json_encode(array_keys($st)) . ')');
 foreach (['Edwina', 'PRIVATE REVIEW NOTE', 'secret-filer-name'] as $leak) {

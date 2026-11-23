@@ -44,7 +44,7 @@ $initials = mb_substr($initials, 0, 2) ?: 'TT';
 
     <?php if ($post['image']): ?>
     <figure class="hero" style="grid-column: 2 / span 10">
-      <img src="<?= e($post['image']) ?>" alt="<?= e($post['image_caption'] ?: $post['title']) ?>">
+      <img src="<?= e($post['image']) ?>" alt="<?= e(($post['image_alt'] ?? '') ?: ($post['image_caption'] ?: $post['title'])) ?>">
       <?php if ($post['image_caption'] !== '' || $post['image_credit'] !== ''): ?>
       <figcaption><?= e($post['image_caption']) ?><?php if ($post['image_credit'] !== ''): ?> <i><?= e($post['image_credit']) ?></i><?php endif; ?></figcaption>
       <?php endif; ?>

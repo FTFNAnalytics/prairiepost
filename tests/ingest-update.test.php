@@ -53,6 +53,7 @@ putenv('PP_CONFIG=' . $config);
 define('PP_TEST_BOOT', 1);
 require $root . '/app/bootstrap.php';
 require $root . '/app/ingest.php';
+require $root . '/app/ingest-edit.php';
 $pdo = db();
 echo 'engine: ' . $pdo->getAttribute(PDO::ATTR_DRIVER_NAME) . " ({$fx['id']})\n";
 
@@ -132,7 +133,14 @@ function api(int $port, string $method, string $path, ?string $token, $body = nu
     curl_close($ch);
     return [$code, json_decode($raw, true), $raw];
 }
-$update = fn (string $token, array $body, string $host = 'paper-a.test'): array => api($GLOBALS['port'], 'POST', '/api/ingest/update', $token, $body, $host);
+// $for names the story the call edits: its current version is sent as
+// if_version (now required) unless the body carries one of its own.
+$update = function (string $token, array $body, string $host = 'paper-a.test', ?int $for = null): array {
+    if ($for !== null && !array_key_exists('if_version', $body)) {
+        $body['if_version'] = ver($for);
+    }
+    return api($GLOBALS['port'], 'POST', '/api/ingest/update', $token, $body, $host);
+};
 
 function fresh(): PDO
 {
@@ -160,6 +168,10 @@ function scalar(string $sql, array $args = []): int
     $r = $s->fetch();
     $s->closeCursor();
     return $r ? (int) array_values($r)[0] : 0;
+}
+function ver(int $id): string
+{
+    return (string) (pp_ingest_edit_load(fresh(), $id)['version'] ?? '');
 }
 function revisions(int $id): array
 {
@@ -232,7 +244,7 @@ ok(row($draft)['title'] === 'An Editor Draft', "3. the editor's draft is untouch
 $auditBefore = scalar("SELECT COUNT(*) FROM audit_log WHERE action = 'ingest-update'");
 [$code, $j] = $update($agent, ['site' => 'prairiedispatch', 'desk' => 'local-news', 'url' => $pubUrl,
     'title' => 'Updated Headline From The Desk Agent',
-    'body' => '<p>The updated body.</p><script>alert(1)</script>']);
+    'body' => '<p>The updated body.</p><script>alert(1)</script>'], 'paper-a.test', $pub);
 ok($code === 200 && ($j['ok'] ?? false) === true && ($j['updated'] ?? null) === ['title', 'body']
    && ($j['status'] ?? '') === 'published' && ($j['url'] ?? '') === $pubUrl
    && preg_match('/^ar_[0-9a-f]{24}$/', (string) ($j['ref'] ?? '')) === 1
@@ -268,7 +280,7 @@ ok($pcode === 200 && str_contains($page, 'Updated Headline From The Desk Agent')
 $ref = is_array($j) ? (string) ($j['article']['ref'] ?? '') : '';
 ok($code === 200 && ($j['result'] ?? '') === 'match' && $ref !== '', "5. setup: lookup finds the story and hands out its ref (got $code " . json_encode($j) . ')');
 [$code, $j] = $update($agent, ['site' => 'prairiedispatch', 'desk' => 'local-news', 'ref' => $ref,
-    'image' => $newArt, 'image_caption' => 'The new caption.', 'image_credit' => 'New Photographer']);
+    'image' => $newArt, 'image_caption' => 'The new caption.', 'image_credit' => 'New Photographer'], 'paper-a.test', $pub);
 ok($code === 200 && ($j['updated'] ?? null) === ['image', 'image_caption', 'image_credit']
    && ($j['previous_image'] ?? '') === $oldArt && ($j['ref'] ?? '') === $ref,
    "5. image swap by ref: 200, all three image fields, the previous image reported (got $code " . json_encode($j) . ')');
@@ -278,7 +290,7 @@ ok($r['image'] === $newArt && $r['image_caption'] === 'The new caption.' && $r['
 $version = (string) ($j['version'] ?? '');
 // A third picture, sent alone: the new picture never inherits the old
 // caption or credit.
-[$code, $j] = $update($agent, ['site' => 'prairiedispatch', 'desk' => 'local-news', 'ref' => $ref, 'image' => $thirdArt]);
+[$code, $j] = $update($agent, ['site' => 'prairiedispatch', 'desk' => 'local-news', 'ref' => $ref, 'image' => $thirdArt], 'paper-a.test', $pub);
 $r = row($pub);
 ok($code === 200 && $r['image'] === $thirdArt && $r['image_caption'] === '' && $r['image_credit'] === '',
    "5. a picture sent without caption or credit clears both — they described a different photo (got $code " . json_encode($j) . ')');
@@ -314,10 +326,10 @@ ok($rc === 302 && $r['image'] === $oldArt && $r['image_caption'] === 'The old ca
 /* ---- 7. if_version, and a request that changes nothing --------------------------- */
 [$code, $j] = $update($agent, ['site' => 'prairiedispatch', 'desk' => 'local-news', 'ref' => $ref,
     'title' => 'Would Overwrite The Editor', 'if_version' => $latest]);
-ok($code === 409 && preg_match('/^v_[0-9a-f]{16}$/', (string) ($j['version'] ?? '')) === 1,
-   "7. if_version from before the editor's restore: 409 with the current version (got $code " . json_encode($j) . ')');
+ok($code === 409 && ($j['status'] ?? '') === 'published' && !isset($j['version']),
+   "7. if_version from before the editor's restore: 409 with the status and NO version — the next one comes from the reader (got $code " . json_encode($j) . ')');
 ok(row($pub)['title'] === 'Original Headline On The Wire', '7. and the restored headline is untouched');
-$current = (string) ($j['version'] ?? '');
+$current = ver($pub);
 $revCount = count(revisions($pub));
 $auditCount = scalar("SELECT COUNT(*) FROM audit_log WHERE action = 'ingest-update'");
 [$code, $j] = $update($agent, ['site' => 'prairiedispatch', 'desk' => 'local-news', 'ref' => $ref,
@@ -331,7 +343,7 @@ $bad = [
     'neither ref nor url' => [['title' => 'X'], 'send exactly one of ref'],
     'both ref and url' => [['ref' => $ref, 'url' => $pubUrl, 'title' => 'X'], 'send exactly one of ref'],
     'a malformed ref' => [['ref' => 'ar_nothex', 'title' => 'X'], 'ref must be an article reference'],
-    'nothing to change' => [['ref' => $ref], 'nothing to update'],
+    'nothing to change' => [['ref' => $ref], 'nothing to edit'],
     'an empty headline' => [['ref' => $ref, 'title' => '   '], 'title cannot be empty'],
     'an image that is not an upload path' => [['ref' => $ref, 'image' => 'https://elsewhere.example/x.png'], 'image must be an /uploads/ path'],
     'an upload path that does not exist' => [['ref' => $ref, 'image' => '/uploads/2026/11/never-uploaded.png'], 'image must be an /uploads/ path'],
@@ -344,7 +356,7 @@ $ins = fresh()->prepare("INSERT INTO audit_log (site_id, user_id, user_name, act
 for ($i = 0; $i < 60; $i++) {
     $ins->execute([$siteA, now()]);
 }
-[$code, $j] = $update($agent, ['site' => 'prairiedispatch', 'desk' => 'local-news', 'ref' => $ref, 'title' => 'Sixty-First Of The Hour']);
+[$code, $j] = $update($agent, ['site' => 'prairiedispatch', 'desk' => 'local-news', 'ref' => $ref, 'title' => 'Sixty-First Of The Hour'], 'paper-a.test', $pub);
 ok($code === 429 && ($j['error'] ?? '') === 'rate limit: at most 60 updates per hour for this token' && row($pub)['title'] === 'Original Headline On The Wire',
    "8. the sixty-first update of the hour: 429, nothing written (got $code)");
 

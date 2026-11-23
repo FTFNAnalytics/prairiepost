@@ -90,7 +90,7 @@ function story_photo(array $post, bool $withCaption = false): string
     if (empty($post['image'])) {
         return '';
     }
-    $img = '<img src="' . e($post['image']) . '" alt="' . e($post['image_caption'] ?: $post['title']) . '" loading="lazy">';
+    $img = '<img src="' . e($post['image']) . '" alt="' . e(($post['image_alt'] ?? '') ?: ($post['image_caption'] ?: $post['title'])) . '" loading="lazy">';
     if (!$withCaption || ($post['image_caption'] === '' && $post['image_credit'] === '')) {
         return '<a class="photo" href="' . e(post_href($post)) . '"' . post_link_attr($post) . ' tabindex="-1" aria-hidden="true">' . $img . '</a>';
     }

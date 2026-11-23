@@ -397,24 +397,47 @@ holding a capability it should not have.
   Contract: docs/api-ingest.md §5; compat: docs/MIGRATION-COMPAT.md
   step 23. Not separately re-confirmed on 21 Nov: per-site indexing
   still off (nothing in the roll touches it).
-- **The published-story update and story-read lanes are BUILT
-  (22 Nov), not yet rolled.** Schema step 24
-  (`ingest_agents.update_published`, default 0;
-  `ingest_agents.read_scope`, default ''; `post_revisions.image_credit`,
-  nullable). POST /api/ingest/update changes headline, lede, body and
-  image (+caption/credit) of a PUBLISHED story for keys holding the
-  grant — see the Phase 1 invariant exception below and
-  docs/api-ingest.md §6. GET /api/ingest/stories lists a paper's
-  stories or returns one in full (with the `version` the update's
-  if_version checks) for keys with read_scope 'published' (live only)
-  or 'all' (drafts, review and scheduled too, editors' included) —
-  docs/api-ingest.md §7; it returns no author accounts, editor names,
-  review notes, internal ids or draft slugs, and writes nothing.
-  Rolling both needs: a pinned roll (step 24 migrates), a routes pass
-  adding /api/ingest/update and /api/ingest/stories to the 14 legacy
-  blocks (the 11 generated blocks need nothing), and re-minting the
-  agents' keys with --update-published and --read (grants are set at
-  minting, like every other).
+- **The article-editing API is BUILT (23 Nov), not yet rolled.** It
+  completes the 22 Nov update and story-read lanes (PR #81, merged at
+  835f90b; schema step 24: `ingest_agents.update_published`,
+  `ingest_agents.read_scope`, `post_revisions.image_credit`) — a VPS
+  brief for 835f90b was issued 22 Nov and NO REPORT HAS COME BACK, so
+  production is not known to be past schema 23; the next roll must act
+  on `migrate.php --status`, not on this line (lesson 5). Schema step
+  25: `posts.image_alt` (default ''), `ingest_agents.edit_drafts`
+  (default 0), `post_revisions.image_alt` (nullable). One engine,
+  `app/ingest-edit.php`, behind two lanes, each its own grant set at
+  minting: PATCH /api/ingest/drafts/{ref} (`--edit-drafts`; status
+  exactly 'draft', editors' drafts included; never publishes,
+  schedules, approves, moves desks or touches awaiting_image) and
+  POST /api/ingest/update (`--update-published`; now also alt text,
+  caption, credit, tags, sources, meta_description and `new_desk`
+  within the key's desks; never slug, publication date, status,
+  byline, papers or correction). Both REQUIRE `if_version` (the
+  reader's version, which now covers status, desk, text, cover, SEO,
+  tags and sources), recheck it under a row lock, commit story + tags +
+  sources + revisions + audit in ONE transaction, refuse unknown
+  fields (422), and answer an already-applied edit `200 unchanged`
+  (retry-safe). The reader returns image_alt, meta_description and
+  sources as {url,title}. Slug renames are NOT built (no redirect
+  infrastructure exists) — generic edits never change the URL.
+  Contract: docs/api-ingest.md §1, §6, §7, §8; compat:
+  docs/MIGRATION-COMPAT.md step 25. **The Kermode 413:** nginx's 1 MB
+  default `client_max_body_size` (set nowhere — not in
+  tools/vps/vhost.template, not in the legacy blocks) refused a 1.6 MB
+  PNG before PHP saw it; PHP's own 2 MB `upload_max_filesize` would
+  have refused the next size up. Fixed in the tree by a release-root
+  `.user.ini` (10M/12M, per-directory so foreign tenants' pools are
+  untouched), `client_max_body_size 10m` in vhost.template, and a JSON
+  413 from /api/ingest-media naming `max_bytes`; the EXISTING 25 blocks
+  need the directive added in the roll's routes pass (generated blocks
+  are never regenerated). Rolling needs: a pinned roll (steps 24 and/or
+  25 migrate), a routes pass adding /api/ingest/update,
+  /api/ingest/stories (if 835f90b's pass did not) and the regex route
+  `^/api/ingest/drafts/[^/]+/?$` to the 14 legacy blocks, plus
+  `client_max_body_size 10m` on all 25, and re-minting the agents' keys
+  with the grants the owner orders (--read all --edit-drafts
+  --update-published).
 - **Test residue awaiting owner cleanup (admin UI, never SQL):** on
   Surrey — draft #315 (`routes-check-agent-ingest-v2-draft`), and
   story #316 (`routes-check-publish-on-image-test`) which the 28 Sep
@@ -516,9 +539,17 @@ Full detail and evidence: `docs/build/phase-01-handoff.md`.
   desk, tags, meta description or correction; body through
   `sanitize_html()`; a compare-and-swap write; the pre-update state and
   every agent change snapshotted into `post_revisions` (with
-  `image_credit`, so an editor's restore is exact) and audited. Do not
-  widen it — any new field or status needs the owner's order, and a
-  row in `tests/ingest-update.test.php`.
+  `image_credit`, so an editor's restore is exact) and audited.
+  **Widened by the owner's order of 23 Nov 2026** to the cover's alt
+  text, tags, sources, meta description and desk (within the key's
+  desks) — still never slug, status, dates, byline, papers or
+  correction; `if_version` now required and rechecked under a row
+  lock; story, tags, sources, revisions and audit in one transaction
+  (`app/ingest-edit.php`). The same order added the DRAFT lane,
+  `PATCH /api/ingest/drafts/{ref}` (grant `edit_drafts`): the same
+  fields minus desk, on status exactly 'draft' only, never a status
+  change. Do not widen either further — any new field or status needs
+  the owner's order, and a row in `tests/ingest-edit.test.php`.
 - **Untrusted URLs** are fetched only through `http_get()`/`pp_http_get()`
   (app/transport.php): destination policy, per-hop redirect validation,
   pinned connections, streamed size caps. Never hand a user-supplied URL

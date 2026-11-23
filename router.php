@@ -89,6 +89,12 @@ if (isset($map[$path])) {
     require __DIR__ . $map[$path];
     return true;
 }
+// The one ingest route with a parameter in its path: the draft's reference.
+// ingest-drafts.php reads the reference from the request line itself.
+if (preg_match('#^/api/ingest/drafts/[^/]+/?$#', $path)) {
+    require __DIR__ . '/ingest-drafts.php';
+    return true;
+}
 if ($path !== '/' && is_file(__DIR__ . $path)) {
     return false; // static file or explicit .php script
 }
