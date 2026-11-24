@@ -16,7 +16,8 @@ code-only from `feb2b1f4f6eb`, with no migration. The brief is
 `docs/briefs/roll-7cb82fb9c20a.md` (revision 2) and its report is
 awaited.
 
-**Built, not rolled:** photo metadata stripping (9.1 below). It reaches
+**Built, not rolled:** photo metadata stripping (9.1 below, #91) and
+the image-hold fix for an editor's publish (9.5, #90). Both reach
 production with the roll after `7cb82fb`.
 
 **The platform phases below (0–3):** Phases 2 and 3 are done. Phase 0
@@ -46,7 +47,7 @@ newsroom's working copy of that plan; this file is the repository's.
 | 2 Template registry | Done. 2.3 is in the backlog by owner decision. |
 | 3 Hermes ingest | Done, and extended (above). |
 | Hub 1–8 | See `PLAN-CIVIS.md` and `DEPLOY-CIVIS.md`. |
-| **9 Exposure and upkeep** | **Next. 9.1 built 24 Nov; 9.2–9.5 open.** |
+| **9 Exposure and upkeep** | **Next. 9.1 and 9.5 built 24 Nov (#91, #90); 9.2–9.4 open.** |
 
 ---
 
@@ -146,14 +147,19 @@ becomes "set on the server", and a migration clears the stored rows.
 *Acceptance:* no `smtp_pass` value exists in the database or in its
 backups; mail still sends.
 
-**9.5 — An editor's publish clears the image hold.** The story editor
-publishes without clearing `awaiting_image` (the bulk status change
-already clears it). A story an editor published by hand and later moved
-back to draft therefore re-enters the image agent's queue, and
-`/api/ingest-publish` can publish it again over the editor's decision.
+**9.5 — An editor's publish clears the image hold.** *Built in PR #90
+(24 Nov), not rolled.* The story editor published without clearing
+`awaiting_image` (the bulk status change already clears it). A story an
+editor published by hand and later moved back to draft therefore
+re-entered the image agent's queue, and `/api/ingest-publish` could
+publish it again over the editor's decision. #90 clears the flag when an
+editor saves a story as published or scheduled. Rows already in
+production keep their flag until saved once after the roll; #90 carries
+a read-only query that counts them.
 
-*Acceptance:* a story published from the editor never appears in
-`GET /api/ingest-queue` afterwards, whatever its later status.
+*Acceptance:* a story published or scheduled from the editor never
+appears in `GET /api/ingest-queue` afterwards, whatever its later
+status. `tests/publish-flow.test.php` checks this in #90.
 
 ## Waiting on the owner (no code needed)
 
