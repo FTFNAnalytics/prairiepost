@@ -151,12 +151,17 @@ function pp_cache_remote_image(string $url): array
     if (!isset($extensions[$mime])) {
         return [null, 'not a JPEG, PNG, WebP or GIF (' . $mime . ')'];
     }
+    // Another publisher's metadata is not ours to republish either.
+    [$clean, , $cleanErr] = pp_image_clean($body, $mime);
+    if ($clean === null) {
+        return [null, $cleanErr];
+    }
     $dir = PP_ROOT . '/uploads/' . date('Y/m');
     if (!is_dir($dir) && !mkdir($dir, 0775, true)) {
         return [null, 'the uploads folder isn\'t writable'];
     }
     $name = 'wire-' . substr(bin2hex(random_bytes(5)), 0, 8) . '.' . $extensions[$mime];
-    if (file_put_contents($dir . '/' . $name, $body) === false) {
+    if (file_put_contents($dir . '/' . $name, $clean) === false) {
         return [null, 'the server couldn\'t write the file'];
     }
     return ['/uploads/' . date('Y/m') . '/' . $name, null];

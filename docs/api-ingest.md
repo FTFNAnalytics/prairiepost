@@ -50,6 +50,29 @@ refused); the server names the stored file; at most 60 uploads per key
 per hour. Uploads land under `/uploads/`, where no vhost will ever
 execute PHP.
 
+**Embedded metadata is removed before the file is stored** (since
+24 Nov 2026, `app/imagemeta.php`). That covers the GPS location, the
+camera, the time, comments, XMP, IPTC, Content Credentials (C2PA)
+manifests, and anything appended after the image. If a graphic needs to
+say how it was made, say it in `image_credit`, which readers see. The
+picture itself is untouched: the compressed data is
+copied byte for byte, the colour profile stays, and a rotated phone
+photo keeps its orientation (alone, in a minimal EXIF block). So the
+stored file is usually a little smaller than what you sent, and the
+`bytes` in the response is the size you sent. Nothing needs changing on
+your side. The same applies to every other way an image reaches
+`/uploads/`: the newsroom's own uploads, `image` URLs fetched by
+`POST /api/ingest`, and wire images cached from a link. A file the
+server cannot walk from end to end, such as a truncated or malformed
+JPEG, is refused rather than stored unexamined. On this route that is a
+`422`:
+
+    → 422 {"ok":false,"error":"the image could not be read closely enough to remove its embedded metadata (location, camera details); re-save it as a new file and try again"}
+
+From an `image` URL on `POST /api/ingest`, the story is still filed,
+without the picture, and the response's `image` field reads
+`skipped — ` followed by the same reason.
+
 **Size limit: 8 MB (8 388 608 bytes)**, raw body or multipart alike.
 Anything larger is refused with a JSON `413` that states the limit:
 

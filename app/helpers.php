@@ -1,6 +1,8 @@
 <?php
 /** The Prairie Dispatch — shared helpers. */
 
+require_once __DIR__ . '/imagemeta.php';   // every stored image goes through pp_image_clean()
+
 function e(?string $s): string
 {
     return htmlspecialchars((string) $s, ENT_QUOTES, 'UTF-8');
@@ -411,7 +413,10 @@ function pp_desk_label(?string $categorySlug, ?string $default): string
 
 /**
  * Validate and store an uploaded image. Returns [public_url|null, error|null].
- * Shared by the editor's upload endpoint and the profile page.
+ * Shared by the editor's upload endpoint, the advertising desks and the
+ * profile page. What is stored is the image without its embedded metadata
+ * (GPS location, camera, time — app/imagemeta.php), never the bytes as
+ * they arrived.
  */
 function pp_handle_image_upload(array $file): array
 {
@@ -420,6 +425,9 @@ function pp_handle_image_upload(array $file): array
     }
     if ($file['size'] > 8 * 1024 * 1024) {
         return [null, 'That file is over 8 MB. Resize it and try again.'];
+    }
+    if (!is_uploaded_file($file['tmp_name'])) {
+        return [null, 'The upload failed. Try again.'];
     }
     $finfo = new finfo(FILEINFO_MIME_TYPE);
     $mime = $finfo->file($file['tmp_name']);
@@ -432,13 +440,17 @@ function pp_handle_image_upload(array $file): array
     if (!isset($extensions[$mime])) {
         return [null, 'Only JPEG, PNG, WebP or GIF images can be uploaded.'];
     }
+    [$clean, , $cleanErr] = pp_image_clean((string) file_get_contents($file['tmp_name']), $mime);
+    if ($clean === null) {
+        return [null, ucfirst($cleanErr) . '.'];
+    }
     $dir = PP_ROOT . '/uploads/' . date('Y/m');
     if (!is_dir($dir)) {
         mkdir($dir, 0775, true);
     }
     $base = slugify(pathinfo($file['name'], PATHINFO_FILENAME)) ?: 'image';
     $name = $base . '-' . substr(bin2hex(random_bytes(4)), 0, 6) . '.' . $extensions[$mime];
-    if (!move_uploaded_file($file['tmp_name'], $dir . '/' . $name)) {
+    if (file_put_contents($dir . '/' . $name, $clean) === false) {
         return [null, "The server couldn't write the file. Check that /uploads/ is writable."];
     }
     return ['/uploads/' . date('Y/m') . '/' . $name, null];
@@ -447,7 +459,8 @@ function pp_handle_image_upload(array $file): array
 /**
  * Store image BYTES the server fetched itself (the ingest pipeline's image
  * field) under the same rules as a browser upload: 8 MB cap, MIME sniffed
- * from the bytes, the same four formats, the same /uploads/YYYY/MM home.
+ * from the bytes, the same four formats, the same /uploads/YYYY/MM home,
+ * and the embedded metadata stripped before anything is written.
  * Returns [public path, null] or [null, reason].
  */
 function pp_store_image_bytes(string $bytes, string $baseName): array
@@ -474,13 +487,17 @@ function pp_store_image_bytes(string $bytes, string $baseName): array
     if (@getimagesizefromstring($bytes) === false) {
         return [null, 'the file does not decode as an image'];
     }
+    [$clean, , $cleanErr] = pp_image_clean($bytes, $mime);
+    if ($clean === null) {
+        return [null, $cleanErr];
+    }
     $dir = PP_ROOT . '/uploads/' . date('Y/m');
     if (!is_dir($dir)) {
         mkdir($dir, 0775, true);
     }
     $base = slugify($baseName) ?: 'image';
     $name = $base . '-' . substr(bin2hex(random_bytes(4)), 0, 6) . '.' . $extensions[$mime];
-    if (file_put_contents($dir . '/' . $name, $bytes) === false) {
+    if (file_put_contents($dir . '/' . $name, $clean) === false) {
         return [null, 'the server could not write the file'];
     }
     return ['/uploads/' . date('Y/m') . '/' . $name, null];
