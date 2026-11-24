@@ -6,6 +6,14 @@
  * in one guarded write and returns the public URL, re-publishing and
  * unflagged stories are refused, and a filing that brings both flag
  * and image publishes immediately.
+ *
+ * Then the newsroom's side, through a signed-in editor: publishing or
+ * scheduling a flagged story by hand consumes the flag, so a story the
+ * editor later moves back to draft is not queued again, and an attach
+ * from a worklist read while it waited is refused instead of
+ * republishing it. A draft save leaves the story waiting, review holds
+ * it out of the lane until it returns to draft, and a refused save
+ * changes nothing.
  */
 if (PHP_SAPI !== 'cli') {
     exit(1);
@@ -32,6 +40,8 @@ putenv('PP_CONFIG=' . $config);
 define('PP_TEST_BOOT', 1);
 require $root . '/app/bootstrap.php';
 $pdo = db();
+echo 'engine: ', $pdo->getAttribute(PDO::ATTR_DRIVER_NAME), ' server ',
+     (string) $pdo->getAttribute(PDO::ATTR_SERVER_VERSION), "\n";
 
 $pdo->prepare('INSERT INTO categories (name, slug) VALUES (?,?)')->execute(['Local News', 'local-news']);
 $pdo->prepare('INSERT INTO domains (hostname, site_slug, created_at) VALUES (?,?,?)')
@@ -77,6 +87,23 @@ function api(int $port, string $method, string $path, ?string $token, $body = nu
     $code = (int) curl_getinfo($ch, CURLINFO_RESPONSE_CODE);
     curl_close($ch);
     return [$code, (array) json_decode($out, true)];
+}
+
+/** The newsroom's side: a browser session with a cookie jar. */
+function web(int $port, string $method, string $path, array $fields, string $jar): array
+{
+    $ch = curl_init('http://127.0.0.1:' . $port . $path);
+    curl_setopt_array($ch, [CURLOPT_RETURNTRANSFER => true, CURLOPT_TIMEOUT => 15,
+                            CURLOPT_COOKIEJAR => $jar, CURLOPT_COOKIEFILE => $jar,
+                            CURLOPT_FOLLOWLOCATION => false]);
+    if ($method === 'POST') {
+        curl_setopt($ch, CURLOPT_POST, true);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($fields));
+    }
+    $body = (string) curl_exec($ch);
+    $code = (int) curl_getinfo($ch, CURLINFO_RESPONSE_CODE);
+    curl_close($ch);
+    return [$code, $body];
 }
 
 $png = base64_decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==');
@@ -166,6 +193,133 @@ ok($code === 409 && str_contains((string) ($j2['error'] ?? ''), 'newsroom'),
 ok($code === 201 && ($j2['status'] ?? '') === 'published'
    && ($j2['url'] ?? '') === 'https://paper.test/story/' . ($j2['slug'] ?? ''),
    "flag + image in one filing publishes immediately with its URL (got $code/" . ($j2['status'] ?? '?') . ')');
+
+/* ---- Step 7: an editor publishes a waiting story by hand ------------------ */
+// Publishing by hand is a person deciding, so it spends the flag. When the
+// editor later moves the story back to draft, it must not return to the
+// image agent's worklist, and an attach call made from a worklist read while
+// the story waited must be refused, not republish over the unpublish.
+$deskId = (int) $pdo->query("SELECT id FROM categories WHERE slug = 'local-news'")->fetchColumn();
+$siteId = (int) $pdo->query("SELECT id FROM sites WHERE slug = 'prairiedispatch'")->fetchColumn();
+$pdo->prepare('INSERT INTO users (name, email, pass_hash, role, slug, created_at) VALUES (?,?,?,?,?,?)')
+    ->execute(['Ed Editor', 'editor-pubflow@test.local', password_hash('correct horse pp', PASSWORD_DEFAULT),
+               'editor', 'ed-editor-pubflow', now()]);
+$jar = $work . '/jar-editor';
+[, $page] = web($port, 'GET', '/admin/login.php', [], $jar);
+preg_match('/name="csrf" value="([0-9a-f]+)"/', $page, $m);
+$csrf = $m[1] ?? '';
+[$code] = web($port, 'POST', '/admin/login.php',
+    ['csrf' => $csrf, 'email' => 'editor-pubflow@test.local', 'password' => 'correct horse pp'], $jar);
+ok($code === 302, "an editor signs in (got $code)");
+
+// The row as the server left it, read through a closed cursor so the
+// long-lived handle never pins an old snapshot.
+$story = function (int $id) use ($pdo): array {
+    $s = $pdo->prepare('SELECT slug, status, awaiting_image, image FROM posts WHERE id = ?');
+    $s->execute([$id]);
+    $r = $s->fetch() ?: [];
+    $s->closeCursor();
+    return $r;
+};
+// The ids on the image agent's worklist, or null when the queue did not
+// answer: a broken queue must never pass for one without the story in it.
+$queue = function () use ($port, $token): ?array {
+    [$code, $q] = api($port, 'GET', '/api/ingest-queue', $token);
+    return $code === 200 && ($q['ok'] ?? false) === true
+        ? array_map('intval', array_column($q['stories'] ?? [], 'id')) : null;
+};
+// A ready filing with no art yet: [id, slug], or [0, ''] if it did not land so.
+$fileWaiting = function (string $title) use ($port, $token): array {
+    [$code, $j] = api($port, 'POST', '/api/ingest', $token, [
+        'site' => 'prairiedispatch', 'desk' => 'local-news', 'title' => $title,
+        'lede' => 'Approved copy waiting for its art.', 'body' => '<p>Approved body.</p>',
+        'publish_on_image' => true,
+    ]);
+    return $code === 201 && ($j['awaiting_image'] ?? false) === true
+        ? [(int) ($j['id'] ?? 0), (string) ($j['slug'] ?? '')] : [0, ''];
+};
+// The edit form as the editor's browser posts it: the story's own headline
+// (so its address stays put), its desk, and the paper it runs on, ticked.
+$save = fn (int $id, string $title, array $over) => web($port, 'POST', "/admin/post-edit.php?id=$id", array_merge([
+    'csrf' => $csrf, 'title' => $title,
+    'lede' => 'Approved copy waiting for its art.', 'body' => '<p>Approved body.</p>',
+    'status' => 'draft', 'published_at' => '', 'category_id' => $deskId,
+    'byline' => 'Automated report', 'tags' => '', 'sites' => [$siteId],
+], $over), $jar);
+
+$t1 = 'Waiting story the editor publishes by hand';
+[$s1, $slug1] = $fileWaiting($t1);
+ok($s1 > 0 && in_array($s1, $queue() ?? [], true), 'a ready filing without art is on the worklist');
+
+[$code] = $save($s1, $t1, ['status' => 'published']);
+$p = $story($s1);
+ok($code === 302 && ($p['status'] ?? '') === 'published' && ($p['slug'] ?? '') === $slug1,
+   "the editor publishes it by hand, at the address it was filed under (got $code)");
+ok((int) ($p['awaiting_image'] ?? -1) === 0, 'publishing by hand consumes the publish-on-image flag');
+[$pcode] = api($port, 'GET', '/story/' . $slug1, null);
+ok($pcode === 200, "the story is live without its art (got $pcode)");
+
+[$code] = $save($s1, $t1, ['status' => 'draft']);
+$p = $story($s1);
+ok($code === 302 && ($p['status'] ?? '') === 'draft' && (int) ($p['awaiting_image'] ?? -1) === 0,
+   "the editor moves it back to draft, and the flag stays spent (got $code)");
+$ids = $queue();
+ok($ids !== null && !in_array($s1, $ids, true), 'the unpublished story is not back on the worklist');
+
+[$code, $j2] = api($port, 'POST', '/api/ingest-publish', $token, ['story' => $slug1, 'image' => $art]);
+ok($code === 409 && str_contains((string) ($j2['error'] ?? ''), 'only its newsroom can publish it'),
+   "an attach from the stale worklist is refused (got $code)");
+$p = $story($s1);
+ok(($p['status'] ?? '') === 'draft' && ($p['image'] ?? 'x') === '',
+   "and the story stays the editor's draft, without the art");
+[$pcode] = api($port, 'GET', '/story/' . $slug1, null);
+ok($pcode === 404, "it is not public (got $pcode)");
+
+/* ---- Step 8: a draft save keeps it waiting; scheduling spends the flag ---- */
+// An edit saved as a draft is not a decision to publish, so the story keeps
+// waiting for its art; sent to review, it is held out of the lane until it
+// returns to draft. A save the server refuses changes nothing.
+// Scheduling is approval for publication just as publishing is, so it spends
+// the flag too: pulled back to draft before it runs, the story stays out of
+// the lane.
+$t2 = 'Waiting story the editor schedules';
+[$s2, $slug2] = $fileWaiting($t2);
+[$code] = $save($s2, $t2, ['lede' => 'The editor tightened the lede while the art is made.']);
+$p = $story($s2);
+ok($code === 302 && ($p['status'] ?? '') === 'draft' && (int) ($p['awaiting_image'] ?? -1) === 1
+   && in_array($s2, $queue() ?? [], true),
+   "an editor's draft save leaves the story waiting on the worklist (got $code)");
+
+[$code] = $save($s2, $t2, ['status' => 'in_review']);
+$ids = $queue();
+[$acode] = api($port, 'POST', '/api/ingest-publish', $token, ['story' => $slug2, 'image' => $art]);
+ok($code === 302 && $ids !== null && !in_array($s2, $ids, true) && $acode === 409
+   && ($story($s2)['status'] ?? '') === 'in_review',
+   "sent to review, it is held out of the lane: off the worklist, attach refused (got $code/$acode)");
+[$code] = $save($s2, $t2, ['status' => 'draft']);
+$p = $story($s2);
+ok($code === 302 && (int) ($p['awaiting_image'] ?? -1) === 1 && in_array($s2, $queue() ?? [], true),
+   "returned to draft, it is waiting on the worklist again (got $code)");
+
+[$code, $page] = $save($s2, $t2, ['status' => 'scheduled', 'published_at' => date('Y-m-d\TH:i', time() - 2 * 86400)]);
+$p = $story($s2);
+ok($code === 200 && str_contains($page, 'needs a publish time in the future'), "a schedule in the past is refused (got $code)");
+ok(($p['status'] ?? '') === 'draft' && (int) ($p['awaiting_image'] ?? -1) === 1 && in_array($s2, $queue() ?? [], true),
+   'and the refused save changed nothing: still a waiting draft on the worklist');
+
+[$code] = $save($s2, $t2, ['status' => 'scheduled', 'published_at' => date('Y-m-d\TH:i', time() + 7 * 86400)]);
+$p = $story($s2);
+ok($code === 302 && ($p['status'] ?? '') === 'scheduled' && (int) ($p['awaiting_image'] ?? -1) === 0,
+   "scheduling by hand consumes the flag too (got $code)");
+
+[$code] = $save($s2, $t2, ['status' => 'draft']);
+$ids = $queue();
+ok($code === 302 && ($story($s2)['status'] ?? '') === 'draft' && $ids !== null && !in_array($s2, $ids, true),
+   "pulled back to draft before it ran, it is not back on the worklist (got $code)");
+[$code, $j2] = api($port, 'POST', '/api/ingest-publish', $token, ['story' => $slug2, 'image' => $art]);
+ok($code === 409 && str_contains((string) ($j2['error'] ?? ''), 'only its newsroom can publish it')
+   && ($story($s2)['status'] ?? '') === 'draft',
+   "and an attach is refused, leaving it a draft (got $code)");
 
 if ($fails === 0) {
     echo "publish-flow: all checks pass\n";
