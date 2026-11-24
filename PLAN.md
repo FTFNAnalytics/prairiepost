@@ -115,6 +115,11 @@ This is 1.2's remainder and 1.3, which was never built.
   Without one, nginx falls back to the first block bound to each socket.
   That is how Turtle Island served Brampton's certificate.
 - The same pass audits every block for both-family `listen` pairs.
+  No paper publishes an AAAA record (24 Nov), so readers reach every
+  paper over IPv4 only. Publish AAAA records, with the VPS's own IPv6
+  `2a02:4780:2d:6f65::1`, only after every block answers correctly on
+  both families. Until then an IPv6 visitor could be served another
+  site's certificate.
 
 Two cautions. The box hosts foreign tenants (the Institute and Calgary
 Dispatch), whose blocks must be left alone, and any tenant's broken
@@ -170,26 +175,28 @@ status. `tests/publish-flow.test.php` checks this in #90.
 
 ## Waiting on the owner (no code needed)
 
-1. **Pacific Post's DNS (found 24 Nov).** `thepacificpost.com` has a
-   second A record, `217.21.85.231`, beside the VPS. That address is a
-   Hostinger server answering 403. About half of visits to the bare
-   domain fail with a certificate error; `www.thepacificpost.com` is
-   unaffected. Delete that record in the domain's DNS at Hostinger.
-   Every other domain, bare and `www`, points only at the VPS.
-2. **Agent key grants for the editing API.** It is live, but no key
+1. **Agent key grants for the editing API.** It is live, but no key
    carries the read, edit-drafts or update-published grants until you
    name which keys get them. Granting one is a revoke and re-mint.
-3. **Surrey's test residue.** Delete draft #315 and story #316 in
+2. **Surrey's test residue.** Delete draft #315 and story #316 in
    Surrey's admin (never by SQL); #316 is publicly visible. Two test PNGs
    sit under `/uploads/2026/09/`.
-4. **An off-site destination for backups.** They run nightly and are
+3. **An off-site destination for backups.** They run nightly and are
    verified, but they sit on the same server as everything else. The
    hook is `/etc/civis-backup-offsite`.
-5. **The ops alert email,** in the hub's Settings → Security. Until it
+4. **The ops alert email,** in the hub's Settings → Security. Until it
    is set, the five-minute watch can only show problems on the
    dashboard, not email them.
-6. **The GitHub default branch** (0.3): repoint it to
+5. **The GitHub default branch** (0.3): repoint it to
    `claude/master-dashboard-control-room-nr3mp4`.
+
+Done: **Pacific Post's DNS** (found and fixed 24 Nov). The bare domain
+carried two stray Hostinger records beside the VPS: an A record that
+failed about half of visits with a certificate error, and an AAAA
+record that wasn't the VPS's IPv6 either. The owner deleted both in
+hPanel. Two public resolvers now return only the VPS for the bare
+domain and `www`, and visits to the bare domain succeeded 12 times out
+of 12.
 
 ## Policy decisions before more code
 
