@@ -15,9 +15,10 @@ paper's newsroom wearing that paper's branding), a code-only roll from
 domains serve `assets/js/bulk.js`, which only that tree carries (checked
 from outside on 24 Nov).
 
-**Analytics:** Kermode Chronicle has carried the Google Analytics tag
-since 24 Nov, the first paper to. No paper has a privacy page yet (see
-the policy decisions below).
+**Analytics:** eight papers load analytics as of 24 Nov. Kermode
+Chronicle carries a Google Analytics tag, and seven papers each carry
+their own Google Tag Manager container. No paper has a privacy page yet
+(see the policy decisions below).
 
 **Merged, not rolled:** photo metadata stripping (9.1 below, #91) and
 the image-hold fix for an editor's publish (9.5, #90). The brief that
@@ -203,10 +204,12 @@ of 12.
 - **AI-assistance disclosure.** The `ai_disclosure` setting is blank
   (off) by default and no launch pack sets it. Decide whether readers
   see a note on stories drafted with the desk's help.
-- **A privacy page and reader consent.** Kermode has carried the
-  Google Analytics tag since 24 Nov, and no paper has a privacy page
-  yet. Settle this before any other paper adds a tag, and before any
-  paper's indexing is switched on.
+- **A privacy page and reader consent.** Eight papers load analytics
+  as of 24 Nov: Kermode's Google Analytics tag, and Google Tag Manager
+  containers on Burrard, Edmonton, Grande Prairie, Portage, Prairie
+  Dispatch, Surrey and Toronto. No paper has a privacy page yet. Settle
+  this before more papers add tags, and before any paper's indexing is
+  switched on.
 - **A tamper-evident audit log.** Today's audit rows are ordinary
   database rows, which anyone with write access to the database can
   change. Decide whether they should be hash-chained or shipped off the

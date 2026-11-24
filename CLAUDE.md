@@ -222,11 +222,16 @@ holding a capability it should not have.
     file, but its routes pass and upload limit landed: every domain
     answers `401` on `/api/ingest/update`, `/api/ingest/stories` and
     `/api/ingest/drafts/{ref}`, and to a 1.5 MB body.
-  - **Kermode Chronicle carries the GA4 tag `G-RTEJHC0DFB`,** pasted
-    into its Analytics snippet setting. It is served once, in `<head>`,
-    on every public page type, and is absent from the sign-in page and
-    from every sister paper. It is the network's first analytics tag,
-    and no paper has a privacy page.
+  - **Eight papers load analytics.** Kermode Chronicle carries the GA4
+    tag `G-RTEJHC0DFB`, pasted into its Analytics snippet setting on
+    24 Nov. It is served once, in `<head>`, on every public page type,
+    and is absent from the sign-in page and from every sister paper.
+    The evening crawl the same day found seven more papers loading their
+    own Google Tag Manager container, one ID each: Burrard
+    `GTM-577M22PZ`, Edmonton `GTM-PXR2FHTQ`, Grande Prairie
+    `GTM-NWFCM75J`, Portage `GTM-TFM38BG7`, Prairie Dispatch
+    `GTM-K9VN3L7C`, Surrey `GTM-KQ3222B6` and Toronto `GTM-PZ6PWL6K`.
+    No paper has a privacy page.
   - **thepacificpost.com's apex had two stray Hostinger records,
     deleted by the owner the same day.**
     - An A record, `217.21.85.231` (a Hostinger server answering 403),
