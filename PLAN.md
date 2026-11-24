@@ -2,19 +2,22 @@
 
 ## Current state · 24 Nov 2026
 
-**Live:** 27 sites, which is 26 papers and the CivisMedia hub. All of
-them serve release `feb2b1f4f6eb` at schema version 25 (the VPS agent's
-report of 23 Nov). Steeltown Standard and Toronto Telegraph are in that
+**Live:** 27 sites, which is 26 papers and the CivisMedia hub, at
+schema version 25. Steeltown Standard and Toronto Telegraph are in that
 count; their launch report hasn't reached the repository. One foundation
 paper, `terminal-city-times`, waits for its brand package. Twelve more
 mastheads are named in `NETWORK-EXPANSION.md`; none is registered or
 built.
 
-**In flight:** the roll to `7cb82fb` (the Stories list's bulk status
-change, and each paper's newsroom wearing that paper's branding). It is
-code-only from `feb2b1f4f6eb`, with no migration. The brief is
-`docs/briefs/roll-7cb82fb9c20a.md` (revision 2) and its report is
-awaited.
+**Rolled:** `7cb82fb` (the Stories list's bulk status change, and each
+paper's newsroom wearing that paper's branding), a code-only roll from
+`feb2b1f4f6eb`. Its report hasn't reached the repository, but all 27
+domains serve `assets/js/bulk.js`, which only that tree carries (checked
+from outside on 24 Nov).
+
+**Analytics:** Kermode Chronicle has carried the Google Analytics tag
+since 24 Nov, the first paper to. No paper has a privacy page yet (see
+the policy decisions below).
 
 **Built, not rolled:** photo metadata stripping (9.1 below, #91) and
 the image-hold fix for an editor's publish (9.5, #90). Both reach
@@ -102,7 +105,7 @@ This is 1.2's remainder and 1.3, which was never built.
 
 - Every block takes `tools/vps/vhost.template`'s shape and routes
   through `router.php`. Every API route added since September has needed
-  a hand-written pass over those 14 blocks (the 7cb82fb roll carries
+  a hand-written pass over those 14 blocks (the 7cb82fb roll carried
   another one).
 - An explicit `default_server` on 80 and 443, both address families,
   answers unknown hostnames with `444` behind a self-signed certificate.
@@ -163,19 +166,25 @@ status. `tests/publish-flow.test.php` checks this in #90.
 
 ## Waiting on the owner (no code needed)
 
-1. **Agent key grants for the editing API.** It is live, but no key
+1. **Pacific Post's DNS (found 24 Nov).** `thepacificpost.com` has a
+   second A record, `217.21.85.231`, beside the VPS. That address is a
+   Hostinger server answering 403. About half of visits to the bare
+   domain fail with a certificate error; `www.thepacificpost.com` is
+   unaffected. Delete that record in the domain's DNS at Hostinger.
+   Every other domain, bare and `www`, points only at the VPS.
+2. **Agent key grants for the editing API.** It is live, but no key
    carries the read, edit-drafts or update-published grants until you
    name which keys get them. Granting one is a revoke and re-mint.
-2. **Surrey's test residue.** Delete draft #315 and story #316 in
+3. **Surrey's test residue.** Delete draft #315 and story #316 in
    Surrey's admin (never by SQL); #316 is publicly visible. Two test PNGs
    sit under `/uploads/2026/09/`.
-3. **An off-site destination for backups.** They run nightly and are
+4. **An off-site destination for backups.** They run nightly and are
    verified, but they sit on the same server as everything else. The
    hook is `/etc/civis-backup-offsite`.
-4. **The ops alert email,** in the hub's Settings → Security. Until it
+5. **The ops alert email,** in the hub's Settings → Security. Until it
    is set, the five-minute watch can only show problems on the
    dashboard, not email them.
-5. **The GitHub default branch** (0.3): repoint it to
+6. **The GitHub default branch** (0.3): repoint it to
    `claude/master-dashboard-control-room-nr3mp4`.
 
 ## Policy decisions before more code
@@ -183,8 +192,10 @@ status. `tests/publish-flow.test.php` checks this in #90.
 - **AI-assistance disclosure.** The `ai_disclosure` setting is blank
   (off) by default and no launch pack sets it. Decide whether readers
   see a note on stories drafted with the desk's help.
-- **A privacy page and reader consent,** before analytics or search
-  indexing are switched on for any paper.
+- **A privacy page and reader consent.** Kermode has carried the
+  Google Analytics tag since 24 Nov, and no paper has a privacy page
+  yet. Settle this before any other paper adds a tag, and before any
+  paper's indexing is switched on.
 - **A tamper-evident audit log.** Today's audit rows are ordinary
   database rows, which anyone with write access to the database can
   change. Decide whether they should be hash-chained or shipped off the

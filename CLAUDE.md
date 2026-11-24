@@ -215,6 +215,21 @@ holding a capability it should not have.
 
 ## Current operational state (as of the story-lookup roll, 21 Nov 2026)
 
+- **24 Nov, checked from outside (no agent report yet).**
+  - **The `7cb82fb` roll has run.** All 27 domains serve
+    `/assets/js/bulk.js`, which only the `7cb82fb` tree carries. It was
+    code-only, so the schema stays 25. Its report, including the routes
+    pass (D5, D6), hasn't reached this file.
+  - **Kermode Chronicle carries the GA4 tag `G-RTEJHC0DFB`,** pasted
+    into its Analytics snippet setting. It is served once, in `<head>`,
+    on every public page type, and is absent from the sign-in page and
+    from every sister paper. It is the network's first analytics tag,
+    and no paper has a privacy page.
+  - **thepacificpost.com's apex has a stray second A record,**
+    `217.21.85.231` (a Hostinger server answering 403), beside the VPS,
+    so about half of apex requests fail TLS. `www` points only at the
+    VPS, as does every other domain, bare and `www`. The fix is the
+    owner's, at the registrar.
 - **Latest known state (23 Nov, from the VPS agent's report when the
   `7cb82fb` roll stopped at A3).** All 27 sites serve release
   `feb2b1f4f6eb` (the merge of #84), rolled the night of 22 Nov, at
@@ -478,8 +493,8 @@ holding a capability it should not have.
   ancestor of the pin, using the GitHub compare API, instead of naming
   releases this file might have wrong. Write future rolls' A3 the same
   way.
-- **The Stories list's bulk status change is BUILT (23 Nov), not yet
-  rolled.** A checkbox per row and a bar beside "+ New story"
+- **The Stories list's bulk status change is LIVE (rolled with
+  `7cb82fb`; see the 24 Nov check).** A checkbox per row and a bar beside "+ New story"
   (`admin/posts.php`, `assets/js/bulk.js`, `pp_bulk_set_status()` in
   app/models.php): editors move up to 100 ticked stories at once to
   published (live now), in review or draft; authors move only their own
@@ -489,10 +504,10 @@ holding a capability it should not have.
   what the story editor does (stamps an empty or future `published_at`,
   maps an unassigned story to the paper whose admin it is, fires the
   agent auto-queue) and also clears `awaiting_image`; one audit row,
-  `stories.bulk_status`, per action. No schema step and no new route:
-  it reaches production with the next pinned roll.
-- **Each paper's newsroom wears the paper — BUILT (23 Nov), not yet
-  rolled.** On a paper's own domain the admin takes that paper's
+  `stories.bulk_status`, per action. No schema step and no new route.
+- **Each paper's newsroom wears the paper — LIVE (rolled with
+  `7cb82fb`; Kermode's admin wore its accent in the owner's 24 Nov
+  screenshot).** On a paper's own domain the admin takes that paper's
   masthead (its mark or image wordmark, its name set the way its front
   page sets it), its rail/band/nav colours, its accent and spot (buttons,
   links, status chips) and its fonts, from the `admin` block of
@@ -506,8 +521,7 @@ holding a capability it should not have.
   (Playfair Display is declared in admin.css itself, lesson 9). The
   admin sheet's URL carries a content hash, because no static asset is
   served with Cache-Control. A new paper's block is scaffolded by
-  `tools/make-paper.php` and replaced at brand time. No schema step;
-  it reaches production with the next pinned roll.
+  `tools/make-paper.php` and replaced at brand time. No schema step.
 - **Embedded image metadata is stripped — BUILT (24 Nov), not yet
   rolled (PLAN.md 9.1).** Until now every upload path stored bytes as
   received, so a phone photo published its GPS position, camera and
