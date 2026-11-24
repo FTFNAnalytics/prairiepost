@@ -218,8 +218,10 @@ holding a capability it should not have.
 - **24 Nov, checked from outside (no agent report yet).**
   - **The `7cb82fb` roll has run.** All 27 domains serve
     `/assets/js/bulk.js`, which only the `7cb82fb` tree carries. It was
-    code-only, so the schema stays 25. Its report, including the routes
-    pass (D5, D6), hasn't reached this file.
+    code-only, so the schema stays 25. Its report hasn't reached this
+    file, but its routes pass and upload limit landed: every domain
+    answers `401` on `/api/ingest/update`, `/api/ingest/stories` and
+    `/api/ingest/drafts/{ref}`, and to a 1.5 MB body.
   - **Kermode Chronicle carries the GA4 tag `G-RTEJHC0DFB`,** pasted
     into its Analytics snippet setting. It is served once, in `<head>`,
     on every public page type, and is absent from the sign-in page and
@@ -229,7 +231,11 @@ holding a capability it should not have.
     `217.21.85.231` (a Hostinger server answering 403), beside the VPS,
     so about half of apex requests fail TLS. `www` points only at the
     VPS, as does every other domain, bare and `www`. The fix is the
-    owner's, at the registrar.
+    owner's, at the registrar. Public DNS can be wrong like this, so a
+    brief pins every HTTP check to the box
+    (`curl --resolve "$host:443:127.0.0.1"`, certificates still
+    verified), as the upgrader's own probes always have. Write future
+    briefs the same way.
 - **Latest known state (23 Nov, from the VPS agent's report when the
   `7cb82fb` roll stopped at A3).** All 27 sites serve release
   `feb2b1f4f6eb` (the merge of #84), rolled the night of 22 Nov, at
@@ -527,8 +533,8 @@ holding a capability it should not have.
   admin sheet's URL carries a content hash, because no static asset is
   served with Cache-Control. A new paper's block is scaffolded by
   `tools/make-paper.php` and replaced at brand time. No schema step.
-- **Embedded image metadata is stripped — BUILT (24 Nov), not yet
-  rolled (PLAN.md 9.1).** Until now every upload path stored bytes as
+- **Embedded image metadata is stripped — MERGED (24 Nov, #91), not
+  yet rolled (PLAN.md 9.1).** Until now every upload path stored bytes as
   received, so a phone photo published its GPS position, camera and
   time. Every image written under /uploads now goes through
   `pp_image_clean()` (`app/imagemeta.php`):
@@ -542,12 +548,22 @@ holding a capability it should not have.
   - a file it cannot walk end to end is refused (ingest-media answers
     422), never stored as it came.
 
-  No schema step and no new route. **After the roll that carries it,
-  the uploads already on disk still need cleaning:** a VPS brief runs
-  `php tools/strip-image-metadata.php` from `$REL` (dry run, then
-  `--apply`; lossless, atomic per file, keeps owner and mode,
-  idempotent). Backup sets taken before that run still hold the
-  originals until they age out.
+  No schema step and no new route. **The roll brief is written:**
+  `docs/briefs/roll-72f8adccbcca.md` (24 Nov) pins
+  `72f8adccbcca4bca12aefb937d4d21cbdfc62e8e`, the merge of #90 after
+  #91. That is 11 commits and code-only from `7cb82fb` at schema 25, and
+  the upgrader is unchanged (sha256 `273b747f…`). It then cleans the
+  uploads already on disk:
+  - `tools/strip-image-metadata.php` runs as `www-data`, which owns the
+    shared uploads: a dry run, `--apply`, and a second dry run that must
+    find nothing;
+  - an owner/group/mode diff of every image before and after;
+  - served bytes compared with the cleaned files.
+
+  Every command in it was run here against a local TLS nginx, fake
+  releases built from the pin, and a `www-data`-owned uploads tree.
+  Backup sets taken before the cleanup still hold the originals until
+  they age out.
 - **Test residue awaiting owner cleanup (admin UI, never SQL):** on
   Surrey — draft #315 (`routes-check-agent-ingest-v2-draft`), and
   story #316 (`routes-check-publish-on-image-test`) which the 28 Sep
