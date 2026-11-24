@@ -87,6 +87,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             'updated_at' => now(),
         ];
 
+        // Publishing or scheduling by hand consumes the publish-on-image
+        // flag, as the Stories list's bulk publish does. The flag is the
+        // filing agent's standing order ("approved copy: publish it when its
+        // art arrives"), and a person publishing the story spends it. Left
+        // set, it outlives the publish: an editor who later moves the story
+        // back to draft puts it back on the image agent's worklist, and the
+        // next image through /api/ingest-publish republishes it with no
+        // person deciding. Scheduling spends it too, because a person has
+        // approved the story for publication either way: the cron flip that
+        // takes it live (pp_publish_due) never touches the flag, and pulling
+        // a scheduled story back to draft is the same call as unpublishing
+        // one. A draft or review save leaves the flag set; no one has
+        // decided to publish, so the story keeps waiting for its art. Only
+        // an editor can choose these statuses, and the field rides in this
+        // save's single write, so a refused save leaves the flag as it was.
+        if ($status === 'published' || $status === 'scheduled') {
+            $fields['awaiting_image'] = 0;
+        }
+
         if ($editor) {
             $placement = (string) ($_POST['placement'] ?? '');
             if (!in_array($placement, ['', 'hero', 'featured', 'desk_lead'], true)) {

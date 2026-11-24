@@ -146,5 +146,10 @@ Handle these responses without human help:
    their Draft status in every paper's admin story list — that is the
    human-visible view of the queue.
 4. To pause the pipeline: revoke the keys (instant). To pull one story
-   out of the lane: an editor publishes or edits it in the newsroom —
-   it leaves the queue and the attach call can no longer touch it.
+   out of the lane for good: an editor publishes or schedules it in the
+   newsroom. That consumes its flag, so the attach call can no longer
+   touch it, even after the story goes back to draft. Saving it as a
+   draft does not: an edited draft stays in the queue, and the next
+   image publishes it with the editor's copy. To hold one without
+   publishing it, send it to review; it is out of the queue while it is
+   in review, and back in the queue if it returns to draft.
