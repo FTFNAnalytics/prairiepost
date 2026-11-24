@@ -5,14 +5,14 @@
    maple — brand rule); outlined subscribe, never the solid brick; the
    active desk carries the crimson underline; ONE crimson rule under
    the nav. */
-$rrWeather = trim(setting('weather_line'));
+$rrWeather = pp_weather_line();
 $rrMail = trim(setting('contact_email'));
 ?>
 <div class="rr-util">
   <div class="in">
     <div>
       <span><?= e(date('l, F j, Y')) ?></span>
-      <?php if ($rrWeather !== ''): ?><span class="sep">|</span><span><?= e(str_replace('|', ' · ', $rrWeather)) ?></span><?php endif; ?>
+      <?php if ($rrWeather !== ''): ?><span class="sep">|</span><span><?= pp_weather_link(e(str_replace('|', ' · ', $rrWeather)), 'pp-wx') ?></span><?php endif; ?>
     </div>
     <div>
       <?php if ($rrMail !== ''): ?><a href="mailto:<?= e($rrMail) ?>">News tips</a><span class="sep">|</span><?php endif; ?>

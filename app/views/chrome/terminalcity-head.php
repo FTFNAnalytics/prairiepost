@@ -2,14 +2,14 @@
 /* Terminal City Times — masthead chrome (foundation build). In scope
    from page_header(): $siteTitle, $tagline, $activeDesk. Centred
    heritage masthead between rules; the roundel is the placeholder mark. */
-$tcWeather = trim(setting('weather_line'));
+$tcWeather = pp_weather_line();
 $tcMail = trim(setting('contact_email'));
 ?>
 <div class="tc-util">
   <div class="in">
     <div>
       <span><?= e(date('l, j F Y')) ?></span>
-      <?php if ($tcWeather !== ''): ?><span class="sep">|</span><span><?= e(str_replace('|', ' · ', $tcWeather)) ?></span><?php endif; ?>
+      <?php if ($tcWeather !== ''): ?><span class="sep">|</span><span><?= pp_weather_link(e(str_replace('|', ' · ', $tcWeather)), 'pp-wx') ?></span><?php endif; ?>
     </div>
     <div>
       <?php if ($tcMail !== ''): ?><a href="mailto:<?= e($tcMail) ?>">Send a tip</a><span class="sep">|</span><?php endif; ?>

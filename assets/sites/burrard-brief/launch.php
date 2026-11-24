@@ -45,7 +45,6 @@ return [
         'contact_email'      => 'tips@burrardbrief.ca',
         'newsletter_heading' => 'The Morning Brief',
         'newsletter_copy'    => 'The five Vancouver and Lower Mainland stories worth your time, written to be read in four minutes. Every weekday at 7 a.m., free.',
-        'weather_line'       => '14°C|Showers clearing by evening',
         'regions'            => json_encode([
             'vancouver'      => 'Vancouver',
             'lower-mainland' => 'Lower Mainland',

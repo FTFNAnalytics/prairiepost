@@ -45,7 +45,6 @@ return [
         'contact_email'      => 'tips@brandonbulletin.com',
         'newsletter_heading' => 'The Wheat City Brief',
         'newsletter_copy'    => 'Brandon and the southwest\'s news every weekday morning — what happened, what it means, and what to watch, before the day gets going.',
-        'weather_line'       => '4°C|Sunny',
         'regions'            => json_encode([
             'brandon'            => 'Brandon',
             'southwest-manitoba' => 'Southwest Manitoba',

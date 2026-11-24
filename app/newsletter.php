@@ -83,12 +83,13 @@ function pp_compile_edition(): array
     }
 
     // The rail, in miniature: forecast then closing prices.
-    $weather = setting_json('weather_today');
+    $weather = pp_weather_today();
     if (!empty($weather['line'])) {
         $out .= "<tr><td style=\"background:$sky;padding:12px 14px;margin-top:8px;\">"
               . "<span style=\"$mono;font-size:9.5px;color:$ink;\">The forecast</span>"
               . "<div style=\"$bodyF;font-size:14px;line-height:1.45;color:$ink;padding-top:4px;\">"
-              . $h(($weather['temp'] ?? '') . ' — ' . $weather['line']) . '</div></td></tr>';
+              . $h(($weather['temp'] ?? '') . ' — ' . $weather['line']) . '</div>'
+              . "<div style=\"$mono;font-size:9.5px;color:$ink;padding-top:4px;\">" . $h($weather['credit'] . ' · ' . $weather['observed']) . '</div></td></tr>';
     }
     $markets = setting_json('markets');
     if ($markets) {

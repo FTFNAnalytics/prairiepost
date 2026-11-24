@@ -7,14 +7,14 @@
 $ssWords = preg_split('/\s+/', trim($siteTitle)) ?: [];
 $ssThe   = (strcasecmp($ssWords[0] ?? '', 'the') === 0) ? array_shift($ssWords) : '';
 $ssName  = implode(' ', $ssWords) ?: $siteTitle;
-$ssWeather = trim(setting('weather_line'));
+$ssWeather = pp_weather_line();
 $ssMail = trim(setting('contact_email'));
 ?>
 <div class="ss-util">
   <div class="in">
     <div>
       <span><?= e(date('l, j F Y')) ?></span>
-      <?php if ($ssWeather !== ''): ?><span class="sep">|</span><span><?= e(str_replace('|', ' · ', $ssWeather)) ?></span><?php endif; ?>
+      <?php if ($ssWeather !== ''): ?><span class="sep">|</span><span><?= pp_weather_link(e(str_replace('|', ' · ', $ssWeather)), 'pp-wx') ?></span><?php endif; ?>
     </div>
     <div>
       <?php if ($ssMail !== ''): ?><a href="mailto:<?= e($ssMail) ?>">News tips</a><span class="sep">|</span><?php endif; ?>

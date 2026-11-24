@@ -261,7 +261,7 @@ else
   echo "WARN: certbot failed — the site stays HTTP-only; re-run 'certbot --nginx -d civismedia.ca -d www.civismedia.ca -n --redirect' later"
 fi
 
-say "The hub's cron — monitoring hourly, agents every ten minutes, analytics nightly"
+say "The hub's cron — monitoring hourly, agents every ten minutes, analytics nightly, weather every half hour"
 # Every job runs through the wrapper: outcome + output tail land in the ops
 # ledger (hub dashboard + Ops page), full output in /var/log/civis/. The
 # watch patrols every five minutes and files the network snapshot.
@@ -271,9 +271,10 @@ cat > /etc/cron.d/civismedia <<CRON
 */10 * * * * www-data cd $REL && PP_SITE=civismedia php cron/run.php agents >> /var/log/civis/agents.log 2>&1
 43 2 * * * www-data cd $REL && PP_SITE=civismedia php cron/run.php analytics >> /var/log/civis/analytics.log 2>&1
 */5 * * * * www-data cd $REL && PP_SITE=civismedia php cron/run.php watch >> /var/log/civis/watch.log 2>&1
+7,37 * * * * www-data cd $REL && PP_SITE=civismedia php cron/run.php weather >> /var/log/civis/weather.log 2>&1
 CRON
 chmod 644 /etc/cron.d/civismedia
-echo "cron installed: /etc/cron.d/civismedia -> $REL (monitor :17, agents */10, analytics 02:43, watch */5 — all via run.php)"
+echo "cron installed: /etc/cron.d/civismedia -> $REL (monitor :17, agents */10, analytics 02:43, watch */5, weather :07/:37 — all via run.php)"
 
 echo
 echo "== done. Open https://civismedia.ca and https://civismedia.ca/admin =="

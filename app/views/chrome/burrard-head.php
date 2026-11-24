@@ -30,14 +30,14 @@ if (!function_exists('bb_art')) {
 $bbWords = preg_split('/\s+/', trim($siteTitle)) ?: [];
 $bbThe   = (strcasecmp($bbWords[0] ?? '', 'the') === 0) ? array_shift($bbWords) : '';
 $bbName  = implode(' ', $bbWords) ?: $siteTitle;
-$bbWeather = trim(setting('weather_line'));
+$bbWeather = pp_weather_line();
 $bbMail = trim(setting('contact_email'));
 ?>
 <div class="bb-util">
   <div class="in">
     <div>
       <span><?= e(date('l, F j, Y')) ?></span>
-      <?php if ($bbWeather !== ''): ?><span class="sep">|</span><span>Vancouver <?= e(str_replace('|', ' · ', $bbWeather)) ?></span><?php endif; ?>
+      <?php if ($bbWeather !== ''): ?><span class="sep">|</span><span><?= pp_weather_link('Vancouver ' . e(str_replace('|', ' · ', $bbWeather)), 'pp-wx') ?></span><?php endif; ?>
     </div>
     <div>
       <?php if ($bbMail !== ''): ?><a href="mailto:<?= e($bbMail) ?>">News tips</a><span class="sep">|</span><?php endif; ?>

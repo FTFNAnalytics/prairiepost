@@ -23,6 +23,7 @@ $jobs = [
     'agents'    => 'agents.php',
     'analytics' => 'analytics.php',
     'watch'     => 'watch.php',
+    'weather'   => 'weather.php',
 ];
 $job = (string) ($argv[1] ?? '');
 if (!isset($jobs[$job])) {

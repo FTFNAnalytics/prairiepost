@@ -34,7 +34,6 @@ return [
         'tagline'            => 'From the Okanagan. Across British Columbia.',
         'meta_description'   => 'Independent B.C. journalism with an Okanagan point of view. Clear reporting, regional intelligence and a wider view of the province.',
         'footer_line'        => 'Independent B.C. journalism with an Okanagan point of view. Clear reporting, regional intelligence and a wider view of the province.',
-        'weather_line'       => 'Kelowna · 24°C · Clear',
         'contact_email'      => 'tips@kelownacurrent.ca',
         'newsletter_heading' => 'The Morning Current',
         'newsletter_copy'    => 'A concise weekday briefing from Kelowna and across British Columbia — what happened, why it matters, and what to watch next.',

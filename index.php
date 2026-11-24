@@ -18,7 +18,7 @@ $secondary = $featured ?: latest_posts(2, $heroId);
 $shownIds = array_merge($heroId, array_map('intval', array_column($secondary, 'id')));
 $river = latest_posts(10, $shownIds);
 $markets = setting_json('markets');
-$weather = setting_json('weather_today');
+$weather = pp_weather_today();
 
 $GLOBALS['pp_front_page'] = true;
 
@@ -130,6 +130,7 @@ if (is_file($ppView)) {
         <div class="temp"><?= e($weather['temp'] ?? '') ?></div>
         <span class="pp-meta">High <?= e($weather['hi'] ?? '—') ?> · Low <?= e($weather['lo'] ?? '—') ?></span>
         <p><?= e($weather['line'] ?? '') ?></p>
+        <span class="pp-meta"><?= $weather['source'] ?? '' ?></span>
       </div>
       <?php endif; ?>
 

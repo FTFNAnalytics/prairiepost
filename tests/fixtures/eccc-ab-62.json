@@ -1,0 +1,226 @@
+{
+ "type": "Feature",
+ "id": "ab-62",
+ "properties": {
+  "identifier": "ab-62",
+  "name": {
+   "en": "Drumheller",
+   "fr": "Drumheller"
+  },
+  "region": {
+   "en": "Town of Drumheller",
+   "fr": "ville de Drumheller"
+  },
+  "url": {
+   "en": "https://weather.gc.ca/en/location/index.html?coords=51.46,-112.72",
+   "fr": "https://meteo.gc.ca/fr/location/index.html?coords=51.46,-112.72"
+  },
+  "currentConditions": {
+   "timestamp": {
+    "en": "__OBSERVED__",
+    "fr": "__OBSERVED__"
+   },
+   "temperature": {
+    "unitType": {
+     "en": "metric",
+     "fr": "metric"
+    },
+    "units": {
+     "en": "C",
+     "fr": "C"
+    },
+    "qaValue": {
+     "en": 100,
+     "fr": 100
+    },
+    "value": {
+     "en": -7.6,
+     "fr": -7.6
+    }
+   },
+   "station": {
+    "code": {
+     "en": "wdz",
+     "fr": "wdz"
+    },
+    "lat": {
+     "en": "51.45N",
+     "fr": "51.45N"
+    },
+    "lon": {
+     "en": "112.68W",
+     "fr": "112.68O"
+    },
+    "value": {
+     "en": "Drumheller",
+     "fr": "Drumheller"
+    }
+   },
+   "relativeHumidity": {
+    "units": {
+     "en": "%",
+     "fr": "%"
+    },
+    "qaValue": {
+     "en": 100,
+     "fr": 100
+    },
+    "value": {
+     "en": 77,
+     "fr": 77
+    }
+   }
+  },
+  "forecastGroup": {
+   "forecasts": [
+    {
+     "period": {
+      "textForecastName": {
+       "en": "Tonight",
+       "fr": "Ce soir et cette nuit"
+      },
+      "value": {
+       "en": "Tuesday night",
+       "fr": "ce soir et cette nuit"
+      }
+     },
+     "temperatures": {
+      "temperature": [
+       {
+        "unitType": {
+         "en": "metric",
+         "fr": "metric"
+        },
+        "units": {
+         "en": "C",
+         "fr": "C"
+        },
+        "class": {
+         "en": "low",
+         "fr": "low"
+        },
+        "value": {
+         "en": -7,
+         "fr": -7
+        }
+       }
+      ],
+      "textSummary": {
+       "en": "Temperature rising to minus 1 by morning.",
+       "fr": "Températures à la hausse pour atteindre moins 1 au cours de la nuit."
+      }
+     },
+     "abbreviatedForecast": {
+      "icon": {
+       "format": "gif",
+       "value": 31,
+       "url": "https://weather.gc.ca/weathericons/31.gif"
+      },
+      "textSummary": {
+       "en": "A few clouds",
+       "fr": "Quelques nuages"
+      }
+     }
+    },
+    {
+     "period": {
+      "textForecastName": {
+       "en": "Wednesday",
+       "fr": "Mercredi"
+      },
+      "value": {
+       "en": "Wednesday",
+       "fr": "mercredi"
+      }
+     },
+     "temperatures": {
+      "temperature": [
+       {
+        "unitType": {
+         "en": "metric",
+         "fr": "metric"
+        },
+        "units": {
+         "en": "C",
+         "fr": "C"
+        },
+        "class": {
+         "en": "high",
+         "fr": "high"
+        },
+        "value": {
+         "en": 9,
+         "fr": 9
+        }
+       }
+      ],
+      "textSummary": {
+       "en": "High 9.",
+       "fr": "Maximum 9."
+      }
+     },
+     "abbreviatedForecast": {
+      "icon": {
+       "format": "gif",
+       "value": 1,
+       "url": "https://weather.gc.ca/weathericons/01.gif"
+      },
+      "textSummary": {
+       "en": "Mainly sunny",
+       "fr": "Généralement ensoleillé"
+      }
+     }
+    },
+    {
+     "period": {
+      "textForecastName": {
+       "en": "Wednesday night",
+       "fr": "Mercredi soir et nuit"
+      },
+      "value": {
+       "en": "Wednesday night",
+       "fr": "mercredi soir et nuit"
+      }
+     },
+     "temperatures": {
+      "temperature": [
+       {
+        "unitType": {
+         "en": "metric",
+         "fr": "metric"
+        },
+        "units": {
+         "en": "C",
+         "fr": "C"
+        },
+        "class": {
+         "en": "low",
+         "fr": "low"
+        },
+        "value": {
+         "en": -3,
+         "fr": -3
+        }
+       }
+      ],
+      "textSummary": {
+       "en": "Low minus 3.",
+       "fr": "Minimum moins 3."
+      }
+     },
+     "abbreviatedForecast": {
+      "icon": {
+       "format": "gif",
+       "value": 31,
+       "url": "https://weather.gc.ca/weathericons/31.gif"
+      },
+      "textSummary": {
+       "en": "A few clouds",
+       "fr": "Quelques nuages"
+      }
+     }
+    }
+   ]
+  }
+ }
+}

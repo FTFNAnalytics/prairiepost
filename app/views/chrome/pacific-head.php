@@ -1,7 +1,7 @@
 <div class="pf-strip">
   <div class="wrap">
     <div class="grp">
-      <span><?= e(date('l, F j, Y')) ?><?= setting('weather_line') !== '' ? ' · ' . e(setting('weather_line')) : '' ?></span>
+      <span><?= e(date('l, F j, Y')) ?><?= pp_weather_text() !== '' ? ' · ' . pp_weather_link(e(pp_weather_text()), 'pp-wx') : '' ?></span>
     </div>
     <div class="grp">
       <a class="hide-s" href="<?= e(url('newsletter/')) ?>">Newsletters</a>

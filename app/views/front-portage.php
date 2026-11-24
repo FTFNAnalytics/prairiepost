@@ -10,7 +10,7 @@ $ptgSeen = $hero ? [(int) $hero['id']] : [];
 $ptgGrid = latest_posts(6, $ptgSeen);
 $ptgSeen = array_merge($ptgSeen, array_column($ptgGrid, 'id'));
 $ptgMost = latest_posts(5, []);
-$ptgW = array_pad(explode('|', (string) setting('weather_line')), 2, '');
+$ptgW = array_pad(explode('|', pp_weather_line()), 2, '');
 ?>
 <div class="ptg-wrap">
   <div class="ptg-home">
@@ -58,7 +58,7 @@ $ptgW = array_pad(explode('|', (string) setting('weather_line')), 2, '');
           <span class="temp"><?= e(trim($ptgW[0])) ?></span>
           <span class="place">Winnipeg, MB<?php if (trim($ptgW[1]) !== ''): ?><br><?= e(trim($ptgW[1])) ?><?php endif; ?></span>
         </div>
-        <div class="cond">Updated each morning by the newsroom.</div>
+        <div class="cond"><?= pp_weather_source_html() ?></div>
       </div>
       <?php endif; ?>
       <div class="ptg-mostread">

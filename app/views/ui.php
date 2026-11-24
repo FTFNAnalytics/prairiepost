@@ -246,9 +246,7 @@ elseif (pp_chrome('header') === 'bar'): ?>
     <?php if (setting('breaking_label') !== '' && setting('breaking_url') !== ''): ?>
     <a class="tb-breaking" href="<?= e(setting('breaking_url')) ?>"><?= e(setting('breaking_label')) ?></a>
     <?php endif; ?>
-    <?php if (setting('weather_line') !== ''): ?>
-    <a class="tb-weather" href="<?= e(url('desk/weather')) ?>"><?= e(setting('weather_line')) ?></a>
-    <?php endif; ?>
+    <?= pp_weather_link(e(pp_weather_text()), 'tb-weather') ?>
     <a class="tb-search" href="<?= e(url('search')) ?>" aria-label="Search the archive">Search</a>
   </div>
 </header>
@@ -256,7 +254,7 @@ elseif (pp_chrome('header') === 'bar'): ?>
 <div class="skybar">
   <div class="wrap pp-meta">
     <span><?= e(date('l, F j, Y')) ?></span>
-    <span><a href="<?= e(url('desk/weather')) ?>"><?= e(setting('weather_line', '')) ?></a></span>
+    <?php if (pp_weather_text() !== ''): ?><span><?= pp_weather_link(e(pp_weather_text())) ?></span><?php endif; ?>
   </div>
 </div>
 

@@ -44,7 +44,6 @@ return [
         'contact_email'      => 'tips@rideaureview.ca',
         'newsletter_heading' => 'The Evening Briefing',
         'newsletter_copy'    => 'The capital\'s day, closely read — council, the bridges and the budgets, five evenings a week, across the river and down the canal.',
-        'weather_line'       => '4°C|Ottawa–Gatineau',
         'regions'            => json_encode([
             'ottawa'          => 'Ottawa',
             'gatineau'        => 'Gatineau',

@@ -38,7 +38,6 @@ return [
         'tagline'            => 'Reporting from the coast and the interior',
         'meta_description'   => 'Independent, reader-funded journalism for British Columbia: environment, wildlife, climate, resources, and the communities of the coast and the interior.',
         'footer_line'        => 'Published on the territories of the Lekwungen-speaking peoples.',
-        'weather_line'       => 'Victoria, B.C.',
         'contact_email'      => 'tips@kermodechronicle.ca',
         'newsletter_heading' => 'The Coast Report',
         'newsletter_copy'    => 'A weekly letter from the Great Bear Rainforest: what our reporters saw, counted, and could not let go of.',

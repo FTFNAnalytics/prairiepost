@@ -24,6 +24,11 @@ the image-hold fix for an editor's publish (9.5, #90). The brief that
 rolls them is `docs/briefs/roll-72f8adccbcca.md`. It then cleans the
 images already stored.
 
+**Built, not merged:** live weather from Environment and Climate Change
+Canada (9.6 below), replacing the weather lines typed in at launch. The
+24 Nov audit's other loose ends are 9.7–9.9 and three new owner
+decisions under the policy decisions below.
+
 **The platform phases below (0–3):** Phases 2 and 3 are done. Phase 0
 is done except the GitHub default branch, which is the owner's switch.
 Phase 1 is done except converting the 14 hand-written nginx blocks and
@@ -51,7 +56,7 @@ newsroom's working copy of that plan; this file is the repository's.
 | 2 Template registry | Done. 2.3 is in the backlog by owner decision. |
 | 3 Hermes ingest | Done, and extended (above). |
 | Hub 1–8 | See `PLAN-CIVIS.md` and `DEPLOY-CIVIS.md`. |
-| **9 Exposure and upkeep** | **Next. 9.1 and 9.5 merged 24 Nov (#91, #90), rolling with `roll-72f8adccbcca`; 9.2–9.4 open.** |
+| **9 Exposure and upkeep** | **Next. 9.1 and 9.5 merged 24 Nov (#91, #90), rolling with `roll-72f8adccbcca`; 9.6 built; 9.2–9.4 and 9.7–9.9 open.** |
 
 ---
 
@@ -168,6 +173,109 @@ a read-only query that counts them.
 appears in `GET /api/ingest-queue` afterwards, whatever its later
 status. `tests/publish-flow.test.php` checks this in #90.
 
+**9.6 — Live weather.** *Built 24 Nov on `claude/live-weather`; not
+merged, not rolled.* Until now a paper's weather was a line an editor
+typed into Settings at launch, and nothing ever changed it. On 24 Nov
+sixteen papers printed launch-day weather beside today's date; Brampton
+read "Brampton, Ont. · 27°C · Humid, smog advisory" in late November.
+
+Now the hub's `weather` job reads Environment and Climate Change
+Canada's city pages every 30 minutes through the MSC GeoMet API
+(`api.weather.gc.ca`: free, no key, English and French). A paper names
+its city page in its `palette.json`, as
+`"weather": {"city": "mb-38", "place": "Winnipeg"}`. Nineteen papers do,
+covering 15 cities, and each city is fetched once however many papers
+share it. Every template now follows four rules:
+
+- A reading observed more than three hours ago is never shown; the
+  widget disappears instead.
+- Every rendering credits ECCC, as its licence asks, and links to the
+  city's forecast.
+- Conditions are only what the station reported. Where a station
+  reports no sky, the strip shows the temperature alone and a forecast
+  box shows the labelled outlook ("Tonight: Mainly cloudy"), never a
+  forecast passed off as an observation.
+- The observation time is on the city's own clock.
+
+Settings shows the live reading where the typed field was. The eight
+papers whose templates have no weather slot carry no block. The old
+`weather_line` and `weather_today` rows stay in the database, unread.
+
+Rolling it needs three server steps beyond the roll itself, all for the
+next roll brief:
+
+1. A line in `/etc/cron.d/civismedia`, which the upgrader repoints but
+   never extends. It is the line `tools/vps/deploy-civis.sh` now writes:
+   `7,37 * * * * www-data cd $REL && PP_SITE=civismedia php cron/run.php weather >> /var/log/civis/weather.log 2>&1`
+2. A time-zone database that knows 2026's changes. British Columbia,
+   Alberta and Manitoba stopped changing clocks this year and stay on
+   UTC−7, −6 and −5 year-round (tzdata 2026b, 2026c and 2026e; ECCC
+   prints PCT, ABT and MBT). On older data, every time printed for
+   those papers is an hour early. The check prints the hour of
+   24 Nov 22:00 UTC in Vancouver, Edmonton and Winnipeg, and must read
+   `15 16 17`:
+   `php -r 'foreach (["Vancouver","Edmonton","Winnipeg"] as $c) echo (new DateTime("2026-11-24 22:00 UTC"))->setTimezone(new DateTimeZone("America/$c"))->format("G "); echo "\n";'`
+   If it doesn't, update the `tzdata` package and reload PHP-FPM.
+3. Outbound HTTPS from the box to `api.weather.gc.ca`.
+
+*Acceptance:* `tests/weather.test.php` passes. It covers all 19
+palettes, the parser on real and hostile records, freshness, one fetch
+per city, a failed city keeping its last reading, the wrapper's failure
+record, and real front pages for 11 papers. In production, the first
+run's log lists every city, each paper with a block shows a reading
+within the hour, and the watch reports the job on time.
+
+**9.7 — Retire the other launch-day widgets that never update.** The
+weather was not the only field typed in at launch and left. The 24 Nov
+audit found these on live front pages:
+
+- breaking-news banners still up from launch day on Brampton, Kelowna
+  (pointing at a newsletter that doesn't exist), Mississauga
+  ("Multi-vehicle crash on Highway 401") and Tri-Cities;
+- events listings dated in August on Grande Prairie (13 and 15 Aug) and
+  Edmonton;
+- Edmonton's six traffic items, each linking to `#`;
+- London's council tracker (a "26 Aug meeting" with invented votes) and
+  its membership bar ("1,240 members", goal 2,000);
+- Prairie Dispatch's markets box, with invented prices "last updated
+  4:15 p.m." from `app/seed.php`'s demo settings.
+
+In code, a banner gets an expiry and hides after it, an event hides
+after its date, and a widget with no real data renders nothing, as the
+weather now does. The invented items are editorial content, cleared
+through the admin, never by SQL; they belong to debt item 1 in
+`CLAUDE.md`.
+
+*Acceptance:* no front page shows a banner past its expiry or an event
+past its date. The invented traffic, council, membership and markets
+items are gone from every live paper and from the packs and the seed.
+
+**9.8 — Print each paper's times on its own clock.** The network formats
+every time in one configured zone, America/Edmonton per `DEPLOY.md` and
+the Kermode runbook, so the story times on every paper are Alberta's.
+Since 1 Nov that is an hour ahead of local time in British Columbia and
+an hour behind in Manitoba and Ontario (two hours behind in Ontario's
+summer). Kermode's runbook deferred this as "a follow-up decision".
+Storage stays in the network zone and only the display converts, using a
+zone per paper. It has the same time-zone database dependency as 9.6.
+
+*Acceptance:* in winter, a story published at 22:00 UTC prints
+3:00 p.m. on Kermode, 4:00 p.m. on the Echo, and 5:00 p.m. on Portage
+and Kitchener.
+
+**9.9 — Two small reader-facing fixes.**
+
+- Kitchener's "Email" share link puts only the story's path in the
+  message, because `url()` returns `/story/<slug>`, so the recipient
+  gets a link that goes nowhere. It needs the absolute URL from
+  `site_url()`, as `app/models.php` builds it for the ingest API.
+- `/about` answers 404 on 11 papers and the hub. Nothing links to it,
+  but readers look for one, and it is where a paper names its owner and
+  how to reach the newsroom.
+
+*Acceptance:* the emailed link opens the story, and every paper and the
+hub answer `/about` with a page.
+
 ## Waiting on the owner (no code needed)
 
 1. **Pacific Post's DNS (found 24 Nov).** `thepacificpost.com` has a
@@ -204,6 +312,20 @@ status. `tests/publish-flow.test.php` checks this in #90.
   database rows, which anyone with write access to the database can
   change. Decide whether they should be hash-chained or shipped off the
   box.
+- **Tip lines that cannot receive mail (found 24 Nov).** Of the 24
+  papers that publish a tips address, only two have a mail server for
+  it: londonlookout.com and westernwire.ca. The other 22 addresses are
+  on domains with no MX record, so nothing is set up to receive a
+  reader's tip. Decide between forwarding on each domain and one
+  working tips address for the network, set in each paper's Settings.
+- **Newsletters (found 24 Nov).** Sign-ups promise "One email a day",
+  and all 27 archives are empty: nothing has ever been sent. Decide
+  between setting up sending (the backlog's mail setup, after 9.4) and
+  hiding the sign-up until a paper's newsletter is enabled.
+- **Three quiet papers (found 24 Nov).** Western Wire's newest story is
+  from 11 Aug, and Bleuet Blanc's and Turtle Island's are from 24 Aug.
+  Decide whether each resumes, pauses with a note to readers, or
+  retires.
 
 ---
 

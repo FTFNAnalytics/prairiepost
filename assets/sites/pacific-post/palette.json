@@ -1,4 +1,5 @@
 {
+  "weather": {"city": "bc-74", "place": "Vancouver"},
   "palette": {
     "ink":     "#201E1D",
     "paper":   "#FBFAF8",

@@ -10,7 +10,7 @@ $bdnSeen = $hero ? [(int) $hero['id']] : [];
 $bdnGrid = latest_posts(6, $bdnSeen);
 $bdnSeen = array_merge($bdnSeen, array_column($bdnGrid, 'id'));
 $bdnTrend = latest_posts(5, []);
-$bdnW = array_pad(explode('|', (string) setting('weather_line')), 2, '');
+$bdnW = array_pad(explode('|', pp_weather_line()), 2, '');
 ?>
 <?php if (!$hero): ?>
 <div class="bdn-wrap" style="padding-top:24px">
@@ -64,8 +64,8 @@ $bdnW = array_pad(explode('|', (string) setting('weather_line')), 2, '');
         <div>
           <div class="ttl">Weather</div>
           <div class="cond"><?= e(trim($bdnW[1]) !== '' ? trim($bdnW[1]) . ', ' : '') ?><?= e(trim($bdnW[0])) ?></div>
+          <div class="src"><?= pp_weather_source_html() ?></div>
         </div>
-        <span class="sun" aria-hidden="true">☀</span>
       </div>
       <?php endif; ?>
       <div class="bdn-trend">

@@ -1,4 +1,5 @@
 {
+  "weather": {"city": "on-4", "place": "Brampton"},
   "palette": {
     "ink":     "#201E1D",
     "paper":   "#F3F2F2",

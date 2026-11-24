@@ -41,7 +41,6 @@ return [
         'contact_email'      => 'tips@cariboocompass.ca',
         'newsletter_heading' => 'The Morning Bearing',
         'newsletter_copy'    => 'North and Central BC\'s news every weekday morning: what happened, what it means, and what to watch — your true north before the day starts.',
-        'weather_line'       => '9°C|Nechako',
         'regions'            => json_encode([
             'prince-george' => 'Prince George',
             'cariboo'       => 'The Cariboo',

@@ -47,7 +47,6 @@ return [
         'newsletter_copy'    => 'What happened in Coquitlam, Port Coquitlam and Port Moody while you slept.',
         'breaking_label'     => 'Riverview lands rezoning heads to public hearing',
         'breaking_url'       => '/story/riverview-lands-rezoning-heads-to-public-hearing',
-        'weather_line'       => 'Coquitlam · 19°C · Cloud breaking by noon',
         'regions'            => json_encode([
             'tri-cities' => 'Tri-Cities',
             'metro'      => 'Metro Vancouver',

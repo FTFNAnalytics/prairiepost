@@ -36,7 +36,6 @@ return [
         'tagline'            => 'Brampton first. The GTA in full.',
         'meta_description'   => 'Independent local journalism for Brampton and the western GTA — city hall, Peel Region, transit, housing, and the stories the big papers drive past.',
         'footer_line'        => 'Independent local journalism for Brampton and the western GTA — city hall, Peel Region, transit, housing, and the stories the big papers drive past.',
-        'weather_line'       => 'Brampton, Ont. · 27°C · Humid, smog advisory',
         'contact_email'      => 'tips@bramptonbulletin.com',
         'newsletter_heading' => 'The Brief',
         'newsletter_copy'    => 'Five things, every weekday at 7 — what happened overnight in Brampton and across the GTA, why it matters, and what to watch at City Hall today.',

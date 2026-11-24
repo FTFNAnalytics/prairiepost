@@ -44,7 +44,6 @@ return [
         'contact_email'      => 'tips@bisonbulletin.ca',
         'newsletter_heading' => 'The Morning Bulletin',
         'newsletter_copy'    => 'Manitoba\'s news every weekday morning — what happened, what it means, and what to watch, from the heart of the province.',
-        'weather_line'       => '2°C|The Forks',
         'regions'            => json_encode([
             'winnipeg' => 'Winnipeg',
             'manitoba' => 'Manitoba',

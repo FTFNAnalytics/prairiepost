@@ -43,7 +43,6 @@ return [
         'contact_email'      => 'tips@steeltownstandard.ca',
         'newsletter_heading' => 'The Morning Pour',
         'newsletter_copy'    => 'Hamilton\'s news every weekday morning — what the city decided, built and argued about, before the first shift ends.',
-        'weather_line'       => '11°C|Harbour haze',
         'regions'            => json_encode([
             'hamilton' => 'Hamilton',
             'ontario'  => 'Ontario',

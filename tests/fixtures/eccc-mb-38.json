@@ -1,0 +1,230 @@
+{
+ "type": "Feature",
+ "id": "mb-38",
+ "properties": {
+  "identifier": "mb-38",
+  "name": {
+   "en": "Winnipeg",
+   "fr": "Winnipeg"
+  },
+  "region": {
+   "en": "City of Winnipeg",
+   "fr": "ville de Winnipeg"
+  },
+  "url": {
+   "en": "https://weather.gc.ca/en/location/index.html?coords=49.89,-97.13",
+   "fr": "https://meteo.gc.ca/fr/location/index.html?coords=49.89,-97.13"
+  },
+  "currentConditions": {
+   "timestamp": {
+    "en": "__OBSERVED__",
+    "fr": "__OBSERVED__"
+   },
+   "temperature": {
+    "unitType": {
+     "en": "metric",
+     "fr": "metric"
+    },
+    "units": {
+     "en": "C",
+     "fr": "C"
+    },
+    "qaValue": {
+     "en": 100,
+     "fr": 100
+    },
+    "value": {
+     "en": -3.1,
+     "fr": -3.1
+    }
+   },
+   "condition": {
+    "en": "Mostly Cloudy",
+    "fr": "Généralement nuageux"
+   },
+   "station": {
+    "code": {
+     "en": "ywg",
+     "fr": "ywg"
+    },
+    "lat": {
+     "en": "49.91N",
+     "fr": "49.91N"
+    },
+    "lon": {
+     "en": "97.24W",
+     "fr": "97.24O"
+    },
+    "value": {
+     "en": "Winnipeg Richardson Int'l Airport",
+     "fr": "Aéroport int. Richardson de Winnipeg"
+    }
+   },
+   "relativeHumidity": {
+    "units": {
+     "en": "%",
+     "fr": "%"
+    },
+    "qaValue": {
+     "en": 100,
+     "fr": 100
+    },
+    "value": {
+     "en": 81,
+     "fr": 81
+    }
+   }
+  },
+  "forecastGroup": {
+   "forecasts": [
+    {
+     "period": {
+      "textForecastName": {
+       "en": "Tonight",
+       "fr": "Ce soir et cette nuit"
+      },
+      "value": {
+       "en": "Tuesday night",
+       "fr": "ce soir et cette nuit"
+      }
+     },
+     "temperatures": {
+      "temperature": [
+       {
+        "unitType": {
+         "en": "metric",
+         "fr": "metric"
+        },
+        "units": {
+         "en": "C",
+         "fr": "C"
+        },
+        "class": {
+         "en": "low",
+         "fr": "low"
+        },
+        "value": {
+         "en": -7,
+         "fr": -7
+        }
+       }
+      ],
+      "textSummary": {
+       "en": "Low minus 7.",
+       "fr": "Minimum moins 7."
+      }
+     },
+     "abbreviatedForecast": {
+      "icon": {
+       "format": "gif",
+       "value": 33,
+       "url": "https://weather.gc.ca/weathericons/33.gif"
+      },
+      "textSummary": {
+       "en": "Mainly cloudy",
+       "fr": "Généralement nuageux"
+      }
+     }
+    },
+    {
+     "period": {
+      "textForecastName": {
+       "en": "Wednesday",
+       "fr": "Mercredi"
+      },
+      "value": {
+       "en": "Wednesday",
+       "fr": "mercredi"
+      }
+     },
+     "temperatures": {
+      "temperature": [
+       {
+        "unitType": {
+         "en": "metric",
+         "fr": "metric"
+        },
+        "units": {
+         "en": "C",
+         "fr": "C"
+        },
+        "class": {
+         "en": "high",
+         "fr": "high"
+        },
+        "value": {
+         "en": 0,
+         "fr": 0
+        }
+       }
+      ],
+      "textSummary": {
+       "en": "High zero.",
+       "fr": "Maximum zéro."
+      }
+     },
+     "abbreviatedForecast": {
+      "icon": {
+       "format": "gif",
+       "value": 3,
+       "url": "https://weather.gc.ca/weathericons/03.gif"
+      },
+      "textSummary": {
+       "en": "Mainly cloudy",
+       "fr": "Généralement nuageux"
+      }
+     }
+    },
+    {
+     "period": {
+      "textForecastName": {
+       "en": "Wednesday night",
+       "fr": "Mercredi soir et nuit"
+      },
+      "value": {
+       "en": "Wednesday night",
+       "fr": "mercredi soir et nuit"
+      }
+     },
+     "temperatures": {
+      "temperature": [
+       {
+        "unitType": {
+         "en": "metric",
+         "fr": "metric"
+        },
+        "units": {
+         "en": "C",
+         "fr": "C"
+        },
+        "class": {
+         "en": "low",
+         "fr": "low"
+        },
+        "value": {
+         "en": -2,
+         "fr": -2
+        }
+       }
+      ],
+      "textSummary": {
+       "en": "Low minus 2.",
+       "fr": "Minimum moins 2."
+      }
+     },
+     "abbreviatedForecast": {
+      "icon": {
+       "format": "gif",
+       "value": 33,
+       "url": "https://weather.gc.ca/weathericons/33.gif"
+      },
+      "textSummary": {
+       "en": "Mainly cloudy",
+       "fr": "Généralement nuageux"
+      }
+     }
+    }
+   ]
+  }
+ }
+}

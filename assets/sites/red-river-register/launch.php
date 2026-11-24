@@ -43,7 +43,6 @@ return [
         'contact_email'      => 'tips@redriverregister.ca',
         'newsletter_heading' => 'The Morning Record',
         'newsletter_copy'    => 'The valley\'s day, on the record — councils, main streets and the river itself, every weekday morning before the gravel roads fill.',
-        'weather_line'       => '3°C|Red River at Selkirk',
         'regions'            => json_encode([
             'red-river-valley' => 'Red River Valley',
             'manitoba'         => 'Manitoba',

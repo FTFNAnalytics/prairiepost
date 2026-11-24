@@ -48,7 +48,6 @@ return [
         'contact_email'      => 'tips@torontotelegraph.ca',
         'newsletter_heading' => 'The Morning Wire',
         'newsletter_copy'    => 'Toronto\'s news every weekday morning — what the city decided, built and argued about, before the first streetcar is full.',
-        'weather_line'       => '12°C|Light cloud',
         'regions'            => json_encode([
             'toronto' => 'Toronto',
             'ontario' => 'Ontario',
