@@ -19,9 +19,10 @@ from outside on 24 Nov).
 since 24 Nov, the first paper to. No paper has a privacy page yet (see
 the policy decisions below).
 
-**Built, not rolled:** photo metadata stripping (9.1 below, #91) and
-the image-hold fix for an editor's publish (9.5, #90). Both reach
-production with the roll after `7cb82fb`.
+**Merged, not rolled:** photo metadata stripping (9.1 below, #91) and
+the image-hold fix for an editor's publish (9.5, #90). The brief that
+rolls them is `docs/briefs/roll-72f8adccbcca.md`. It then cleans the
+images already stored.
 
 **The platform phases below (0–3):** Phases 2 and 3 are done. Phase 0
 is done except the GitHub default branch, which is the owner's switch.
@@ -50,7 +51,7 @@ newsroom's working copy of that plan; this file is the repository's.
 | 2 Template registry | Done. 2.3 is in the backlog by owner decision. |
 | 3 Hermes ingest | Done, and extended (above). |
 | Hub 1–8 | See `PLAN-CIVIS.md` and `DEPLOY-CIVIS.md`. |
-| **9 Exposure and upkeep** | **Next. 9.1 and 9.5 built 24 Nov (#91, #90); 9.2–9.4 open.** |
+| **9 Exposure and upkeep** | **Next. 9.1 and 9.5 merged 24 Nov (#91, #90), rolling with `roll-72f8adccbcca`; 9.2–9.4 open.** |
 
 ---
 
@@ -60,9 +61,10 @@ It is numbered after the hub plan's Phase 8, the last numbered phase on
 either plan. Every item below was confirmed open against the code on
 24 Nov, not taken from older notes.
 
-**9.1 — Strip embedded metadata from every stored image.** *Built
-24 Nov, not rolled.* Until now every path stored image bytes exactly as
-they arrived:
+**9.1 — Strip embedded metadata from every stored image.** *Merged
+24 Nov (#91), not rolled; `docs/briefs/roll-72f8adccbcca.md` rolls it
+and runs the cleanup.* Until now every path stored image bytes exactly
+as they arrived:
 
 - the newsroom's uploads, including ads and profile photos;
 - `POST /api/ingest-media`;
@@ -86,8 +88,9 @@ the visible credit line.
 What remains after the roll is cleaning the uploads already on disk.
 `tools/strip-image-metadata.php` runs a dry run first and `--apply`
 second; it is lossless, atomic per file, keeps each file's owner and
-mode, and is safe to re-run. It needs a VPS brief run from the live
-release. The backup sets taken before the cleanup still hold the
+mode, and is safe to re-run. The roll brief runs it from the new
+release as `www-data`, which owns the shared uploads, right after the
+roll. The backup sets taken before the cleanup still hold the
 originals until they age out (7 daily + 4 weekly, about four weeks); the
 owner decides whether to purge them sooner.
 
@@ -150,8 +153,9 @@ becomes "set on the server", and a migration clears the stored rows.
 *Acceptance:* no `smtp_pass` value exists in the database or in its
 backups; mail still sends.
 
-**9.5 — An editor's publish clears the image hold.** *Built in PR #90
-(24 Nov), not rolled.* The story editor published without clearing
+**9.5 — An editor's publish clears the image hold.** *Merged 24 Nov
+(#90), not rolled; it rolls with the same brief.* The story editor
+published without clearing
 `awaiting_image` (the bulk status change already clears it). A story an
 editor published by hand and later moved back to draft therefore
 re-entered the image agent's queue, and `/api/ingest-publish` could
