@@ -215,6 +215,21 @@ holding a capability it should not have.
 
 ## Current operational state (as of the story-lookup roll, 21 Nov 2026)
 
+- **24 Nov, checked from outside (no agent report yet).**
+  - **The `7cb82fb` roll has run.** All 27 domains serve
+    `/assets/js/bulk.js`, which only the `7cb82fb` tree carries. It was
+    code-only, so the schema stays 25. Its report, including the routes
+    pass (D5, D6), hasn't reached this file.
+  - **Kermode Chronicle carries the GA4 tag `G-RTEJHC0DFB`,** pasted
+    into its Analytics snippet setting. It is served once, in `<head>`,
+    on every public page type, and is absent from the sign-in page and
+    from every sister paper. It is the network's first analytics tag,
+    and no paper has a privacy page.
+  - **thepacificpost.com's apex has a stray second A record,**
+    `217.21.85.231` (a Hostinger server answering 403), beside the VPS,
+    so about half of apex requests fail TLS. `www` points only at the
+    VPS, as does every other domain, bare and `www`. The fix is the
+    owner's, at the registrar.
 - **Latest known state (23 Nov, from the VPS agent's report when the
   `7cb82fb` roll stopped at A3).** All 27 sites serve release
   `feb2b1f4f6eb` (the merge of #84), rolled the night of 22 Nov, at
@@ -478,8 +493,8 @@ holding a capability it should not have.
   ancestor of the pin, using the GitHub compare API, instead of naming
   releases this file might have wrong. Write future rolls' A3 the same
   way.
-- **The Stories list's bulk status change is BUILT (23 Nov), not yet
-  rolled.** A checkbox per row and a bar beside "+ New story"
+- **The Stories list's bulk status change is LIVE (rolled with
+  `7cb82fb`; see the 24 Nov check).** A checkbox per row and a bar beside "+ New story"
   (`admin/posts.php`, `assets/js/bulk.js`, `pp_bulk_set_status()` in
   app/models.php): editors move up to 100 ticked stories at once to
   published (live now), in review or draft; authors move only their own
@@ -489,10 +504,10 @@ holding a capability it should not have.
   what the story editor does (stamps an empty or future `published_at`,
   maps an unassigned story to the paper whose admin it is, fires the
   agent auto-queue) and also clears `awaiting_image`; one audit row,
-  `stories.bulk_status`, per action. No schema step and no new route:
-  it reaches production with the next pinned roll.
-- **Each paper's newsroom wears the paper — BUILT (23 Nov), not yet
-  rolled.** On a paper's own domain the admin takes that paper's
+  `stories.bulk_status`, per action. No schema step and no new route.
+- **Each paper's newsroom wears the paper — LIVE (rolled with
+  `7cb82fb`; Kermode's admin wore its accent in the owner's 24 Nov
+  screenshot).** On a paper's own domain the admin takes that paper's
   masthead (its mark or image wordmark, its name set the way its front
   page sets it), its rail/band/nav colours, its accent and spot (buttons,
   links, status chips) and its fonts, from the `admin` block of
@@ -506,8 +521,28 @@ holding a capability it should not have.
   (Playfair Display is declared in admin.css itself, lesson 9). The
   admin sheet's URL carries a content hash, because no static asset is
   served with Cache-Control. A new paper's block is scaffolded by
-  `tools/make-paper.php` and replaced at brand time. No schema step;
-  it reaches production with the next pinned roll.
+  `tools/make-paper.php` and replaced at brand time. No schema step.
+- **Embedded image metadata is stripped — BUILT (24 Nov), not yet
+  rolled (PLAN.md 9.1).** Until now every upload path stored bytes as
+  received, so a phone photo published its GPS position, camera and
+  time. Every image written under /uploads now goes through
+  `pp_image_clean()` (`app/imagemeta.php`):
+  - the newsroom's uploads, `/api/ingest-media`, `image` URLs fetched by
+    `/api/ingest`, and wire images cached from a link;
+  - a lossless container rewrite of JPEG/PNG/WebP/GIF (no GD, no
+    re-encode) that keeps the colour profile, JFIF/Adobe markers,
+    animation and a non-default orientation, alone;
+  - EXIF, XMP, IPTC, comments, text chunks, MPF, C2PA Content
+    Credentials and anything after the image's end marker are dropped;
+  - a file it cannot walk end to end is refused (ingest-media answers
+    422), never stored as it came.
+
+  No schema step and no new route. **After the roll that carries it,
+  the uploads already on disk still need cleaning:** a VPS brief runs
+  `php tools/strip-image-metadata.php` from `$REL` (dry run, then
+  `--apply`; lossless, atomic per file, keeps owner and mode,
+  idempotent). Backup sets taken before that run still hold the
+  originals until they age out.
 - **Test residue awaiting owner cleanup (admin UI, never SQL):** on
   Surrey — draft #315 (`routes-check-agent-ingest-v2-draft`), and
   story #316 (`routes-check-publish-on-image-test`) which the 28 Sep
@@ -523,16 +558,23 @@ holding a capability it should not have.
 
 ## Known debt, in the order it should be paid
 
-**The paydown schedule now lives in `PLAN.md`** — four phases and a
-compliance gate that papers 14 and 15 are built against. The list below
-remains the inventory; PLAN.md is the order and the acceptance tests.
-Check any new-paper work against the PLAN.md gate before starting it.
+**The paydown schedule now lives in `PLAN.md`**: the platform phases,
+the compliance gate every new paper is built against, and (since
+24 Nov) Phase 9, the next work, with what waits on the owner. The list
+below remains the inventory; PLAN.md is the order and the acceptance
+tests. Check any new-paper work against the PLAN.md gate before starting
+it.
 
-1. **Every paper is indexable** — `robots.txt` is `Allow: /` with the
-   sitemap advertised — and every paper's content is invented editorial
-   about a real city, including figures and votes attributed to real
-   councils. Either `Disallow: /` until the content is real, or replace
-   the packs. This grows with each launch.
+1. **[HALF PAID — PLAN.md 0.4: every page is noindex until its paper's
+   `indexing_enabled` is set, and none is.]** What remains: the older
+   papers' content is invented editorial about a real city, including
+   figures and votes attributed to real councils, publicly readable if
+   not indexed. Replace a paper's pack before its indexing is switched
+   on. The newer papers' inaugural editions are about the papers
+   themselves, true by construction, so launches no longer grow this.
+   Original text: every paper is indexable — `robots.txt` is
+   `Allow: /` with the sitemap advertised. (`robots.txt` stays `Allow`
+   on purpose: a disallowed crawler never sees the noindex.)
 2. **[PAID — phase 2, Aug 24: convention dispatch + chrome partials;
    a new paper is files only, scaffolded by tools/make-paper.php]**
    A new paper edits four shared files — a dispatch arm in
@@ -564,7 +606,8 @@ Check any new-paper work against the PLAN.md gate before starting it.
    change six live papers' typography in one release; decide whether
    that is wanted before doing it.
 
-4. **Nginx has no `default_server` on 443, and the papers are not
+4. **[OPEN — PLAN.md 9.2, with converting the 14 legacy blocks.]**
+   **Nginx has no `default_server` on 443, and the papers are not
    symmetric across address families.** With no explicit default, nginx
    falls back to the first block bound to each socket — Brampton on
    IPv4, the Institute on IPv6. A paper whose block is missing one
@@ -578,7 +621,10 @@ Check any new-paper work against the PLAN.md gate before starting it.
    an explicit `default_server` that rejects unknown SNI is wanted
    rather than letting the first-loaded paper serve as the fallback.
 
-5. **`upgrade-papers.sh` cannot detect template loss.** Its guard
+5. **[PAID — PLAN.md 1.4: before a roll the upgrader records each
+   domain's status, title AND front-page stylesheet set (`front_css`),
+   and rolls the group back if any of them changes.]**
+   **`upgrade-papers.sh` cannot detect template loss.** Its guard
    compares each domain's `<title>`, which comes from the database, so a
    paper whose CSS and templates are missing from the release still
    passes. Assert that each paper's expected stylesheet appears in the
@@ -587,8 +633,9 @@ Check any new-paper work against the PLAN.md gate before starting it.
    slugs in one namespace in the same register, and the seeder's failure
    mode is a silent `story exists, skipped`. Scope it per site or have
    the seeder prefix automatically.
-7. **GitHub's default branch is the dead line.** Repoint it to the
-   release branch so the trunk that is visible is the trunk that ships.
+7. **[OPEN — the owner's switch, PLAN.md 0.3.]** **GitHub's default
+   branch is the dead line.** Repoint it to the release branch so the
+   trunk that is visible is the trunk that ships.
 
 ## Phase 1 security invariants (do not regress)
 
@@ -627,6 +674,12 @@ Full detail and evidence: `docs/build/phase-01-handoff.md`.
   (app/transport.php): destination policy, per-hop redirect validation,
   pinned connections, streamed size caps. Never hand a user-supplied URL
   to raw curl.
+- **Stored images** (24 Nov 2026): every image written under /uploads
+  goes through `pp_image_clean()` (`app/imagemeta.php`), which strips
+  embedded metadata and refuses a file it cannot walk. Never
+  `move_uploaded_file()`, copy or write image bytes there directly. A
+  new upload path writes the cleaned bytes, and gets a case in
+  `tests/imagemeta-http.test.php`.
 - **First administrator** comes from `php tools/setup-admin.php` on the
   server; the login page never creates accounts.
 - **Indexing is per-site opt-in** (`indexing_enabled`, default OFF —

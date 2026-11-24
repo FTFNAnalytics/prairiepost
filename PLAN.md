@@ -1,43 +1,205 @@
 # Roadmap — the platform plan and where it stands
 
-## Current state · 31 Aug 2026
+## Current state · 24 Nov 2026
 
-**Live:** fifteen papers plus the CivisMedia hub, all serving one release
-(the hub joined the release roll in #46 after drifting on its own
-deploys). The sixteenth paper, the London Lookout, is built, tested and
-merged, waiting only on londonlookout.com pointing at the server.
+**Live:** 27 sites, which is 26 papers and the CivisMedia hub, at
+schema version 25. Steeltown Standard and Toronto Telegraph are in that
+count; their launch report hasn't reached the repository. One foundation
+paper, `terminal-city-times`, waits for its brand package. Twelve more
+mastheads are named in `NETWORK-EXPANSION.md`; none is registered or
+built.
 
-**Of the four phases below:** Phase 1 (launch machinery), Phase 2
-(template registry) and Phase 3 (Hermes ingest) are **done** and proved
-in production — papers launch from packs with no config edit, and the
-ingest path has carried a real agent filing end to end: filed with a
-scoped token, badged in the admin, reviewed and rejected by the owner.
-**Phase 0 is not built** and is now the largest standing gap: no
-committed baseline harness, no seed/render checks in CI (CI runs lint
-and the unit suite only), the GitHub default branch still points at a
-stale feature branch, and — the risk item — every masthead of
-demonstration content remains **indexable**. The owner's recorded
-decision is noindex-until-real-editorial; `indexing_enabled` does not
-exist in the code yet.
+**Rolled:** `7cb82fb` (the Stories list's bulk status change, and each
+paper's newsroom wearing that paper's branding), a code-only roll from
+`feb2b1f4f6eb`. Its report hasn't reached the repository, but all 27
+domains serve `assets/js/bulk.js`, which only that tree carries (checked
+from outside on 24 Nov).
 
-**Working now:** single-agent Hermes discovery is proven (wire map +
-nine sourced proposals across three papers, nothing filed); the wire
-itself was repaired on 31 Aug — five dead feeds replaced after
-verification, `durham` and `northern` given their own sources, and the
-one-URL-one-bucket rule documented after it silently emptied `ontario`.
-First agent-filed stories are the next milestone.
+**Analytics:** Kermode Chronicle has carried the Google Analytics tag
+since 24 Nov, the first paper to. No paper has a privacy page yet (see
+the policy decisions below).
 
-**Operational debts, from the 31 Aug audit:** the hub's five-minute
-watch read only `sites.domain` and so never monitored the six papers
-launched since Phase 1 (fixed in code; needs the next release roll); the
-nightly 03:17 backup is failing and needs server-side diagnosis from
-`/var/log/civis/backup.log`; `tri-cities` and `saguenay` still have no
-working wire source. Two-step sign-in was removed entirely while the
-network is private (#45-#48) — recovery is `tools/reset-password.php`
-over SSH, documented in `docs/ACCOUNT-RECOVERY.md`.
+**Built, not rolled:** photo metadata stripping (9.1 below, #91) and
+the image-hold fix for an editor's publish (9.5, #90). Both reach
+production with the roll after `7cb82fb`.
 
-The hub's own Roadmap page (database-backed, edited in the admin) is the
-newsroom's working copy; this file is the repository's.
+**The platform phases below (0–3):** Phases 2 and 3 are done. Phase 0
+is done except the GitHub default branch, which is the owner's switch.
+Phase 1 is done except converting the 14 hand-written nginx blocks and
+the catch-all server, both of which have moved to Phase 9. Phase 3's
+ingest path has kept growing since it closed:
+
+- agent ingest v2: media upload and hub-minted keys (27 Sep);
+- the publish-on-image lane (28 Sep);
+- story lookup (21 Nov);
+- the read lane and the two edit lanes, for drafts and published
+  stories (22–23 Nov).
+
+The contract is `docs/api-ingest.md`.
+
+**The hub's phases (1–8)** are in `PLAN-CIVIS.md`, with their runbooks
+in `DEPLOY-CIVIS.md` §9–14. Phase 8 (resilience) built the backups, the
+five-minute watch, revisions, session lifecycle and the edge kit. The
+hub's own Roadmap page (database-backed, edited in the admin) is the
+newsroom's working copy of that plan; this file is the repository's.
+
+| Phase | Status, 24 Nov |
+| --- | --- |
+| 0 Safety nets | 0.1, 0.2, 0.4 done. 0.3 waits on the owner. |
+| 1 Launch machinery | 1.1, 1.4, 1.5 done. 1.2 is done for new blocks; the 14 legacy blocks and 1.3 are now 9.2. |
+| 2 Template registry | Done. 2.3 is in the backlog by owner decision. |
+| 3 Hermes ingest | Done, and extended (above). |
+| Hub 1–8 | See `PLAN-CIVIS.md` and `DEPLOY-CIVIS.md`. |
+| **9 Exposure and upkeep** | **Next. 9.1 and 9.5 built 24 Nov (#91, #90); 9.2–9.4 open.** |
+
+---
+
+## Phase 9 — Exposure and upkeep (next)
+
+It is numbered after the hub plan's Phase 8, the last numbered phase on
+either plan. Every item below was confirmed open against the code on
+24 Nov, not taken from older notes.
+
+**9.1 — Strip embedded metadata from every stored image.** *Built
+24 Nov, not rolled.* Until now every path stored image bytes exactly as
+they arrived:
+
+- the newsroom's uploads, including ads and profile photos;
+- `POST /api/ingest-media`;
+- image URLs fetched by `POST /api/ingest`;
+- wire images cached from a pasted link.
+
+So a phone photo published its GPS position, its camera and the time it
+was taken. For a newsroom that is a source-protection failure.
+`app/imagemeta.php` rewrites JPEG, PNG, WebP and GIF containers
+losslessly, copying the compressed image data byte for byte. It keeps
+only what a picture needs to look right: the colour profile, the JFIF
+and Adobe markers, the animation and looping blocks, and a non-default
+orientation, kept on its own. A file it cannot walk end to end is
+refused, never stored unexamined.
+
+C2PA Content Credentials are removed too. A manifest can embed the same
+EXIF and creator assertions, and once anything else is removed it would
+no longer validate. Disclosure that a graphic was generated belongs in
+the visible credit line.
+
+What remains after the roll is cleaning the uploads already on disk.
+`tools/strip-image-metadata.php` runs a dry run first and `--apply`
+second; it is lossless, atomic per file, keeps each file's owner and
+mode, and is safe to re-run. It needs a VPS brief run from the live
+release. The backup sets taken before the cleanup still hold the
+originals until they age out (7 daily + 4 weekly, about four weeks); the
+owner decides whether to purge them sooner.
+
+*Acceptance:* a GPS-tagged photo sent through the admin upload and
+through `/api/ingest-media` is stored with no location, camera or time
+(PHP's own EXIF reader finds none), decodes to identical pixels, and
+still displays upright. A truncated photo is refused on both paths. The
+cleanup's dry run changes nothing, and a second `--apply` finds nothing.
+All of this is in `tests/imagemeta.test.php` and
+`tests/imagemeta-http.test.php`. The production cleanup's report is
+filed.
+
+**9.2 — Convert the 14 legacy nginx blocks, and add the catch-all.**
+This is 1.2's remainder and 1.3, which was never built.
+
+- Every block takes `tools/vps/vhost.template`'s shape and routes
+  through `router.php`. Every API route added since September has needed
+  a hand-written pass over those 14 blocks (the 7cb82fb roll carried
+  another one).
+- An explicit `default_server` on 80 and 443, both address families,
+  answers unknown hostnames with `444` behind a self-signed certificate.
+  Without one, nginx falls back to the first block bound to each socket.
+  That is how Turtle Island served Brampton's certificate.
+- The same pass audits every block for both-family `listen` pairs.
+
+Two cautions. The box hosts foreign tenants (the Institute and Calgary
+Dispatch), whose blocks must be left alone, and any tenant's broken
+block fails the global `nginx -t`. The runbooks currently say "do not
+add `default_server`"; the brief for this item replaces that rule
+rather than breaking it quietly.
+
+*Acceptance:* a route added to `router.php` alone serves on every paper.
+`curl` against an unknown hostname gets 444 on both families, never a
+sister paper's certificate. Every paper keeps its masthead and
+stylesheet through the conversion; the upgrader's guard runs it.
+
+**9.3 — Prune old release directories.** Every roll leaves full copies
+under `/var/www/prairiepost-<sha12>-<label>`, and nothing removes them.
+Eventually the disk fills and all 27 sites fail together. The pruner:
+
+- keeps each group's live release and a small number of predecessors;
+- never touches a directory any enabled nginx block or cron file
+  references;
+- never touches roots outside `/var/www/prairiepost-*`.
+
+Since migrations are forward-only past steps 22 and 23
+(`docs/MIGRATION-COMPAT.md`), a release older than the stored schema
+cannot serve as a fallback anyway.
+
+*Acceptance:* after a roll, at most N release directories remain per
+group, the live ones intact, and a dry run lists exactly what it would
+remove.
+
+**9.4 — Move the SMTP password out of the database.** Today
+`smtp_pass` is a `settings` row written from the Newsletter page and
+read by `app/mailer.php`. The AI and Google keys already live in the
+server-only config. The password moves there too, the admin field
+becomes "set on the server", and a migration clears the stored rows.
+
+*Acceptance:* no `smtp_pass` value exists in the database or in its
+backups; mail still sends.
+
+**9.5 — An editor's publish clears the image hold.** *Built in PR #90
+(24 Nov), not rolled.* The story editor published without clearing
+`awaiting_image` (the bulk status change already clears it). A story an
+editor published by hand and later moved back to draft therefore
+re-entered the image agent's queue, and `/api/ingest-publish` could
+publish it again over the editor's decision. #90 clears the flag when an
+editor saves a story as published or scheduled. Rows already in
+production keep their flag until saved once after the roll; #90 carries
+a read-only query that counts them.
+
+*Acceptance:* a story published or scheduled from the editor never
+appears in `GET /api/ingest-queue` afterwards, whatever its later
+status. `tests/publish-flow.test.php` checks this in #90.
+
+## Waiting on the owner (no code needed)
+
+1. **Pacific Post's DNS (found 24 Nov).** `thepacificpost.com` has a
+   second A record, `217.21.85.231`, beside the VPS. That address is a
+   Hostinger server answering 403. About half of visits to the bare
+   domain fail with a certificate error; `www.thepacificpost.com` is
+   unaffected. Delete that record in the domain's DNS at Hostinger.
+   Every other domain, bare and `www`, points only at the VPS.
+2. **Agent key grants for the editing API.** It is live, but no key
+   carries the read, edit-drafts or update-published grants until you
+   name which keys get them. Granting one is a revoke and re-mint.
+3. **Surrey's test residue.** Delete draft #315 and story #316 in
+   Surrey's admin (never by SQL); #316 is publicly visible. Two test PNGs
+   sit under `/uploads/2026/09/`.
+4. **An off-site destination for backups.** They run nightly and are
+   verified, but they sit on the same server as everything else. The
+   hook is `/etc/civis-backup-offsite`.
+5. **The ops alert email,** in the hub's Settings → Security. Until it
+   is set, the five-minute watch can only show problems on the
+   dashboard, not email them.
+6. **The GitHub default branch** (0.3): repoint it to
+   `claude/master-dashboard-control-room-nr3mp4`.
+
+## Policy decisions before more code
+
+- **AI-assistance disclosure.** The `ai_disclosure` setting is blank
+  (off) by default and no launch pack sets it. Decide whether readers
+  see a note on stories drafted with the desk's help.
+- **A privacy page and reader consent.** Kermode has carried the
+  Google Analytics tag since 24 Nov, and no paper has a privacy page
+  yet. Settle this before any other paper adds a tag, and before any
+  paper's indexing is switched on.
+- **A tamper-evident audit log.** Today's audit rows are ordinary
+  database rows, which anyone with write access to the database can
+  change. Decide whether they should be hash-chained or shipped off the
+  box.
 
 ---
 
@@ -51,6 +213,23 @@ and the ingest pipeline before any Hermes agent holds a token.
 ---
 
 ## Phase 0 — Safety nets (one session)
+
+> **Status, 24 Nov:** 0.1, 0.2 and 0.4 done; 0.3 is the owner's switch
+> (above). CI runs on every PR to the release branch:
+>
+> - lint;
+> - the generated schema check;
+> - brand palettes validate;
+> - the suite on SQLite and on PostgreSQL;
+> - the release-flow fixture;
+> - `seed-all.sh` with zero skipped lines;
+> - the render baseline against the base branch (`tools/render-gate.sh`).
+>
+> 0.4 shipped as the per-site `indexing_enabled` setting, default off.
+> Until an admin enables it, every page carries a noindex meta, and
+> feeds, sitemaps and social cards carry an `X-Robots-Tag` header. None
+> had been enabled at the last check. `robots.txt` deliberately stays
+> `Allow`, because a crawler that is disallowed never sees the noindex.
 
 The render-diff harness has caught three shipped-invisible defects
 (stray newline on twelve papers, wrong-layer EN DIRECT check, Pickering
@@ -93,10 +272,27 @@ paper serves the noindex meta until its flag is flipped.
 
 ## Phase 1 — Launch machinery (the step that has caused every stop)
 
-> **Status, Aug 24:** live on the server. 1.1 resolves all 22 hostnames
-> from the database (config arms still present, retirement pending);
-> 1.2's template is committed, conversion of existing blocks pending;
-> 1.3 and 1.4 done; 1.5 done. Papers 14–15 can launch config-edit-free.
+> **Status, 24 Nov:** 1.1, 1.4 and 1.5 done.
+>
+> - **1.1:** the `domains` table resolves the tenant ahead of the
+>   config, and every launch since August has been config-edit-free.
+>   Whether the live config's own host arms have been retired has not
+>   been confirmed on the server.
+> - **1.4:** `upgrade-papers.sh` records each domain's status, title
+>   *and* front-page stylesheet set before a roll, and rolls the group
+>   back if any of them changes. That is the template-loss check.
+> - **1.2:** the template is committed and every block created since is
+>   generated from it (13 of 27). The 14 hand-written blocks were never
+>   converted.
+> - **1.3:** the catch-all was never built.
+>
+> 1.2's remainder and 1.3 are Phase 9.2.
+>
+> *(Aug 24 status, for the record: 1.1 resolved all 22 hostnames from
+> the database; 1.2's template was committed; 1.3 was recorded as done.
+> That 1.3 entry was wrong. No catch-all exists in the template, the
+> deploy scripts or any runbook, and the runbooks forbid adding
+> `default_server`.)*
 
 Three of the last four deployments hard-stopped at least once, and
 every stop but one traces to the same two designs: a hand-edited
@@ -213,6 +409,14 @@ rendering front page with no shared-file edits.
 > creation/invisibility/idempotency, and token hermes-quebec issued to
 > /root/hermes-tokens/ (never printed). Phase 3 is closed; the ingest
 > path opens for real the day the first Hermes agent receives the token.
+>
+> **Since then (24 Nov):** ingest v2 (27 Sep) put key minting on the
+> hub's API-keys page and added `/api/ingest-media`. The publish-on-image
+> lane followed on 28 Sep. Story lookup (`/api/ingest/lookup`) went live
+> 21 Nov. The read lane (`GET /api/ingest/stories`) and the two edit lanes
+> (`PATCH /api/ingest/drafts/{ref}` and `POST /api/ingest/update`) went
+> live 22–23 Nov, each behind its own grant. The current contract is
+> `docs/api-ingest.md`; `docs/HERMES-INGEST.md` is the original.
 
 Agents tracking databases and public sources will feed the papers. The
 write path they use decides whether the network stays trustworthy. No
@@ -246,10 +450,11 @@ ethical disclosure and the debugging trail.
 B; a duplicate filing dedupes; a revoked token fails closed; a
 published agent story shows its sources box and automated byline.
 
-## The compliance gate for papers 14 and 15
+## The compliance gate for every new paper
 
-A new paper build is accepted only when all of the following hold —
-this is the definition of done the next build is written against:
+Written for papers 14 and 15; every paper since has been built against
+it, and the next one is too. A new paper build is accepted only when
+all of the following hold:
 
 1. **Files only.** The build adds `assets/sites/<slug>/` (palette,
    launch pack, art), `assets/css/<template>.css`, three view
@@ -269,11 +474,24 @@ this is the definition of done the next build is written against:
 6. **Launch is config-edit-free:** DNS, generated nginx block, cert,
    seed. If the deployment brief contains a config-file edit step, the
    phase-1 work isn't finished — stop and finish it first.
+7. **The newsroom wears the paper** (since 23 Nov): the palette's
+   `admin` block is chosen from the rendered masthead, and
+   `tests/admin-brand.test.php` passes for it.
 
 ## Standing backlog (not gating, tracked)
 
-Newsletter infrastructure per paper (owner mail setup: mailboxes, SMTP
-identity, SPF, DKIM, test send); `NewsArticle` JSON-LD and per-story
-OG images once indexing turns on; desk pagination and related-stories
-before agent volume arrives; analytics beyond the `views` column;
-replacing demonstration packs with real editorial, paper by paper.
+- Newsletter infrastructure per paper: the owner's mail setup
+  (mailboxes, SMTP identity, SPF, DKIM, a test send). No paper has its
+  newsletter enabled.
+- `NewsArticle` JSON-LD and per-story OG images once indexing turns on.
+- Desk pagination and related stories before agent volume arrives.
+- Analytics beyond the `views` column.
+- Replacing the older demonstration packs with real editorial, paper
+  by paper. The newer papers' inaugural editions are about the papers
+  themselves and true by construction. The older packs still carry
+  invented editorial about real cities, kept out of search only by
+  noindex.
+- Accessibility levelling (2.3), as a declared-diff pass with
+  screenshot review.
+- Slug renames with redirects. No redirect infrastructure exists, so
+  the editing API never changes a URL.
