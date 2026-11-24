@@ -386,7 +386,7 @@ holding a capability it should not have.
   an editor publishes and later moves back to draft never returns to
   the image queue (the Stories list's bulk publish does this from the
   7cb82fb roll on; the story editor was fixed on 24 Nov, after that
-  pin, and needs a later one). Operating guide for the two agents:
+  pin, and rides the roll after it). Operating guide for the two agents:
   `docs/agent-workflow.md`. The 28 Sep mini routes pass added both
   routes to the same 14 legacy blocks (backups at
   /root/nginx-mini-routes-20260928T020338Z); all 25 domains fail
