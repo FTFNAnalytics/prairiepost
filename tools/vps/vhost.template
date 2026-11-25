@@ -39,6 +39,16 @@ server {
         fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
         fastcgi_pass unix:__PHP_SOCKET__;
     }
+    # pp-tips-unlogged: the tips form is never in the access log (PLAN.md
+    # 9.10), which would pair each sender's IP with a tip stored without
+    # one. It passes straight to the router, with no internal redirect, so
+    # this location's access_log is the one that applies.
+    location ~ ^/tips/?$ {
+        access_log off;
+        include fastcgi_params;
+        fastcgi_param SCRIPT_FILENAME $document_root/router.php;
+        fastcgi_pass unix:__PHP_SOCKET__;
+    }
     location ~ \.php$ {
         try_files $uri =404;
         include fastcgi_params;

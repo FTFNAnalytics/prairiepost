@@ -137,6 +137,74 @@ PHASE="starting"
 say()  { PHASE="$*"; echo; echo "== $*"; }
 fail() { echo "FATAL: $*" >&2; exit 1; }
 
+# --- Two edits to live server blocks (PLAN.md 9.2 and 9.10) ---------------
+# Both are idempotent by marker, insert only beside the block's PHP handler
+# (`location ~ \.php$`), so certbot's port-80 redirect servers are never
+# touched, and use the php-fpm socket the block already passes PHP to.
+# They run inside the vhost loop below, so the roll's nginx test, its
+# masthead and stylesheet guard and its rollback all cover them.
+
+# The php-fpm socket a block passes PHP to ('' when it has none).
+pp_block_socket() { grep -oE 'fastcgi_pass[[:space:]]+unix:[^;[:space:]]+' "$1" | head -1 | sed -E 's/.*unix://'; }
+
+# Insert lines (from stdin) before each PHP handler in a block, in place.
+pp_before_php_handler() { # $1 vhost file
+  local add; add=$(cat)
+  awk -v add="$add" '
+    /^[[:space:]]*location[[:space:]]+~[[:space:]]+\\\.php\$[[:space:]]*\{/ {
+      match($0, /^[[:space:]]*/); ind = substr($0, 1, RLENGTH)
+      n = split(add, lines, "\n")
+      for (i = 1; i <= n; i++) print ind lines[i]
+    }
+    { print }' "$1" > "$1.pp-tmp" && cat "$1.pp-tmp" > "$1"; rm -f "$1.pp-tmp"
+}
+
+# A hand-written block routes only the paths written into it, so every
+# route added since (/about, /tips, the /api lanes) needed a hand pass over
+# each one, and /about never had one. Give it the generated blocks' front
+# controller: its `location /` fallback becomes router.php, behind the
+# same internal-only exact location. Its rewrite lines stay and go on
+# serving the routes they already serve. -> 0 when the file changed.
+pp_front_controller() { # $1 vhost file
+  local sock
+  grep -q 'pp-front-controller' "$1" && return 1
+  grep -q 'location = /router.php' "$1" && return 1
+  grep -qE 'try_files[[:space:]]+\$uri[[:space:]]+\$uri/[[:space:]]+=404;' "$1" || return 1
+  sock=$(pp_block_socket "$1"); [ -n "$sock" ] || return 1
+  pp_before_php_handler "$1" <<EOF
+# pp-front-controller: paths no rewrite names go to router.php, as in generated blocks.
+location = /router.php {
+    internal;
+    include fastcgi_params;
+    fastcgi_param SCRIPT_FILENAME \$document_root\$fastcgi_script_name;
+    fastcgi_pass unix:$sock;
+}
+EOF
+  sed -i -E 's#try_files([[:space:]]+)\$uri([[:space:]]+)\$uri/([[:space:]]+)=404;#try_files\1$uri\2$uri/\3/router.php$is_args$args;#' "$1"
+  return 0
+}
+
+# The tips form is never logged: an access log would pair each sender's IP
+# with the time of a tip the database stores without one. The location
+# passes straight to router.php, with no internal redirect, so its
+# `access_log off` is the one that applies. -> 0 when the file changed.
+pp_tips_unlogged() { # $1 vhost file
+  local sock
+  grep -q 'pp-tips-unlogged' "$1" && return 1
+  sock=$(pp_block_socket "$1"); [ -n "$sock" ] || return 1
+  grep -qE '^[[:space:]]*location[[:space:]]+~[[:space:]]+\\\.php\$' "$1" || return 1
+  pp_before_php_handler "$1" <<EOF
+# pp-tips-unlogged: the tips form is never in the access log (PLAN.md 9.10).
+location ~ ^/tips/?\$ {
+    access_log off;
+    include fastcgi_params;
+    fastcgi_param SCRIPT_FILENAME \$document_root/router.php;
+    fastcgi_pass unix:$sock;
+}
+EOF
+  return 0
+}
+
 if [ "$FIXTURE" != "1" ]; then
   [ "$(id -u)" = "0" ] || fail "run as root"
   command -v nginx >/dev/null || fail "nginx not found"
@@ -1046,6 +1114,8 @@ WRAP
       sed -i "s|root $NEW;|root $NEW;\n    include $SNIPPET_DIR/prairiepost-deny.conf;|" "$VH"
       echo "   $base: legacy block — shared deny snippet injected"
     fi
+    pp_front_controller "$VH" && echo "   $base: legacy block — paths no rewrite names now reach router.php"
+    pp_tips_unlogged "$VH" && echo "   $base: /tips kept out of the access log"
   done
   [ "$ok" = "1" ] || continue
 

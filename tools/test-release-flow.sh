@@ -217,7 +217,9 @@ CFG
   # release in production) — proves migrate-once-per-schema.
   cp -r "$BOX/www/prairiepost-oldsha11-shared" "$BOX/www/prairiepost-oldsha11-civismedia"
   rm -rf "$BOX/www/prairiepost-oldsha11-civismedia/.git" "$BOX/www/prairiepost-oldsha11-shared/.git" 2>/dev/null
-  printf 'server {\n  root %s; # shared\n  server_name kitchenerchronicle.test;\n}\n' "$BOX/www/prairiepost-oldsha11-shared" > "$BOX/vhosts/kitchenerchronicle"
+  # A hand-written (legacy) block: a PHP handler and a `location /` that
+  # 404s whatever no rewrite names, as DEPLOY.md's blocks do.
+  printf 'server {\n  root %s; # shared\n  server_name kitchenerchronicle.test;\n  location ~ \\.php$ {\n    fastcgi_pass unix:/run/php/php8.3-fpm.sock;\n  }\n  location / { try_files $uri $uri/ =404; }\n}\n' "$BOX/www/prairiepost-oldsha11-shared" > "$BOX/vhosts/kitchenerchronicle"
   printf 'server {\n  root %s;\n  server_name civismedia.test;\n}\n' "$BOX/www/prairiepost-oldsha11-civismedia" > "$BOX/vhosts/civismedia"
   printf '17 3 * * * root php %s/cron/fetch-news.php\n' "$BOX/www/prairiepost-oldsha11-shared" > "$BOX/cron/pp-fetch"
   # A historical backup artifact from an "earlier run": references the old
@@ -455,6 +457,9 @@ ok "historical .bak cron ignored entirely"    "grep -q oldsha11 $B1/cron/pp-fetc
 ok "the shared schema migrated exactly once"  '[ "$(grep -c "migrating the schema" <<< "$OUT1")" = 1 ]'
 ok "the second group reused the migration"    'has "$OUT1" "already migrated this run"'
 ok "legacy vhosts got the deny snippet injected" "grep -q prairiepost-deny $B1/vhosts/kitchenerchronicle && [ -f $B1/snippets/prairiepost-deny.conf ]"
+ok "the legacy block's fallback now reaches router.php, once" '[ "$(grep -c pp-front-controller $B1/vhosts/kitchenerchronicle)" = 1 ] && grep -qF "try_files \$uri \$uri/ /router.php\$is_args\$args;" $B1/vhosts/kitchenerchronicle && grep -qF "fastcgi_pass unix:/run/php/php8.3-fpm.sock;" $B1/vhosts/kitchenerchronicle && ! grep -qF "=404; }" $B1/vhosts/kitchenerchronicle'
+ok "the legacy block keeps /tips out of its access log, once" '[ "$(grep -c pp-tips-unlogged $B1/vhosts/kitchenerchronicle)" = 1 ] && grep -qF "access_log off;" $B1/vhosts/kitchenerchronicle'
+ok "a block with no PHP handler is left alone by both" '! grep -q -e pp-front-controller -e pp-tips-unlogged $B1/vhosts/civismedia'
 ok "both vhosts repointed to the new release" "grep -q ${HEADSHA:0:12} $B1/vhosts/kitchenerchronicle && grep -q ${HEADSHA:0:12} $B1/vhosts/civismedia"
 ok "both groups boot ready as their tenants"  '[ "$(grep -c "PASS (fixture)" <<< "$OUT1")" = 2 ]'
 J=$(php -r '$p = new PDO("sqlite:" . $argv[1]); echo implode(",", $p->query("SELECT version || \":\" || status FROM schema_migrations ORDER BY version")->fetchAll(PDO::FETCH_COLUMN));' "$B1/data/net.sqlite")
