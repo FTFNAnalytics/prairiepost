@@ -21,18 +21,14 @@
       <a href="<?= e(url('search')) ?>">Search the archive</a>
       <a href="<?= e(url('corrections')) ?>">Corrections</a>
       <a href="/admin/">Newsroom sign-in</a>
-      <?php if (setting('contact_email') !== ''): ?>
-      <a href="mailto:<?= e(setting('contact_email')) ?>">Contact</a>
-      <?php endif; ?>
+      <a href="<?= e(url('tips')) ?>">Contact</a>
     </div>
     <div class="col">
       <h3>Connect</h3>
       <a href="<?= e(url('newsletter/')) ?>">Newsletters</a>
       <a href="<?= e(url('subscribe')) ?>">Membership</a>
       <a href="<?= e(url('feed/')) ?>">RSS</a>
-      <?php if (setting('contact_email') !== ''): ?>
-      <a href="mailto:<?= e(setting('contact_email')) ?>">Send a tip</a>
-      <?php endif; ?>
+      <a href="<?= e(url('tips')) ?>">Send a tip</a>
     </div>
   </div>
   <div class="bottom">

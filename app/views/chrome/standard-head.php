@@ -11,7 +11,7 @@ $sdMono  = mb_substr(preg_replace('/^The\s+/i', '', $siteTitle), 0, 1);
     <span><?= e(pp_chrome('place') ?: setting('tagline')) ?> &middot; <?= e(date('j F Y')) ?></span>
     <span class="grp">
       <a href="<?= e(url('newsletter/')) ?>">Newsletter</a>
-      <?php if (setting('contact_email') !== ''): ?><a href="mailto:<?= e(setting('contact_email')) ?>">Tips</a><?php endif; ?>
+      <a href="<?= e(url('tips')) ?>">Tips</a>
       <a href="/admin/">Sign in</a>
     </span>
   </div>

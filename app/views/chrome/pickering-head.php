@@ -14,7 +14,7 @@ $pkMode  = $GLOBALS['ppPkMode'] ?? 'full';
     <span><?= e(setting('tagline')) ?> &middot; <?= e(date('l, F j, Y')) ?></span>
     <span class="grp">
       <a href="<?= e(url('newsletter/')) ?>">Newsletter</a>
-      <?php if (setting('contact_email') !== ''): ?><a href="mailto:<?= e(setting('contact_email')) ?>">Contact</a><?php endif; ?>
+      <a href="<?= e(url('tips')) ?>">Contact</a>
       <a href="/admin/">Sign in</a>
     </span>
   </div>

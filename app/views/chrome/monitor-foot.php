@@ -14,7 +14,7 @@
     </div>
     <div>
       <h4>About us</h4>
-      <?php if (setting('contact_email') !== ''): ?><a href="mailto:<?= e(setting('contact_email')) ?>">Contact us</a><?php endif; ?>
+      <a href="<?= e(url('tips')) ?>">Contact us</a>
       <a href="<?= e(url('corrections')) ?>">Corrections</a>
       <a href="<?= e(url('search')) ?>">Search the archive</a>
       <a href="/admin/">Newsroom sign-in</a>
@@ -23,7 +23,7 @@
       <h4>Follow us</h4>
       <a href="<?= e(url('newsletter/')) ?>">Newsletter</a>
       <a href="<?= e(url('feed/')) ?>">RSS</a>
-      <?php if (setting('contact_email') !== ''): ?><a href="mailto:<?= e(setting('contact_email')) ?>">Send a tip</a><?php endif; ?>
+      <a href="<?= e(url('tips')) ?>">Send a tip</a>
     </div>
   </div>
   <div class="base">

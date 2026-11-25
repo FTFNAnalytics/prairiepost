@@ -17,7 +17,7 @@ page_header([
 <div class="pagehead wrap" style="--desk:#9C3B22">
   <span class="pp-meta" style="color:#5A6A5C">The record</span>
   <h1>The corrections file</h1>
-  <p class="desc">When the paper gets something wrong, the story is corrected where it stands and the correction is logged here. If you've caught an error, tell us — the newsroom reads its email.</p>
+  <p class="desc">When the paper gets something wrong, the story is corrected where it stands and the correction is logged here. If you've caught an error, <a href="<?= e(url('tips')) ?>">tell the editors</a>.</p>
   <div class="pp-horizon"></div>
 </div>
 

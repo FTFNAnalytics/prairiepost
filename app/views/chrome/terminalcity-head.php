@@ -3,7 +3,6 @@
    from page_header(): $siteTitle, $tagline, $activeDesk. Centred
    heritage masthead between rules; the roundel is the placeholder mark. */
 $tcWeather = pp_weather_line();
-$tcMail = trim(setting('contact_email'));
 ?>
 <div class="tc-util">
   <div class="in">
@@ -12,7 +11,7 @@ $tcMail = trim(setting('contact_email'));
       <?php if ($tcWeather !== ''): ?><span class="sep">|</span><span><?= pp_weather_link(e(str_replace('|', ' · ', $tcWeather)), 'pp-wx') ?></span><?php endif; ?>
     </div>
     <div>
-      <?php if ($tcMail !== ''): ?><a href="mailto:<?= e($tcMail) ?>">Send a tip</a><span class="sep">|</span><?php endif; ?>
+      <a href="<?= e(url('tips')) ?>">Send a tip</a><span class="sep">|</span>
       <a href="<?= e(url('newsletter/')) ?>"><?= e(setting('newsletter_heading', 'The Morning Departure')) ?></a><span class="sep">|</span>
       <a href="/admin/">Sign in</a>
     </div>

@@ -6,7 +6,6 @@
    and the white nav with the red active underline — over a light
    utility strip. */
 $ptgWeather = pp_weather_line();
-$ptgMail = trim(setting('contact_email'));
 $ptgWords = preg_split('/\s+/', trim($siteTitle)) ?: [$siteTitle];
 $ptgLast = array_pop($ptgWords);
 $ptgFirst = implode(' ', $ptgWords);
@@ -18,7 +17,7 @@ $ptgFirst = implode(' ', $ptgWords);
       <?php if ($ptgWeather !== ''): ?><span class="sep">|</span><span><?= pp_weather_link(e(str_replace('|', ' · ', $ptgWeather)) . ' in Winnipeg', 'pp-wx') ?></span><?php endif; ?>
     </div>
     <div>
-      <?php if ($ptgMail !== ''): ?><a href="mailto:<?= e($ptgMail) ?>">News tips</a><span class="sep">|</span><?php endif; ?>
+      <a href="<?= e(url('tips')) ?>">News tips</a><span class="sep">|</span>
       <a href="/admin/">Sign in</a>
     </div>
   </div>

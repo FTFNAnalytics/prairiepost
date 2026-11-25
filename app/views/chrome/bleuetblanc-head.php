@@ -16,7 +16,7 @@ foreach ($activeDesk !== '' ? categories_all() : [] as $c) {
     <span>Édition du <?= e(pp_date_full()) ?></span>
     <span class="grp">
       <a href="<?= e(url('newsletter/')) ?>"><?= e(pp_t('Newsletters')) ?></a>
-      <?php if (setting('contact_email') !== ''): ?><a href="mailto:<?= e(setting('contact_email')) ?>"><?= e(pp_t('Contact')) ?></a><?php endif; ?>
+      <a href="<?= e(url('tips')) ?>"><?= e(pp_t('Contact')) ?></a>
       <a href="/admin/"><?= e(pp_t('Sign in')) ?></a>
     </span>
   </div>

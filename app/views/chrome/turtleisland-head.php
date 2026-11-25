@@ -17,7 +17,7 @@ $tiPlate = $GLOBALS['ppTiPlate'] ?? $siteTitle;
         <span><?= e(setting('tagline')) ?></span>
         <span class="grp">
           <a href="<?= e(url('subscribe')) ?>">Subscribe</a>
-          <?php if (setting('contact_email') !== ''): ?><a href="mailto:<?= e(setting('contact_email')) ?>">Contact</a><?php endif; ?>
+          <a href="<?= e(url('tips')) ?>">Contact</a>
           <a href="/admin/">Sign in</a>
         </span>
       </div>

@@ -73,6 +73,11 @@ $lines[] = "INSERT INTO settings (site_id, skey, svalue) VALUES (0, 'schema_vers
 // two of them, hyphens stripped, give the same 64 hex characters.
 $lines[] = "INSERT INTO settings (site_id, skey, svalue)";
 $lines[] = "VALUES (0, 'ingest_ref_key', replace(gen_random_uuid()::text || gen_random_uuid()::text, '-', ''));";
+// The tips form's signing key, as pp_install() and step 26 mint it.
+// Without it the form can never issue a valid token, so every paper's
+// /tips page would refuse every tip.
+$lines[] = "INSERT INTO settings (site_id, skey, svalue)";
+$lines[] = "VALUES (0, 'tips_form_key', replace(gen_random_uuid()::text || gen_random_uuid()::text, '-', ''));";
 $lines[] = "INSERT INTO schema_migrations (version, name, checksum, status, started_at, finished_at)";
 $lines[] = "VALUES (" . $version . ", 'bootstrapped from supabase/schema.sql', '', 'installed', now(), now());";
 $lines[] = '';

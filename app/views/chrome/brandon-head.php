@@ -5,7 +5,6 @@
    beside the stacked wordmark (serif BRANDON over the letterspaced
    gold BULLETIN), nav right with the gold active underline, over a
    thin utility strip. */
-$bdnMail = trim(setting('contact_email'));
 ?>
 <div class="bdn-util">
   <div class="in">
@@ -14,7 +13,7 @@ $bdnMail = trim(setting('contact_email'));
       <span class="sep">|</span><span><?= e($tagline) ?></span>
     </div>
     <div>
-      <?php if ($bdnMail !== ''): ?><a href="mailto:<?= e($bdnMail) ?>">News tips</a><span class="sep">|</span><?php endif; ?>
+      <a href="<?= e(url('tips')) ?>">News tips</a><span class="sep">|</span>
       <a href="/admin/">Sign in</a>
     </div>
   </div>

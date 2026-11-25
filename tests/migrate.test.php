@@ -94,6 +94,9 @@ $pdo->exec('ALTER TABLE post_revisions DROP COLUMN image_credit');
 $pdo->exec('ALTER TABLE posts DROP COLUMN image_alt');
 $pdo->exec('ALTER TABLE ingest_agents DROP COLUMN edit_drafts');
 $pdo->exec('ALTER TABLE post_revisions DROP COLUMN image_alt');
+// Step 26's: the whiteboard table (its index goes with it) and the tips form key.
+$pdo->exec('DROP TABLE whiteboard_notes');
+$pdo->prepare("DELETE FROM settings WHERE site_id = 0 AND skey = 'tips_form_key'")->execute();
 $pdo->prepare("UPDATE settings SET svalue = '18' WHERE site_id = 0 AND skey = 'schema_version'")->execute();
 $pdo->prepare('INSERT INTO posts (title, slug, body, status, author_id, created_at, updated_at) VALUES (?,?,?,?,?,?,?)')
     ->execute(['Upgrade survivor', 'upgrade-survivor-' . bin2hex(random_bytes(3)), '<p>x</p>', 'published', 1, date('Y-m-d H:i:s'), date('Y-m-d H:i:s')]);
@@ -146,6 +149,8 @@ $p2->exec('ALTER TABLE post_revisions DROP COLUMN image_credit');
 $p2->exec('ALTER TABLE posts DROP COLUMN image_alt');
 $p2->exec('ALTER TABLE ingest_agents DROP COLUMN edit_drafts');
 $p2->exec('ALTER TABLE post_revisions DROP COLUMN image_alt');
+$p2->exec('DROP TABLE whiteboard_notes');
+$p2->prepare("DELETE FROM settings WHERE site_id = 0 AND skey = 'tips_form_key'")->execute();
 $p2->prepare("UPDATE settings SET svalue = '18' WHERE site_id = 0 AND skey = 'schema_version'")->execute();
 $p2->exec('DELETE FROM schema_migrations');
 $p2->exec('INSERT INTO schema_migrations (version, name, checksum, status, started_at, finished_at) '

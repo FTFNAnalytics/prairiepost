@@ -6,7 +6,6 @@
    (TORONTO navy over TELEGRAPH cambridge, the tagline letterspaced
    beneath), modern sans nav with the cambridge active underline and
    the navy Subscribe button, over an oxford utility strip. */
-$tgMail = trim(setting('contact_email'));
 ?>
 <div class="tg-util">
   <div class="in">
@@ -15,7 +14,7 @@ $tgMail = trim(setting('contact_email'));
       <span class="sep">|</span><span><?= e($tagline) ?></span>
     </div>
     <div>
-      <?php if ($tgMail !== ''): ?><a href="mailto:<?= e($tgMail) ?>">News tips</a><span class="sep">|</span><?php endif; ?>
+      <a href="<?= e(url('tips')) ?>">News tips</a><span class="sep">|</span>
       <a href="/admin/">Sign in</a>
     </div>
   </div>

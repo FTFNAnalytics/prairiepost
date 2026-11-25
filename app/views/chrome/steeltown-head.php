@@ -5,7 +5,6 @@
    stacked wordmark (condensed navy STEELTOWN over the letterspaced
    serif STANDARD), uppercase navy nav with the gold active underline,
    and the gold Subscribe button, over a black utility strip. */
-$stMail = trim(setting('contact_email'));
 ?>
 <div class="st-util">
   <div class="in">
@@ -14,7 +13,7 @@ $stMail = trim(setting('contact_email'));
       <span class="sep">|</span><span><?= e($tagline) ?></span>
     </div>
     <div>
-      <?php if ($stMail !== ''): ?><a href="mailto:<?= e($stMail) ?>">News tips</a><span class="sep">|</span><?php endif; ?>
+      <a href="<?= e(url('tips')) ?>">News tips</a><span class="sep">|</span>
       <a href="/admin/">Sign in</a>
     </div>
   </div>

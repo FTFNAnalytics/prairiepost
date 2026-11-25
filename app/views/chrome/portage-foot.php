@@ -32,7 +32,7 @@ $ptgFirst = implode(' ', $ptgWords);
     </div>
     <div>
       <h4>The Newsroom</h4>
-      <?php if (setting('contact_email') !== ''): ?><a href="mailto:<?= e(setting('contact_email')) ?>">News tips</a><?php endif; ?>
+      <a href="<?= e(url('tips')) ?>">News tips</a>
       <a href="/admin/">Newsroom sign-in</a>
     </div>
   </div>

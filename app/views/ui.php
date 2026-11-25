@@ -266,7 +266,7 @@ elseif (pp_chrome('header') === 'bar'): ?>
     <div class="pp-horizon pp-horizon--full" style="margin-top:8px"></div>
     <div class="tagline">
       <span class="pp-meta"><?= e($tagline) ?></span>
-      <span class="pp-meta muted"><a href="<?= e(url('feed/')) ?>" style="color:inherit;text-decoration:none">RSS</a> · <a href="<?= e(url('search')) ?>" style="color:inherit;text-decoration:none">Search</a></span>
+      <span class="pp-meta muted"><a href="<?= e(url('tips')) ?>" style="color:inherit;text-decoration:none">Send a tip</a> · <a href="<?= e(url('feed/')) ?>" style="color:inherit;text-decoration:none">RSS</a> · <a href="<?= e(url('search')) ?>" style="color:inherit;text-decoration:none">Search</a></span>
     </div>
   </div>
 </header>
@@ -336,6 +336,7 @@ if (is_file($ppChrome)) { require $ppChrome; return; } ?>
             <li><a href="<?= e(url('feed/')) ?>">RSS feed</a></li>
             <li><a href="<?= e(url('newsletter/')) ?>">The 6 a.m. newsletter</a></li>
             <li><a href="<?= e(url('corrections')) ?>">The corrections file</a></li>
+            <li><a href="<?= e(url('tips')) ?>">Send a tip</a></li>
             <li><a href="/admin/">Newsroom sign-in</a></li>
           </ul>
         </div>

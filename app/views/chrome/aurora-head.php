@@ -8,9 +8,7 @@
       <?php if (setting('breaking_label') !== '' && setting('breaking_url') !== ''): ?>
       <a class="hot" href="<?= e(setting('breaking_url')) ?>"><?= e(setting('breaking_label')) ?></a>
       <?php endif; ?>
-      <?php if (setting('contact_email') !== ''): ?>
-      <a href="mailto:<?= e(setting('contact_email')) ?>">Send a tip</a>
-      <?php endif; ?>
+      <a href="<?= e(url('tips')) ?>">Send a tip</a>
       <a href="<?= e(url('corrections')) ?>">Corrections</a>
       <a href="<?= e(url('newsletter/')) ?>">Newsletters</a>
     </div>
@@ -23,9 +21,7 @@
     </a>
     <div class="acts">
       <a class="lnk" href="<?= e(url('search')) ?>">Search</a>
-      <?php if (setting('contact_email') !== ''): ?>
-      <a class="ga-btn ga-btn--ghost" href="mailto:<?= e(setting('contact_email')) ?>">Send a tip</a>
-      <?php endif; ?>
+      <a class="ga-btn ga-btn--ghost" href="<?= e(url('tips')) ?>">Send a tip</a>
       <a class="ga-btn ga-btn--solid" href="<?= e(url('subscribe')) ?>">Get the newsletter</a>
     </div>
   </div>

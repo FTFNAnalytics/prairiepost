@@ -5,7 +5,7 @@
           <h4>The paper</h4>
           <a href="<?= e(url('about')) ?>">About &amp; contact</a>
           <a href="<?= e(url('corrections')) ?>">Corrections</a>
-          <?php if (setting('contact_email') !== ''): ?><a href="mailto:<?= e(setting('contact_email')) ?>">Send a tip</a><?php endif; ?>
+          <a href="<?= e(url('tips')) ?>">Send a tip</a>
           <a href="/admin/">Newsroom sign-in</a>
         </div>
         <div>

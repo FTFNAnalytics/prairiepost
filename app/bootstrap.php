@@ -5,7 +5,7 @@
  */
 
 define('PP_ROOT', dirname(__DIR__));
-define('PP_SCHEMA_VERSION', 25);
+define('PP_SCHEMA_VERSION', 26);
 
 // PP_CONFIG lets the committed harness (tools/seed-all.sh, baseline.sh)
 // point a CLI run at a throwaway config without touching the checkout's
@@ -58,6 +58,7 @@ require PP_ROOT . '/app/i18n.php';
 require PP_ROOT . '/app/db.php';
 require PP_ROOT . '/app/models.php';
 require PP_ROOT . '/app/weather.php';
+require PP_ROOT . '/app/whiteboard.php';
 require PP_ROOT . '/app/media.php';
 require PP_ROOT . '/app/ai.php';
 require PP_ROOT . '/app/google.php';

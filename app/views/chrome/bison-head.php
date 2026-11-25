@@ -5,7 +5,6 @@
    bison mark, the Montserrat nameplate and the white nav (active desk
    underlined white), over a thin white utility strip. */
 $bsnWeather = pp_weather_line();
-$bsnMail = trim(setting('contact_email'));
 ?>
 <div class="bsn-util">
   <div class="in">
@@ -15,7 +14,7 @@ $bsnMail = trim(setting('contact_email'));
       <span class="sep">|</span><span><?= e($tagline) ?></span>
     </div>
     <div>
-      <?php if ($bsnMail !== ''): ?><a href="mailto:<?= e($bsnMail) ?>">News tips</a><span class="sep">|</span><?php endif; ?>
+      <a href="<?= e(url('tips')) ?>">News tips</a><span class="sep">|</span>
       <a href="/admin/">Sign in</a>
     </div>
   </div>

@@ -30,7 +30,7 @@ $pkInit = mb_strtoupper(mb_substr($pkName !== '' ? $pkName : $siteTitle, 0, 1));
         <h4>Follow</h4>
         <a href="<?= e(url('newsletter/')) ?>">The morning email</a>
         <a href="<?= e(url('feed/')) ?>">RSS</a>
-        <?php if (setting('contact_email') !== ''): ?><a href="mailto:<?= e(setting('contact_email')) ?>">Send a tip</a><?php endif; ?>
+        <a href="<?= e(url('tips')) ?>">Send a tip</a>
       </div>
     </div>
     <div class="base">

@@ -90,13 +90,11 @@ $llUpd = strtotime((string) ($post['updated_at'] ?: $post['published_at']));
         </div>
       </section>
 
-      <?php if (setting('contact_email') !== ''): ?>
       <div class="ll-tipbox">
         <h3>Do you know something about this story?</h3>
-        <p>We read every reply. Nothing is published without your consent, and documents can come to us without your name attached.</p>
-        <p><a class="ll-btn" href="mailto:<?= e(setting('contact_email')) ?>">Send a tip</a></p>
+        <p>Tips go straight to the editors. We never publish your name without your consent, and you can stay anonymous.</p>
+        <p><a class="ll-btn" href="<?= e(url('tips')) ?>">Send a tip</a></p>
       </div>
-      <?php endif; ?>
 
       <?php if ($llRelated): ?>
       <section class="ll-related">
