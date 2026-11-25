@@ -25,9 +25,11 @@ rolls them is `docs/briefs/roll-72f8adccbcca.md`. It then cleans the
 images already stored.
 
 **Built, not merged:** live weather from Environment and Climate Change
-Canada (9.6 below), replacing the weather lines typed in at launch. The
-24 Nov audit's other loose ends are 9.7–9.9 and three new owner
-decisions under the policy decisions below.
+Canada (9.6 below), replacing the weather lines typed in at launch, and
+the whiteboard with its public tips form (9.10), modelled on Calgary
+Dispatch's. The 24 Nov audit's other loose ends are 9.7–9.9. The owner
+settled its three open questions on 25 Nov (decided, under the policy
+decisions below).
 
 **The platform phases below (0–3):** Phases 2 and 3 are done. Phase 0
 is done except the GitHub default branch, which is the owner's switch.
@@ -56,7 +58,7 @@ newsroom's working copy of that plan; this file is the repository's.
 | 2 Template registry | Done. 2.3 is in the backlog by owner decision. |
 | 3 Hermes ingest | Done, and extended (above). |
 | Hub 1–8 | See `PLAN-CIVIS.md` and `DEPLOY-CIVIS.md`. |
-| **9 Exposure and upkeep** | **Next. 9.1 and 9.5 merged 24 Nov (#91, #90), rolling with `roll-72f8adccbcca`; 9.6 built; 9.2–9.4 and 9.7–9.9 open.** |
+| **9 Exposure and upkeep** | **Next. 9.1 and 9.5 merged 24 Nov (#91, #90), rolling with `roll-72f8adccbcca`; 9.6 and 9.10 built; 9.2–9.4 and 9.7–9.9 open.** |
 
 ---
 
@@ -265,16 +267,69 @@ and Kitchener.
 
 **9.9 — Two small reader-facing fixes.**
 
-- Kitchener's "Email" share link puts only the story's path in the
-  message, because `url()` returns `/story/<slug>`, so the recipient
-  gets a link that goes nowhere. It needs the absolute URL from
-  `site_url()`, as `app/models.php` builds it for the ingest API.
-- `/about` answers 404 on 11 papers and the hub. Nothing links to it,
-  but readers look for one, and it is where a paper names its owner and
-  how to reach the newsroom.
+- *Fixed with 9.10.* Kitchener's "Email" share link put only the story's
+  path in the message, because `url()` returns `/story/<slug>`, so the
+  recipient got a link that went nowhere. It now carries the story's
+  canonical URL, as every other paper's share link does.
+- `/about` answers 404 on 11 papers and the hub. The page is in the
+  code (`about.php`, routed in `router.php` and `.htaccess`); what is
+  missing is the rewrite in the hand-written nginx blocks, which carry
+  eleven routes and not this one. So the fix is server work: the next
+  routes pass, or 9.2's conversion. Nothing links to it yet, but readers
+  look for one, and it is where a paper names its owner and how to
+  reach the newsroom.
 
 *Acceptance:* the emailed link opens the story, and every paper and the
 hub answer `/about` with a page.
+
+**9.10 — The whiteboard and the tips form.** *Built 25 Nov on
+`claude/whiteboard-tips`; not merged, not rolled. The owner's order of
+25 Nov: "Draw on the whiteboard from the Calgary Dispatch. Have the tips
+form go to a new whiteboard on each site admin portal."*
+
+Every paper's newsroom gets a private board (`admin/whiteboard.php`),
+taken from Calgary Dispatch's: notes typed as a reader tip, lead, rumour
+or fact, each with a status (unverified, checking, confirmed, debunked)
+and an optional source link, filtered by both, editable, and turned into
+a draft with one click. Editors and administrators open it; authors
+don't. The nav shows how many reader tips are still unverified.
+
+Readers reach it through `/tips`, a form on every paper that pins their
+tip to that paper's board and no other. Every paper's Tips and Contact
+links now point there instead of a mailto: 22 of the 24 tips addresses
+were on domains with no mail server. What the form keeps is only what
+the reader types: the tip, a link, and optionally a name and a way to
+reach them. It stores no IP address and no device details, and writes
+no audit row (an audit row records an IP). A signed timing token and a
+honeypot stop naive bots, and a cap of 30 tips an hour and 200 a day per
+paper bounds a flood without knowing who sends. Turning a tip into a
+draft copies the tip and its link, never the tipster.
+
+Schema step 26 adds the `whiteboard_notes` table and the
+`tips_form_key` setting. Like every step since 21, it is forward only
+(`docs/MIGRATION-COMPAT.md`).
+
+Rolling it needs, beyond the roll itself:
+
+1. `/tips` routed on the hand-written nginx blocks, in the same pass as
+   `/about` (9.9) or by 9.2's conversion. Until then those papers' Tips
+   links lead to a 404.
+2. The tips POST kept out of nginx's access logs. Otherwise the log
+   holds each sender's IP beside the time of a tip the database stores
+   without one. The mechanism (an http-level `map` on the request and
+   `access_log … if=`) is to be tested on a local nginx when the brief
+   is written.
+
+Not built: Calgary's agent lane, `/api/ingest/notes`. Letting Hermes pin
+notes needs a new grant on the ingest surface, which widens only by the
+owner's order.
+
+*Acceptance:* `tests/whiteboard.test.php` passes (the token, the
+honeypot, the cap, site scoping of every read and write, escaping, the
+draft that leaves the tipster out, author refusal, CSRF and the audit
+trail). In production, a tip sent through one paper's `/tips` appears on
+that paper's board and no other, its row carries no IP, and no access
+log line records the POST.
 
 ## Waiting on the owner (no code needed)
 
@@ -312,20 +367,20 @@ hub answer `/about` with a page.
   database rows, which anyone with write access to the database can
   change. Decide whether they should be hash-chained or shipped off the
   box.
-- **Tip lines that cannot receive mail (found 24 Nov).** Of the 24
-  papers that publish a tips address, only two have a mail server for
-  it: londonlookout.com and westernwire.ca. The other 22 addresses are
-  on domains with no MX record, so nothing is set up to receive a
-  reader's tip. Decide between forwarding on each domain and one
-  working tips address for the network, set in each paper's Settings.
-- **Newsletters (found 24 Nov).** Sign-ups promise "One email a day",
-  and all 27 archives are empty: nothing has ever been sent. Decide
-  between setting up sending (the backlog's mail setup, after 9.4) and
-  hiding the sign-up until a paper's newsletter is enabled.
-- **Three quiet papers (found 24 Nov).** Western Wire's newest story is
-  from 11 Aug, and Bleuet Blanc's and Turtle Island's are from 24 Aug.
-  Decide whether each resumes, pauses with a note to readers, or
-  retires.
+
+Decided by the owner on 25 Nov, from the 24 Nov audit:
+
+- **Tips go to the whiteboard.** Of the 24 papers that published a tips
+  address, only two (londonlookout.com and westernwire.ca) had a mail
+  server for it. Instead of mailboxes, every paper's tips now go
+  through its `/tips` form to its whiteboard (9.10).
+- **Newsletters start once the pages are live; not yet.** No edition
+  has been sent, and none goes out before then. The sign-up forms are on
+  the pages today and accept addresses.
+- **Western Wire, Bleuet Blanc and Turtle Island are the next tranche to
+  go live.** They are not quiet papers to retire: their newest stories
+  (11 Aug, 24 Aug, 24 Aug) are their launch content, and their own
+  launch comes next.
 
 ---
 

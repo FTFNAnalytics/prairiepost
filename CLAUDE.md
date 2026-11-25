@@ -587,6 +587,32 @@ holding a capability it should not have.
   prints their times an hour early. The sandbox's tzdata is current;
   production's is a server fact the brief checks (lesson 10a). Story
   times still print in the network zone on every paper (PLAN.md 9.8).
+- **The whiteboard and the tips form — BUILT (25 Nov, branch
+  `claude/whiteboard-tips`, stacked on the weather branch), not merged
+  or rolled (PLAN.md 9.10).** The owner's order: "Draw on the
+  whiteboard from the Calgary Dispatch. Have the tips form go to a new
+  whiteboard on each site admin portal." Calgary Dispatch's source is
+  `FTFNAnalytics/CalgaryDispatch`, branch `feature/whiteboard` (a
+  FastAPI/React app, a foreign tenant on the box). Here:
+  - `admin/whiteboard.php` (editors and admins; authors get 403) shows
+    one paper's notes (tip, lead, rumour or fact; unverified, checking,
+    confirmed or debunked), scoped by `site_id` in every read and write
+    in `app/whiteboard.php`;
+  - `tips.php` (`/tips`) pins a reader's tip to that paper's board and
+    keeps only what the reader typed: no IP, no device details, and no
+    audit row, because `pp_audit()` records an IP. Never add one;
+  - turning a note into a draft copies the tip and its link, never the
+    tipster's name or contact, and a guarded `post_id` claim keeps it to
+    one draft per note;
+  - every paper's Tips and Contact links point at `/tips`. No chrome may
+    link a mailto to the paper again, and `tests/whiteboard.test.php`
+    checks it. `contact_email` now matters only on the hub.
+
+  Schema step 26 adds `whiteboard_notes` and the `tips_form_key` row
+  (forward only, like every step since 21). Rolling it needs `/tips`
+  (with `/about`) routed on the hand-written nginx blocks, and the tips
+  POST kept out of the access logs, which would otherwise pair each
+  sender's IP with the tip's time.
 - **Test residue awaiting owner cleanup (admin UI, never SQL):** on
   Surrey — draft #315 (`routes-check-agent-ingest-v2-draft`), and
   story #316 (`routes-check-publish-on-image-test`) which the 28 Sep
