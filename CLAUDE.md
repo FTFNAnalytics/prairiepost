@@ -117,7 +117,12 @@ against this list before shipping them.
    and the nginx rewrite list in the new site's runbook (existing
    papers' blocks don't need routes they don't use — `/region/` lives
    only in Western Wire's block). Miss one and the route 404s only in
-   production.
+   production. **This ends with the first roll whose upgrader carries
+   `pp_front_controller()` (PLAN.md 9.2).** That roll gives the
+   hand-written blocks a `router.php` fallback. From then on a route
+   needs `router.php` and `.htaccess` only, and the roll's report shows
+   which blocks were converted ("paths no rewrite names now reach
+   router.php").
 
 8. **The first request after a pull runs pending migrations.** Any
    curl during nginx/TLS verification can trigger it. Schedule the
@@ -634,6 +639,16 @@ holding a capability it should not have.
   clock via `PP_NEWSROOM_CLOCK`, because its inputs are read on it.
   Western Wire and Turtle Island have no zone and print the network's
   time.
+- **The upgrader converts hand-written blocks — BUILT (25 Nov, branch
+  `claude/legacy-front-controller`, stacked on the clocks branch), not
+  merged (PLAN.md 9.2).** In the vhost loop, `pp_front_controller()` sends a
+  legacy `location /`'s `=404` fallback to `router.php`, and
+  `pp_tips_unlogged()` gives every block `location ~ ^/tips/?$` with
+  `access_log off`. Both are idempotent by marker, inserted beside the PHP
+  handler, and use the block's own php-fpm socket. They were tested on a
+  real nginx and php-fpm. `vhost.template` carries the tips location from
+  creation. The upgrader's sha256 changes with this branch, so a brief
+  that pins it must take the new value.
 - **Test residue awaiting owner cleanup (admin UI, never SQL):** on
   Surrey — draft #315 (`routes-check-agent-ingest-v2-draft`), and
   story #316 (`routes-check-publish-on-image-test`) which the 28 Sep

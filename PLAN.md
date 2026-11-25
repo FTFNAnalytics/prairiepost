@@ -113,6 +113,31 @@ filed.
 **9.2 — Convert the 14 legacy nginx blocks, and add the catch-all.**
 This is 1.2's remainder and 1.3, which was never built.
 
+*The routing half is built (25 Nov, `claude/legacy-front-controller`) and
+runs on the next roll.* `upgrade-papers.sh` now changes each hand-written
+block it repoints: the `try_files $uri $uri/ =404` fallback of
+`location /` becomes `router.php`, behind the same internal-only exact
+location generated blocks use. The block's rewrite lines stay and go on
+serving the routes they already serve. Every block also gets an unlogged
+`/tips` location (9.10). Both edits are idempotent by marker and go in
+beside the block's PHP handler, so certbot's port-80 redirect servers are
+never touched. Both use the php-fpm socket the block already names, and
+a block without one is left alone. They run inside the roll, under its
+nginx test, its masthead and stylesheet guard and its rollback.
+
+Tested on nginx 1.24 with php-fpm 8.3, on a block shaped like
+`DEPLOY.md`'s and one from the template:
+- before, the hand-written block answered 404 for `/about` and `/tips`;
+- after, `/about` and `/tips` answer 200, unknown paths get the branded
+  404, `/router.php` stays unreachable (404), `/app/` stays denied (403),
+  and `/api/ingest` answers 401 through the router;
+- neither `/tips` request reached the access log;
+- a second pass changed nothing.
+
+`tools/test-release-flow.sh` asserts both edits on a legacy-shaped
+fixture block. Still to build: the catch-all and the both-family audit
+below.
+
 - Every block takes `tools/vps/vhost.template`'s shape and routes
   through `router.php`. Every API route added since September has needed
   a hand-written pass over those 14 blocks (the 7cb82fb roll carried
@@ -321,8 +346,8 @@ falls back.
 - `/about` answers 404 on 11 papers and the hub. The page is in the
   code (`about.php`, routed in `router.php` and `.htaccess`); what is
   missing is the rewrite in the hand-written nginx blocks, which carry
-  eleven routes and not this one. So the fix is server work: the next
-  routes pass, or 9.2's conversion. Nothing links to it yet, but readers
+  eleven routes and not this one. *Fixed by the upgrader (9.2) on the
+  next roll*, which sends their unknown paths to `router.php`. Nothing links to it yet, but readers
   look for one, and it is where a paper names its owner and how to
   reach the newsroom.
 
@@ -356,16 +381,13 @@ Schema step 26 adds the `whiteboard_notes` table and the
 `tips_form_key` setting. Like every step since 21, it is forward only
 (`docs/MIGRATION-COMPAT.md`).
 
-Rolling it needs, beyond the roll itself:
-
-1. `/tips` routed on the hand-written nginx blocks, in the same pass as
-   `/about` (9.9) or by 9.2's conversion. Until then those papers' Tips
-   links lead to a 404.
-2. The tips POST kept out of nginx's access logs. Otherwise the log
-   holds each sender's IP beside the time of a tip the database stores
-   without one. The mechanism (an http-level `map` on the request and
-   `access_log … if=`) is to be tested on a local nginx when the brief
-   is written.
+Rolling it needs nothing beyond the roll itself, if the roll runs an
+upgrader from `claude/legacy-front-controller` or later (9.2). That
+upgrader routes `/tips` on the hand-written blocks and keeps it out of
+every block's access log; otherwise the log would hold each sender's IP
+beside the time of a tip the database stores without one. Only certbot's
+plain-HTTP redirect servers, which the roll leaves alone, still log a
+typed `http://…/tips` visit as a 301. No tip ever reaches them.
 
 Not built: Calgary's agent lane, `/api/ingest/notes`. Letting Hermes pin
 notes needs a new grant on the ingest surface, which widens only by the
