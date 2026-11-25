@@ -1,4 +1,5 @@
 {
+  "zone": "America/Edmonton",
   "weather": {"city": "ab-31", "place": "Grande Prairie"},
   "palette": {
     "ink":     "#0B1E3D",

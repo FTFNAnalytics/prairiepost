@@ -58,7 +58,7 @@ newsroom's working copy of that plan; this file is the repository's.
 | 2 Template registry | Done. 2.3 is in the backlog by owner decision. |
 | 3 Hermes ingest | Done, and extended (above). |
 | Hub 1–8 | See `PLAN-CIVIS.md` and `DEPLOY-CIVIS.md`. |
-| **9 Exposure and upkeep** | **Next. 9.1 and 9.5 merged 24 Nov (#91, #90), rolling with `roll-72f8adccbcca`; 9.6, 9.7 and 9.10 built; 9.2–9.4, 9.8 and 9.9 open.** |
+| **9 Exposure and upkeep** | **Next. 9.1 and 9.5 merged 24 Nov (#91, #90), rolling with `roll-72f8adccbcca`; 9.6, 9.7, 9.8 and 9.10 built; 9.2–9.4 and 9.9 open.** |
 
 ---
 
@@ -277,7 +277,8 @@ Dispatch and finds none of them, then gives each widget a clock and
 finds it back. It also checks Settings' expiry and clock rules over
 HTTP, and every rule is mutation-tested.
 
-**9.8 — Print each paper's times on its own clock.** The network formats
+**9.8 — Print each paper's times on its own clock.** *Built 25 Nov on
+`claude/paper-clocks`; not merged, not rolled. Code only.* The network formats
 every time in one configured zone, America/Edmonton per `DEPLOY.md` and
 the Kermode runbook, so the story times on every paper are Alberta's.
 Since 1 Nov that is an hour ahead of local time in British Columbia and
@@ -286,9 +287,30 @@ summer). Kermode's runbook deferred this as "a follow-up decision".
 Storage stays in the network zone and only the display converts, using a
 zone per paper. It has the same time-zone database dependency as 9.6.
 
+What was built. Each paper's `palette.json` names its zone (`"zone":
+"America/Vancouver"`). `pp_date()` in `app/i18n.php` prints on that clock,
+and every printed time on a public page goes through it: `fmt_date()`,
+`time_label()` (whose "today" and "yesterday" are the paper's too),
+`pp_clock()`, the French dates, the mastheads' datelines, and the
+newsletter's date line and subject. Storage and parsing stay on the
+network's clock, so no row changes. Three things stay on the network's
+clock:
+- The newsroom (`admin/_layout.php` defines `PP_NEWSROOM_CLOCK`). Its
+  date inputs, such as a story's scheduled time, are read on that clock,
+  and a form that printed one clock and read another would mis-schedule.
+  Moving the newsroom too means reading its inputs on the paper's clock,
+  a separate change.
+- The newsletter's send hour and edition dates.
+- Western Wire and Turtle Island, which cover the West and the
+  territories and have no single home clock. They carry no zone.
+
 *Acceptance:* in winter, a story published at 22:00 UTC prints
 3:00 p.m. on Kermode, 4:00 p.m. on the Echo, and 5:00 p.m. on Portage
-and Kitchener.
+and Kitchener. `tests/clock.test.php` checks this through every shared
+helper, with expected times computed through the same tz database. It
+also checks that a paper's zone matches its weather city's province,
+that the newsroom stays on the network's clock, and that a broken zone
+falls back.
 
 **9.9 — Two small reader-facing fixes.**
 

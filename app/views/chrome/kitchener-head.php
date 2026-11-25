@@ -43,7 +43,7 @@ if (!function_exists('kc_art')) {
   <div class="in">
     <img class="kc-sky" src="<?= e(site_asset('img/skyline-ghost.svg')) ?>" alt="" aria-hidden="true">
     <div class="kc-dateline">
-      <span><?= e(date('l, F j, Y')) ?></span>
+      <span><?= e(pp_date('l, F j, Y')) ?></span>
       <span class="vol">Vol. <?= e($kcRoman((int) date('Y') - 1909)) ?> &middot; No. <?= e((string) ((int) date('z') + 1)) ?></span>
     </div>
     <a class="kc-lock" href="/" aria-label="<?= e($siteTitle) ?> — front page">

@@ -58,7 +58,7 @@ $llUpd = strtotime((string) ($post['updated_at'] ?: $post['published_at']));
           <span class="av"><?= e($llInitials((string) $post['byline'])) ?></span>
           <span>
             <span class="n">By <?= e($post['byline']) ?></span><br>
-            <span class="t"><?= e(pp_date_long($llPub)) ?><?= $llUpd > $llPub ? ' · Updated ' . e(date('H:i', $llUpd)) : '' ?></span>
+            <span class="t"><?= e(pp_date_long($llPub)) ?><?= $llUpd > $llPub ? ' · Updated ' . e(pp_date('H:i', $llUpd)) : '' ?></span>
           </span>
           <?php else: ?>
           <span class="t"><?= e(pp_date_long($llPub)) ?></span>
@@ -79,13 +79,13 @@ $llUpd = strtotime((string) ($post['updated_at'] ?: $post['published_at']));
         <span class="ll-kick ll-kick--n">Update log</span>
         <?php if ($llUpd > $llPub): ?>
         <div class="row">
-          <span class="when"><?= e(date('j M H:i', $llUpd)) ?></span>
+          <span class="when"><?= e(pp_date('j M H:i', $llUpd)) ?></span>
           <span class="what">Story updated after publication.</span>
         </div>
         <div class="ll-hair"></div>
         <?php endif; ?>
         <div class="row">
-          <span class="when"><?= e(date('j M H:i', $llPub)) ?></span>
+          <span class="when"><?= e(pp_date('j M H:i', $llPub)) ?></span>
           <span class="what">Published.</span>
         </div>
       </section>

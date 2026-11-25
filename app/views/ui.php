@@ -253,7 +253,7 @@ elseif (pp_chrome('header') === 'bar'): ?>
 <?php else: ?>
 <div class="skybar">
   <div class="wrap pp-meta">
-    <span><?= e(date('l, F j, Y')) ?></span>
+    <span><?= e(pp_date('l, F j, Y')) ?></span>
     <?php if (pp_weather_text() !== ''): ?><span><?= pp_weather_link(e(pp_weather_text())) ?></span><?php endif; ?>
   </div>
 </div>

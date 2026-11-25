@@ -107,7 +107,7 @@ $llArt = fn (array $p) => $p['image'] ?: site_asset('img/skyline-night.svg');
         $llRest = trim((string) preg_replace('/^[^·]*·\s*/u', '', (string) $p['dateline']));
         ?>
         <article class="ll-ev">
-          <span class="chip"><span class="d"><?= e(date('D', $ts)) ?></span><span class="n"><?= e(date('d', $ts)) ?></span></span>
+          <span class="chip"><span class="d"><?= e(pp_date('D', $ts)) ?></span><span class="n"><?= e(pp_date('d', $ts)) ?></span></span>
           <span>
             <h3><a href="<?= e(post_href($p)) ?>" style="color:inherit"><?= e($p['title']) ?></a></h3>
             <?php if ($llRest !== ''): ?><span class="where"><?= e($llRest) ?></span><?php endif; ?>

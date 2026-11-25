@@ -624,6 +624,16 @@ holding a capability it should not have.
   never through `setting()` directly, or a launch-day value comes back.
   London's council tracker, open files, membership band and city-hall
   agenda are removed. No schema step, no server step.
+- **Each paper prints on its own clock — BUILT (25 Nov, branch
+  `claude/paper-clocks`, stacked on the widgets branch), not merged or
+  rolled (PLAN.md 9.8).** Each `palette.json` carries a `"zone"`. Every
+  printed time on a public page goes through `pp_date()` (or
+  `fmt_date()`, `time_label()`, `pp_clock()`, which use it); never print
+  a time with bare `date()`. Storage and `strtotime()` stay on the
+  network clock (config `timezone`). The admin stays on the network
+  clock via `PP_NEWSROOM_CLOCK`, because its inputs are read on it.
+  Western Wire and Turtle Island have no zone and print the network's
+  time.
 - **Test residue awaiting owner cleanup (admin UI, never SQL):** on
   Surrey — draft #315 (`routes-check-agent-ingest-v2-draft`), and
   story #316 (`routes-check-publish-on-image-test`) which the 28 Sep

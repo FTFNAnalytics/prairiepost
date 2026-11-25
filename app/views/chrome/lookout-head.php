@@ -12,7 +12,7 @@ $llWeather = pp_weather_line();
 <div class="ll-util">
   <div class="in">
     <div class="grp">
-      <span><?= e(date('l, j F Y')) ?></span>
+      <span><?= e(pp_date('l, j F Y')) ?></span>
       <?php if ($llWeather !== ''): ?>
       <span class="sep">|</span><span><?= pp_weather_link(e(str_replace('|', ' · ', $llWeather)), 'pp-wx') ?></span>
       <?php endif; ?>

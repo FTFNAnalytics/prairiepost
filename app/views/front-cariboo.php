@@ -41,7 +41,7 @@ $ccKick = fn (array $p) => 'cc-kick' . ((($p['category_slug'] ?? '') === 'enviro
       <div class="item">
         <span class="<?= e($ccKick($p)) ?>" style="font-size:10px;padding:2px 8px"><?= e(pp_desk_label((string) $p['category_slug'], (string) $p['category_name'])) ?></span>
         <h3><a href="<?= e(url('story/' . $p['slug'])) ?>"><?= e($p['title']) ?></a></h3>
-        <span class="meta"><?= e(date('M j', strtotime($p['published_at']))) ?> · <?= e(max(1, (int) ceil(str_word_count(strip_tags((string) $p['body'])) / 220))) ?> min read</span>
+        <span class="meta"><?= e(pp_date('M j', strtotime($p['published_at']))) ?> · <?= e(max(1, (int) ceil(str_word_count(strip_tags((string) $p['body'])) / 220))) ?> min read</span>
       </div>
       <?php endforeach; ?>
       <?php if (!$ccRail): ?><div class="item"><span class="meta">Nothing filed yet today.</span></div><?php endif; ?>

@@ -2,7 +2,7 @@
 <div class="cu-util">
   <div class="wrap">
     <div class="grp">
-      <strong><?= e(date('l, F j')) ?></strong>
+      <strong><?= e(pp_date('l, F j')) ?></strong>
       <?php if (pp_weather_text() !== ''): ?><span><?= pp_weather_link(e(pp_weather_text()), 'pp-wx') ?></span><?php endif; ?>
     </div>
     <div class="grp">

@@ -34,7 +34,7 @@ $bbOp = $bbOpCat ? (posts_in_category((int) $bbOpCat['id'], 1)[0] ?? null) : nul
       <h2>Latest</h2>
       <?php foreach ($bbRail as $p): ?>
       <div class="item">
-        <span class="when"><?= e(date('g:i a', strtotime($p['published_at']))) ?></span>
+        <span class="when"><?= e(pp_date('g:i a', strtotime($p['published_at']))) ?></span>
         <h3><a href="<?= e(url('story/' . $p['slug'])) ?>"><?= e($p['title']) ?></a></h3>
         <span class="sec"><?= e(pp_desk_label((string) $p['category_slug'], (string) $p['category_name'])) ?></span>
       </div>

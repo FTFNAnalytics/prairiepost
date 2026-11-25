@@ -13,7 +13,7 @@ $ptgFirst = implode(' ', $ptgWords);
 <div class="ptg-util">
   <div class="in">
     <div>
-      <span><?= e(date('l, F j, Y')) ?></span>
+      <span><?= e(pp_date('l, F j, Y')) ?></span>
       <?php if ($ptgWeather !== ''): ?><span class="sep">|</span><span><?= pp_weather_link(e(str_replace('|', ' · ', $ptgWeather)) . ' in Winnipeg', 'pp-wx') ?></span><?php endif; ?>
     </div>
     <div>

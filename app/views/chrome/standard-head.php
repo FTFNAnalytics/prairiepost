@@ -8,7 +8,7 @@ $sdMono  = mb_substr(preg_replace('/^The\s+/i', '', $siteTitle), 0, 1);
 ?>
 <div class="sd-util">
   <div class="in">
-    <span><?= e(pp_chrome('place') ?: setting('tagline')) ?> &middot; <?= e(date('j F Y')) ?></span>
+    <span><?= e(pp_chrome('place') ?: setting('tagline')) ?> &middot; <?= e(pp_date('j F Y')) ?></span>
     <span class="grp">
       <a href="<?= e(url('newsletter/')) ?>">Newsletter</a>
       <a href="<?= e(url('tips')) ?>">Tips</a>

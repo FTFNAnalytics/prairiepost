@@ -1,7 +1,7 @@
 <div class="ww-strip">
   <div class="wrap">
     <div class="grp">
-      <span>Western Canada · <?= e(date('l, j F Y')) ?></span>
+      <span>Western Canada · <?= e(pp_date('l, j F Y')) ?></span>
     </div>
     <div class="grp">
       <a href="<?= e(url('newsletter/')) ?>">Newsletters</a>

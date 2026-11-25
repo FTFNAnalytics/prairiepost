@@ -1,7 +1,7 @@
 <div class="ga-strip">
   <div class="wrap">
     <div class="grp">
-      <span><?= e(date('l, F j, Y')) ?></span>
+      <span><?= e(pp_date('l, F j, Y')) ?></span>
       <?= pp_weather_link(e(pp_weather_text())) ?>
     </div>
     <div class="grp">

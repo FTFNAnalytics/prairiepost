@@ -1,4 +1,5 @@
 {
+  "zone": "America/Vancouver",
   "weather": {"city": "bc-85", "place": "Victoria"},
   "palette": {
     "ink":     "#131E28",

@@ -1,4 +1,5 @@
 {
+  "zone": "America/Vancouver",
   "weather": {"city": "bc-62", "place": "Surrey"},
   "palette": {
     "ink":     "#2D2D2D",

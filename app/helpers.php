@@ -246,7 +246,7 @@ function fmt_date(?string $dt, string $format = 'M j, Y'): string
         return '';
     }
     $ts = strtotime($dt);
-    return $ts ? date($format, $ts) : '';
+    return $ts ? pp_date($format, $ts) : '';
 }
 
 /**
@@ -261,8 +261,9 @@ function read_minutes(array $post): int
 }
 
 /** "6:40 a.m." / "Yesterday" / "Jul 3" — the register of a dateline, not a widget. */
-function time_label(?string $dt): string
+function time_label(?string $dt, ?int $now = null): string
 {
+    $now ??= time();
     if (!$dt) {
         return '';
     }
@@ -270,14 +271,15 @@ function time_label(?string $dt): string
     if (!$ts) {
         return '';
     }
-    $day = date('Y-m-d', $ts);
-    if ($day === date('Y-m-d')) {
-        return strtolower(str_replace(['AM', 'PM'], ['a.m.', 'p.m.'], date('g:i A', $ts)));
+    // Today and yesterday are the paper's, like the clock.
+    $day = pp_date('Y-m-d', $ts);
+    if ($day === pp_date('Y-m-d', $now)) {
+        return strtolower(str_replace(['AM', 'PM'], ['a.m.', 'p.m.'], pp_date('g:i A', $ts)));
     }
-    if ($day === date('Y-m-d', strtotime('-1 day'))) {
+    if ($day === pp_date('Y-m-d', $now - 86400)) {
         return 'Yesterday';
     }
-    return date('M j', $ts);
+    return pp_date('M j', $ts);
 }
 
 /** Full dateline: "THREE HILLS — By Dana Ruthven · 6:40 a.m." */

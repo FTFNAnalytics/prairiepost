@@ -1,4 +1,5 @@
 {
+  "zone": "America/Edmonton",
   "weather": {"city": "ab-62", "place": "Drumheller"},
   "chrome": {
     "nav": ["news", "politics", "agriculture", "business", "community", "opinion", "weather"]

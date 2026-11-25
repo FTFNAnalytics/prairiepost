@@ -9,7 +9,7 @@
 <div class="st-util">
   <div class="in">
     <div>
-      <span><?= e(date('l, F j, Y')) ?></span>
+      <span><?= e(pp_date('l, F j, Y')) ?></span>
       <span class="sep">|</span><span><?= e($tagline) ?></span>
     </div>
     <div>

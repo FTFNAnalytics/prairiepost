@@ -27,7 +27,7 @@ $wwAgo = function (?string $dt): string {
     if ($mins < 60 * 24) {
         return (int) round($mins / 60) . ' h';
     }
-    return date('M j', $ts);
+    return pp_date('M j', $ts);
 };
 
 // "Calgary Herald · 42 min" on a wire link; the byline on an original.

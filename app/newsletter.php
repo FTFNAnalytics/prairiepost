@@ -24,8 +24,8 @@ function pp_compile_edition(): array
 {
     $posts = pp_edition_posts();
     $siteTitle = setting('site_title', 'The Prairie Dispatch');
-    $dateLine = date('l, F j, Y');
-    $subject = setting('newsletter_heading', 'The 6 a.m.') . ' — ' . date('l, M j')
+    $dateLine = pp_date('l, F j, Y');
+    $subject = setting('newsletter_heading', 'The 6 a.m.') . ' — ' . pp_date('l, M j')
         . ($posts ? ': ' . $posts[0]['title'] : '');
 
     $pal = pp_brand_palette();

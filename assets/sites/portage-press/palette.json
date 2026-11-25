@@ -1,4 +1,5 @@
 {
+  "zone": "America/Winnipeg",
   "weather": {"city": "mb-38", "place": "Winnipeg"},
   "palette": {
     "navy":  "#041E42",

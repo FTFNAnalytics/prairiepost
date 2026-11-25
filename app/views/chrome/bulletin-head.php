@@ -1,7 +1,7 @@
 <div class="bb-util">
   <div class="wrap">
     <div class="grp">
-      <span><?= e(date('l, F j, Y')) ?><?= pp_weather_text() !== '' ? ' · ' . pp_weather_link(e(pp_weather_text()), 'pp-wx') : '' ?></span>
+      <span><?= e(pp_date('l, F j, Y')) ?><?= pp_weather_text() !== '' ? ' · ' . pp_weather_link(e(pp_weather_text()), 'pp-wx') : '' ?></span>
     </div>
     <div class="grp">
       <a href="<?= e(url('newsletter/')) ?>">Newsletters</a>

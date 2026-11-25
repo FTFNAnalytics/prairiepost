@@ -2,7 +2,7 @@
 <div class="v3-strip">
   <div class="wrap">
     <div class="grp">
-      <span><?= e(date('l, F j, Y')) ?></span>
+      <span><?= e(pp_date('l, F j, Y')) ?></span>
       <a href="<?= e(url('newsletter/')) ?>">Newsletters</a>
       <a href="<?= e(url('corrections')) ?>">Corrections</a>
     </div>

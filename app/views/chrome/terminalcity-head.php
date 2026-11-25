@@ -7,7 +7,7 @@ $tcWeather = pp_weather_line();
 <div class="tc-util">
   <div class="in">
     <div>
-      <span><?= e(date('l, j F Y')) ?></span>
+      <span><?= e(pp_date('l, j F Y')) ?></span>
       <?php if ($tcWeather !== ''): ?><span class="sep">|</span><span><?= pp_weather_link(e(str_replace('|', ' · ', $tcWeather)), 'pp-wx') ?></span><?php endif; ?>
     </div>
     <div>
