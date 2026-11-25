@@ -33,9 +33,7 @@
       <div class="lnks">
         <a href="<?= e(url('subscribe')) ?>">Subscribe</a>
         <a href="<?= e(url('newsletter/')) ?>">Newsletters</a>
-        <?php if (setting('contact_email') !== ''): ?>
-        <a href="mailto:<?= e(setting('contact_email')) ?>">Send a tip</a>
-        <?php endif; ?>
+        <a href="<?= e(url('tips')) ?>">Send a tip</a>
       </div>
     </div>
   </div>

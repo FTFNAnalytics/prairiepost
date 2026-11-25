@@ -291,6 +291,22 @@ function pp_schema_ddl(string $driver): array
             created_at $dt NOT NULL
         )$suffix",
 
+        "CREATE TABLE whiteboard_notes (
+            id $id,
+            site_id INTEGER NOT NULL,
+            body TEXT NOT NULL,
+            source_url VARCHAR(1000) NOT NULL DEFAULT '',
+            note_type VARCHAR(20) NOT NULL DEFAULT 'lead',
+            status VARCHAR(20) NOT NULL DEFAULT 'unverified',
+            origin VARCHAR(20) NOT NULL DEFAULT 'staff',
+            posted_by VARCHAR(120) NOT NULL DEFAULT '',
+            contact VARCHAR(255) NOT NULL DEFAULT '',
+            user_id INTEGER,
+            post_id INTEGER,
+            created_at $dt NOT NULL,
+            updated_at $dt NOT NULL
+        )$suffix",
+
         "CREATE TABLE roadmap_items (
             id $id,
             kind VARCHAR(20) NOT NULL DEFAULT 'note',
@@ -559,6 +575,7 @@ function pp_schema_ddl(string $driver): array
         'CREATE INDEX idx_ads_site_placement ON ads (site_id, placement)',
         'CREATE INDEX idx_ads_campaign ON ads (campaign_id)',
         'CREATE INDEX idx_inquiries_site ON inquiries (site_id, created_at)',
+        'CREATE INDEX idx_whiteboard_site ON whiteboard_notes (site_id, created_at)',
         'CREATE INDEX idx_login_attempts_email ON login_attempts (email, created_at)',
         'CREATE INDEX idx_login_attempts_ip ON login_attempts (ip, created_at)',
         'CREATE INDEX idx_audit_created ON audit_log (created_at)',
@@ -585,6 +602,10 @@ function pp_install(PDO $pdo, string $driver): void
     // must never write, so the key exists before its first request.
     $pdo->prepare('INSERT INTO settings (site_id, skey, svalue) VALUES (0, ?, ?)')
         ->execute(['ingest_ref_key', bin2hex(random_bytes(32))]);
+    // The key that signs the tips form's timing token (step 26 mints it on
+    // upgrades), so the public form never writes a setting.
+    $pdo->prepare('INSERT INTO settings (site_id, skey, svalue) VALUES (0, ?, ?)')
+        ->execute(['tips_form_key', bin2hex(random_bytes(32))]);
 }
 
 /** Current stored schema version; 1 = the pre-network schema. */
@@ -1511,6 +1532,41 @@ function pp_migrations(): array
             $pdo->exec('ALTER TABLE ingest_agents ADD COLUMN edit_drafts INTEGER NOT NULL DEFAULT 0');
             $pdo->exec('ALTER TABLE post_revisions ADD COLUMN image_alt VARCHAR(255)');
             $pdo->exec("UPDATE settings SET svalue = '25' WHERE site_id = 0 AND skey = 'schema_version'");
+        },
+
+        26 => function (PDO $pdo, string $driver): void {
+            // The whiteboard (25 Nov 2026): one private board per paper for
+            // reader tips, leads, rumours and facts, modelled on Calgary
+            // Dispatch's. Each paper's /tips form pins reader tips to it in
+            // place of the tips mailto links, whose domains mostly had no
+            // mail server. A new table: no existing row changes.
+            //
+            // tips_form_key signs the tips form's timing token. Minted here,
+            // like ingest_ref_key in step 23, so the public form never
+            // writes a setting.
+            $id = $driver === 'mysql' ? 'INT UNSIGNED AUTO_INCREMENT PRIMARY KEY'
+                : ($driver === 'pgsql' ? 'INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY' : 'INTEGER PRIMARY KEY AUTOINCREMENT');
+            $dt = $driver === 'pgsql' ? 'TIMESTAMP' : 'DATETIME';
+            $suffix = $driver === 'mysql' ? ' ENGINE=InnoDB DEFAULT CHARSET=utf8mb4' : '';
+            $pdo->exec("CREATE TABLE whiteboard_notes (
+                id $id,
+                site_id INTEGER NOT NULL,
+                body TEXT NOT NULL,
+                source_url VARCHAR(1000) NOT NULL DEFAULT '',
+                note_type VARCHAR(20) NOT NULL DEFAULT 'lead',
+                status VARCHAR(20) NOT NULL DEFAULT 'unverified',
+                origin VARCHAR(20) NOT NULL DEFAULT 'staff',
+                posted_by VARCHAR(120) NOT NULL DEFAULT '',
+                contact VARCHAR(255) NOT NULL DEFAULT '',
+                user_id INTEGER,
+                post_id INTEGER,
+                created_at $dt NOT NULL,
+                updated_at $dt NOT NULL
+            )$suffix");
+            $pdo->exec('CREATE INDEX idx_whiteboard_site ON whiteboard_notes (site_id, created_at)');
+            $pdo->prepare('INSERT INTO settings (site_id, skey, svalue) VALUES (0, ?, ?)')
+                ->execute(['tips_form_key', bin2hex(random_bytes(32))]);
+            $pdo->exec("UPDATE settings SET svalue = '26' WHERE site_id = 0 AND skey = 'schema_version'");
         },
 
     ];

@@ -25,6 +25,17 @@ function admin_header(string $title, string $active = '', string $actions = ''):
         'dashboard' => ['index.php', 'Dashboard'],
         'posts'     => ['posts.php', 'Stories'],
     ];
+    if (is_editor($user)) {
+        // The whiteboard carries a count of reader tips nobody has looked
+        // into yet: one small indexed query, like the wire time below.
+        $waiting = 0;
+        try {
+            $waiting = pp_wb_waiting(current_site_id());
+        } catch (PDOException) {
+            // A board that can't be counted still opens.
+        }
+        $items['whiteboard'] = ['whiteboard.php', $waiting > 0 ? "Whiteboard ($waiting)" : 'Whiteboard'];
+    }
     if ($hub && is_editor($user)) {
         // The control room: the network-wide pages exist only on the hub.
         $items['network'] = ['network-posts.php', 'Network desk'];

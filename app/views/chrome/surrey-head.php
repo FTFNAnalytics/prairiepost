@@ -8,7 +8,6 @@ $ssWords = preg_split('/\s+/', trim($siteTitle)) ?: [];
 $ssThe   = (strcasecmp($ssWords[0] ?? '', 'the') === 0) ? array_shift($ssWords) : '';
 $ssName  = implode(' ', $ssWords) ?: $siteTitle;
 $ssWeather = pp_weather_line();
-$ssMail = trim(setting('contact_email'));
 ?>
 <div class="ss-util">
   <div class="in">
@@ -17,7 +16,7 @@ $ssMail = trim(setting('contact_email'));
       <?php if ($ssWeather !== ''): ?><span class="sep">|</span><span><?= pp_weather_link(e(str_replace('|', ' · ', $ssWeather)), 'pp-wx') ?></span><?php endif; ?>
     </div>
     <div>
-      <?php if ($ssMail !== ''): ?><a href="mailto:<?= e($ssMail) ?>">News tips</a><span class="sep">|</span><?php endif; ?>
+      <a href="<?= e(url('tips')) ?>">News tips</a><span class="sep">|</span>
       <a href="<?= e(url('newsletter/')) ?>"><?= e(setting('newsletter_heading', 'Stay in the Know')) ?></a><span class="sep">|</span>
       <a href="/admin/">Sign in</a>
     </div>

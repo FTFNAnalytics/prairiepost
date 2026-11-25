@@ -20,7 +20,7 @@
       </div>
       <div class="col">
         <h4>The newsroom</h4>
-        <?php if (setting('contact_email') !== ''): ?><a href="mailto:<?= e(setting('contact_email')) ?>">Send a tip</a><?php endif; ?>
+        <a href="<?= e(url('tips')) ?>">Send a tip</a>
         <a href="<?= e(url('corrections')) ?>">Corrections</a>
         <a href="<?= e(url('search')) ?>">Search the archive</a>
         <a href="/admin/">Newsroom sign-in</a>
@@ -29,7 +29,6 @@
         <h4>Follow</h4>
         <a href="<?= e(url('newsletter/')) ?>"><?= e(setting('newsletter_heading', 'The Daily Lookout')) ?></a>
         <a href="<?= e(url('feed/')) ?>">RSS</a>
-        <?php if (setting('contact_email') !== ''): ?><a href="mailto:<?= e(setting('contact_email')) ?>">Membership</a><?php endif; ?>
       </div>
     </div>
   </div>

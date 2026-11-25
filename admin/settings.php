@@ -197,7 +197,7 @@ flash_show();
         <textarea id="traffic_items" name="traffic_items" class="mono"><?= e(setting('traffic_items')) ?></textarea>
         <label for="events_items">Events box · JSON rows of [label, link, date, venue] — date &amp; venue optional</label>
         <textarea id="events_items" name="events_items" class="mono"><?= e(setting('events_items')) ?></textarea>
-        <label for="contact_email">Contact email · shown in the footer</label>
+        <label for="contact_email">Contact email · for the newsroom's own use; readers' tips go to the <a href="whiteboard.php">whiteboard</a></label>
         <input type="text" id="contact_email" name="contact_email" value="<?= e(setting('contact_email')) ?>">
         <label for="field_notes_text">Field notes box · a standing note on the rail</label>
         <textarea id="field_notes_text" name="field_notes_text" style="min-height:64px"><?= e(setting('field_notes_text')) ?></textarea>

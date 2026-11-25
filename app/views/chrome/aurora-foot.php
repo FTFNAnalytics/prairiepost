@@ -33,10 +33,7 @@
     <div>
       <div class="fh">Contact</div>
       <div class="lnks">
-        <?php if (setting('contact_email') !== ''): ?>
-        <a href="mailto:<?= e(setting('contact_email')) ?>">Send a tip</a>
-        <a href="mailto:<?= e(setting('contact_email')) ?>"><?= e(setting('contact_email')) ?></a>
-        <?php endif; ?>
+        <a href="<?= e(url('tips')) ?>">Send a tip</a>
         <a href="<?= e(url('subscribe')) ?>">Get the newsletter</a>
       </div>
       <?php if (setting('paper_address') !== ''): ?>

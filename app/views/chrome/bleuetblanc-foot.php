@@ -23,7 +23,7 @@
           <h4><?= e(pp_t('Follow')) ?></h4>
           <a href="<?= e(url('newsletter/')) ?>"><?= e(setting('newsletter_heading', pp_t('Newsletter'))) ?></a>
           <a href="<?= e(url('feed/')) ?>">RSS</a>
-          <?php if (setting('contact_email') !== ''): ?><a href="mailto:<?= e(setting('contact_email')) ?>"><?= e(pp_t('Send a tip')) ?></a><?php endif; ?>
+          <a href="<?= e(url('tips')) ?>"><?= e(pp_t('Send a tip')) ?></a>
         </div>
       </div>
     </div>

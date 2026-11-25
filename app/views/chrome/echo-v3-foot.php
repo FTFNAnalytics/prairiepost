@@ -11,7 +11,7 @@
   <div class="cols">
     <div>
       <div class="fh">Contact <?= e(preg_replace('/^The\s+/i', '', $siteTitle)) ?></div>
-      <p><?= nl2br(e(setting('paper_address'))) ?><?= setting('contact_email') !== '' ? '<br>' . e(setting('contact_email')) : '' ?></p>
+      <p><?= nl2br(e(setting('paper_address'))) ?><?= setting('paper_address') !== '' ? '<br>' : '' ?><a href="<?= e(url('tips')) ?>">Send a tip</a></p>
     </div>
     <div>
       <div class="fh">Sections</div>

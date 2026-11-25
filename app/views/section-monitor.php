@@ -53,8 +53,7 @@ $rest = array_slice($posts, 1);
     <div class="mm-card">
       <h3>Have a tip?</h3>
       <p class="mm-meta" style="margin:0 0 12px">We protect our sources. Reach the newsroom directly.</p>
-      <?php $mmTip = setting('contact_email'); ?>
-      <a class="mm-subscribe" style="margin-left:0" href="<?= $mmTip !== '' ? 'mailto:' . e($mmTip) : e(url('corrections')) ?>">Send a tip</a>
+      <a class="mm-subscribe" style="margin-left:0" href="<?= e(url('tips')) ?>">Send a tip</a>
     </div>
   </aside>
 </div>

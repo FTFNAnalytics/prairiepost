@@ -271,3 +271,15 @@ footer.adminfoot{border-top:0;padding:16px 0 30px;margin-top:40px}
 footer.adminfoot .wrap{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--color-neutral-600);
   display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
 footer.adminfoot a{color:inherit}
+
+/* The whiteboard (admin/whiteboard.php) */
+.wb-filters{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin:0 0 14px}
+.wb-filters select{width:auto;min-width:0}
+.wb-note .wb-body{margin:8px 0 0;font-size:15px;line-height:1.55;overflow-wrap:anywhere}
+/* .newsitem .t a styles headlines; links inside a note are plain links. */
+.wb-note .t a.wb-link{display:block;margin-top:6px;max-width:60ch;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  font-family:inherit;font-size:13px;font-weight:400;line-height:1.4;color:var(--color-accent);text-decoration:underline}
+.wb-note .wb-private{margin-top:10px;padding:6px 10px;font-size:13px;line-height:1.45;border-left:3px solid var(--color-accent-2-800);
+  background:var(--color-accent-2-100);color:var(--color-accent-2-800);overflow-wrap:anywhere}
+.wb-note .t .wb-private a{font-family:inherit;font-size:inherit;font-weight:600;line-height:inherit;color:inherit;text-decoration:underline}
+.wb-note .wb-private__note{display:block;font-size:12px;font-style:italic}

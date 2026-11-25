@@ -7,9 +7,7 @@
       <?php if (setting('breaking_label') !== '' && setting('breaking_url') !== ''): ?>
       <a href="<?= e(setting('breaking_url')) ?>"><strong><?= e(setting('breaking_label')) ?></strong></a>
       <?php endif; ?>
-      <?php if (setting('contact_email') !== ''): ?>
-      <a href="mailto:<?= e(setting('contact_email')) ?>">Tips line</a>
-      <?php endif; ?>
+      <a href="<?= e(url('tips')) ?>">Tips line</a>
       <a href="<?= e(url('newsletter/')) ?>">Newsletters</a>
       <a href="/admin/">Sign in</a>
     </div>

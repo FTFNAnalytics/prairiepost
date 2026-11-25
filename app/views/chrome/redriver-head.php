@@ -6,7 +6,6 @@
    newsletter button, never a solid brick; the active desk carries the
    clay underline; ONE clay rule under the nav. */
 $rgWeather = pp_weather_line();
-$rgMail = trim(setting('contact_email'));
 ?>
 <div class="rg-util">
   <div class="in">
@@ -15,7 +14,7 @@ $rgMail = trim(setting('contact_email'));
       <?php if ($rgWeather !== ''): ?><span class="sep">|</span><span><?= pp_weather_link(e(str_replace('|', ' · ', $rgWeather)), 'pp-wx') ?></span><?php endif; ?>
     </div>
     <div>
-      <?php if ($rgMail !== ''): ?><a href="mailto:<?= e($rgMail) ?>">News tips</a><span class="sep">|</span><?php endif; ?>
+      <a href="<?= e(url('tips')) ?>">News tips</a><span class="sep">|</span>
       <a href="/admin/">Sign in</a>
     </div>
   </div>

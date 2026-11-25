@@ -18,7 +18,7 @@
     </div>
     <div>
       <h4>The newsroom</h4>
-      <?php if (setting('contact_email') !== ''): ?><a href="mailto:<?= e(setting('contact_email')) ?>">News tips</a><?php endif; ?>
+      <a href="<?= e(url('tips')) ?>">News tips</a>
       <a href="<?= e(url('corrections')) ?>">Corrections</a>
       <a href="<?= e(url('search')) ?>">Search the archive</a>
       <a href="/admin/">Newsroom sign-in</a>

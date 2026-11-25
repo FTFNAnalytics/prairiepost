@@ -12,7 +12,7 @@ $kcRelated = !empty($post['category_id'])
     ? posts_in_category((int) $post['category_id'], 3, [(int) $post['id']])
     : [];
 $kcMail = 'mailto:?subject=' . rawurlencode((string) $post['title'])
-        . '&body=' . rawurlencode(url('story/' . $post['slug']));
+        . '&body=' . rawurlencode($canonical);
 ?>
 
 <div class="kc-art in">

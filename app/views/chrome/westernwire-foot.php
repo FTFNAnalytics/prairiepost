@@ -34,9 +34,7 @@
         <a href="<?= e(url('newsletter/')) ?>">Newsletters</a>
         <a href="<?= e(url('corrections')) ?>">Corrections</a>
         <a href="<?= e(url('subscribe')) ?>">Subscribe</a>
-        <?php if (setting('contact_email') !== ''): ?>
-        <a href="mailto:<?= e(setting('contact_email')) ?>">Submit a tip</a>
-        <?php endif; ?>
+        <a href="<?= e(url('tips')) ?>">Submit a tip</a>
         <a href="/admin/">Desk sign-in</a>
       </div>
     </div>

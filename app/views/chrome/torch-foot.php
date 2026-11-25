@@ -27,9 +27,7 @@ $ttFirst = $ttLast !== '' ? implode(' ', $ttWords) : $siteTitle;
         <a href="<?= e(url('newsletter/')) ?>">Newsletters</a>
         <a href="<?= e(url('corrections')) ?>">Corrections</a>
         <a href="<?= e(url('feed/')) ?>">RSS</a>
-        <?php if (setting('contact_email') !== ''): ?>
-        <a href="mailto:<?= e(setting('contact_email')) ?>">Send a tip</a>
-        <?php endif; ?>
+        <a href="<?= e(url('tips')) ?>">Send a tip</a>
         <a href="/admin/">Newsroom sign-in</a>
       </div>
     </div>

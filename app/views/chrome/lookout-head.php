@@ -8,7 +8,6 @@ $llWords = preg_split('/\s+/', trim($siteTitle)) ?: [];
 $llName  = array_pop($llWords) ?: $siteTitle;      // LOOKOUT
 $llThe   = implode(' ', $llWords);                  // The London
 $llWeather = pp_weather_line();
-$llMail = trim(setting('contact_email'));
 ?>
 <div class="ll-util">
   <div class="in">
@@ -21,7 +20,7 @@ $llMail = trim(setting('contact_email'));
       <a class="digest" href="<?= e(url('newsletter/')) ?>">Get the 7am digest</a>
     </div>
     <div class="grp">
-      <?php if ($llMail !== ''): ?><a href="mailto:<?= e($llMail) ?>">Send a tip</a><?php endif; ?>
+      <a href="<?= e(url('tips')) ?>">Send a tip</a>
       <a href="<?= e(url('corrections')) ?>">Corrections</a>
       <a href="/admin/">Sign in</a>
     </div>
