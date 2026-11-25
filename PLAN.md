@@ -15,9 +15,10 @@ paper's newsroom wearing that paper's branding), a code-only roll from
 domains serve `assets/js/bulk.js`, which only that tree carries (checked
 from outside on 24 Nov).
 
-**Analytics:** Kermode Chronicle has carried the Google Analytics tag
-since 24 Nov, the first paper to. No paper has a privacy page yet (see
-the policy decisions below).
+**Analytics:** eight papers load analytics as of 24 Nov. Kermode
+Chronicle carries a Google Analytics tag, and seven papers each carry
+their own Google Tag Manager container. No paper has a privacy page yet
+(see the policy decisions below).
 
 **Merged, not rolled:**
 - photo metadata stripping (9.1 below, #91) and the image-hold fix for an
@@ -151,6 +152,11 @@ below.
   Without one, nginx falls back to the first block bound to each socket.
   That is how Turtle Island served Brampton's certificate.
 - The same pass audits every block for both-family `listen` pairs.
+  No paper publishes an AAAA record (24 Nov), so readers reach every
+  paper over IPv4 only. Publish AAAA records, with the VPS's own IPv6
+  `2a02:4780:2d:6f65::1`, only after every block answers correctly on
+  both families. Until then an IPv6 visitor could be served another
+  site's certificate.
 
 Two cautions. The box hosts foreign tenants (the Institute and Calgary
 Dispatch), whose blocks must be left alone, and any tenant's broken
@@ -406,36 +412,40 @@ log line records the POST.
 
 ## Waiting on the owner (no code needed)
 
-1. **Pacific Post's DNS (found 24 Nov).** `thepacificpost.com` has a
-   second A record, `217.21.85.231`, beside the VPS. That address is a
-   Hostinger server answering 403. About half of visits to the bare
-   domain fail with a certificate error; `www.thepacificpost.com` is
-   unaffected. Delete that record in the domain's DNS at Hostinger.
-   Every other domain, bare and `www`, points only at the VPS.
-2. **Agent key grants for the editing API.** It is live, but no key
+1. **Agent key grants for the editing API.** It is live, but no key
    carries the read, edit-drafts or update-published grants until you
    name which keys get them. Granting one is a revoke and re-mint.
-3. **Surrey's test residue.** Delete draft #315 and story #316 in
+2. **Surrey's test residue.** Delete draft #315 and story #316 in
    Surrey's admin (never by SQL); #316 is publicly visible. Two test PNGs
    sit under `/uploads/2026/09/`.
-4. **An off-site destination for backups.** They run nightly and are
+3. **An off-site destination for backups.** They run nightly and are
    verified, but they sit on the same server as everything else. The
    hook is `/etc/civis-backup-offsite`.
-5. **The ops alert email,** in the hub's Settings → Security. Until it
+4. **The ops alert email,** in the hub's Settings → Security. Until it
    is set, the five-minute watch can only show problems on the
    dashboard, not email them.
-6. **The GitHub default branch** (0.3): repoint it to
+5. **The GitHub default branch** (0.3): repoint it to
    `claude/master-dashboard-control-room-nr3mp4`.
+
+Done: **Pacific Post's DNS** (found and fixed 24 Nov). The bare domain
+carried two stray Hostinger records beside the VPS: an A record that
+failed about half of visits with a certificate error, and an AAAA
+record that wasn't the VPS's IPv6 either. The owner deleted both in
+hPanel. Two public resolvers now return only the VPS for the bare
+domain and `www`, and visits to the bare domain succeeded 12 times out
+of 12.
 
 ## Policy decisions before more code
 
 - **AI-assistance disclosure.** The `ai_disclosure` setting is blank
   (off) by default and no launch pack sets it. Decide whether readers
   see a note on stories drafted with the desk's help.
-- **A privacy page and reader consent.** Kermode has carried the
-  Google Analytics tag since 24 Nov, and no paper has a privacy page
-  yet. Settle this before any other paper adds a tag, and before any
-  paper's indexing is switched on.
+- **A privacy page and reader consent.** Eight papers load analytics
+  as of 24 Nov: Kermode's Google Analytics tag, and Google Tag Manager
+  containers on Burrard, Edmonton, Grande Prairie, Portage, Prairie
+  Dispatch, Surrey and Toronto. No paper has a privacy page yet. Settle
+  this before more papers add tags, and before any paper's indexing is
+  switched on.
 - **A tamper-evident audit log.** Today's audit rows are ordinary
   database rows, which anyone with write access to the database can
   change. Decide whether they should be hash-chained or shipped off the

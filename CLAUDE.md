@@ -227,20 +227,34 @@ holding a capability it should not have.
     file, but its routes pass and upload limit landed: every domain
     answers `401` on `/api/ingest/update`, `/api/ingest/stories` and
     `/api/ingest/drafts/{ref}`, and to a 1.5 MB body.
-  - **Kermode Chronicle carries the GA4 tag `G-RTEJHC0DFB`,** pasted
-    into its Analytics snippet setting. It is served once, in `<head>`,
-    on every public page type, and is absent from the sign-in page and
-    from every sister paper. It is the network's first analytics tag,
-    and no paper has a privacy page.
-  - **thepacificpost.com's apex has a stray second A record,**
-    `217.21.85.231` (a Hostinger server answering 403), beside the VPS,
-    so about half of apex requests fail TLS. `www` points only at the
-    VPS, as does every other domain, bare and `www`. The fix is the
-    owner's, at the registrar. Public DNS can be wrong like this, so a
-    brief pins every HTTP check to the box
-    (`curl --resolve "$host:443:127.0.0.1"`, certificates still
-    verified), as the upgrader's own probes always have. Write future
-    briefs the same way.
+  - **Eight papers load analytics.** Kermode Chronicle carries the GA4
+    tag `G-RTEJHC0DFB`, pasted into its Analytics snippet setting on
+    24 Nov. It is served once, in `<head>`, on every public page type,
+    and is absent from the sign-in page and from every sister paper.
+    The evening crawl the same day found seven more papers loading their
+    own Google Tag Manager container, one ID each: Burrard
+    `GTM-577M22PZ`, Edmonton `GTM-PXR2FHTQ`, Grande Prairie
+    `GTM-NWFCM75J`, Portage `GTM-TFM38BG7`, Prairie Dispatch
+    `GTM-K9VN3L7C`, Surrey `GTM-KQ3222B6` and Toronto `GTM-PZ6PWL6K`.
+    No paper has a privacy page.
+  - **thepacificpost.com's apex had two stray Hostinger records,
+    deleted by the owner the same day.**
+    - An A record, `217.21.85.231` (a Hostinger server answering 403),
+      failed about half of apex requests over TLS.
+    - An AAAA record, `2a02:4780:11:974:0:20d7:f3ee:1`, wasn't the VPS
+      either. The VPS is `srv810445.hstgr.cloud`, whose IPv6 is
+      `2a02:4780:2d:6f65::1`.
+
+    The zone sits on Hostinger's `dns-parking.com` nameservers (serial
+    `2026112402` after the fix). It now holds only A records for `@`
+    and `www`, both the VPS, and Google and Cloudflare agree. No paper
+    publishes an AAAA record, so the network is IPv4-only in DNS. Add
+    AAAA records only after PLAN.md 9.2's both-family audit.
+
+    Public DNS can be wrong like this, so a brief pins every HTTP check
+    to the box (`curl --resolve "$host:443:127.0.0.1"`, certificates
+    still verified), as the upgrader's own probes always have. Write
+    future briefs the same way.
 - **Latest known state (23 Nov, from the VPS agent's report when the
   `7cb82fb` roll stopped at A3).** All 27 sites serve release
   `feb2b1f4f6eb` (the merge of #84), rolled the night of 22 Nov, at
