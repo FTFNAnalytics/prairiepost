@@ -220,6 +220,21 @@ holding a capability it should not have.
 
 ## Current operational state (as of the story-lookup roll, 21 Nov 2026)
 
+- **25 Nov, checked from outside: thirteen papers call themselves
+  prairiedispatch.ca.** On Bison, Brandon, Burrard, Cariboo, Kitchener,
+  London, Mississauga, Portage, Red River, Rideau, Steeltown, Surrey and
+  Toronto, `site_url()` returns `https://prairiedispatch.ca`. These
+  carry that address:
+  - every canonical link, `og:url`, share image and story data;
+  - every sitemap URL and every feed link.
+
+  The flagship has none of those stories, so a feed or a share lands on
+  a 404. The cause is the live tenant configuration
+  (`app/config.site.php`), not the code: `site_url()` returns the
+  configured value unchanged. The other thirteen papers and the hub name
+  their own host. Fix it before any of the thirteen is indexed (PLAN.md
+  10.0). A brief states the mapping semantically (lesson 2) and makes it
+  a pre-authorized, exactly-thirteen-entry edit (lesson 6).
 - **24 Nov, checked from outside (no agent report yet).**
   - **The `7cb82fb` roll has run.** All 27 domains serve
     `/assets/js/bulk.js`, which only the `7cb82fb` tree carries. It was
@@ -690,7 +705,9 @@ holding a capability it should not have.
 
 **The paydown schedule now lives in `PLAN.md`**: the platform phases,
 the compliance gate every new paper is built against, and (since
-24 Nov) Phase 9, the next work, with what waits on the owner. The list
+24 Nov) Phase 9, the next work, with what waits on the owner. Phase 10
+(proposed 25 Nov) is the reader-facing work from a review of every site
+against news and design practice. The list
 below remains the inventory; PLAN.md is the order and the acceptance
 tests. Check any new-paper work against the PLAN.md gate before starting
 it.
@@ -699,8 +716,12 @@ it.
    `indexing_enabled` is set, and none is.]** What remains: the older
    papers' content is invented editorial about a real city, including
    figures and votes attributed to real councils, publicly readable if
-   not indexed. Replace a paper's pack before its indexing is switched
-   on. The newer papers' inaugural editions are about the papers
+   not indexed. Fourteen of those packs sign it with about 80 people
+   who do not exist, and nine of those papers still show at least one
+   such name on their front (25 Nov; PLAN.md 10.3). Replace a paper's
+   pack before its indexing is switched on, and before the next
+   tranche (Western Wire, Bleuet Blanc, Turtle Island) launches. The
+   newer papers' inaugural editions are about the papers
    themselves, true by construction, so launches no longer grow this.
    Original text: every paper is indexable — `robots.txt` is
    `Allow: /` with the sitemap advertised. (`robots.txt` stays `Allow`
