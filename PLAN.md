@@ -58,7 +58,7 @@ newsroom's working copy of that plan; this file is the repository's.
 | 2 Template registry | Done. 2.3 is in the backlog by owner decision. |
 | 3 Hermes ingest | Done, and extended (above). |
 | Hub 1–8 | See `PLAN-CIVIS.md` and `DEPLOY-CIVIS.md`. |
-| **9 Exposure and upkeep** | **Next. 9.1 and 9.5 merged 24 Nov (#91, #90), rolling with `roll-72f8adccbcca`; 9.6 and 9.10 built; 9.2–9.4 and 9.7–9.9 open.** |
+| **9 Exposure and upkeep** | **Next. 9.1 and 9.5 merged 24 Nov (#91, #90), rolling with `roll-72f8adccbcca`; 9.6, 9.7 and 9.10 built; 9.2–9.4, 9.8 and 9.9 open.** |
 
 ---
 
@@ -227,9 +227,11 @@ record, and real front pages for 11 papers. In production, the first
 run's log lists every city, each paper with a block shows a reading
 within the hour, and the watch reports the job on time.
 
-**9.7 — Retire the other launch-day widgets that never update.** The
-weather was not the only field typed in at launch and left. The 24 Nov
-audit found these on live front pages:
+**9.7 — Retire the other launch-day widgets that never update.** *Built
+25 Nov on `claude/retire-launch-widgets`; not merged, not rolled. Code
+only: no schema step, no route, no server step.* The weather was not the
+only field typed in at launch and left. The 24 Nov audit found these on
+live front pages:
 
 - breaking-news banners still up from launch day on Brampton, Kelowna
   (pointing at a newsletter that doesn't exist), Mississauga
@@ -242,15 +244,38 @@ audit found these on live front pages:
 - Prairie Dispatch's markets box, with invented prices "last updated
   4:15 p.m." from `app/seed.php`'s demo settings.
 
-In code, a banner gets an expiry and hides after it, an event hides
-after its date, and a widget with no real data renders nothing, as the
-weather now does. The invented items are editorial content, cleared
-through the admin, never by SQL; they belong to debt item 1 in
-`CLAUDE.md`.
+What was built (`app/freshness.php`). Every such widget now has a clock,
+and none of it edits a row: the launch-day values stay in the database,
+unread, as the typed weather lines did.
 
-*Acceptance:* no front page shows a banner past its expiry or an event
-past its date. The invented traffic, council, membership and markets
-items are gone from every live paper and from the packs and the seed.
+- A breaking banner shows only until `breaking_until`. Settings sets it
+  when a new banner is saved: six hours, or the time the editor picks. A
+  banner with no expiry never shows, and no launch-day banner has one.
+  Saving Settings for another reason never puts a stale banner back up.
+- Traffic shows for 12 hours, and closing prices for 30, after an editor
+  last changed them in Settings. Seeded and launch-day rows were never
+  changed there, so they never show. Unchanged values don't restart the
+  clock.
+- An event shows through its own date. A row whose date names no month
+  and day ("Saturday", or no date at all) never shows, since it could
+  never expire. Settings now says to date every event.
+- London's council tracker, open-files list, membership band and
+  "Next at City Hall" agenda are gone from its templates. Only the launch
+  pack ever filled them, with figures it called illustrative, and no
+  screen could edit them. They come back, if London wants them, as
+  features the newsroom edits and dates.
+- The packs and the seed no longer carry any of it: no banners, events,
+  traffic or prices, and none of London's panels.
+
+Mississauga's "Multi-vehicle crash on Highway 401" is also a launch
+story's headline. That story is launch editorial (debt item 1 in
+`CLAUDE.md`), replaced with the paper's pack, not a widget.
+
+*Acceptance:* `tests/freshness.test.php` passes. It loads production's
+launch-day values into real front pages for six papers and Prairie
+Dispatch and finds none of them, then gives each widget a clock and
+finds it back. It also checks Settings' expiry and clock rules over
+HTTP, and every rule is mutation-tested.
 
 **9.8 — Print each paper's times on its own clock.** The network formats
 every time in one configured zone, America/Edmonton per `DEPLOY.md` and

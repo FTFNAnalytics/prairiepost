@@ -28,7 +28,7 @@
     <?php foreach (pp_nav_categories() as $cat): ?>
     <a<?= $cat['slug'] === 'opinion' ? ' class="op"' : '' ?> href="<?= e(url('desk/' . $cat['slug'])) ?>"<?= $activeDesk === $cat['slug'] ? ' aria-current="page"' : '' ?>><?= e($cat['name']) ?></a>
     <?php endforeach; ?>
-    <?php if (setting('breaking_label') !== '' && setting('breaking_url') !== ''): ?>
+    <?php if (pp_breaking_live()): ?>
     <a class="live" href="<?= e(setting('breaking_url')) ?>">
       <span class="dot"></span><span class="l">Live</span>
       <span class="t"><?= e(setting('breaking_label')) ?></span>

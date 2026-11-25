@@ -52,34 +52,6 @@ return [
             'canada'  => 'Canada',
         ]),
 
-        /* The council tracker and open-files panels (site canvas §isHome).
-           Newsroom-editable in Settings; each panel disappears when blank. */
-        'council_meeting'  => '26 Aug meeting',
-        'council_tracker'  => json_encode([
-            ['state' => 'Deferred', 'item' => 'Wellington bus corridor, phase 3'],
-            ['state' => 'Passed',   'item' => 'Vacant unit tax, 1% for 2027'],
-            ['state' => 'Passed',   'item' => 'Old East Village heritage overlay'],
-            ['state' => 'In camera', 'item' => 'Land acquisition, Ward 4'],
-        ]),
-        'open_files' => json_encode([
-            ['tag' => 'Day 41', 'status' => 'FOI pending', 'title' => 'What did the city pay for the Adelaide land assembly?', 'note' => 'Request filed 17 July. Deadline extended once, to 12 September.'],
-            ['tag' => 'Day 12', 'status' => 'Awaiting comment', 'title' => 'Who signed off on the shelter contract extension?', 'note' => 'Four questions sent to the city manager\'s office. None answered.'],
-            ['tag' => 'Answered', 'closed' => true, 'status' => 'Closed 22 Aug', 'title' => 'The real cost of the Thames Valley Parkway repairs', 'note' => '$4.1M, up from the $2.6M presented to council in March.'],
-        ]),
-        'council_agenda' => json_encode([
-            ['what' => 'Budget committee', 'when' => 'Tue 2 Sep, 09:30 · Committee room 1'],
-            ['what' => 'Planning & environment', 'when' => 'Mon 8 Sep, 16:00 · Chamber'],
-            ['what' => 'Council', 'when' => 'Tue 9 Sep, 13:00 · Chamber'],
-        ]),
-
-        /* Membership band. Figures are illustrative until the newsroom
-           connects real numbers; the panel hides when member_pitch is blank. */
-        'member_pitch'     => 'The Lookout is funded by readers in London. Members keep the record open.',
-        'member_copy'      => 'Freedom-of-information requests, court transcripts and a reporter in the council chamber every Tuesday night. No paywall — the reporting stays free for everyone in the city.',
-        'member_count'     => '1240',
-        'member_goal'      => '2000',
-        'member_goal_note' => 'Funding at 2,000 members covers a second full-time city hall reporter and the annual FOI budget.',
-
         /* Hermes-ready when the owner orders a token: drafts only — this
            paper declares no wire desk. The byline names the newsroom's
            automation, never a person (brand §08: we say how we know). */

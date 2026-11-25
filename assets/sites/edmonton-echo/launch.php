@@ -37,16 +37,6 @@ return [
             'alberta'  => 'Alberta',
             'canada'   => 'Canada',
         ]),
-        'traffic_items'    => json_encode([
-            ['Yellowhead closures at 97 Street', '#'],
-            ['Groat Road single lane at the bridge', '#'],
-            ['LRT replacement buses after 10 p.m.', '#'],
-        ]),
-        'events_items'     => json_encode([
-            ['Downtown farmers\' market, Saturday', '#'],
-            ['City council meets Tuesday, 9:30 a.m.', '#'],
-            ['Community league registration opens', '#'],
-        ]),
     ],
 
     /* --- Wire sources (added only if the URL is new to the network) ------- */

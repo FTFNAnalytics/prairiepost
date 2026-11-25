@@ -121,9 +121,43 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $new = $raw === '' ? '' : json_encode($decoded);
             if ($new !== setting($key)) {
                 $changed[] = $key;
+                // Traffic and prices run on a clock from their last change
+                // (app/freshness.php); saving Settings for another reason
+                // must not make yesterday's figures look current again.
+                if (isset(PP_FRESH_FOR[$key])) {
+                    set_setting($key . '_saved', $new === '' ? '' : (string) time());
+                }
             }
             set_setting($key, $new);
         }
+    }
+    // The breaking banner's expiry. A banner comes down by itself, at the
+    // time the editor picks or six hours after a new one is saved. Saving
+    // Settings for another reason changes nothing: a banner whose time has
+    // passed, or a launch-day banner that never had one, stays down until
+    // an editor picks a time ahead or writes a new banner.
+    if (isset($_POST['breaking_until'])) {
+        $picked = trim((string) $_POST['breaking_until']);
+        $until = '';
+        if (setting('breaking_label') === '') {
+            $until = '';
+        } elseif ($picked !== '') {
+            $ts = strtotime($picked);
+            if ($ts !== false && $ts > time()) {
+                $until = (string) $ts;
+            } else {
+                flash_set('The banner\'s "show until" time has passed, so the banner is down. Pick a time ahead to put it up.', true);
+                $saveError = true;
+            }
+        } elseif (in_array('breaking_label', $changed, true)) {
+            $until = (string) (time() + PP_BREAKING_DEFAULT);
+        } else {
+            $until = setting('breaking_until');
+        }
+        if ($until !== setting('breaking_until')) {
+            $changed[] = 'breaking_until';
+        }
+        set_setting('breaking_until', $until);
     }
     if ($changed) {
         pp_audit('settings.saved', 'settings', implode(', ', $changed));
@@ -166,6 +200,12 @@ flash_show();
         <input type="text" id="breaking_label" name="breaking_label" value="<?= e(setting('breaking_label')) ?>" placeholder="BREAKING">
         <label for="breaking_url">Breaking banner · link</label>
         <input type="text" id="breaking_url" name="breaking_url" value="<?= e(setting('breaking_url')) ?>" placeholder="/story/…">
+        <?php $bUntil = setting('breaking_until'); ?>
+        <label for="breaking_until">Breaking banner · show until</label>
+        <input type="datetime-local" id="breaking_until" name="breaking_until" value="<?= ctype_digit($bUntil) && (int) $bUntil > time() ? e(date('Y-m-d\TH:i', (int) $bUntil)) : '' ?>">
+        <p class="help"><?php if (pp_breaking_live()): ?>Up until <?= e(date('M j, g:i a', (int) $bUntil)) ?>.
+          <?php elseif (setting('breaking_label') !== ''): ?>Down: it has no time ahead. Pick one to put it back up.
+          <?php else: ?>No banner.<?php endif; ?> A banner comes down by itself: at the time you pick here, or six hours after you save a new one with this left blank.</p>
       </div>
       <div>
         <label for="meta_description">Search description</label>
@@ -187,15 +227,15 @@ flash_show();
     <h2>The rail — markets, traffic &amp; events</h2>
     <div class="formgrid">
       <div>
-        <label for="markets">Closing prices · JSON rows of [name, price, change]</label>
+        <label for="markets">Closing prices · JSON rows of [name, price, change] · shown for 30 hours after you change them</label>
         <textarea id="markets" name="markets" class="mono"><?= e(setting('markets')) ?></textarea>
         <label for="markets_note">Prices note</label>
         <input type="text" id="markets_note" name="markets_note" value="<?= e(setting('markets_note')) ?>">
       </div>
       <div>
-        <label for="traffic_items">Traffic box · JSON rows of [label, link]</label>
+        <label for="traffic_items">Traffic box · JSON rows of [label, link] · shown for 12 hours after you change it</label>
         <textarea id="traffic_items" name="traffic_items" class="mono"><?= e(setting('traffic_items')) ?></textarea>
-        <label for="events_items">Events box · JSON rows of [label, link, date, venue] — date &amp; venue optional</label>
+        <label for="events_items">Events box · JSON rows of [label, link, date, venue] · each event shows through its date, so give every one a date like "Dec 4"; venue optional</label>
         <textarea id="events_items" name="events_items" class="mono"><?= e(setting('events_items')) ?></textarea>
         <label for="contact_email">Contact email · for the newsroom's own use; readers' tips go to the <a href="whiteboard.php">whiteboard</a></label>
         <input type="text" id="contact_email" name="contact_email" value="<?= e(setting('contact_email')) ?>">

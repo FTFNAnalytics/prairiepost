@@ -17,7 +17,7 @@ $featured = front_featured_posts($heroId);
 $secondary = $featured ?: latest_posts(2, $heroId);
 $shownIds = array_merge($heroId, array_map('intval', array_column($secondary, 'id')));
 $river = latest_posts(10, $shownIds);
-$markets = setting_json('markets');
+$markets = pp_fresh_rows('markets');
 $weather = pp_weather_today();
 
 $GLOBALS['pp_front_page'] = true;

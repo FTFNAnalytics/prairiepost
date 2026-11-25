@@ -25,7 +25,7 @@ $initials = mb_substr($initials, 0, 2) ?: 'TT';
   <div class="tt-grid">
     <div style="grid-column: 2 / span 7">
       <div class="flagrow">
-        <?php if (setting('breaking_label') !== '' && setting('breaking_url') !== '' && $post['slug'] === basename((string) setting('breaking_url'))): ?>
+        <?php if (pp_breaking_live() && $post['slug'] === basename((string) setting('breaking_url'))): ?>
         <span class="tt-flag">Breaking</span>
         <?php endif; ?>
         <?php if ($k = torch_kicker($post)): ?><span class="kicker"><?= $k ?></span><?php endif; ?>

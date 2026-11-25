@@ -46,8 +46,8 @@ return [
         'contact_email'      => 'tips@mississaugamonitor.com',
         'newsletter_heading' => 'Newsletter signup',
         'newsletter_copy'    => 'Get the latest local news delivered to your inbox, every weekday morning.',
-        'breaking_label'     => 'Multi-vehicle crash on Highway 401 eastbound causes major delays in Mississauga',
-        'breaking_url'       => '/story/mm-401-crash-eastbound-delays',
+        'breaking_label'     => '',
+        'breaking_url'       => '',
         // Hermes: the live desk publishes on filing, clearly labelled.
         'wire_desks'         => 'live',
         'automated_byline'   => 'Monitor Newsroom',
