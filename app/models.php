@@ -965,6 +965,35 @@ function pp_social_save(int $postId, string $platform, array $f): void
  * places the watch reads: sites.domain for the founding papers, the domains
  * table (shortest form, so bare beats www) for everything since.
  */
+/**
+ * A paper's canonical public hostname: its `sites.domain` when set, else
+ * the shortest hostname the `domains` table maps to it (the bare domain
+ * over www; every launch pack lists the canonical one first), else ''.
+ * The one rule for both of a paper's absolute addresses: its own
+ * (site_url()) and a story's (pp_post_public_url()).
+ */
+function pp_site_canonical_host(string $slug, string $domain = ''): string
+{
+    $host = trim($domain);
+    if ($host === '' && $slug !== '') {
+        $stmt = db()->prepare('SELECT hostname FROM domains WHERE site_slug = ? ORDER BY LENGTH(hostname), hostname LIMIT 1');
+        $stmt->execute([$slug]);
+        $host = trim((string) ($stmt->fetchColumn() ?: ''));
+    }
+    return $host;
+}
+
+/** The slugs of every site that claims a hostname, by either record. */
+function pp_host_claimants(string $host): array
+{
+    $stmt = db()->prepare('SELECT site_slug FROM domains WHERE hostname = ?');
+    $stmt->execute([$host]);
+    $slugs = $stmt->fetchAll(PDO::FETCH_COLUMN);
+    $stmt = db()->prepare('SELECT slug FROM sites WHERE LOWER(domain) = ?');
+    $stmt->execute([$host]);
+    return array_values(array_unique(array_map('strval', array_merge($slugs, $stmt->fetchAll(PDO::FETCH_COLUMN)))));
+}
+
 function pp_post_public_url(array $post): string
 {
     $siteId = (int) ($post['canonical_site_id'] ?? 0);
@@ -976,12 +1005,7 @@ function pp_post_public_url(array $post): string
     $stmt = db()->prepare('SELECT slug, domain FROM sites WHERE id = ?');
     $stmt->execute([$siteId]);
     $site = $stmt->fetch() ?: ['slug' => '', 'domain' => ''];
-    $host = trim((string) $site['domain']);
-    if ($host === '' && $site['slug'] !== '') {
-        $stmt = db()->prepare('SELECT hostname FROM domains WHERE site_slug = ? ORDER BY LENGTH(hostname), hostname LIMIT 1');
-        $stmt->execute([$site['slug']]);
-        $host = trim((string) ($stmt->fetchColumn() ?: ''));
-    }
+    $host = pp_site_canonical_host((string) $site['slug'], (string) $site['domain']);
     if ($host === '') {
         return rtrim(site_url(), '/') . '/story/' . rawurlencode((string) ($post['slug'] ?? ''));
     }

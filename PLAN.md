@@ -28,8 +28,9 @@ their own Google Tag Manager container. No paper has a privacy page yet
   launch-day widgets retired (9.7, #96), each paper's own clock (9.8,
   #97), and the routing half of 9.2 (#98), all merged 25 Nov.
 
-The brief that rolls all of it is `docs/briefs/roll-1458b09870e0.md`.
-It raises the schema to 26 (forward only), and the upgrader converts the
+The brief that rolls all of it is `docs/briefs/roll-6e3cfab33b32.md`,
+which supersedes `roll-1458b09870e0.md` and also carries #101's
+address fix (10.0). It raises the schema to 26 (forward only), and the upgrader converts the
 hand-written nginx blocks. Afterwards it adds the weather job's cron line,
 and cleans the stored images if the earlier brief's cleanup never ran.
 
@@ -67,8 +68,8 @@ newsroom's working copy of that plan; this file is the repository's.
 | 2 Template registry | Done. 2.3 is in the backlog by owner decision. |
 | 3 Hermes ingest | Done, and extended (above). |
 | Hub 1–8 | See `PLAN-CIVIS.md` and `DEPLOY-CIVIS.md`. |
-| **9 Exposure and upkeep** | **Next. 9.1 and 9.5 merged 24 Nov (#91, #90), rolling with `roll-72f8adccbcca`; 9.6–9.8, 9.10 and 9.2's routing half merged 25 Nov (#94–#98), rolling with `roll-1458b09870e0`; 9.2's catch-all, 9.3, 9.4 open.** |
-| 10 The reader's paper | Proposed 25 Nov from a review of all 27 sites against news and design practice. Nothing started. 10.0 is two server steps: 13 papers' canonical address (a config edit) and the `roll-1458b09870e0` roll. 10.2, 10.3 and 10.5 wait on owner decisions. |
+| **9 Exposure and upkeep** | **Next. 9.1 and 9.5 merged 24 Nov (#91, #90); 9.6–9.8, 9.10 and 9.2's routing half merged 25 Nov (#94–#98). All of it rolls with `roll-6e3cfab33b32`, which supersedes the `72f8adccbcca` and `1458b09870e0` briefs. 9.2's catch-all, 9.3, 9.4 open.** |
+| 10 The reader's paper | Proposed 25 Nov from a review of all 27 sites against news and design practice. 10.0's address fix is code (#101), and rolls with the next roll. 10.2, 10.3 and 10.5 wait on owner decisions. |
 
 ---
 
@@ -124,7 +125,7 @@ filed.
 This is 1.2's remainder and 1.3, which was never built.
 
 *The routing half is merged (25 Nov, #98) and runs on the next roll,
-`docs/briefs/roll-1458b09870e0.md`.* `upgrade-papers.sh` now changes each hand-written
+`docs/briefs/roll-6e3cfab33b32.md`.* `upgrade-papers.sh` now changes each hand-written
 block it repoints: the `try_files $uri $uri/ =404` fallback of
 `location /` becomes `router.php`, behind the same internal-only exact
 location generated blocks use. The block's rewrite lines stay and go on
@@ -216,7 +217,7 @@ appears in `GET /api/ingest-queue` afterwards, whatever its later
 status. `tests/publish-flow.test.php` checks this in #90.
 
 **9.6 — Live weather.** *Merged 25 Nov (#94), not rolled;
-`docs/briefs/roll-1458b09870e0.md` rolls it and adds the cron line.* Until now a paper's weather was a line an editor
+`docs/briefs/roll-6e3cfab33b32.md` rolls it and adds the cron line.* Until now a paper's weather was a line an editor
 typed into Settings at launch, and nothing ever changed it. On 24 Nov
 sixteen papers printed launch-day weather beside today's date; Brampton
 read "Brampton, Ont. · 27°C · Humid, smog advisory" in late November.
@@ -370,7 +371,7 @@ falls back.
 hub answer `/about` with a page.
 
 **9.10 — The whiteboard and the tips form.** *Merged 25 Nov (#95), not
-rolled; `docs/briefs/roll-1458b09870e0.md` rolls it (schema 26). The owner's order of
+rolled; `docs/briefs/roll-6e3cfab33b32.md` rolls it (schema 26). The owner's order of
 25 Nov: "Draw on the whiteboard from the Calgary Dispatch. Have the tips
 form go to a new whiteboard on each site admin portal."*
 
@@ -452,7 +453,7 @@ page has a canonical URL and an Open Graph card, and every story has
 design: what the pictures are, whose names are on the stories, what
 counts as local, and what a reader can learn about the paper.
 
-**10.0 — Two server steps first.** Neither needs new code.
+**10.0 — Two fixes first.**
 
 *Give thirteen papers their own address.* On thirteen papers,
 `site_url()` returns `https://prairiedispatch.ca`: Bison, Brandon,
@@ -472,14 +473,33 @@ Today noindex keeps search engines out. Once indexing is on, these
 papers would point every search engine at 404s on another paper. So
 this is fixed before any of the thirteen is indexed.
 
-The fix is in the live tenant configuration (`app/config.site.php`):
-each of these thirteen slugs maps to its own canonical URL. The VPS
-agent mirrors the form the other thirteen papers' and the hub's entries
-already take (CLAUDE.md lesson 2). It is a pre-authorized edit of
-exactly thirteen entries, behind a root-only backup (lesson 6). Each
-domain is checked with `curl --resolve`. The upgrader's probe should
-also record each front's canonical host and flag any domain whose
-canonical names another paper, so no launch repeats this.
+*Found the same day, and fixed in code (#101).* The thirteen are
+exactly the papers launched config-edit-free:
+- Kitchener, London and Mississauga, in the 3 Sep batch;
+- every launch since: Surrey, Cariboo, Burrard, Rideau, the Manitoba
+  four, Steeltown and Toronto.
+
+Their runbooks say so ("There is no config-file step"). They resolve
+their tenant from the `domains` table, but `site_url()` read only the
+config, so the config's default, the flagship's address, reached them.
+Migration 15's own note says a paper's canonical hostname lives in
+`sites.domain`, yet nothing read it there. Only migration 11 ever
+filled it, for nine sites.
+
+`site_url()` now keeps the configured URL unless its host belongs to
+another paper. Then it uses the paper's own canonical host: its
+`sites.domain`, else the shortest hostname `domains` maps to it. That is
+the rule `pp_post_public_url()` already used, so the URLs the agents'
+publish lane returns were always right. A configured URL that names the
+paper itself, or no paper, is kept, and an empty one still means the
+request's host. So the other fourteen sites and every test fixture are
+unchanged.
+
+No config edit is needed and there is no schema step; it reaches
+production with the next roll. A future launch gets its own address with
+no config edit (compliance gate item 8). The roll's verification checks
+every domain's canonical, sitemap and feed host. The upgrader's probe
+should also learn to flag a domain whose canonical names another paper.
 
 *Acceptance:* on all 27 domains, the front's canonical, a story's
 canonical and `og:url`, every sitemap URL and every feed link name the
@@ -493,7 +513,7 @@ current:
   canola;
 - London shows 18°C.
 
-`docs/briefs/roll-1458b09870e0.md` puts ECCC's readings in the weather's
+`docs/briefs/roll-6e3cfab33b32.md` puts ECCC's readings in the weather's
 place (9.6), retires the stale widgets (9.7) and puts each paper on its
 own clock (9.8). It also makes `/about` and `/tips` answer on every
 block (9.2, 9.10); today `/about` is a 404 on 11 papers and the hub.
@@ -1058,6 +1078,12 @@ all of the following hold:
 7. **The newsroom wears the paper** (since 23 Nov): the palette's
    `admin` block is chosen from the rendered masthead, and
    `tests/admin-brand.test.php` passes for it.
+8. **The paper prints its own address** (since 25 Nov): the pack's
+   `domains` lists the canonical host first, and the launch runbook's
+   verification checks that the front's canonical link and a sitemap URL
+   name that host. A paper launched config-edit-free has no arm in the
+   server's tenant config, so before the 25 Nov fix it printed the
+   flagship's address, and no masthead check could see it (PLAN.md 10.0).
 
 ## Standing backlog (not gating, tracked)
 
