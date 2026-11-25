@@ -580,8 +580,9 @@ D4. **Every paper names itself.** This is #101's check:
     | the flagship's address, as it gives the web | the paper's own `https://` address, the host its `addr-after.tsv` line names, and `https://prairiedispatch.ca` for the flagship alone | #101 replaces another paper's address with the paper's own |
     | no address at all | `http://localhost` on every line | an empty `site_url` means "the request's host", and there is no request |
 
-    Report which. Neither is a failure of this roll: no scheduled job
-    prints an address today, and the newsletters aren't sending.
+    Report which. Neither is a failure of this roll. No scheduled job
+    sends an address anywhere today: the watch job's alert email has no
+    recipient set, and the newsletters aren't sending.
 
 D5. **Front pages unchanged.** Run `snap "$W/after.tsv"` and `diff` it
     against `before.tsv`. Every domain must show the same status, the same
