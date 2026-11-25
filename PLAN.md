@@ -28,8 +28,9 @@ their own Google Tag Manager container. No paper has a privacy page yet
   launch-day widgets retired (9.7, #96), each paper's own clock (9.8,
   #97), and the routing half of 9.2 (#98), all merged 25 Nov.
 
-The brief that rolls all of it is `docs/briefs/roll-1458b09870e0.md`.
-It raises the schema to 26 (forward only), and the upgrader converts the
+The brief that rolls all of it is `docs/briefs/roll-6e3cfab33b32.md`,
+which supersedes `roll-1458b09870e0.md` and also carries #101's
+address fix (10.0). It raises the schema to 26 (forward only), and the upgrader converts the
 hand-written nginx blocks. Afterwards it adds the weather job's cron line,
 and cleans the stored images if the earlier brief's cleanup never ran.
 
@@ -67,7 +68,7 @@ newsroom's working copy of that plan; this file is the repository's.
 | 2 Template registry | Done. 2.3 is in the backlog by owner decision. |
 | 3 Hermes ingest | Done, and extended (above). |
 | Hub 1–8 | See `PLAN-CIVIS.md` and `DEPLOY-CIVIS.md`. |
-| **9 Exposure and upkeep** | **Next. 9.1 and 9.5 merged 24 Nov (#91, #90), rolling with `roll-72f8adccbcca`; 9.6–9.8, 9.10 and 9.2's routing half merged 25 Nov (#94–#98), rolling with `roll-1458b09870e0`; 9.2's catch-all, 9.3, 9.4 open.** |
+| **9 Exposure and upkeep** | **Next. 9.1 and 9.5 merged 24 Nov (#91, #90); 9.6–9.8, 9.10 and 9.2's routing half merged 25 Nov (#94–#98). All of it rolls with `roll-6e3cfab33b32`, which supersedes the `72f8adccbcca` and `1458b09870e0` briefs. 9.2's catch-all, 9.3, 9.4 open.** |
 | 10 The reader's paper | Proposed 25 Nov from a review of all 27 sites against news and design practice. 10.0's address fix is code (#101), and rolls with the next roll. 10.2, 10.3 and 10.5 wait on owner decisions. |
 
 ---
@@ -124,7 +125,7 @@ filed.
 This is 1.2's remainder and 1.3, which was never built.
 
 *The routing half is merged (25 Nov, #98) and runs on the next roll,
-`docs/briefs/roll-1458b09870e0.md`.* `upgrade-papers.sh` now changes each hand-written
+`docs/briefs/roll-6e3cfab33b32.md`.* `upgrade-papers.sh` now changes each hand-written
 block it repoints: the `try_files $uri $uri/ =404` fallback of
 `location /` becomes `router.php`, behind the same internal-only exact
 location generated blocks use. The block's rewrite lines stay and go on
@@ -216,7 +217,7 @@ appears in `GET /api/ingest-queue` afterwards, whatever its later
 status. `tests/publish-flow.test.php` checks this in #90.
 
 **9.6 — Live weather.** *Merged 25 Nov (#94), not rolled;
-`docs/briefs/roll-1458b09870e0.md` rolls it and adds the cron line.* Until now a paper's weather was a line an editor
+`docs/briefs/roll-6e3cfab33b32.md` rolls it and adds the cron line.* Until now a paper's weather was a line an editor
 typed into Settings at launch, and nothing ever changed it. On 24 Nov
 sixteen papers printed launch-day weather beside today's date; Brampton
 read "Brampton, Ont. · 27°C · Humid, smog advisory" in late November.
@@ -370,7 +371,7 @@ falls back.
 hub answer `/about` with a page.
 
 **9.10 — The whiteboard and the tips form.** *Merged 25 Nov (#95), not
-rolled; `docs/briefs/roll-1458b09870e0.md` rolls it (schema 26). The owner's order of
+rolled; `docs/briefs/roll-6e3cfab33b32.md` rolls it (schema 26). The owner's order of
 25 Nov: "Draw on the whiteboard from the Calgary Dispatch. Have the tips
 form go to a new whiteboard on each site admin portal."*
 
@@ -512,7 +513,7 @@ current:
   canola;
 - London shows 18°C.
 
-`docs/briefs/roll-1458b09870e0.md` puts ECCC's readings in the weather's
+`docs/briefs/roll-6e3cfab33b32.md` puts ECCC's readings in the weather's
 place (9.6), retires the stale widgets (9.7) and puts each paper on its
 own clock (9.8). It also makes `/about` and `/tips` answer on every
 block (9.2, 9.10); today `/about` is a 404 on 11 papers and the hub.

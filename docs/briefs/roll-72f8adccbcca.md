@@ -1,5 +1,10 @@
 # Brief — roll the network to 72f8adccbcca, then clean the stored images
 
+> **Superseded on 25 Nov 2026 by `docs/briefs/roll-6e3cfab33b32.md`.**
+> Don't start this brief. The new one carries this one's code and its
+> image cleanup (its C3), and works from whichever release production is
+> on, including this one's.
+
 **For: the VPS agent** (root SSH; server work only). Written 24 Nov 2026.
 
 You are rolling every prairiepost release group (the papers and the

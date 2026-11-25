@@ -685,7 +685,18 @@ holding a capability it should not have.
   handler, and use the block's own php-fpm socket. They were tested on a
   real nginx and php-fpm. `vhost.template` carries the tips location from
   creation. Its sha256 at the merge is `d28307e3…`.
-- **The roll brief for #90–#98 is written:**
+- **The roll brief to run is `docs/briefs/roll-6e3cfab33b32.md`**
+  (25 Nov). It pins `6e3cfab33b323a7facc93e96eb268eecc27b46cc`, #101's
+  code commit: the address fix, 8 commits after `1458b09`, 22 after
+  `72f8adc` and 33 after `7cb82fb`. Its A5 stops until #101 is merged.
+  It supersedes the brief below, carries all of #90–#98 from whichever of
+  those three releases production is on, and adds A9 and D4: every
+  domain's canonical, `og:url`, sitemap and feed must name the domain
+  itself. Its address check was run here on nginx 1.24 and php-fpm 8.3
+  over verified TLS. It found the two config-edit-free papers in that
+  harness naming the flagship on `1458b09`, and every domain naming
+  itself on the pin.
+- **Superseded: the roll brief for #90–#98,**
   `docs/briefs/roll-1458b09870e0.md` (25 Nov). It pins
   `1458b09870e02f83f8ebd9acafcf6fce04d8e2cb`, the merge of #98: 14
   commits after `72f8adc`, or 25 after `7cb82fb` if the 72f8adc brief
