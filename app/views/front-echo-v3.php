@@ -8,8 +8,8 @@
 
 $quick = latest_posts(5, $hero ? [(int) $hero['id']] : []);
 $latestTitles = array_slice($quick, 0, 5);
-$traffic = setting_json('traffic_items');
-$events = setting_json('events_items');
+$traffic = pp_fresh_rows('traffic_items');
+$events = pp_events_upcoming(setting_json('events_items'));
 $sections = pp_brand_file()['sections'] ?? [];
 ?>
 

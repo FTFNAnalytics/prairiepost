@@ -91,7 +91,7 @@ function pp_compile_edition(): array
               . $h(($weather['temp'] ?? '') . ' — ' . $weather['line']) . '</div>'
               . "<div style=\"$mono;font-size:9.5px;color:$ink;padding-top:4px;\">" . $h($weather['credit'] . ' · ' . $weather['observed']) . '</div></td></tr>';
     }
-    $markets = setting_json('markets');
+    $markets = pp_fresh_rows('markets');
     if ($markets) {
         $out .= "<tr><td style=\"padding:14px 0 0;\"><span style=\"$mono;font-size:10px;color:$muted;\">Closing prices</span>"
               . '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-top:6px;">';

@@ -41,14 +41,11 @@ $vus = array_merge($vus, array_map('intval', array_column($llOpinion, 'id')));
 $llSports = ($c = category_by_slug('sports')) ? posts_in_category((int) $c['id'], 3, $vus) : [];
 
 $llArt = fn (array $p) => $p['image'] ?: site_asset('img/skyline-night.svg');
-$llJson = function (string $key): array {
-    $raw = json_decode((string) setting($key), true);
-    return is_array($raw) ? $raw : [];
-};
-$llTracker = $llJson('council_tracker');
-$llFiles = $llJson('open_files');
-$llMembers = (int) setting('member_count');
-$llGoal = max(1, (int) setting('member_goal'));
+// The council tracker, the open-files list and the membership band are
+// gone (25 Nov 2026). Only the launch pack ever filled them, with figures
+// it called illustrative: invented votes of a real council, invented FOI
+// requests, an invented member count. They return, if London wants them,
+// as features the newsroom edits and dates (PLAN.md 9.7).
 ?>
 
 <div class="ll-front ll-wrap">
@@ -75,27 +72,7 @@ $llGoal = max(1, (int) setting('member_goal'));
     </div>
 
     <aside class="ll-rail">
-      <?php if ($llTracker): ?>
-      <section class="ll-tracker" aria-label="Council tracker">
-        <div class="head">
-          <span class="ll-kick">Council tracker</span>
-          <?php if (setting('council_meeting') !== ''): ?><span class="when"><?= e(setting('council_meeting')) ?></span><?php endif; ?>
-        </div>
-        <?php foreach ($llTracker as $i => $row): ?>
-        <?php if ($i): ?><div class="ll-hair"></div><?php endif; ?>
-        <div class="row">
-          <span class="state<?= stripos((string) ($row['state'] ?? ''), 'camera') !== false ? ' state--quiet' : '' ?>"><?= e((string) ($row['state'] ?? '')) ?></span>
-          <span class="item"><?= e((string) ($row['item'] ?? '')) ?></span>
-        </div>
-        <?php endforeach; ?>
-        <?php if ($cc = category_by_slug('city-hall')): ?>
-        <a class="more" href="<?= e(url('desk/' . $cc['slug'])) ?>">Every vote, this term &rarr;</a>
-        <?php endif; ?>
-      </section>
-      <?php endif; ?>
-
       <?php if ($rail): ?>
-      <div class="ll-rule"></div>
       <div class="stack">
         <?php foreach ($rail as $i => $p): ?>
         <?php if ($i): ?><div class="ll-hair"></div><?php endif; ?>
@@ -109,31 +86,6 @@ $llGoal = max(1, (int) setting('member_goal'));
       <?php endif; ?>
     </aside>
   </div>
-
-  <?php if ($llFiles): ?>
-  <div class="ll-rule" style="margin:38px 0"></div>
-  <section class="ll-files" aria-label="Open files">
-    <div class="head">
-      <div>
-        <span class="ll-kick">The Lookout is watching</span>
-        <h2>Open files we are still chasing</h2>
-      </div>
-      <span class="note">Every accountability story stays on this list until it is answered or closed.</span>
-    </div>
-    <div class="grid">
-      <?php foreach (array_slice($llFiles, 0, 3) as $f): ?>
-      <article class="card">
-        <div class="top">
-          <span class="ll-tag<?= !empty($f['closed']) ? ' ll-tag--out' : '' ?>"><?= e((string) ($f['tag'] ?? '')) ?></span>
-          <span class="status"><?= e((string) ($f['status'] ?? '')) ?></span>
-        </div>
-        <h3><?= e((string) ($f['title'] ?? '')) ?></h3>
-        <p><?= e((string) ($f['note'] ?? '')) ?></p>
-      </article>
-      <?php endforeach; ?>
-    </div>
-  </section>
-  <?php endif; ?>
 
   <?php if ($llCols): ?>
   <div class="ll-rule" style="margin:38px 0"></div>
@@ -207,23 +159,4 @@ $llGoal = max(1, (int) setting('member_goal'));
   </div>
   <?php endif; ?>
 
-  <?php if (setting('member_pitch') !== ''): ?>
-  <section class="ll-member-band" aria-label="Membership">
-    <div>
-      <span class="ll-kick">Reader funded</span>
-      <h2><?= e(setting('member_pitch')) ?></h2>
-      <?php if (setting('member_copy') !== ''): ?><p><?= e(setting('member_copy')) ?></p><?php endif; ?>
-      <div class="cta">
-        <a class="ll-member" href="<?= e(url('newsletter/')) ?>">Become a member</a>
-      </div>
-    </div>
-    <?php if ($llMembers > 0): ?>
-    <div>
-      <div class="nums"><span><?= e(number_format($llMembers)) ?> members</span><span>Goal <?= e(number_format($llGoal)) ?></span></div>
-      <div class="bar"><span style="width:<?= (int) min(100, round($llMembers / $llGoal * 100)) ?>%"></span></div>
-      <?php if (setting('member_goal_note') !== ''): ?><div class="foot"><?= e(setting('member_goal_note')) ?></div><?php endif; ?>
-    </div>
-    <?php endif; ?>
-  </section>
-  <?php endif; ?>
 </div>

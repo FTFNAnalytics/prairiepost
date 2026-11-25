@@ -613,6 +613,17 @@ holding a capability it should not have.
   (with `/about`) routed on the hand-written nginx blocks, and the tips
   POST kept out of the access logs, which would otherwise pair each
   sender's IP with the tip's time.
+- **Launch-day widgets retired — BUILT (25 Nov, branch
+  `claude/retire-launch-widgets`, stacked on the whiteboard branch), not
+  merged or rolled (PLAN.md 9.7).** `app/freshness.php` gives each
+  time-bound widget a clock: a banner needs `breaking_until` ahead (set
+  by Settings), traffic and prices need `traffic_items_saved` /
+  `markets_saved` within 12 / 30 hours, and an event needs a readable
+  date that hasn't passed. Read these widgets only through
+  `pp_breaking_live()`, `pp_fresh_rows()` and `pp_events_upcoming()`,
+  never through `setting()` directly, or a launch-day value comes back.
+  London's council tracker, open files, membership band and city-hall
+  agenda are removed. No schema step, no server step.
 - **Test residue awaiting owner cleanup (admin UI, never SQL):** on
   Surrey — draft #315 (`routes-check-agent-ingest-v2-draft`), and
   story #316 (`routes-check-publish-on-image-test`) which the 28 Sep

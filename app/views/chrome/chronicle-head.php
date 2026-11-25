@@ -4,7 +4,7 @@
       <span><?= e(date('l, j F Y')) ?><?= pp_weather_text() !== '' ? ' · ' . pp_weather_link(e(pp_weather_text()), 'pp-wx') : '' ?></span>
     </div>
     <div class="grp">
-      <?php if (setting('breaking_label') !== '' && setting('breaking_url') !== ''): ?>
+      <?php if (pp_breaking_live()): ?>
       <a href="<?= e(setting('breaking_url')) ?>"><strong><?= e(setting('breaking_label')) ?></strong></a>
       <?php endif; ?>
       <a href="<?= e(url('tips')) ?>">Tips line</a>

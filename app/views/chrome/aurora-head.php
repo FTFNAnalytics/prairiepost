@@ -5,7 +5,7 @@
       <?= pp_weather_link(e(pp_weather_text())) ?>
     </div>
     <div class="grp">
-      <?php if (setting('breaking_label') !== '' && setting('breaking_url') !== ''): ?>
+      <?php if (pp_breaking_live()): ?>
       <a class="hot" href="<?= e(setting('breaking_url')) ?>"><?= e(setting('breaking_label')) ?></a>
       <?php endif; ?>
       <a href="<?= e(url('tips')) ?>">Send a tip</a>

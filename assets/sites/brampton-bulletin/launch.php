@@ -39,8 +39,8 @@ return [
         'contact_email'      => 'tips@bramptonbulletin.com',
         'newsletter_heading' => 'The Brief',
         'newsletter_copy'    => 'Five things, every weekday at 7 — what happened overnight in Brampton and across the GTA, why it matters, and what to watch at City Hall today.',
-        'breaking_label'     => 'Budget 2027 — council debates the DC freeze',
-        'breaking_url'       => '/story/council-votes-7-4-to-freeze-development-charges-for-two-years',
+        'breaking_label'     => '',
+        'breaking_url'       => '',
         'regions'            => json_encode([
             'brampton' => 'Brampton',
             'gta'      => 'Greater Toronto',

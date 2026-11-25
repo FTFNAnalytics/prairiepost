@@ -174,15 +174,9 @@ function pp_seed(PDO $pdo): void
     }
 
     /* --- Settings -------------------------------------------------------- */
-    $settings = array_merge(pp_site_default_settings($siteName), [
-        'markets'       => json_encode([
-            ['Canola Nov',  '687.40', '+4.10'],
-            ['Wheat CWRS',  '318.75', '-1.25'],
-            ['Barley Feed', '241.00', '+0.75'],
-            ['Steers 850lb','402.50', '+2.00'],
-        ]),
-        'markets_note'  => 'Prices last updated 4:15 p.m.',
-    ]);
+    // No demonstration prices: closing prices are the newsroom's to enter,
+    // and show only while fresh (app/freshness.php).
+    $settings = pp_site_default_settings($siteName);
     $insSet = $pdo->prepare('INSERT INTO settings (site_id, skey, svalue) VALUES (?, ?, ?)');
     foreach ($settings as $k => $v) {
         $insSet->execute([$siteId, $k, $v]);

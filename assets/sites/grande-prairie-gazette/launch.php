@@ -38,11 +38,6 @@ return [
             'alberta' => 'Alberta',
             'canada'  => 'Canada',
         ]),
-        'events_items'       => json_encode([
-            ['Bear Creek Folk Festival opens', '#', 'Aug 13', 'Muskoseepi Park · 5 p.m.'],
-            ['Council committee: transit review', '#', 'Aug 15', 'City Hall · 9 a.m.'],
-            ["Farmers' market, last summer date", '#', 'Aug 17', 'Montrose Cultural Centre · 9 a.m.'],
-        ]),
     ],
 
     'sources' => [

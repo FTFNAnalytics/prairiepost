@@ -243,7 +243,7 @@ elseif (pp_chrome('header') === 'bar'): ?>
       <a href="<?= e(url('desk/' . $cat['slug'])) ?>"<?= desk_style(pp_desk_hex($cat['slug'], $cat['color'])) ?><?= $activeDesk === $cat['slug'] ? ' aria-current="page"' : '' ?>><?= e($cat['name']) ?></a>
       <?php endforeach; ?>
     </nav>
-    <?php if (setting('breaking_label') !== '' && setting('breaking_url') !== ''): ?>
+    <?php if (pp_breaking_live()): ?>
     <a class="tb-breaking" href="<?= e(setting('breaking_url')) ?>"><?= e(setting('breaking_label')) ?></a>
     <?php endif; ?>
     <?= pp_weather_link(e(pp_weather_text()), 'tb-weather') ?>

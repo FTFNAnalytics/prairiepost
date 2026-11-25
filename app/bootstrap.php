@@ -59,6 +59,7 @@ require PP_ROOT . '/app/db.php';
 require PP_ROOT . '/app/models.php';
 require PP_ROOT . '/app/weather.php';
 require PP_ROOT . '/app/whiteboard.php';
+require PP_ROOT . '/app/freshness.php';
 require PP_ROOT . '/app/media.php';
 require PP_ROOT . '/app/ai.php';
 require PP_ROOT . '/app/google.php';

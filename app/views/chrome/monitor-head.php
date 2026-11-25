@@ -2,11 +2,12 @@
 /* The Mississauga Monitor — masthead chrome (design pkg §2, §4).
    In scope from page_header(): $siteTitle, $tagline, $activeDesk.
    The breaking bar is settings-driven: it renders only while the
-   newsroom has breaking_label set, and links to breaking_url. */
+   newsroom's banner is live (pp_breaking_live(): a label, a link and an
+   expiry still ahead), and links to breaking_url. */
 $mmWords = preg_split('/\s+/', trim($siteTitle)) ?: [];
 $mmThe   = (strcasecmp($mmWords[0] ?? '', 'The') === 0) ? array_shift($mmWords) : '';
 $mmName  = implode(' ', $mmWords) ?: $siteTitle;
-$mmBreaking = trim(setting('breaking_label'));
+$mmBreaking = pp_breaking_live() ? trim(setting('breaking_label')) : '';
 ?>
 <div class="mm-mast">
   <div class="in">

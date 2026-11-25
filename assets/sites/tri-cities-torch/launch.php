@@ -45,8 +45,8 @@ return [
         'contact_email'      => 'tips@tricitiestorch.ca',
         'newsletter_heading' => 'The Torch, every weekday at 6am',
         'newsletter_copy'    => 'What happened in Coquitlam, Port Coquitlam and Port Moody while you slept.',
-        'breaking_label'     => 'Riverview lands rezoning heads to public hearing',
-        'breaking_url'       => '/story/riverview-lands-rezoning-heads-to-public-hearing',
+        'breaking_label'     => '',
+        'breaking_url'       => '',
         'regions'            => json_encode([
             'tri-cities' => 'Tri-Cities',
             'metro'      => 'Metro Vancouver',

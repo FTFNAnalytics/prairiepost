@@ -29,7 +29,7 @@
     <a class="sp" href="<?= e(url('search')) ?>">Search</a>
   </div>
 </nav>
-<?php if (setting('breaking_label') !== '' && setting('breaking_url') !== ''): ?>
+<?php if (pp_breaking_live()): ?>
 <div class="pf-breaking">
   <div class="wrap">
     <span class="b">Breaking</span>

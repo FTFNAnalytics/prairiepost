@@ -33,7 +33,7 @@
     <a class="sp" href="<?= e(url('search')) ?>" aria-label="Search the archive">Search</a>
   </div>
 </nav>
-<?php if (setting('breaking_label') !== '' && setting('breaking_url') !== ''): ?>
+<?php if (pp_breaking_live()): ?>
 <div class="cu-strip<?= pp_chrome('strip_tone') === 'teal' ? ' cu-strip--teal' : '' ?>">
   <div class="wrap">
     <span class="lab">The Current</span>

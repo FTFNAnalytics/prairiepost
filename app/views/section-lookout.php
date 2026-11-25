@@ -10,8 +10,8 @@
 $llLead = $posts[0] ?? null;
 $llRest = array_slice($posts, 1);
 $llArt = fn (array $p) => $p['image'] ?: site_asset('img/skyline-night.svg');
-$llAgenda = json_decode((string) setting('council_agenda'), true);
-$llAgenda = (is_array($llAgenda) && $cat['slug'] === 'city-hall') ? $llAgenda : [];
+// "Next at City Hall" is gone with the front's council tracker (25 Nov
+// 2026): only the launch pack ever filled it, with September dates.
 $llCount = count_posts_in_category((int) $cat['id']);
 ?>
 
@@ -66,21 +66,6 @@ $llCount = count_posts_in_category((int) $cat['id']);
     </div>
 
     <aside class="ll-aside">
-      <?php if ($llAgenda): ?>
-      <section class="ll-tracker">
-        <span class="ll-kick">Next at City Hall</span>
-        <div style="margin-top:13px">
-          <?php foreach ($llAgenda as $i => $row): ?>
-          <?php if ($i): ?><div class="ll-hair"></div><?php endif; ?>
-          <div style="padding:8px 0">
-            <div style="font-size:13px;font-weight:500;line-height:1.35"><?= e((string) ($row['what'] ?? '')) ?></div>
-            <div style="font-size:11px;line-height:1.5;color:var(--ll-n600)"><?= e((string) ($row['when'] ?? '')) ?></div>
-          </div>
-          <?php endforeach; ?>
-        </div>
-        <span style="display:block;font-size:10px;line-height:1.5;color:var(--ll-n600);margin-top:10px">Agendas post five days ahead. We read them so you don&rsquo;t have to.</span>
-      </section>
-      <?php endif; ?>
       <div class="ll-digest">
         <span class="ll-kick"><?= e(setting('newsletter_heading', 'The 7am digest')) ?></span>
         <p><?= e(setting('newsletter_copy', 'Everything London needs to know, in one email before work.')) ?></p>

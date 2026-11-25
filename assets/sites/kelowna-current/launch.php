@@ -37,8 +37,8 @@ return [
         'contact_email'      => 'tips@kelownacurrent.ca',
         'newsletter_heading' => 'The Morning Current',
         'newsletter_copy'    => 'A concise weekday briefing from Kelowna and across British Columbia — what happened, why it matters, and what to watch next.',
-        'breaking_label'     => 'Morning briefing: the five B.C. stories shaping the day',
-        'breaking_url'       => '/newsletter/',
+        'breaking_label'     => '',
+        'breaking_url'       => '',
         'regions'            => json_encode([
             'okanagan' => 'Okanagan',
             'bc'       => 'British Columbia',

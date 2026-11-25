@@ -7,7 +7,7 @@
       <a href="<?= e(url('corrections')) ?>">Corrections</a>
     </div>
     <div class="grp">
-      <?php if (setting('breaking_label') !== '' && setting('breaking_url') !== ''): ?>
+      <?php if (pp_breaking_live()): ?>
       <a class="hot" href="<?= e(setting('breaking_url')) ?>"><?= e(setting('breaking_label')) ?></a>
       <?php endif; ?>
       <a class="hot" href="<?= e(url('subscribe')) ?>">Subscribe</a>

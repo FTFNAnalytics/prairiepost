@@ -26,7 +26,7 @@ foreach (categories_all() as $cat) {
     }
 }
 
-$events = setting_json('events_items');
+$events = pp_events_upcoming(setting_json('events_items'));
 $chrome = pp_brand_file()['chrome'] ?? [];
 $crosshead = is_string($chrome['crosshead'] ?? null) && $chrome['crosshead'] !== '' ? $chrome['crosshead'] : 'Across the region';
 $eventsLabel = is_string($chrome['events_label'] ?? null) && $chrome['events_label'] !== '' ? $chrome['events_label'] : 'This week';
