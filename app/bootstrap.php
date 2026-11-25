@@ -388,14 +388,47 @@ function set_setting(string $key, string $value, ?int $siteId = null): void
     }
 }
 
-/** Canonical absolute base URL, no trailing slash. */
+/**
+ * Canonical absolute base URL, no trailing slash: the configured
+ * site_url, unless it names another paper (see pp_site_url_resolve()).
+ * An empty site_url means the request's own host, as it always has (local
+ * runs and the test fixtures).
+ */
 function site_url(): string
 {
-    $configured = trim((string) pp_config('site_url', ''));
-    if ($configured !== '') {
-        return rtrim($configured, '/');
+    $configured = rtrim(trim((string) pp_config('site_url', '')), '/');
+    if ($configured === '') {
+        $https = !empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off';
+        $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
+        return ($https ? 'https://' : 'http://') . $host;
     }
-    $https = !empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off';
-    $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
-    return ($https ? 'https://' : 'http://') . $host;
+    static $resolved = [];
+    return $resolved[$configured] ??= pp_site_url_resolve($configured);
+}
+
+/**
+ * The configured base URL, unless its host belongs to another paper. Then
+ * it is this paper's own canonical host (pp_site_canonical_host()).
+ *
+ * Papers launched since tenant resolution moved into the database
+ * (migration 15) have no arm in the server's tenant config. They resolve
+ * their tenant from the `domains` table, but site_url came only from the
+ * config, so the config's default (the flagship's address) reached them.
+ * Thirteen papers printed prairiedispatch.ca in every canonical, share
+ * link, sitemap and feed (PLAN.md 10.0). A configured URL that names this
+ * paper, or no paper at all, is kept exactly as configured.
+ */
+function pp_site_url_resolve(string $configured): string
+{
+    $site = pp_current_site_or_null();
+    $host = strtolower((string) parse_url($configured, PHP_URL_HOST));
+    if ($site === null || $host === '') {
+        return $configured;
+    }
+    $claimants = pp_host_claimants($host);
+    if ($claimants === [] || in_array((string) $site['slug'], $claimants, true)) {
+        return $configured;
+    }
+    $own = pp_site_canonical_host((string) $site['slug'], (string) ($site['domain'] ?? ''));
+    return $own === '' ? $configured : 'https://' . $own;
 }

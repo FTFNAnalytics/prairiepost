@@ -169,6 +169,18 @@ against this list before shipping them.
     string as it appears in the served HTML, and say so when CSS
     transforms it.
 
+10b. **A launch that skips the config edit skips everything only the
+    config supplies.** Since migration 15, a paper's hostnames live in the
+    `domains` table and a launch needs no config arm. But `site_url` still
+    came only from the config, so thirteen papers launched that way
+    printed the flagship's address in every canonical, sitemap and feed for
+    up to twelve weeks. Every check passed, because every check looked at
+    the masthead, which comes from the database. `site_url` was the only
+    per-paper value the config alone supplied, and it now falls back to the
+    database (#101). Before moving anything out of the config path, list
+    what that path supplies (`pp_config()` reads). A launch verifies the
+    front's canonical host, not just its masthead.
+
 11. **Keep what worked:** hard stop after two failed verifications with
    an exact report (both Western Wire stops were correct and caught
    real defects); per-step Verify gates; no manual database edits ever
@@ -229,12 +241,13 @@ holding a capability it should not have.
   - every sitemap URL and every feed link.
 
   The flagship has none of those stories, so a feed or a share lands on
-  a 404. The cause is the live tenant configuration
-  (`app/config.site.php`), not the code: `site_url()` returns the
-  configured value unchanged. The other thirteen papers and the hub name
-  their own host. Fix it before any of the thirteen is indexed (PLAN.md
-  10.0). A brief states the mapping semantically (lesson 2) and makes it
-  a pre-authorized, exactly-thirteen-entry edit (lesson 6).
+  a 404. The thirteen are exactly the papers launched config-edit-free.
+  They resolve their tenant from the `domains` table, but `site_url()`
+  read only the config, whose default is the flagship's address. **Fixed
+  in code (#101), not rolled:** `site_url()` replaces a configured URL
+  that names another paper with the paper's own canonical host
+  (`sites.domain`, else its shortest `domains` hostname). No config edit
+  is needed. Fix it before any of the thirteen is indexed (PLAN.md 10.0).
 - **24 Nov, checked from outside (no agent report yet).**
   - **The `7cb82fb` roll has run.** All 27 domains serve
     `/assets/js/bulk.js`, which only the `7cb82fb` tree carries. It was
