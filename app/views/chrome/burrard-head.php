@@ -35,7 +35,7 @@ $bbWeather = pp_weather_line();
 <div class="bb-util">
   <div class="in">
     <div>
-      <span><?= e(date('l, F j, Y')) ?></span>
+      <span><?= e(pp_date('l, F j, Y')) ?></span>
       <?php if ($bbWeather !== ''): ?><span class="sep">|</span><span><?= pp_weather_link('Vancouver ' . e(str_replace('|', ' · ', $bbWeather)), 'pp-wx') ?></span><?php endif; ?>
     </div>
     <div>

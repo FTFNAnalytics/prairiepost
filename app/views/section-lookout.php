@@ -49,7 +49,7 @@ $llCount = count_posts_in_category((int) $cat['id']);
             <span class="ll-kick ll-kick--n"><?= e($p['dateline'] ?: pp_desk_label($p['category_slug'], $p['category_name'])) ?></span>
             <h2 style="margin-top:8px"><a href="<?= e(post_href($p)) ?>" style="color:inherit"><?= e($p['title']) ?></a></h2>
             <?php if ($p['lede']): ?><p><?= e(excerpt($p['lede'], 130)) ?></p><?php endif; ?>
-            <p class="ll-meta" style="margin-top:8px"><?php if ($p['byline']): ?>By <?= e($p['byline']) ?> · <?php endif; ?><?= e(date('j F', strtotime((string) $p['published_at']))) ?></p>
+            <p class="ll-meta" style="margin-top:8px"><?php if ($p['byline']): ?>By <?= e($p['byline']) ?> · <?php endif; ?><?= e(pp_date('j F', strtotime((string) $p['published_at']))) ?></p>
           </div>
         </article>
         <?php endforeach; ?>

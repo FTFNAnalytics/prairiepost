@@ -2,6 +2,12 @@
 /** The Prairie Dispatch — admin chrome. Include after bootstrap; call admin_header()/admin_footer(). */
 require_once PP_ROOT . '/app/admin-theme.php';
 
+// The newsroom works on the network's clock: its date inputs are read on
+// it, so its pages print on it too (pp_paper_zone() in app/i18n.php).
+if (!defined('PP_NEWSROOM_CLOCK')) {
+    define('PP_NEWSROOM_CLOCK', true);
+}
+
 function flash_set(string $message, bool $error = false): void
 {
     $_SESSION['flash'] = ['message' => $message, 'error' => $error];

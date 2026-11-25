@@ -1,4 +1,5 @@
 {
+  "zone": "America/Vancouver",
   "weather": {"city": "bc-48", "place": "Kelowna"},
   "palette": {
     "ink":     "#17242A",

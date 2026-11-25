@@ -1,4 +1,5 @@
 {
+  "zone": "America/Toronto",
   "weather": {"city": "on-137", "place": "London"},
   "palette": {
     "ink":     "#1D241F",

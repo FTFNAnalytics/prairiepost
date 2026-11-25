@@ -30,7 +30,7 @@ $kcRows = array_slice($posts, 3);
           <?php if ($kcLead['lede']): ?><p><?= e(excerpt($kcLead['lede'], 220)) ?></p><?php endif; ?>
           <p class="kc-meta">
             <?php if ($kcLead['byline']): ?>By <?= e($kcLead['byline']) ?> &middot; <?php endif; ?>
-            <?= e(date('j F', strtotime((string) $kcLead['published_at']))) ?>
+            <?= e(pp_date('j F', strtotime((string) $kcLead['published_at']))) ?>
           </p>
         </div>
       </article>
@@ -54,7 +54,7 @@ $kcRows = array_slice($posts, 3);
       <div class="kc-list">
         <?php foreach ($kcRows as $p): ?>
         <div class="item">
-          <span class="d"><?= e(date('j M', strtotime((string) $p['published_at']))) ?></span>
+          <span class="d"><?= e(pp_date('j M', strtotime((string) $p['published_at']))) ?></span>
           <h2><a href="<?= e(post_href($p)) ?>"><?= e($p['title']) ?></a></h2>
           <span class="tag"><?= e($p['dateline'] ?: read_minutes($p) . ' min') ?></span>
         </div>

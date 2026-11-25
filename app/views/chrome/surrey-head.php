@@ -12,7 +12,7 @@ $ssWeather = pp_weather_line();
 <div class="ss-util">
   <div class="in">
     <div>
-      <span><?= e(date('l, j F Y')) ?></span>
+      <span><?= e(pp_date('l, j F Y')) ?></span>
       <?php if ($ssWeather !== ''): ?><span class="sep">|</span><span><?= pp_weather_link(e(str_replace('|', ' · ', $ssWeather)), 'pp-wx') ?></span><?php endif; ?>
     </div>
     <div>

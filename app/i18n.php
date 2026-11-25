@@ -67,6 +67,42 @@ function pp_t(string $key): string
 }
 
 /**
+ * The paper's own clock (PLAN.md 9.8).
+ *
+ * Stored times are written on the network's clock (config 'timezone', the
+ * PHP default), and strtotime() still reads them on it, so storage never
+ * changes. Only printing does. Public pages and the newsletter print on
+ * the paper's clock, from the "zone" in its palette.json, so a Victoria
+ * reader sees Victoria's time. A paper with no zone, or an invalid one,
+ * prints on the network's clock.
+ *
+ * The newsroom keeps the network's clock: admin/_layout.php defines
+ * PP_NEWSROOM_CLOCK, because the admin's date and time inputs are read on
+ * that clock, and a form that printed one clock and read another would
+ * mis-schedule stories.
+ */
+function pp_paper_zone(): DateTimeZone
+{
+    static $network = null, $paper = null;
+    $network ??= new DateTimeZone(date_default_timezone_get());
+    if (defined('PP_NEWSROOM_CLOCK')) {
+        return $network;
+    }
+    if ($paper === null) {
+        $zone = function_exists('pp_brand_file') ? (pp_brand_file()['zone'] ?? null) : null;
+        $paper = is_string($zone) && $zone !== '' && in_array($zone, DateTimeZone::listIdentifiers(), true)
+            ? new DateTimeZone($zone) : $network;
+    }
+    return $paper;
+}
+
+/** date(), on the paper's clock: for printing a time, never for storing one. */
+function pp_date(string $format, ?int $ts = null): string
+{
+    return (new DateTimeImmutable('@' . ($ts ?? time())))->setTimezone(pp_paper_zone())->format($format);
+}
+
+/**
  * Format a timestamp with an ICU pattern, in the paper's locale and timezone.
  * Falls back to a date() pattern when intl is unavailable, so the site still
  * renders — in English — rather than fataling.
@@ -77,7 +113,8 @@ function pp_fmt(int $ts, string $icu, string $fallback): string
         return date($fallback, $ts);
     }
     static $cache = [];
-    $key = pp_locale() . '|' . $icu;
+    $zone = pp_paper_zone()->getName();
+    $key = pp_locale() . '|' . $zone . '|' . $icu;
     if (!isset($cache[$key])) {
         // A dateline is furniture on every page. If intl is present but
         // refuses the locale or the pattern, fall back to an English date
@@ -87,7 +124,7 @@ function pp_fmt(int $ts, string $icu, string $fallback): string
                 pp_locale(),
                 IntlDateFormatter::NONE,
                 IntlDateFormatter::NONE,
-                date_default_timezone_get(),
+                $zone,
                 null,
                 $icu
             );
@@ -100,7 +137,7 @@ function pp_fmt(int $ts, string $icu, string $fallback): string
     } catch (Throwable) {
         $out = false;
     }
-    return $out === false ? date($fallback, $ts) : $out;
+    return $out === false ? pp_date($fallback, $ts) : $out;
 }
 
 /** "Sunday, August 23, 2026" / "dimanche 23 août 2026" — a masthead dateline. */
@@ -109,7 +146,7 @@ function pp_date_full(?int $ts = null): string
     $ts ??= time();
     return pp_lang() === 'fr'
         ? pp_fmt($ts, 'EEEE d MMMM y', 'l, F j, Y')
-        : date('l, F j, Y', $ts);
+        : pp_date('l, F j, Y', $ts);
 }
 
 /** "August 23, 2026" / "23 août 2026" — a byline date. */
@@ -118,7 +155,7 @@ function pp_date_long(?int $ts = null): string
     $ts ??= time();
     return pp_lang() === 'fr'
         ? pp_fmt($ts, 'd MMMM y', 'F j, Y')
-        : date('F j, Y', $ts);
+        : pp_date('F j, Y', $ts);
 }
 
 /**
@@ -131,7 +168,7 @@ function pp_clock(int $ts): string
     if (pp_lang() === 'fr') {
         return str_replace(' ', "\u{202F}", pp_fmt($ts, "H 'h' mm", 'H\\hi'));
     }
-    return strtolower(str_replace(['AM', 'PM'], ['a.m.', 'p.m.'], date('g:i A', $ts)));
+    return strtolower(str_replace(['AM', 'PM'], ['a.m.', 'p.m.'], pp_date('g:i A', $ts)));
 }
 
 /**

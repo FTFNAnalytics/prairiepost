@@ -80,7 +80,7 @@ $kick = function (array $p): string {
   <aside class="kc-rail">
     <div class="kc-railhead">
       <span class="kc-caps">Latest</span>
-      <span class="upd">Updated <?= e(date('H:i')) ?></span>
+      <span class="upd">Updated <?= e(pp_date('H:i')) ?></span>
     </div>
     <ul class="kc-latest">
       <?php foreach ($latest as $p): ?>

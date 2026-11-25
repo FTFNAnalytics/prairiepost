@@ -11,7 +11,7 @@ $pkMode  = $GLOBALS['ppPkMode'] ?? 'full';
 ?>
 <div class="pk-page">
   <div class="pk-util">
-    <span><?= e(setting('tagline')) ?> &middot; <?= e(date('l, F j, Y')) ?></span>
+    <span><?= e(setting('tagline')) ?> &middot; <?= e(pp_date('l, F j, Y')) ?></span>
     <span class="grp">
       <a href="<?= e(url('newsletter/')) ?>">Newsletter</a>
       <a href="<?= e(url('tips')) ?>">Contact</a>

@@ -1,4 +1,5 @@
 {
+  "zone": "America/Toronto",
   "weather": {"city": "on-82", "place": "Kitchener-Waterloo"},
   "palette": {
     "ink":   "#201E1D",

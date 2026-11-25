@@ -23,7 +23,7 @@ $vus = array_merge($vus, array_map('intval', array_column($ontario, 'id')));
 
 $latest = latest_posts(4, $vus);
 $mostRead = latest_posts(4, array_merge($vus, array_map('intval', array_column($latest, 'id'))));
-$kcClock = fn (array $p) => str_replace(['am', 'pm'], ['a.m.', 'p.m.'], date('g:i a', strtotime((string) $p['published_at'])));
+$kcClock = fn (array $p) => str_replace(['am', 'pm'], ['a.m.', 'p.m.'], pp_date('g:i a', strtotime((string) $p['published_at'])));
 $kcWeather = pp_weather_line();
 ?>
 

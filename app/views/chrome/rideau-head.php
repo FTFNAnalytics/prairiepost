@@ -10,7 +10,7 @@ $rrWeather = pp_weather_line();
 <div class="rr-util">
   <div class="in">
     <div>
-      <span><?= e(date('l, F j, Y')) ?></span>
+      <span><?= e(pp_date('l, F j, Y')) ?></span>
       <?php if ($rrWeather !== ''): ?><span class="sep">|</span><span><?= pp_weather_link(e(str_replace('|', ' · ', $rrWeather)), 'pp-wx') ?></span><?php endif; ?>
     </div>
     <div>
