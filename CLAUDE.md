@@ -569,8 +569,7 @@ holding a capability it should not have.
   releases built from the pin, and a `www-data`-owned uploads tree.
   Backup sets taken before the cleanup still hold the originals until
   they age out.
-- **Live weather — BUILT (24 Nov, branch `claude/live-weather`), not
-  merged or rolled (PLAN.md 9.6).** The typed `weather_line` and
+- **Live weather — MERGED (25 Nov, #94), not rolled (PLAN.md 9.6).** The typed `weather_line` and
   `weather_today` settings are gone from Settings, the seed and every
   pack; their production rows stay, unread. In their place:
   - the hub's `weather` job (`cron/weather.php` through `cron/run.php`,
@@ -592,9 +591,8 @@ holding a capability it should not have.
   prints their times an hour early. The sandbox's tzdata is current;
   production's is a server fact the brief checks (lesson 10a). Story
   times still print in the network zone on every paper (PLAN.md 9.8).
-- **The whiteboard and the tips form — BUILT (25 Nov, branch
-  `claude/whiteboard-tips`, stacked on the weather branch), not merged
-  or rolled (PLAN.md 9.10).** The owner's order: "Draw on the
+- **The whiteboard and the tips form — MERGED (25 Nov, #95), not rolled
+  (PLAN.md 9.10).** The owner's order: "Draw on the
   whiteboard from the Calgary Dispatch. Have the tips form go to a new
   whiteboard on each site admin portal." Calgary Dispatch's source is
   `FTFNAnalytics/CalgaryDispatch`, branch `feature/whiteboard` (a
@@ -618,9 +616,8 @@ holding a capability it should not have.
   (with `/about`) routed on the hand-written nginx blocks, and the tips
   POST kept out of the access logs, which would otherwise pair each
   sender's IP with the tip's time.
-- **Launch-day widgets retired — BUILT (25 Nov, branch
-  `claude/retire-launch-widgets`, stacked on the whiteboard branch), not
-  merged or rolled (PLAN.md 9.7).** `app/freshness.php` gives each
+- **Launch-day widgets retired — MERGED (25 Nov, #96), not rolled
+  (PLAN.md 9.7).** `app/freshness.php` gives each
   time-bound widget a clock: a banner needs `breaking_until` ahead (set
   by Settings), traffic and prices need `traffic_items_saved` /
   `markets_saved` within 12 / 30 hours, and an event needs a readable
@@ -629,8 +626,7 @@ holding a capability it should not have.
   never through `setting()` directly, or a launch-day value comes back.
   London's council tracker, open files, membership band and city-hall
   agenda are removed. No schema step, no server step.
-- **Each paper prints on its own clock — BUILT (25 Nov, branch
-  `claude/paper-clocks`, stacked on the widgets branch), not merged or
+- **Each paper prints on its own clock — MERGED (25 Nov, #97), not
   rolled (PLAN.md 9.8).** Each `palette.json` carries a `"zone"`. Every
   printed time on a public page goes through `pp_date()` (or
   `fmt_date()`, `time_label()`, `pp_clock()`, which use it); never print
@@ -639,16 +635,30 @@ holding a capability it should not have.
   clock via `PP_NEWSROOM_CLOCK`, because its inputs are read on it.
   Western Wire and Turtle Island have no zone and print the network's
   time.
-- **The upgrader converts hand-written blocks — BUILT (25 Nov, branch
-  `claude/legacy-front-controller`, stacked on the clocks branch), not
-  merged (PLAN.md 9.2).** In the vhost loop, `pp_front_controller()` sends a
+- **The upgrader converts hand-written blocks — MERGED (25 Nov, #98),
+  not rolled (PLAN.md 9.2).** In the vhost loop, `pp_front_controller()` sends a
   legacy `location /`'s `=404` fallback to `router.php`, and
   `pp_tips_unlogged()` gives every block `location ~ ^/tips/?$` with
   `access_log off`. Both are idempotent by marker, inserted beside the PHP
   handler, and use the block's own php-fpm socket. They were tested on a
   real nginx and php-fpm. `vhost.template` carries the tips location from
-  creation. The upgrader's sha256 changes with this branch, so a brief
-  that pins it must take the new value.
+  creation. Its sha256 at the merge is `d28307e3…`.
+- **The roll brief for #90–#98 is written:**
+  `docs/briefs/roll-1458b09870e0.md` (25 Nov). It pins
+  `1458b09870e02f83f8ebd9acafcf6fce04d8e2cb`, the merge of #98: 14
+  commits after `72f8adc`, or 25 after `7cb82fb` if the 72f8adc brief
+  never ran (its A3 tells which). It covers:
+  - the preflight, including the tzdata check (`15 16 17`, updating
+    `tzdata` if needed) and reachability of `api.weather.gc.ca`;
+  - the pinned roll, which raises the schema to 26 (forward only) and
+    edits the blocks;
+  - the weather cron line and its first run;
+  - the image cleanup if `m > 0`;
+  - thirteen checks: `/about` and `/tips` on every domain, a marker probe
+    proving `/tips` never reaches the access logs, the block counts, and
+    each paper's clock.
+
+  Its new commands were run here against nginx 1.24 and php-fpm 8.3.
 - **Test residue awaiting owner cleanup (admin UI, never SQL):** on
   Surrey — draft #315 (`routes-check-agent-ingest-v2-draft`), and
   story #316 (`routes-check-publish-on-image-test`) which the 28 Sep

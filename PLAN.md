@@ -19,17 +19,21 @@ from outside on 24 Nov).
 since 24 Nov, the first paper to. No paper has a privacy page yet (see
 the policy decisions below).
 
-**Merged, not rolled:** photo metadata stripping (9.1 below, #91) and
-the image-hold fix for an editor's publish (9.5, #90). The brief that
-rolls them is `docs/briefs/roll-72f8adccbcca.md`. It then cleans the
-images already stored.
+**Merged, not rolled:**
+- photo metadata stripping (9.1 below, #91) and the image-hold fix for an
+  editor's publish (9.5, #90), whose brief was
+  `docs/briefs/roll-72f8adccbcca.md`;
+- live weather (9.6, #94), the whiteboard and tips form (9.10, #95), the
+  launch-day widgets retired (9.7, #96), each paper's own clock (9.8,
+  #97), and the routing half of 9.2 (#98), all merged 25 Nov.
 
-**Built, not merged:** live weather from Environment and Climate Change
-Canada (9.6 below), replacing the weather lines typed in at launch, and
-the whiteboard with its public tips form (9.10), modelled on Calgary
-Dispatch's. The 24 Nov audit's other loose ends are 9.7–9.9. The owner
-settled its three open questions on 25 Nov (decided, under the policy
-decisions below).
+The brief that rolls all of it is `docs/briefs/roll-1458b09870e0.md`.
+It raises the schema to 26 (forward only), and the upgrader converts the
+hand-written nginx blocks. Afterwards it adds the weather job's cron line,
+and cleans the stored images if the earlier brief's cleanup never ran.
+
+The 24 Nov audit's loose ends are 9.6–9.10. The owner settled its three
+open questions on 25 Nov (decided, under the policy decisions below).
 
 **The platform phases below (0–3):** Phases 2 and 3 are done. Phase 0
 is done except the GitHub default branch, which is the owner's switch.
@@ -58,7 +62,7 @@ newsroom's working copy of that plan; this file is the repository's.
 | 2 Template registry | Done. 2.3 is in the backlog by owner decision. |
 | 3 Hermes ingest | Done, and extended (above). |
 | Hub 1–8 | See `PLAN-CIVIS.md` and `DEPLOY-CIVIS.md`. |
-| **9 Exposure and upkeep** | **Next. 9.1 and 9.5 merged 24 Nov (#91, #90), rolling with `roll-72f8adccbcca`; 9.6, 9.7, 9.8 and 9.10 built; 9.2–9.4 and 9.9 open.** |
+| **9 Exposure and upkeep** | **Next. 9.1 and 9.5 merged 24 Nov (#91, #90), rolling with `roll-72f8adccbcca`; 9.6–9.8, 9.10 and 9.2's routing half merged 25 Nov (#94–#98), rolling with `roll-1458b09870e0`; 9.2's catch-all, 9.3, 9.4 open.** |
 
 ---
 
@@ -113,8 +117,8 @@ filed.
 **9.2 — Convert the 14 legacy nginx blocks, and add the catch-all.**
 This is 1.2's remainder and 1.3, which was never built.
 
-*The routing half is built (25 Nov, `claude/legacy-front-controller`) and
-runs on the next roll.* `upgrade-papers.sh` now changes each hand-written
+*The routing half is merged (25 Nov, #98) and runs on the next roll,
+`docs/briefs/roll-1458b09870e0.md`.* `upgrade-papers.sh` now changes each hand-written
 block it repoints: the `try_files $uri $uri/ =404` fallback of
 `location /` becomes `router.php`, behind the same internal-only exact
 location generated blocks use. The block's rewrite lines stay and go on
@@ -200,8 +204,8 @@ a read-only query that counts them.
 appears in `GET /api/ingest-queue` afterwards, whatever its later
 status. `tests/publish-flow.test.php` checks this in #90.
 
-**9.6 — Live weather.** *Built 24 Nov on `claude/live-weather`; not
-merged, not rolled.* Until now a paper's weather was a line an editor
+**9.6 — Live weather.** *Merged 25 Nov (#94), not rolled;
+`docs/briefs/roll-1458b09870e0.md` rolls it and adds the cron line.* Until now a paper's weather was a line an editor
 typed into Settings at launch, and nothing ever changed it. On 24 Nov
 sixteen papers printed launch-day weather beside today's date; Brampton
 read "Brampton, Ont. · 27°C · Humid, smog advisory" in late November.
@@ -252,9 +256,9 @@ record, and real front pages for 11 papers. In production, the first
 run's log lists every city, each paper with a block shows a reading
 within the hour, and the watch reports the job on time.
 
-**9.7 — Retire the other launch-day widgets that never update.** *Built
-25 Nov on `claude/retire-launch-widgets`; not merged, not rolled. Code
-only: no schema step, no route, no server step.* The weather was not the
+**9.7 — Retire the other launch-day widgets that never update.** *Merged
+25 Nov (#96), not rolled. Code only: no schema step, no route, no server
+step.* The weather was not the
 only field typed in at launch and left. The 24 Nov audit found these on
 live front pages:
 
@@ -302,8 +306,8 @@ Dispatch and finds none of them, then gives each widget a clock and
 finds it back. It also checks Settings' expiry and clock rules over
 HTTP, and every rule is mutation-tested.
 
-**9.8 — Print each paper's times on its own clock.** *Built 25 Nov on
-`claude/paper-clocks`; not merged, not rolled. Code only.* The network formats
+**9.8 — Print each paper's times on its own clock.** *Merged 25 Nov
+(#97), not rolled. Code only; the roll brief checks the box's tzdata.* The network formats
 every time in one configured zone, America/Edmonton per `DEPLOY.md` and
 the Kermode runbook, so the story times on every paper are Alberta's.
 Since 1 Nov that is an hour ahead of local time in British Columbia and
@@ -354,8 +358,8 @@ falls back.
 *Acceptance:* the emailed link opens the story, and every paper and the
 hub answer `/about` with a page.
 
-**9.10 — The whiteboard and the tips form.** *Built 25 Nov on
-`claude/whiteboard-tips`; not merged, not rolled. The owner's order of
+**9.10 — The whiteboard and the tips form.** *Merged 25 Nov (#95), not
+rolled; `docs/briefs/roll-1458b09870e0.md` rolls it (schema 26). The owner's order of
 25 Nov: "Draw on the whiteboard from the Calgary Dispatch. Have the tips
 form go to a new whiteboard on each site admin portal."*
 
