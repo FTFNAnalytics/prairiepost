@@ -45,7 +45,6 @@ return [
         'contact_email'      => 'tips@kitchenerchronicle.com',
         'newsletter_heading' => 'The Morning Chronicle',
         'newsletter_copy'    => 'The region in six items, by 6 a.m., every weekday.',
-        'weather_line'       => '21°|Cloudy, showers after 8 p.m.',
         'regions'            => json_encode([
             'waterloo' => 'Waterloo Region',
             'ontario'  => 'Ontario',

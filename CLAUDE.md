@@ -564,6 +564,29 @@ holding a capability it should not have.
   releases built from the pin, and a `www-data`-owned uploads tree.
   Backup sets taken before the cleanup still hold the originals until
   they age out.
+- **Live weather — BUILT (24 Nov, branch `claude/live-weather`), not
+  merged or rolled (PLAN.md 9.6).** The typed `weather_line` and
+  `weather_today` settings are gone from Settings, the seed and every
+  pack; their production rows stay, unread. In their place:
+  - the hub's `weather` job (`cron/weather.php` through `cron/run.php`,
+    at :07 and :37) reads ECCC city pages from `api.weather.gc.ca`
+    through `pp_http_get()`, fetches each city once, and stores each
+    paper's reading as its `weather_live` setting;
+  - a paper opts in with a `weather` block in its `palette.json` (the
+    city-page id and the place name); 19 do, and
+    `tests/weather.test.php` pins which;
+  - `app/weather.php` is the only reader. Nothing older than three hours
+    shows, every rendering credits ECCC and links to the forecast,
+    conditions are only what the station reported, and the observation
+    time is on the city's own clock.
+
+  Rolling it needs the cron line added to `/etc/cron.d/civismedia` (the
+  upgrader repoints cron files, never extends them) and tzdata 2026e or
+  newer on the box. British Columbia, Alberta and Manitoba stopped
+  changing clocks in 2026 (ECCC prints PCT, ABT and MBT), and older data
+  prints their times an hour early. The sandbox's tzdata is current;
+  production's is a server fact the brief checks (lesson 10a). Story
+  times still print in the network zone on every paper (PLAN.md 9.8).
 - **Test residue awaiting owner cleanup (admin UI, never SQL):** on
   Surrey — draft #315 (`routes-check-agent-ingest-v2-draft`), and
   story #316 (`routes-check-publish-on-image-test`) which the 28 Sep

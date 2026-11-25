@@ -7,14 +7,14 @@
 $ccWords = preg_split('/\s+/', trim($siteTitle)) ?: [];
 $ccLast  = array_pop($ccWords) ?: $siteTitle;    // Compass
 $ccFirst = implode(' ', $ccWords);               // The Cariboo
-$ccWeather = trim(setting('weather_line'));
+$ccWeather = pp_weather_line();
 $ccMail = trim(setting('contact_email'));
 ?>
 <div class="cc-util">
   <div class="in">
     <div>
       <span><?= e(date('l, F j, Y')) ?></span>
-      <?php if ($ccWeather !== ''): ?><span class="sep">|</span><span><?= e(str_replace('|', ' · ', $ccWeather)) ?></span><?php endif; ?>
+      <?php if ($ccWeather !== ''): ?><span class="sep">|</span><span><?= pp_weather_link(e(str_replace('|', ' · ', $ccWeather)), 'pp-wx') ?></span><?php endif; ?>
     </div>
     <div>
       <?php if ($ccMail !== ''): ?><a href="mailto:<?= e($ccMail) ?>">News tips</a><span class="sep">|</span><?php endif; ?>

@@ -11,7 +11,7 @@ $tgGrid = latest_posts(3, $tgSeen);
 $tgSeen = array_merge($tgSeen, array_column($tgGrid, 'id'));
 $tgMore = latest_posts(6, $tgSeen);
 $tgTrend = latest_posts(5, []);
-$tgW = array_pad(explode('|', (string) setting('weather_line')), 2, '');
+$tgW = array_pad(explode('|', pp_weather_line()), 2, '');
 ?>
 <?php if (!$hero): ?>
 <div class="tg-wrap" style="padding-top:24px">
@@ -80,13 +80,14 @@ $tgW = array_pad(explode('|', (string) setting('weather_line')), 2, '');
     </div>
 
     <aside class="tg-rail">
-      <?php if (trim((string) setting('weather_line')) !== ''): ?>
+      <?php if (pp_weather_line() !== ''): ?>
       <div class="tg-box tg-weather">
         <div class="hd"><h3>Weather</h3></div>
         <div class="now">
           <span class="temp"><?= e(trim($tgW[0])) ?></span>
           <span class="cond"><?= e(trim($tgW[1])) ?></span>
         </div>
+        <div class="src"><?= pp_weather_source_html() ?></div>
       </div>
       <?php endif; ?>
       <?php if ($tgTrend): ?>

@@ -7,7 +7,7 @@
 $llWords = preg_split('/\s+/', trim($siteTitle)) ?: [];
 $llName  = array_pop($llWords) ?: $siteTitle;      // LOOKOUT
 $llThe   = implode(' ', $llWords);                  // The London
-$llWeather = trim(setting('weather_line'));
+$llWeather = pp_weather_line();
 $llMail = trim(setting('contact_email'));
 ?>
 <div class="ll-util">
@@ -15,7 +15,7 @@ $llMail = trim(setting('contact_email'));
     <div class="grp">
       <span><?= e(date('l, j F Y')) ?></span>
       <?php if ($llWeather !== ''): ?>
-      <span class="sep">|</span><span><?= e(str_replace('|', ' · ', $llWeather)) ?></span>
+      <span class="sep">|</span><span><?= pp_weather_link(e(str_replace('|', ' · ', $llWeather)), 'pp-wx') ?></span>
       <?php endif; ?>
       <span class="sep">|</span>
       <a class="digest" href="<?= e(url('newsletter/')) ?>">Get the 7am digest</a>

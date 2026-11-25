@@ -4,14 +4,14 @@
    owner's package: the solid bison-red bar carrying the reversed
    bison mark, the Montserrat nameplate and the white nav (active desk
    underlined white), over a thin white utility strip. */
-$bsnWeather = trim(setting('weather_line'));
+$bsnWeather = pp_weather_line();
 $bsnMail = trim(setting('contact_email'));
 ?>
 <div class="bsn-util">
   <div class="in">
     <div>
       <span><?= e(date('l, F j, Y')) ?></span>
-      <?php if ($bsnWeather !== ''): ?><span class="sep">|</span><span><?= e(str_replace('|', ' · ', $bsnWeather)) ?></span><?php endif; ?>
+      <?php if ($bsnWeather !== ''): ?><span class="sep">|</span><span><?= pp_weather_link(e(str_replace('|', ' · ', $bsnWeather)), 'pp-wx') ?></span><?php endif; ?>
       <span class="sep">|</span><span><?= e($tagline) ?></span>
     </div>
     <div>

@@ -1,4 +1,5 @@
 {
+  "weather": {"city": "mb-52", "place": "Brandon"},
   "palette": {
     "ink":      "#111111",
     "white":    "#FFFFFF",

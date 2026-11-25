@@ -5,7 +5,7 @@ require __DIR__ . '/_layout.php';
 require_admin();
 
 $textKeys = [
-    'site_title', 'tagline', 'meta_description', 'footer_line', 'weather_line',
+    'site_title', 'tagline', 'meta_description', 'footer_line',
     'newsletter_heading', 'newsletter_copy', 'markets_note', 'analytics_code',
     'breaking_label', 'breaking_url', 'contact_email',
     'field_notes_text', 'field_notes_url',
@@ -13,7 +13,7 @@ $textKeys = [
     'ai_model', 'ai_disclosure', 'monitor_retention_days',
     'ga4_property_id', 'gsc_site_url',
 ];
-$jsonKeys = ['regions', 'markets', 'weather_today', 'traffic_items', 'events_items'];
+$jsonKeys = ['regions', 'markets', 'traffic_items', 'events_items'];
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     csrf_check();
@@ -157,8 +157,11 @@ flash_show();
         <input type="text" id="site_title" name="site_title" value="<?= e(setting('site_title')) ?>">
         <label for="tagline">Tagline</label>
         <input type="text" id="tagline" name="tagline" value="<?= e(setting('tagline')) ?>">
-        <label for="weather_line">Sky-bar weather line</label>
-        <input type="text" id="weather_line" name="weather_line" value="<?= e(setting('weather_line')) ?>">
+        <?php $wx = pp_weather(); $wxCfg = pp_weather_config_from(pp_brand_file()); ?>
+        <label>Weather · live, from Environment and Climate Change Canada</label>
+        <p class="help" style="margin-top:0"><?php if ($wx): ?>Readers see <strong><?= e($wx['place'] . ' · ' . $wx['temp'] . ($wx['cond'] !== '' ? ' · ' . $wx['cond'] : '')) ?></strong>, <?= e(lcfirst($wx['observed'])) ?>. It refreshes every half hour.
+        <?php elseif ($wxCfg): ?>No current reading for <?= e($wxCfg['place']) ?>, so readers see no weather. Readings appear within half an hour of the weather job running, and hide themselves once they are three hours old.
+        <?php else: ?>This paper has no weather city, so readers see no weather. One is set in the paper's <span class="mono">palette.json</span>.<?php endif; ?></p>
         <label for="breaking_label">Breaking banner · label (blank = no banner)</label>
         <input type="text" id="breaking_label" name="breaking_label" value="<?= e(setting('breaking_label')) ?>" placeholder="BREAKING">
         <label for="breaking_url">Breaking banner · link</label>
@@ -181,7 +184,7 @@ flash_show();
   </div>
 
   <div class="panel">
-    <h2>The rail — markets &amp; forecast</h2>
+    <h2>The rail — markets, traffic &amp; events</h2>
     <div class="formgrid">
       <div>
         <label for="markets">Closing prices · JSON rows of [name, price, change]</label>
@@ -190,8 +193,6 @@ flash_show();
         <input type="text" id="markets_note" name="markets_note" value="<?= e(setting('markets_note')) ?>">
       </div>
       <div>
-        <label for="weather_today">Forecast block · JSON with temp, hi, lo, line</label>
-        <textarea id="weather_today" name="weather_today" class="mono"><?= e(setting('weather_today')) ?></textarea>
         <label for="traffic_items">Traffic box · JSON rows of [label, link]</label>
         <textarea id="traffic_items" name="traffic_items" class="mono"><?= e(setting('traffic_items')) ?></textarea>
         <label for="events_items">Events box · JSON rows of [label, link, date, venue] — date &amp; venue optional</label>

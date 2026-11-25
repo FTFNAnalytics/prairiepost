@@ -37,11 +37,6 @@ return [
             'alberta'  => 'Alberta',
             'canada'   => 'Canada',
         ]),
-        'weather_today'    => json_encode([
-            'temp' => '24°C', 'hi' => '27°', 'lo' => '13°',
-            'line' => 'Hazy sun, wind light out of the southeast. Smoke possible by evening.',
-            'fact_label' => 'Air quality', 'fact' => '4 — Moderate',
-        ]),
         'traffic_items'    => json_encode([
             ['Yellowhead closures at 97 Street', '#'],
             ['Groat Road single lane at the bridge', '#'],

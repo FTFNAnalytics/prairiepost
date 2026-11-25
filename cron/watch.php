@@ -75,7 +75,7 @@ foreach ($domains as $slug => $domain) {
 }
 
 /* -- 2 · The crons are actually running ----------------------------------- */
-$expect = ['monitor' => 2 * 3600 + 900, 'agents' => 35 * 60, 'analytics' => 26 * 3600];
+$expect = ['monitor' => 2 * 3600 + 900, 'agents' => 35 * 60, 'analytics' => 26 * 3600, 'weather' => 2 * 3600];
 $latest = pp_ops_latest();
 foreach ($expect as $job => $maxAge) {
     $run = $latest[$job] ?? null;

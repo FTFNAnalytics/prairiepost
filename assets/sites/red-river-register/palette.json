@@ -1,4 +1,5 @@
 {
+  "weather": {"city": "mb-38", "place": "Winnipeg"},
   "palette": {
     "ink":     "#111111",
     "text":    "#1A1A1A",

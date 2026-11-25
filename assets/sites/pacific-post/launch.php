@@ -32,7 +32,6 @@ return [
         'tagline'            => 'Your source for B.C. news',
         'meta_description'   => 'A Greater Vancouver daily: city hall, transit, housing, the province and the coast — reported plainly, from the region that never stops arguing about all four.',
         'footer_line'        => 'Published on the unceded territories of the Musqueam, Squamish and Tsleil-Waututh Nations.',
-        'weather_line'       => 'Vancouver, B.C.',
         'contact_email'      => 'tips@thepacificpost.com',
         'newsletter_heading' => 'The Morning Ferry',
         'newsletter_copy'    => 'Everything Greater Vancouver needs before 8 a.m., five days a week.',

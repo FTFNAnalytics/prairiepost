@@ -1,7 +1,7 @@
 <div class="kc-strip">
   <div class="wrap">
     <div class="grp">
-      <span><?= e(date('l, j F Y')) ?><?= setting('weather_line') !== '' ? ' · ' . e(setting('weather_line')) : '' ?></span>
+      <span><?= e(date('l, j F Y')) ?><?= pp_weather_text() !== '' ? ' · ' . pp_weather_link(e(pp_weather_text()), 'pp-wx') : '' ?></span>
     </div>
     <div class="grp">
       <?php if (setting('breaking_label') !== '' && setting('breaking_url') !== ''): ?>

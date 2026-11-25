@@ -5,7 +5,6 @@
    beside the stacked wordmark (serif BRANDON over the letterspaced
    gold BULLETIN), nav right with the gold active underline, over a
    thin utility strip. */
-$bdnWeather = trim(setting('weather_line'));
 $bdnMail = trim(setting('contact_email'));
 ?>
 <div class="bdn-util">

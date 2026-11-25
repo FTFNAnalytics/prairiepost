@@ -98,6 +98,8 @@ body.t-telegraph {
 .tg-weather .now { display: flex; align-items: baseline; gap: 12px; }
 .tg-weather .temp { font-family: 'Archivo', sans-serif; font-weight: 800; font-size: 38px; color: #00205B; }
 .tg-weather .cond { font-family: 'Archivo', sans-serif; font-size: 15px; color: #4B5563; }
+.tg-weather .src { margin-top: 10px; font-family: 'Archivo', sans-serif; font-size: 12px; line-height: 1.45; color: #4B5563; }
+.tg-weather .src a { color: inherit; text-decoration: underline; text-underline-offset: 2px; }
 .tg-trend ol { list-style: none; margin: 0; padding: 0; }
 .tg-trend li { display: flex; gap: 12px; align-items: flex-start; padding: 9px 0; border-bottom: 1px solid #DCE1E8; }
 .tg-trend li:last-child { border-bottom: 0; }

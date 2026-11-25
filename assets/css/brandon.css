@@ -117,7 +117,8 @@ body.t-brandon {
 .bdn-weather { background: var(--bdn-wheat); padding: 18px 18px 16px; display: flex; justify-content: space-between; align-items: center; gap: 12px; }
 .bdn-weather .ttl { font-weight: 800; font-size: 16px; }
 .bdn-weather .cond { color: #6b5d33; font-size: 14px; margin-top: 3px; }
-.bdn-weather .sun { font-size: 30px; color: var(--bdn-golddeep); }
+.bdn-weather .src { color: #6b5d33; font-size: 12px; line-height: 1.45; margin-top: 8px; }
+.bdn-weather .src a { color: inherit; text-decoration: underline; text-underline-offset: 2px; }
 .bdn-trend { border: 1px solid var(--bdn-line); }
 .bdn-trend .head { background: var(--bdn-ink); color: #fff; font-weight: 700; font-size: 15px; padding: 10px 14px; }
 .bdn-trend .body { padding: 8px 14px 12px; }

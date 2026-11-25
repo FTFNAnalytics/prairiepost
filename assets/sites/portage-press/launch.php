@@ -46,7 +46,6 @@ return [
         'contact_email'      => 'tips@portagepress.ca',
         'newsletter_heading' => 'Stay in the Know',
         'newsletter_copy'    => 'Get the latest Winnipeg news delivered to your inbox — what the city decided, what it means, and what\'s ahead, every weekday.',
-        'weather_line'       => '-2°C|Mostly cloudy',
         'regions'            => json_encode([
             'winnipeg' => 'Winnipeg',
             'manitoba' => 'Manitoba',

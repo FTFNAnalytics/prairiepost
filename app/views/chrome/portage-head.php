@@ -5,7 +5,7 @@
    two-tone wordmark with the maple, the letterspaced tagline subline,
    and the white nav with the red active underline — over a light
    utility strip. */
-$ptgWeather = trim(setting('weather_line'));
+$ptgWeather = pp_weather_line();
 $ptgMail = trim(setting('contact_email'));
 $ptgWords = preg_split('/\s+/', trim($siteTitle)) ?: [$siteTitle];
 $ptgLast = array_pop($ptgWords);
@@ -15,7 +15,7 @@ $ptgFirst = implode(' ', $ptgWords);
   <div class="in">
     <div>
       <span><?= e(date('l, F j, Y')) ?></span>
-      <?php if ($ptgWeather !== ''): ?><span class="sep">|</span><span><?= e(str_replace('|', ' · ', $ptgWeather)) ?> in Winnipeg</span><?php endif; ?>
+      <?php if ($ptgWeather !== ''): ?><span class="sep">|</span><span><?= pp_weather_link(e(str_replace('|', ' · ', $ptgWeather)) . ' in Winnipeg', 'pp-wx') ?></span><?php endif; ?>
     </div>
     <div>
       <?php if ($ptgMail !== ''): ?><a href="mailto:<?= e($ptgMail) ?>">News tips</a><span class="sep">|</span><?php endif; ?>

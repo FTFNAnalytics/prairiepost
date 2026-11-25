@@ -24,7 +24,7 @@ $vus = array_merge($vus, array_map('intval', array_column($ontario, 'id')));
 $latest = latest_posts(4, $vus);
 $mostRead = latest_posts(4, array_merge($vus, array_map('intval', array_column($latest, 'id'))));
 $kcClock = fn (array $p) => str_replace(['am', 'pm'], ['a.m.', 'p.m.'], date('g:i a', strtotime((string) $p['published_at'])));
-$kcWeather = trim(setting('weather_line'));
+$kcWeather = pp_weather_line();
 ?>
 
 <div class="kc-front in">
@@ -116,7 +116,7 @@ $kcWeather = trim(setting('weather_line'));
           <span class="t"><?= e(trim($kcDeg)) ?></span>
           <span class="w"><?= e(trim($kcCond)) ?></span>
         </div>
-        <div class="src">Kitchener &middot; Region of Waterloo Airport</div>
+        <div class="src"><?= pp_weather_source_html() ?></div>
       </div>
       <?php endif; ?>
 

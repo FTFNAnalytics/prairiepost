@@ -3,7 +3,7 @@
   <div class="wrap">
     <div class="grp">
       <strong><?= e(date('l, F j')) ?></strong>
-      <?php if (setting('weather_line') !== ''): ?><span><?= e(setting('weather_line')) ?></span><?php endif; ?>
+      <?php if (pp_weather_text() !== ''): ?><span><?= pp_weather_link(e(pp_weather_text()), 'pp-wx') ?></span><?php endif; ?>
     </div>
     <div class="grp">
       <a href="<?= e(url('newsletter/')) ?>">Newsletters</a>

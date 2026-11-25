@@ -46,7 +46,6 @@ return [
         'contact_email'      => 'tips@londonlookout.com',
         'newsletter_heading' => 'The Daily Lookout',
         'newsletter_copy'    => 'One email with what London decided yesterday, what it means for your street, and what is on the agenda today. Four minutes, no filler.',
-        'weather_line'       => '18°C|Forest City',
         'regions'            => json_encode([
             'london'  => 'London',
             'ontario' => 'Ontario',

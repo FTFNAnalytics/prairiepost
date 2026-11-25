@@ -35,7 +35,6 @@ return [
         'contact_email'      => 'tips@surreystandard.ca',
         'newsletter_heading' => 'Stay in the Know',
         'newsletter_copy'    => 'The latest Surrey news delivered to your inbox every weekday — what the city decided, approved and built, before your first coffee.',
-        'weather_line'       => '16°C|Bear Creek',
         'regions'            => json_encode([
             'surrey' => 'Surrey',
             'bc'     => 'British Columbia',

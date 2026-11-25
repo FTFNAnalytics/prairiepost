@@ -121,13 +121,9 @@ $sections = pp_brand_file()['sections'] ?? [];
     <div class="v3-card v3-wx">
       <div class="ch">
         <span><?= e(preg_replace('/^The\s+/i', '', setting('site_title'))) ?> weather</span>
-        <a href="<?= e(url('desk/weather')) ?>">Full forecast →</a>
+        <a href="<?= e($weather['url'] ?? '') ?>" rel="external">Full forecast →</a>
       </div>
       <div class="now">
-        <svg width="56" height="44" viewBox="0 0 58 46" aria-hidden="true" style="flex:none">
-          <circle cx="19" cy="17" r="11" fill="#f5c542"></circle>
-          <path d="M20 39h24a8.5 8.5 0 0 0 0-17 12 12 0 0 0-22 3.5A7 7 0 0 0 20 39z" fill="#cfd9e6"></path>
-        </svg>
         <div style="flex:1">
           <div class="temp"><?= e($weather['temp'] ?? '') ?></div>
           <div class="cond"><?= e($weather['line'] ?? '') ?></div>
@@ -138,6 +134,7 @@ $sections = pp_brand_file()['sections'] ?? [];
         <div><div class="k">Low</div><div class="v"><?= e($weather['lo'] ?? '—') ?></div></div>
         <div><div class="k"><?= e($weather['fact_label'] ?? 'Humidity') ?></div><div class="v"><?= e($weather['fact'] ?? '—') ?></div></div>
       </div>
+      <div class="src pp-meta"><?= $weather['source'] ?? '' ?></div>
     </div>
     <?php endif; ?>
 

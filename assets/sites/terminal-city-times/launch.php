@@ -40,7 +40,6 @@ return [
         'contact_email'      => 'tips@terminalcitytimes.ca',
         'newsletter_heading' => 'The Morning Departure',
         'newsletter_copy'    => 'The Times\' front page in your inbox every weekday morning — what Vancouver decided, built and argued about, before the first SeaBus sails.',
-        'weather_line'       => '15°C|Waterfront',
         'regions'            => json_encode([
             'vancouver' => 'Vancouver',
             'bc'        => 'British Columbia',

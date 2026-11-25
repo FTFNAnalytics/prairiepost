@@ -1,4 +1,5 @@
 {
+  "weather": {"city": "ab-50", "place": "Edmonton"},
   "palette": {
     "ink": "#0A2240",
     "paper": "#F5F7FA",

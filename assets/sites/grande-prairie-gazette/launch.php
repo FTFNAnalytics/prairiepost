@@ -30,7 +30,6 @@ return [
         'tagline'            => "Peace Country's daily",
         'meta_description'   => 'Independent local reporting for Grande Prairie, the County and the Peace Country: council, courts, energy, agriculture and the games.',
         'footer_line'        => 'Independent local reporting for Grande Prairie, the County and the Peace Country.',
-        'weather_line'       => 'Grande Prairie, AB · 21°C, clear',
         'contact_email'      => 'tips@grandeprairiegazette.ca',
         'newsletter_heading' => 'The Morning Aurora',
         'newsletter_copy'    => 'Everything that happened in Grande Prairie, in your inbox by 6 a.m. Free, five days a week.',

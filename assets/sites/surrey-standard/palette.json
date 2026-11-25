@@ -1,4 +1,5 @@
 {
+  "weather": {"city": "bc-62", "place": "Surrey"},
   "palette": {
     "ink":     "#2D2D2D",
     "paper":   "#F5F5F5",

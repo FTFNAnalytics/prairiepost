@@ -2,9 +2,7 @@
   <div class="wrap">
     <div class="grp">
       <span><?= e(date('l, F j, Y')) ?></span>
-      <?php if (setting('weather_line') !== ''): ?>
-      <a href="<?= e(url('desk/weather')) ?>"><?= e(setting('weather_line')) ?></a>
-      <?php endif; ?>
+      <?= pp_weather_link(e(pp_weather_text())) ?>
     </div>
     <div class="grp">
       <?php if (setting('breaking_label') !== '' && setting('breaking_url') !== ''): ?>

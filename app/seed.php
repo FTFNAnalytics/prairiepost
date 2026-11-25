@@ -26,7 +26,6 @@ function pp_site_default_settings(string $title): array
         'footer_line'        => 'A regional daily for people who live between the towns: farm and market news alongside council, courts, weather and community.',
         'newsletter_heading' => 'The 6 a.m.',
         'newsletter_copy'    => 'One email before the day starts: council, markets, weather, and what happened overnight.',
-        'weather_line'       => '',
         'regions'            => json_encode([
             'local'       => 'Local & county',
             'alberta'     => 'Alberta',
@@ -35,7 +34,6 @@ function pp_site_default_settings(string $title): array
         ]),
         'markets'            => '',
         'markets_note'       => '',
-        'weather_today'      => '',
         'ad_top'             => '',
         'ad_rail'            => '',
         'ad_article'         => '',
@@ -177,7 +175,6 @@ function pp_seed(PDO $pdo): void
 
     /* --- Settings -------------------------------------------------------- */
     $settings = array_merge(pp_site_default_settings($siteName), [
-        'weather_line'  => '21° and clearing · Wind NW 30 km/h',
         'markets'       => json_encode([
             ['Canola Nov',  '687.40', '+4.10'],
             ['Wheat CWRS',  '318.75', '-1.25'],
@@ -185,10 +182,6 @@ function pp_seed(PDO $pdo): void
             ['Steers 850lb','402.50', '+2.00'],
         ]),
         'markets_note'  => 'Prices last updated 4:15 p.m.',
-        'weather_today' => json_encode([
-            'temp' => '21°', 'hi' => '24°', 'lo' => '9°',
-            'line' => 'Sun through the afternoon, wind out of the northwest at 30 km/h. Frost risk in the valley bottoms overnight.',
-        ]),
     ]);
     $insSet = $pdo->prepare('INSERT INTO settings (site_id, skey, svalue) VALUES (?, ?, ?)');
     foreach ($settings as $k => $v) {

@@ -1,4 +1,5 @@
 {
+  "weather": {"city": "bc-79", "place": "Prince George"},
   "palette": {
     "ink":     "#1C2526",
     "paper":   "#F5F0E6",
