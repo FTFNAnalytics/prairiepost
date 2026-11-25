@@ -36,6 +36,10 @@ and cleans the stored images if the earlier brief's cleanup never ran.
 The 24 Nov audit's loose ends are 9.6–9.10. The owner settled its three
 open questions on 25 Nov (decided, under the policy decisions below).
 
+**The 25 Nov review** checked all 27 sites against good practice in news
+and design. Its findings are Phase 10 (proposed, nothing started), and
+its first item is the roll above.
+
 **The platform phases below (0–3):** Phases 2 and 3 are done. Phase 0
 is done except the GitHub default branch, which is the owner's switch.
 Phase 1 is done except converting the 14 hand-written nginx blocks and
@@ -64,6 +68,7 @@ newsroom's working copy of that plan; this file is the repository's.
 | 3 Hermes ingest | Done, and extended (above). |
 | Hub 1–8 | See `PLAN-CIVIS.md` and `DEPLOY-CIVIS.md`. |
 | **9 Exposure and upkeep** | **Next. 9.1 and 9.5 merged 24 Nov (#91, #90), rolling with `roll-72f8adccbcca`; 9.6–9.8, 9.10 and 9.2's routing half merged 25 Nov (#94–#98), rolling with `roll-1458b09870e0`; 9.2's catch-all, 9.3, 9.4 open.** |
+| 10 The reader's paper | Proposed 25 Nov from a review of all 27 sites against news and design practice. Nothing started. 10.0 is two server steps: 13 papers' canonical address (a config edit) and the `roll-1458b09870e0` roll. 10.2, 10.3 and 10.5 wait on owner decisions. |
 
 ---
 
@@ -410,6 +415,316 @@ trail). In production, a tip sent through one paper's `/tips` appears on
 that paper's board and no other, its row carries no IP, and no access
 log line records the POST.
 
+## Phase 10 — The reader's paper (proposed 25 Nov; nothing started)
+
+On 25 Nov the owner asked for the network to be checked against good
+practice in news and design, and for ways to improve how the sites
+feel. This phase is the answer, in the order it should be done. Nothing
+in it has an order yet. Items marked **decision** need the owner's call
+before any code.
+
+*How it was measured.* On 25 Nov a browser visited the front of all 27
+live sites and one story on each, at 1280 px and on a 390 px phone.
+Production was on `7cb82fb` or `72f8adc`, so nothing from #90–#98 is in
+these numbers. On each page it:
+- ran axe-core 4.10 against WCAG 2.1 A and AA;
+- recorded transfer weight, image markup, head metadata and structured
+  data, and the links the front offers;
+- measured the story's body type as rendered.
+
+It also fetched every `/about`, every sitemap and one feed. Timings went
+through this session's proxy and are only indicative. Weights and markup
+are exact.
+The scripts and results are not in the repository. axe finds only part
+of what a keyboard and screen-reader pass would, so 10.6 still needs one.
+
+*What already works.* Each paper looks like itself. The brand packages
+bought distinct mastheads, palettes and type, and it shows. Body type is
+in range nearly everywhere:
+- 17–19 px;
+- line height 1.5–1.75;
+- 53–81 characters a line (Portage, at 92, is the one too wide).
+
+No front scrolls sideways on a phone, and layout shift stays under 0.1
+on every front. Every paper's front links its corrections file. Every
+page has a canonical URL and an Open Graph card, and every story has
+`NewsArticle` data. What lets the sites down is the system around the
+design: what the pictures are, whose names are on the stories, what
+counts as local, and what a reader can learn about the paper.
+
+**10.0 — Two server steps first.** Neither needs new code.
+
+*Give thirteen papers their own address.* On thirteen papers,
+`site_url()` returns `https://prairiedispatch.ca`: Bison, Brandon,
+Burrard, Cariboo, Kitchener, London, Mississauga, Portage, Red River,
+Rideau, Steeltown, Surrey and Toronto. It returns the configured
+`site_url` unchanged, so the live tenant configuration gives these
+tenants the flagship's address. As a result:
+- every page's canonical link, `og:url`, share image and story data names
+  prairiedispatch.ca;
+- so does every URL in their sitemaps and feed items;
+- the Prairie Dispatch has none of those stories, so a feed reader or a
+  shared link lands on a 404 there;
+- the share card falls back to the flagship's nameless prairie
+  landscape.
+
+Today noindex keeps search engines out. Once indexing is on, these
+papers would point every search engine at 404s on another paper. So
+this is fixed before any of the thirteen is indexed.
+
+The fix is in the live tenant configuration (`app/config.site.php`):
+each of these thirteen slugs maps to its own canonical URL. The VPS
+agent mirrors the form the other thirteen papers' and the hub's entries
+already take (CLAUDE.md lesson 2). It is a pre-authorized edit of
+exactly thirteen entries, behind a root-only backup (lesson 6). Each
+domain is checked with `curl --resolve`. The upgrader's probe should
+also record each front's canonical host and flag any domain whose
+canonical names another paper, so no launch repeats this.
+
+*Acceptance:* on all 27 domains, the front's canonical, a story's
+canonical and `og:url`, every sitemap URL and every feed link name the
+domain's own host, or its canonical alias.
+
+*Roll what is merged.* Today's fronts still show launch-day widgets as
+current:
+- Kelowna's masthead reads "24°C · Clear" above a lead story about the
+  season's first snow;
+- the Prairie Dispatch shows 21° and launch-day closing prices for
+  canola;
+- London shows 18°C.
+
+`docs/briefs/roll-1458b09870e0.md` puts ECCC's readings in the weather's
+place (9.6), retires the stale widgets (9.7) and puts each paper on its
+own clock (9.8). It also makes `/about` and `/tips` answer on every
+block (9.2, 9.10); today `/about` is a 404 on 11 papers and the hub.
+Judge the rest of this phase on the live sites only after the roll.
+
+**10.1 — Pictures that aren't the headline again.** Of the 124
+uploaded images on the 27 fronts, 99 are the image agent's
+`agent-image-*` uploads. Twelve were sampled, one from each of twelve
+papers, and all twelve were headline cards: the paper's masthead, a
+desk label and the headline set in type. As a result:
+- most fronts print each headline twice, once as text and once in the
+  picture;
+- thumbnails crop the card to slivers of unreadable type;
+- the overlay heroes (Steeltown, Toronto, Portage) set the headline over
+  the same headline in the picture, and the two collide.
+
+The card duplicates what `/card/<slug>.png` already makes, in each
+paper's colours, for sharing (once 10.0 gives each paper its own host).
+
+- The image agent's guide (`docs/agent-workflow.md`) says a featured
+  image is a photograph or an illustration with no words in it, with a
+  credit. A headline card is never a featured image, and with no picture
+  the agent sends none.
+- A story with no picture runs without one. The newer papers' fronts
+  already have a no-art treatment, because their inaugural editions use
+  it. An older front that lacks one gets one, checked against the render
+  baseline. Cards already published leave the fronts within days once no
+  new ones arrive, so nothing stored needs rewriting.
+- Responsive images. None of the 218 images on the fronts has a
+  `srcset`, and 14 carry width and height. The agent's PNGs run 180–690
+  KB, served whole to phones. Steeltown's front moves 3.2 MB of images
+  and the Prairie Dispatch's 2.5 MB. The median front moves 539 KB of
+  images and 767 KB in all. Make sized
+  derivatives at upload, each written through `pp_image_clean()` like
+  every other file under `/uploads`. `story_photo()` and the front
+  templates then print `srcset`, `sizes`, `width` and `height`.
+
+*Acceptance:* no front shows a picture carrying the headline beside
+it. Every front image has width and height, and a phone fetches no image
+more than twice its slot's width. The median front is under 500 KB and
+none is over 1.5 MB.
+
+**10.2 — Honest bylines, and a disclosure the agents' stories carry.**
+**Decision:** the bylines and the disclosure's wording.
+- On ten papers the agents' stories are signed "Automated report":
+  Bison, Brandon, Burrard, Cariboo, Portage, Red River, Rideau,
+  Steeltown, Surrey and Toronto. That is `ingest.php`'s fallback for a
+  paper with no `automated_byline` setting.
+- Every byline, "Automated report" and "Echo Newsroom" alike, is a
+  `Person` in the story's structured data.
+- The AI-assistance line cannot reach these stories even when it is
+  switched on. It prints only on `origin = 'ai'` stories (the newsroom's
+  AI draft tool), and every agent filing is `origin = 'hermes'`. It also
+  prints only through the shared `article.php`. The 18 papers with their
+  own article template print no disclosure at all.
+- The standard line says "reviewed by an editor", which is not true of a
+  story the image lane publishes with no editor's action.
+
+What to build:
+- Every paper gets an `automated_byline` in the pattern the owner picks.
+- One shared partial prints the disclosure on `hermes` and `ai` stories
+  in every article template, worded by the owner. Its wording is true
+  for each way a story goes live: published by an editor, or by the
+  image lane.
+- A newsroom or automated byline is an `Organization` in the data. A
+  `Person` is only a named author with an author page.
+
+*Acceptance:* a test files an agent story on every paper and finds the
+disclosure on its page (when the setting is on) and an `Organization`
+author in its data. No paper falls back to the generic byline.
+
+**10.3 — Retire the invented launch content.** **Decision:** when.
+The older launch packs are demonstration editorial about real cities
+(debt item 1 in `CLAUDE.md`). Turtle Island's pack calls its content
+"illustrative, not reported". Fourteen packs sign it with about 80
+people who do not exist: reporters, and in Pickering and Sudbury letter
+writers. Nine of those papers still show at least one such name on
+their front today, Bleuet Blanc five and Turtle Island four. Noindex
+keeps these pages out of search, but anyone can read them, and a reader
+who looks one of those reporters up finds no one.
+
+Before any paper's indexing is switched on, and before Western Wire,
+Bleuet Blanc and Turtle Island launch:
+- an editor moves each pack's demonstration stories to draft with the
+  Stories list's bulk change, never by SQL;
+- each of those papers takes a true-by-construction inaugural edition,
+  as the newer papers launched with, so no front goes empty.
+
+*Acceptance:* no public page carries a byline from the packs' invented
+names (the test holds the list). Every older paper's front opens on its
+inaugural edition or on newer news.
+
+**10.4 — Local leads local.** On 25 Nov the same story led Toronto,
+Steeltown and London: a design contract for Highway 17 between Arnprior
+and Renfrew, in the Ottawa Valley. Toronto labelled it City; Steeltown
+and London labelled it Local News. Steeltown's next three, all labelled Local News,
+are datelined Sault Ste. Marie, Toronto and Mississauga. A city paper
+whose "local" is the whole province reads like a wire, and a reader
+notices that before anything about the design.
+- Each paper's `palette.json` names its coverage area: the places it
+  calls local, beside its weather city and its zone.
+- A front's lead slot and its Local desk label take only stories
+  datelined inside that area. Provincial stories go to a province desk
+  on that paper.
+- The wire map (`tools/wire-map.php`) exports the same list, so Hermes
+  files to the right desk in the first place. The ingest contract does
+  not change.
+
+*Acceptance:* a test files a story datelined outside a paper's area,
+and it never takes that paper's lead slot or its Local label.
+
+**10.5 — What a reader can learn about the paper.** **Decision:** the
+ownership, funding and privacy text.
+- Only Sudbury and Turtle Island link an About page from their fronts.
+- Where `/about` answers, only Sudbury's has copy of its own. The
+  others print their one-line description, some of which make claims
+  the page should either support or drop ("reader-supported", "the
+  paper of record", "a regional daily of record").
+- No paper has a privacy page, though eight load analytics, every
+  newsletter form collects addresses, and the tips form collects names
+  and contact details.
+- No paper says who owns it, how it is paid for, or how its stories are
+  made.
+
+These are what the Trust Project's indicators ask for, and what readers
+and platforms look for first.
+
+What to write:
+- An About for every paper, in its settings (`about_heading`,
+  `about_standfirst`, `about_body`), linked from every footer. It says
+  who owns and runs the paper, how it is funded, how its stories are
+  made (the agents included), and how to send a tip or a correction.
+- One network standards page (ethics, sourcing, corrections, automation,
+  unnamed sources), served on every domain and linked from every footer.
+- A privacy page, served on every domain. It names what is collected
+  (newsletter addresses, tips, analytics) and why, and puts consent
+  before analytics wherever the owner's counsel says the law requires
+  it. Bleuet Blanc, a Quebec paper, is where that question comes first.
+  No paper's indexing switches on without one; that is already a policy
+  decision below.
+- The `NewsMediaOrganization` data names those pages, with
+  `publishingPrinciples`, `correctionsPolicy`, `ethicsPolicy`,
+  `ownershipFundingInfo`, `actionableFeedbackPolicy` and `masthead`.
+
+*Acceptance:* every front, the hub's included, links About, Standards,
+Privacy and Corrections. Every `/about` carries the paper's own text.
+
+**10.6 — Accessibility to WCAG 2.1 AA, held by CI.** axe finds at
+least one failure on 21 of the 27 sites:
+- Text contrast below 4.5:1 on 18 sites, 220 elements in all, mostly
+  small meta lines and accent-coloured desk labels:
+  - London's grey-greens, 3.2–4.2:1;
+  - Grande Prairie's `#9a9a9a`, 2.8:1;
+  - Steeltown's gold label, 3.6:1;
+  - Kelowna's teal, 3.7:1;
+  - Turtle Island's grey, 3.8:1;
+  - Kelowna's large gold numerals, 2.1:1 (large text needs 3:1).
+- 45 links with no accessible name on 9 sites. Mostly a story's picture
+  is a second link to the story, with `alt=""` and no text, so a screen
+  reader announces only "link".
+- On 4 sites, links in body copy differ from the text around them only
+  by colour.
+
+What to change:
+- Darken each paper's muted and accent text colours until they pass. The
+  accent stays for rules, chips and backgrounds.
+- Make each card one link, or take the duplicate image link out of the
+  tab order and the accessibility tree.
+- Underline links in body copy.
+- Hold the line in CI. It already renders every paper
+  (`tools/baseline.sh`), so run axe over those renders and fail the build
+  on a new violation, as `tests/admin-brand.test.php` already checks
+  every newsroom palette.
+
+*Acceptance:* axe reports no A or AA violation, in CI, on every paper's
+front, a story, a desk page and `/tips`. A manual keyboard and
+screen-reader pass of one paper per template is filed.
+
+**10.7 — Dates a reader can trust.** A story's header prints
+`time_label()`:
+- a bare time on the day it runs ("2:32 p.m.");
+- "Yesterday" the next day;
+- after that a month and day with no year, forever, so a story from
+  11 Aug 2026 will still read "Aug 11" a year later.
+
+No zone is printed, although 9.8 makes the clock the paper's. No story
+page marks its date up as `<time datetime>`, and none says when it was
+updated.
+- On the story page, print the full date with the year, the time and
+  the zone.
+- Add "Updated" with its time when the text changed after publication
+  (`post_revisions` records it).
+- Mark both up as `<time datetime>` with the offset.
+- Fronts may keep the short label, adding the year to a story from
+  another year.
+
+*Acceptance:* a test finds the year on a story from a previous year, a
+`<time datetime>` on every story page whose instant equals
+`published_at`, and "Updated" on a story edited after publication.
+
+**10.8 — What browsers and platforms read.**
+- *Icons.* Each page has an SVG favicon and nothing else. No site has an
+  `apple-touch-icon`, a PNG fallback, a `theme-color` or a manifest.
+  Generate them per paper from its mark.
+- *The network's art standing in for a paper's.* `site_asset()` falls
+  back to the network's file when a paper has none of its own, and two
+  such fallbacks are public:
+  - Kelowna and Kermode ship no `mark.svg`, so their story data names
+    the Prairie Dispatch's mark as their publisher logo;
+  - fourteen papers ship no `og-default.png`, so sharing their front
+    page, a desk or `/about` shows the flagship's nameless prairie
+    landscape. They are Bison, Bleuet Blanc, Brandon, Burrard, Cariboo,
+    Kitchener, London, Mississauga, Portage, Red River, Rideau,
+    Steeltown, Surrey and Toronto.
+
+  Each paper gets its own. `tools/make-paper.php` scaffolds both, and
+  the compliance gate checks them.
+- *Story metadata.* Add `article:published_time`, `modified_time` and
+  `section`, and `og:image:alt`. Bleuet Blanc gets `og:locale` `fr_CA`
+  and `inLanguage` `fr`.
+- *Newsletter promises.* No edition goes out before the pages are live
+  (decided 25 Nov), but the sign-up links already promise one: "Get the
+  7am digest", and London's "Become a member", which opens the same
+  form. Until the first edition is sent, say that it starts soon.
+- *Portage's measure.* Its body copy runs 92 characters a line. Cap it
+  near 70.
+
+*Acceptance:* every paper serves its icon set, its own mark and its own
+default share card. A test fails any paper that would fall back to the
+network's.
+
 ## Waiting on the owner (no code needed)
 
 1. **Agent key grants for the editing API.** It is live, but no key
@@ -439,7 +754,9 @@ of 12.
 
 - **AI-assistance disclosure.** The `ai_disclosure` setting is blank
   (off) by default and no launch pack sets it. Decide whether readers
-  see a note on stories drafted with the desk's help.
+  see a note on stories drafted with the desk's help. As built, it could
+  not reach the agents' own stories even if switched on (10.2), so the
+  decision comes with the code that fixes that.
 - **A privacy page and reader consent.** Eight papers load analytics
   as of 24 Nov: Kermode's Google Analytics tag, and Google Tag Manager
   containers on Burrard, Edmonton, Grande Prairie, Portage, Prairie
