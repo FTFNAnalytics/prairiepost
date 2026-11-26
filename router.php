@@ -33,6 +33,11 @@ if ($path === '/favicon.ico') {
     require __DIR__ . '/icon.php';
     return true;
 }
+if ($path === '/favicon.svg') {
+    $_GET['kind'] = 'svg';
+    require __DIR__ . '/icon.php';
+    return true;
+}
 if ($path === '/apple-touch-icon.png' || $path === '/apple-touch-icon-precomposed.png') {
     $_GET['kind'] = '180';
     require __DIR__ . '/icon.php';

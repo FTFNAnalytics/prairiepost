@@ -21,6 +21,7 @@ RewriteRule ^uploads/.+\.(php|phtml|phar)$ - [F,L]
 # Pretty URLs.
 # Icons and the manifest are per host (icon.php), not one file at the root.
 RewriteRule ^favicon\.ico$ icon.php?kind=ico [L]
+RewriteRule ^favicon\.svg$ icon.php?kind=svg [L]
 RewriteRule ^apple-touch-icon(-precomposed)?\.png$ icon.php?kind=180 [L]
 RewriteRule ^icon-(16|32|48|180|192|512)\.png$ icon.php?kind=$1 [L]
 RewriteRule ^site\.webmanifest$ icon.php?kind=manifest [L]

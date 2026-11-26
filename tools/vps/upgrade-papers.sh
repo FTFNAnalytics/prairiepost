@@ -259,6 +259,44 @@ EOF
   return 0
 }
 
+# Paths router.php serves as the paper's icon or manifest. A hand-written
+# block's `location ~* \.(ico|png|svg)$` matches these names and answers
+# from disk, so a missing /favicon.ico is a static 404 and never reaches
+# the route. An exact location is chosen before any regex, and only these
+# names are listed: /assets and /uploads keep the static location.
+pp_icon_route_paths() {
+  printf '%s\n' \
+    /favicon.ico \
+    /favicon.svg \
+    /apple-touch-icon.png \
+    /apple-touch-icon-precomposed.png \
+    /icon-16.png \
+    /icon-32.png \
+    /icon-48.png \
+    /icon-180.png \
+    /icon-192.png \
+    /icon-512.png \
+    /site.webmanifest
+}
+
+# -> 0 when the file changed. A server with no top-level PHP handler
+# (certbot's redirect) is left alone. A second run finds the marker.
+pp_icon_routes() { # $1 vhost file
+  local sock path
+  grep -q 'pp-icon-routes' "$1" && return 1
+  sock=$(pp_block_socket "$1"); [ -n "$sock" ] || return 1
+  grep -qE '^[[:space:]]*location[[:space:]]+~[[:space:]]+\\\.php\$' "$1" || return 1
+  {
+    echo "# pp-icon-routes: exact match beats the static-file regex, so these"
+    echo "# names reach router.php. /assets and /uploads are not in this list."
+    while IFS= read -r path; do
+      printf 'location = %s {\n    include fastcgi_params;\n    fastcgi_param SCRIPT_FILENAME $document_root/router.php;\n    fastcgi_pass unix:%s;\n}\n' "$path" "$sock"
+    done < <(pp_icon_route_paths)
+  } | pp_before_php_handler "$1"
+  grep -q 'pp-icon-routes' "$1" || return 1
+  return 0
+}
+
 # Tests source this file for the two editors above and nothing else.
 if [ "${PP_UPGRADE_LIB_ONLY:-}" = 1 ]; then
   return 0
@@ -1175,6 +1213,7 @@ WRAP
     fi
     pp_front_controller "$VH" && echo "   $base: legacy block — paths no rewrite names now reach router.php"
     pp_tips_unlogged "$VH" && echo "   $base: /tips kept out of the access log"
+    pp_icon_routes "$VH" && echo "   $base: icon and manifest URLs beat the static-file regex"
   done
   [ "$ok" = "1" ] || continue
 
