@@ -532,7 +532,10 @@ function pp_ingest_edit(array $agent, string $mode, string $pathRef = ''): never
     }
 
     /* --- Rate limit: edits per token per hour, from the audit trail -------- */
-    $limit = 60;
+    // Each lane counts its own action, so a token has this many updates AND
+    // this many draft edits an hour. 120 unless PP_INGEST_EDIT_LIMIT_PER_HOUR
+    // says otherwise (app/ingest.php).
+    $limit = pp_ingest_hourly_limit('edit');
     $stmt = $pdo->prepare('SELECT COUNT(*) FROM audit_log WHERE user_name = ? AND action = ? AND created_at > ?');
     $stmt->execute([mb_substr('hermes:' . $agent['name'], 0, 120), $action, date('Y-m-d H:i:s', time() - 3600)]);
     if ((int) $stmt->fetchColumn() >= $limit) {

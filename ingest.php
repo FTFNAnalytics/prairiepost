@@ -230,8 +230,14 @@ if ($sourceStoryId !== '') {
     }
 }
 
-/* --- Rate limit ----------------------------------------------------------- */
-$limit = max(1, (int) pp_hermes_setting($siteId, 'ingest_hourly_limit', '60'));
+/* --- Rate limit: filings per token per hour, from the posts it filed ------ */
+// Counted across every paper the token files to. The number is the target
+// paper's own ingest_hourly_limit setting when it holds one, else the
+// network's: 200 unless PP_INGEST_STORY_LIMIT_PER_HOUR says otherwise
+// (app/ingest.php). Before 26 Nov 2026 an unset setting meant 60, and a
+// setting of 0 or nonsense meant 1; now both mean "not set".
+$limit = pp_ingest_limit_value(pp_hermes_setting($siteId, 'ingest_hourly_limit', ''))
+    ?? pp_ingest_hourly_limit('story');
 $stmt = db()->prepare("SELECT COUNT(*) FROM posts WHERE filed_by = ? AND created_at > ?");
 $stmt->execute([$agent['name'], date('Y-m-d H:i:s', time() - 3600)]);
 if ((int) $stmt->fetchColumn() >= $limit) {

@@ -685,7 +685,33 @@ holding a capability it should not have.
   handler, and use the block's own php-fpm socket. They were tested on a
   real nginx and php-fpm. `vhost.template` carries the tips location from
   creation. Its sha256 at the merge is `d28307e3…`.
-- **The roll brief to run is `docs/briefs/roll-6e3cfab33b32.md`**
+- **The ingest hourly limits are raised — #102 (26 Nov), not rolled.**
+  The owner's order: "raise the Hermes ingest rate limits so one
+  publishing key can run a full multi-site news round in an hour."
+  Every lane stopped a token at 60 an hour. Uploads and both edit lanes
+  had it in code; filings read a paper's `ingest_hourly_limit`, which
+  nothing sets. Now `pp_ingest_hourly_limit()` (`app/ingest.php`) gives
+  each lane its number:
+  - from `PP_INGEST_STORY_LIMIT_PER_HOUR`, `PP_INGEST_MEDIA_LIMIT_PER_HOUR`
+    or `PP_INGEST_EDIT_LIMIT_PER_HOUR`, else the same name in the config,
+    else 200 filings, 200 uploads and 120 edits on each edit lane;
+  - only a whole number from 1 to 100000 counts;
+  - each lane counts as before (audit trail, or the posts a token filed),
+    and the `429` names the limit;
+  - a paper's own `ingest_hourly_limit` still comes first for filings.
+
+  Nothing is set on the server: the defaults are the numbers. DEPLOY.md
+  section 12 has the settings and the check that prints what the papers
+  enforce. `tests/ingest-limits.test.php` holds it.
+- **The roll brief to run is `docs/briefs/roll-acb508aa4fd0.md`**
+  (26 Nov). It pins `acb508aa4fd016dafeb0c12dbda25dc7de793bed`, #102's
+  code commit: 4 commits after `6e3cfab`, 12 after `1458b09`, 26 after
+  `72f8adc` and 37 after `7cb82fb`. Its A5 stops until #102 is merged.
+  It is the brief below plus A16 and D15: the ingest limits before the
+  roll, and the live ones after it, reported as a table. Both were run
+  here against release trees built from `6e3cfab` and the pin. On
+  26 Nov production was still on the 24 Nov release.
+- **Superseded: `docs/briefs/roll-6e3cfab33b32.md`**
   (25 Nov). It pins `6e3cfab33b323a7facc93e96eb268eecc27b46cc`, #101's
   code commit: the address fix, 8 commits after `1458b09`, 22 after
   `72f8adc` and 33 after `7cb82fb`. Its A5 stops until #101 is merged.

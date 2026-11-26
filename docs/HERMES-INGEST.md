@@ -70,7 +70,7 @@ minted `--draft-only` can never publish — see "Status" below.
 | 400 / 422 | malformed payload — the error names the exact field |
 | 401 | missing, unknown, or revoked token — fail closed |
 | 403 | token not scoped to that site or desk |
-| 429 | over the site's `ingest_hourly_limit` (default 60/hour/token) |
+| 429 | over the token's hourly filing limit: 200 in any rolling hour unless the server or the paper's `ingest_hourly_limit` sets another (the error names it) |
 
 ## Rules for agent authors
 

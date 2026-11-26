@@ -31,6 +31,8 @@
  *   pp_ingest_respond()          the one JSON emitter
  *   pp_ingest_audit()            the one audit row: bounded, and unable to
  *                                change an answer
+ *   pp_ingest_hourly_limit()     how many filings, uploads or edits a token
+ *                                may make in a rolling hour
  *
  * What stays in each endpoint is what is its own: the method it accepts,
  * its payload rules, the order of its checks and the wording of its
@@ -52,6 +54,48 @@ function pp_ingest_respond(int $code, array $body): never
     http_response_code($code);
     echo json_encode($body, JSON_UNESCAPED_SLASHES);
     exit;
+}
+
+/**
+ * Each lane's hourly limit per token: the environment variable that sets
+ * it, and its default. Sized so one publishing key can file, illustrate and
+ * correct a full news round across the network inside an hour. Until 26 Nov
+ * 2026 every lane stopped at 60.
+ */
+const PP_INGEST_HOURLY_LIMITS = [
+    'story' => ['PP_INGEST_STORY_LIMIT_PER_HOUR', 200],   // POST /api/ingest
+    'media' => ['PP_INGEST_MEDIA_LIMIT_PER_HOUR', 200],   // POST /api/ingest-media
+    'edit'  => ['PP_INGEST_EDIT_LIMIT_PER_HOUR', 120],    // the update lane and the draft lane, each
+];
+
+/**
+ * How many filings, uploads or edits ('story', 'media', 'edit') one token
+ * may make in a rolling hour. In order:
+ *
+ *   - the lane's environment variable (PP_INGEST_MEDIA_LIMIT_PER_HOUR …),
+ *     as PHP-FPM passes it from the pool's env[] or nginx's fastcgi_param;
+ *   - the same name in the config, lower case and without "PP_"
+ *     ('ingest_media_limit_per_hour' …);
+ *   - the default in PP_INGEST_HOURLY_LIMITS.
+ *
+ * Only a whole number from 1 to 100000 counts. Anything else (a typo, a
+ * zero, a negative) is skipped, so a mistaken setting can neither shut a
+ * lane nor lift its limit. Each endpoint still counts against it the way it
+ * always has; this only says where the number comes from.
+ */
+function pp_ingest_hourly_limit(string $lane): int
+{
+    [$env, $default] = PP_INGEST_HOURLY_LIMITS[$lane];
+    return pp_ingest_limit_value(getenv($env))
+        ?? pp_ingest_limit_value(pp_config(strtolower(substr($env, 3))))
+        ?? $default;
+}
+
+/** A limit as set somewhere, or null unless it is a whole number from 1 to 100000. */
+function pp_ingest_limit_value(mixed $raw): ?int
+{
+    $raw = is_int($raw) ? (string) $raw : (is_string($raw) ? trim($raw) : '');
+    return preg_match('/^[1-9][0-9]{0,5}$/', $raw) === 1 && (int) $raw <= 100000 ? (int) $raw : null;
 }
 
 /**

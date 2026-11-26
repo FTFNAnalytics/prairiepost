@@ -46,9 +46,10 @@ field `name` to seed the stored filename) or as the raw request body:
 
 Rules the server enforces: JPEG, PNG, WebP or GIF only, sniffed from
 the bytes and verified to decode as an image (a renamed file is
-refused); the server names the stored file; at most 60 uploads per key
-per hour. Uploads land under `/uploads/`, where no vhost will ever
-execute PHP.
+refused); the server names the stored file; at most 200 uploads per key
+in any rolling hour (the server's `PP_INGEST_MEDIA_LIMIT_PER_HOUR` can
+set another number; see "Hourly limits" below). Uploads land under
+`/uploads/`, where no vhost will ever execute PHP.
 
 **Embedded metadata is removed before the file is stored** (since
 24 Nov 2026, `app/imagemeta.php`). That covers the GPS location, the
@@ -150,8 +151,10 @@ report it to the VPS agent rather than retrying.
   draft or already published; a correction reaches readers only when
   an editor records it on the story. `tests/correction-note.test.php`
   holds this.
-- Rate limit: at most 60 filings per key per hour by default (the
-  paper's `ingest_hourly_limit` setting).
+- Rate limit: at most 200 filings per key in any rolling hour, counted
+  across every paper the key files to. A paper's own
+  `ingest_hourly_limit` setting replaces that number for filings to that
+  paper (see "Hourly limits" below).
 - `"publish_on_image": true` is the filing agent's **ready checkbox**:
   this copy is approved and publishes the moment the story has a
   featured image. With an `image` in the same filing it publishes
@@ -422,7 +425,8 @@ both.
 - **Answer:** `200 {ok, ref, status, desk, url (published only),
   updated: [fields that changed], version, previous_image?}` — keep the
   new `version` for your next edit.
-- Rate limit: 60 edits per key per hour on each lane (`429`).
+- Rate limit: 120 updates per key in any rolling hour, counted apart
+  from its draft edits (`429`; see "Hourly limits" below).
 
 ## 7. Read a paper's stories: `GET /api/ingest/stories`
 
@@ -537,7 +541,23 @@ grant, set at minting: `edit_drafts` (`tools/make-agent.php
 - **Scope:** the key's papers, this hostname's paper, the key's desks,
   and the draft on the requested `desk`; every scope failure is the
   three-word `403`. A draft another paper also carries is `409`.
-- Rate limit: 60 draft edits per key per hour (`429`).
+- Rate limit: 120 draft edits per key in any rolling hour, counted apart
+  from its updates (`429`; see "Hourly limits" below).
+
+## Hourly limits
+
+Each key has three hourly limits, counted over the last 60 minutes, not
+per clock hour. Since 26 Nov 2026:
+
+| Lane | Default | Counted from | Set on the server by |
+| --- | --- | --- | --- |
+| filings, `POST /api/ingest` | 200 | the stories the key filed, on every paper | `PP_INGEST_STORY_LIMIT_PER_HOUR`; a paper's `ingest_hourly_limit` setting first |
+| uploads, `POST /api/ingest-media` | 200 | the key's upload audit rows | `PP_INGEST_MEDIA_LIMIT_PER_HOUR` |
+| edits, `POST /api/ingest/update` and `PATCH /api/ingest/drafts/{ref}` | 120 each | the key's audit rows for that lane | `PP_INGEST_EDIT_LIMIT_PER_HOUR` |
+
+Over a limit, the answer is `429 {"ok":false,"error":"rate limit: at most
+200 uploads per hour for this token"}`, naming the limit in force. Publish,
+lookup, the story reader and the image queue have no hourly limit.
 
 ## Responses you must handle
 
@@ -551,7 +571,7 @@ grant, set at minting: `edit_drafts` (`tools/make-agent.php
 | 409 | `/api/ingest-publish`: the story is not waiting (already published, unflagged, or changed state mid-request) — fetch the queue again. `/api/ingest`: the `source_story_id` was already filed with different content — the stored article is untouched; corrections go through the newsroom. `/api/ingest/update` and `/api/ingest/drafts/{ref}`: the story is not in that lane's status, is carried by another paper, changed mid-request, or no longer matches your `if_version` — the body carries the current `status` (no version: re-read via `/api/ingest/stories`); nothing was written. |
 | 413 | `/api/ingest-media`: over the upload limit; JSON with `max_bytes`. A non-JSON 413 is nginx's own limit — report it. |
 | 422 | The payload broke a rule; `error` says which. Fix and resend. On the edit lanes this includes a missing `if_version` and any field that is not editable there. |
-| 429 | Hourly rate limit; wait and resend. |
+| 429 | Hourly rate limit; the error names the limit. Wait and resend. |
 
 ## Operational notes (network side)
 

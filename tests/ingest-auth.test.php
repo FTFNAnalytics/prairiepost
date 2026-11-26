@@ -551,19 +551,19 @@ $storedFiles[] = $path;
 $a = one("SELECT user_name FROM audit_log WHERE action = 'ingest-media' AND target = ?", [$path]);
 ok($a && $a['user_name'] === substr('hermes:' . $longName, 0, 120) && strlen($a['user_name']) === 120,
    'its audit row is signed with the name cut to the column (got ' . ($a ? strlen((string) $a['user_name']) . ' characters' : 'no row') . ')');
-// 59 more rows under exactly the name that row was stored with: the 61st
-// upload of the hour must be refused, which it is only if the limit counts
-// under the stored name.
+// 199 more rows under exactly the name that row was stored with: the 201st
+// upload of the hour must be refused (the default limit is 200), which it
+// is only if the limit counts under the stored name.
 $maint = pp_db_connect();
 $ins = $maint->prepare("INSERT INTO audit_log (site_id, user_id, user_name, action, target, detail, ip, created_at) VALUES (0, 0, ?, 'ingest-media', ?, 'fixture', '', ?)");
-for ($i = 0; $a && $i < 59; $i++) {
+for ($i = 0; $a && $i < 199; $i++) {
     $ins->execute([$a['user_name'], '/uploads/fixture/' . $i, now()]);
 }
 $ins = null;
 $maint = null;
 [$code, $j] = $endpoints['/api/ingest-media']['send']("Bearer $longNamed");
-ok($code === 429 && $j === ['ok' => false, 'error' => 'rate limit: at most 60 uploads per hour for this token'],
-   "and its sixty-first upload of the hour is refused: the limit counts under the stored name (got $code)");
+ok($code === 429 && $j === ['ok' => false, 'error' => 'rate limit: at most 200 uploads per hour for this token'],
+   "and its 201st upload of the hour is refused: the limit counts under the stored name (got $code)");
 if ($code === 201 && is_array($j)) {
     $storedFiles[] = (string) ($j['path'] ?? '');   // only when the assertion above has failed
 }
