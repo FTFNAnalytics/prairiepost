@@ -1,6 +1,6 @@
 # Brief — roll the network to 72f8adccbcca, then clean the stored images
 
-> **Superseded on 25 Nov 2026 by `docs/briefs/roll-6e3cfab33b32.md`.**
+> **Superseded on 25 Nov 2026, and again on 26 Nov: run `docs/briefs/roll-acb508aa4fd0.md`.**
 > Don't start this brief. The new one carries this one's code and its
 > image cleanup (its C3), and works from whichever release production is
 > on, including this one's.

@@ -1,5 +1,10 @@
 # Brief — roll the network to 6e3cfab33b32: each paper's own address, weather, the whiteboard, and a router on every block
 
+> **Superseded on 26 Nov 2026 by `docs/briefs/roll-acb508aa4fd0.md`.**
+> Don't start this brief. The new one rolls everything this one does,
+> plus #102, the ingest hourly limits a full news round needs. It works
+> from whichever release production is on, including this one's.
+
 **For: the VPS agent** (root SSH; server work only). Written 25 Nov 2026.
 
 **This brief supersedes `docs/briefs/roll-1458b09870e0.md`.** Run this
