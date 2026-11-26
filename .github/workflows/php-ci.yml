@@ -103,7 +103,7 @@ jobs:
       - name: Install test runtime
         run: |
           sudo apt-get update
-          sudo apt-get install --yes php-cli php-sqlite3 php-mbstring php-xml php-curl php-gd
+          sudo apt-get install --yes php-cli php-sqlite3 php-mbstring php-xml php-curl php-gd nginx
       - name: PHP is production's 8.3
         run: |
           php -v | head -1
@@ -128,6 +128,8 @@ jobs:
       # over synthetic boxes built from real historical releases, on
       # SQLite. It never touches a server. This checkout is shallow, so
       # the fixture fetches the two old commits it builds from.
+      - name: Nginx edits against the live block shapes
+        run: bash tools/test-nginx-edits.sh
       - name: Release-flow fixture — synthetic upgrade rolls
         run: bash tools/test-release-flow.sh
       - name: Seed the full network — zero skipped lines

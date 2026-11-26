@@ -138,25 +138,79 @@ say()  { PHASE="$*"; echo; echo "== $*"; }
 fail() { echo "FATAL: $*" >&2; exit 1; }
 
 # --- Two edits to live server blocks (PLAN.md 9.2 and 9.10) ---------------
-# Both are idempotent by marker, insert only beside the block's PHP handler
-# (`location ~ \.php$`), so certbot's port-80 redirect servers are never
-# touched, and use the php-fpm socket the block already passes PHP to.
-# They run inside the vhost loop below, so the roll's nginx test, its
-# masthead and stylesheet guard and its rollback all cover them.
+# Both are idempotent by marker. They insert only beside a PHP handler that
+# is a direct child of `server`, never one nested inside `location /admin/`.
+# Five live blocks (Edmonton, Grande Prairie, Kermode, the Dispatch, Pacific
+# Post) nest their first `location ~ \.php$` inside `location ^~ /admin/`.
+# Inserting `location = /router.php` there is rejected by nginx
+# ("location \"/router.php\" is outside location \"/admin/\""), and a global
+# rewrite of `try_files $uri $uri/ =404` also points the admin fallback at
+# router.php. A server with no top-level PHP handler (certbot's port-80
+# redirect) is left alone. The socket is the one the block already passes
+# PHP to. The edits run inside the vhost loop below, so the roll's nginx
+# test, its masthead and stylesheet guard and its rollback all cover them.
 
 # The php-fpm socket a block passes PHP to ('' when it has none).
 pp_block_socket() { grep -oE 'fastcgi_pass[[:space:]]+unix:[^;[:space:]]+' "$1" | head -1 | sed -E 's/.*unix://'; }
 
-# Insert lines (from stdin) before each PHP handler in a block, in place.
+# Brace delta of one nginx line, ignoring a # comment and double-quoted text.
+pp_nginx_depth_awk='
+  function delta(s,    i, c, n, q) {
+    n = 0; q = 0
+    for (i = 1; i <= length(s); i++) {
+      c = substr(s, i, 1)
+      if (c == "\"" && !q) q = 1
+      else if (c == "\"" && q) q = 0
+      else if (c == "#" && !q) break
+      else if (!q && c == "{") n++
+      else if (!q && c == "}") n--
+    }
+    return n
+  }
+  function is_top_php(line) {
+    return line ~ /^[[:space:]]*location[[:space:]]+~[[:space:]]+\\\.php\$[[:space:]]*\{?/
+  }
+  function is_front(line) {
+    return line ~ /^[[:space:]]*location[[:space:]]+\/[[:space:]]*(\{|[[:space:]]*$)/
+  }
+'
+
+# Insert lines (from stdin) once per server, immediately before its first
+# top-level `location ~ \.php$`. A handler nested in another location is
+# not a place a server-level location can go.
 pp_before_php_handler() { # $1 vhost file
   local add; add=$(cat)
-  awk -v add="$add" '
-    /^[[:space:]]*location[[:space:]]+~[[:space:]]+\\\.php\$[[:space:]]*\{/ {
-      match($0, /^[[:space:]]*/); ind = substr($0, 1, RLENGTH)
-      n = split(add, lines, "\n")
-      for (i = 1; i <= n; i++) print ind lines[i]
-    }
-    { print }' "$1" > "$1.pp-tmp" && cat "$1.pp-tmp" > "$1"; rm -f "$1.pp-tmp"
+  awk -v add="$add" "$pp_nginx_depth_awk"'
+    BEGIN { depth = 0; did = 0 }
+    {
+      if (depth == 1 && !did && is_top_php($0)) {
+        match($0, /^[[:space:]]*/)
+        ind = substr($0, 1, RLENGTH)
+        n = split(add, lines, "\n")
+        for (i = 1; i <= n; i++) if (lines[i] != "" || i < n) print ind lines[i]
+        did = 1
+      }
+      print
+      depth += delta($0)
+      if (depth < 0) depth = 0
+      if (depth == 0) did = 0
+    }' "$1" > "$1.pp-tmp" && cat "$1.pp-tmp" > "$1"; rm -f "$1.pp-tmp"
+}
+
+# Point only the server-level `location /` fallback at router.php. The same
+# try_files inside `location /admin/` must keep answering 404 for a missing
+# admin file; it is not the front controller.
+pp_rewrite_front_try_files() { # $1 vhost file
+  awk "$pp_nginx_depth_awk"'
+    BEGIN { depth = 0; in_front = 0 }
+    {
+      if (depth == 1 && is_front($0)) in_front = 1
+      if (in_front) sub(/try_files[[:space:]]+\$uri[[:space:]]+\$uri\/[[:space:]]+=404;/, "try_files $uri $uri/ /router.php$is_args$args;")
+      print
+      depth += delta($0)
+      if (depth < 0) depth = 0
+      if (depth <= 1) in_front = 0
+    }' "$1" > "$1.pp-tmp" && cat "$1.pp-tmp" > "$1"; rm -f "$1.pp-tmp"
 }
 
 # A hand-written block routes only the paths written into it, so every
@@ -180,7 +234,7 @@ location = /router.php {
     fastcgi_pass unix:$sock;
 }
 EOF
-  sed -i -E 's#try_files([[:space:]]+)\$uri([[:space:]]+)\$uri/([[:space:]]+)=404;#try_files\1$uri\2$uri/\3/router.php$is_args$args;#' "$1"
+  pp_rewrite_front_try_files "$1"
   return 0
 }
 
@@ -204,6 +258,11 @@ location ~ ^/tips/?\$ {
 EOF
   return 0
 }
+
+# Tests source this file for the two editors above and nothing else.
+if [ "${PP_UPGRADE_LIB_ONLY:-}" = 1 ]; then
+  return 0
+fi
 
 if [ "$FIXTURE" != "1" ]; then
   [ "$(id -u)" = "0" ] || fail "run as root"
