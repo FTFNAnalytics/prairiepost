@@ -31,17 +31,29 @@ their own Google Tag Manager container. No paper has a privacy page yet
 - the ingest hourly limits a full news round needs (#102, 26 Nov): 200
   filings, 200 uploads and 120 edits on each edit lane per token, from 60
   on every lane (DEPLOY.md section 12);
+- each paper's own icons and share card (#104, #105, 26 Nov);
+- the upgrader fix for the hand-written blocks that nest a PHP handler
+  inside `/admin/` (#107, 26 Nov), after the 388f1bd roll stopped at
+  `nginx -t` and put everything back;
 - the search-engine switch (#103, 26 Nov): an Open button per paper in
   Settings, refused while any of its demonstration stories is live (0.4
-  below). The brief below pins #102's code and doesn't carry it.
+  below).
 
-The brief that rolls all of it is `docs/briefs/roll-acb508aa4fd0.md`.
-It supersedes `roll-6e3cfab33b32.md` and `roll-1458b09870e0.md`. It
-raises the schema to 26 (forward only), and the upgrader converts the
-hand-written nginx blocks. Afterwards it adds the weather job's cron line,
-cleans the stored images if the earlier brief's cleanup never ran, and
-reports the live ingest limits (D15). On 26 Nov production was still on
-the 24 Nov release: `/tips` answered 404 everywhere.
+The brief that rolls all of it is `docs/briefs/roll-2f336b118242.md`,
+which pins the merge of #103.
+- It supersedes `roll-117c158a545b.md`. It carries out
+  `roll-acb508aa4fd0.md`'s Steps A–D with its own pin, then
+  `roll-388f1bd03ffe.md`'s icon checks.
+- It raises the schema to 26 (forward only), and the upgrader converts
+  the hand-written nginx blocks.
+- Afterwards it adds the weather job's cron line and cleans the stored
+  images if no earlier roll did. It reports the live ingest limits
+  (D15), and confirms no paper opened to search engines (D16).
+- It lists what each paper must draft before it can open (D17).
+
+On 26 Nov production was reported still on the 24 Nov release
+(`7cb82fb9c20a`, schema 25), after the 388f1bd roll stopped:
+`/tips` answered 404 everywhere.
 
 The 24 Nov audit's loose ends are 9.6–9.10. The owner settled its three
 open questions on 25 Nov (decided, under the policy decisions below).

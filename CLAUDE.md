@@ -124,6 +124,14 @@ against this list before shipping them.
    which blocks were converted ("paths no rewrite names now reach
    router.php").
 
+   The first such roll (388f1bd, 26 Nov) stopped at `nginx -t`. Five
+   live blocks nest their first PHP handler inside `location ^~ /admin/`,
+   and no block in the harness that tested the edit did, so the new
+   `location = /router.php` landed inside `/admin/`. Test an edit to the
+   blocks against copies of the live ones (`tools/vps/fixtures/nginx/`,
+   `tools/test-nginx-edits.sh`), never only against blocks written for
+   the test.
+
 8. **The first request after a pull runs pending migrations.** Any
    curl during nginx/TLS verification can trigger it. Schedule the
    all-papers regression spot-check immediately after the first request
@@ -703,7 +711,8 @@ holding a capability it should not have.
   Nothing is set on the server: the defaults are the numbers. DEPLOY.md
   section 12 has the settings and the check that prints what the papers
   enforce. `tests/ingest-limits.test.php` holds it.
-- **The search-engine switch — #103 (26 Nov), not rolled.** The owner's
+- **The search-engine switch — MERGED (26 Nov, #103, at `2f336b1`), not
+  rolled.** The owner's
   order: "add a button the settings dashboard for each site that turns
   on the indexing." A "Search engines" panel at the top of Settings
   (`admin/settings.php`, administrators only) replaces the old checkbox:
@@ -729,14 +738,47 @@ holding a capability it should not have.
   keeps the slug it was seeded with, and the check finds stories by
   slug. No schema step and no new route; code-only, it rides any roll.
   `tests/indexing-switch.test.php` holds it.
-- **The roll brief to run is `docs/briefs/roll-acb508aa4fd0.md`**
-  (26 Nov). It pins `acb508aa4fd016dafeb0c12dbda25dc7de793bed`, #102's
-  code commit: 4 commits after `6e3cfab`, 12 after `1458b09`, 26 after
-  `72f8adc` and 37 after `7cb82fb`. Its A5 stops until #102 is merged.
-  It is the brief below plus A16 and D15: the ingest limits before the
-  roll, and the live ones after it, reported as a table. Both were run
-  here against release trees built from `6e3cfab` and the pin. On
-  26 Nov production was still on the 24 Nov release.
+- **Each paper's own icons and share card — MERGED (26 Nov, #104 and
+  #105), not rolled.**
+  - Every paper serves an icon set drawn from its own mark
+    (`assets/sites/<slug>/icons/`), its own `og-default.png`,
+    `twitter:image` and `theme-color`.
+  - `/favicon.ico`, `/apple-touch-icon.png`, `/icon-32.png` and
+    `/site.webmanifest` are routes (`icon.php`), one file per host.
+  - Before, `/favicon.ico` was a 404, and a missing mark or card fell
+    back to the flagship's.
+
+  `tests/icons.test.php` holds it.
+- **The 388f1bd roll stopped at `nginx -t` (26 Nov); fixed by #107.**
+  - The upgrader inserted `location = /router.php` inside
+    `location ^~ /admin/` in five hand-written blocks: Edmonton, Grande
+    Prairie, Kermode, Prairie Dispatch and Pacific Post (lesson 7). It
+    then put every vhost and cron file back before the schema step.
+  - Production was reported still on `7cb82fb9c20a`, at schema 25.
+  - #107 (`117c158`) inserts only beside a PHP handler that is a direct
+    child of `server`, and points only the server-level `location /`
+    at `router.php`. The upgrader's sha256 is now `dd1fb181…`.
+- **The roll brief to run is `docs/briefs/roll-2f336b118242.md`**
+  (26 Nov). It pins `2f336b118242387c0057fc5e40366c21e0da230c`, the
+  merge of #103: 4 commits after `117c158`, 13 after `acb508a` and 50
+  after `7cb82fb`. Its upgrader is the same file as `117c158`'s.
+  - It is a short brief over `roll-acb508aa4fd0.md`'s Steps A–D, plus
+    `roll-388f1bd03ffe.md`'s icon checks.
+  - It restates `roll-117c158a545b.md`'s stopped-roll handling and the
+    five blocks' `nginx -t` expectation.
+  - It adds D16 (the switch arrived, no paper is open, every front still
+    `noindex`) and D17 (`tools/demo-inventory.php`, verbatim).
+  - D16 and D17 were run here on nginx 1.24 and php-fpm 8.3 against a
+    release tree built from the pin.
+- **Superseded, in order:**
+  - `docs/briefs/roll-117c158a545b.md` (26 Nov, the upgrader fix);
+  - `docs/briefs/roll-388f1bd03ffe.md` (26 Nov, the icons; its upgrader
+    failed `nginx -t`);
+  - `docs/briefs/roll-acb508aa4fd0.md`, which pins
+    `acb508aa4fd016dafeb0c12dbda25dc7de793bed`, #102's code commit.
+    Its Steps A–D are still the procedure every later brief carries out.
+    It added A16 and D15: the ingest limits before the roll, and the
+    live ones after it, reported as a table.
 - **Superseded: `docs/briefs/roll-6e3cfab33b32.md`**
   (25 Nov). It pins `6e3cfab33b323a7facc93e96eb268eecc27b46cc`, #101's
   code commit: the address fix, 8 commits after `1458b09`, 22 after
