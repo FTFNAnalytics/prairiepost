@@ -25,12 +25,18 @@ $GLOBALS['pp_front_page'] = true;
 page_header([
     'description' => setting('meta_description'),
     'jsonld' => [
-        '@context' => 'https://schema.org',
-        '@type'    => 'NewsMediaOrganization',
-        'name'     => setting('site_title', 'The Prairie Dispatch'),
-        'url'      => site_url(),
-        'slogan'   => setting('tagline', 'News to the horizon'),
-        'logo'     => site_url() . site_asset('mark.svg'),
+        '@context'    => 'https://schema.org',
+        '@type'       => 'NewsMediaOrganization',
+        'name'        => setting('site_title', 'The Prairie Dispatch'),
+        'url'         => site_url(),
+        'slogan'      => setting('tagline', 'News to the horizon'),
+        'inLanguage'  => str_replace('_', '-', pp_locale()),
+        'logo'        => [
+            '@type'  => 'ImageObject',
+            'url'    => ($ppLogo = pp_publisher_logo())['url'],
+            'width'  => $ppLogo['width'],
+            'height' => $ppLogo['height'],
+        ],
     ],
 ]);
 ?>

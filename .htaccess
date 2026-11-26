@@ -19,6 +19,11 @@ RewriteRule \.(sqlite[0-9]*|sql|sh|md|bak|dist|lock)$ - [F,L]
 RewriteRule ^uploads/.+\.(php|phtml|phar)$ - [F,L]
 
 # Pretty URLs.
+# Icons and the manifest are per host (icon.php), not one file at the root.
+RewriteRule ^favicon\.ico$ icon.php?kind=ico [L]
+RewriteRule ^apple-touch-icon(-precomposed)?\.png$ icon.php?kind=180 [L]
+RewriteRule ^icon-(16|32|48|180|192|512)\.png$ icon.php?kind=$1 [L]
+RewriteRule ^site\.webmanifest$ icon.php?kind=manifest [L]
 RewriteRule ^story/([a-z0-9-]+)/?$ article.php?slug=$1 [L,QSA]
 RewriteRule ^desk/([a-z0-9-]+)/?$ section.php?slug=$1 [L,QSA]
 RewriteRule ^region/([a-z0-9-]+)/?$ region.php?slug=$1 [L,QSA]

@@ -57,14 +57,26 @@ $jsonld = [
     'publisher' => [
         '@type' => 'NewsMediaOrganization',
         'name'  => setting('site_title', 'The Prairie Dispatch'),
-        'logo'  => ['@type' => 'ImageObject', 'url' => site_url() . site_asset('mark.svg')],
+        'logo'  => [
+            '@type'  => 'ImageObject',
+            'url'    => ($ppLogo = pp_publisher_logo())['url'],
+            'width'  => $ppLogo['width'],
+            'height' => $ppLogo['height'],
+        ],
     ],
+    'inLanguage' => str_replace('_', '-', pp_locale()),
 ];
-$cardUrl = site_url() . '/card/' . $post['slug'] . '.png';
-$jsonld['image'] = [$cardUrl];
-if ($post['image']) {
-    $jsonld['image'][] = site_url() . $post['image'];
+// The photograph, when it is a raster a platform will actually fetch.
+// An SVG illustration, or no image, falls back to this paper's own card.
+$ppShare = pp_story_share_image($post);
+$ppImageLd = ['@type' => 'ImageObject', 'url' => $ppShare['url']];
+if ($ppShare['width']) {
+    $ppImageLd['width'] = $ppShare['width'];
 }
+if ($ppShare['height']) {
+    $ppImageLd['height'] = $ppShare['height'];
+}
+$jsonld['image'] = [$ppImageLd];
 if ($post['dateline']) {
     $jsonld['dateline'] = mb_strtoupper($post['dateline']);
 }
@@ -75,12 +87,21 @@ if (pp_chrome('template') === 'turtleisland') {
 }
 
 page_header([
-    'title'       => $post['title'],
-    'description' => $post['meta_description'] ?: excerpt((string) $post['lede'], 155),
-    'canonical'   => $canonical,
-    'og_type'     => 'article',
-    'og_image'    => $cardUrl,
-    'jsonld'      => $jsonld,
+    'title'          => $post['title'],
+    'description'    => $post['meta_description'] ?: excerpt((string) $post['lede'], 155),
+    'canonical'      => $canonical,
+    'og_type'        => 'article',
+    'og_image'       => $ppShare['url'],
+    'og_image_width' => $ppShare['width'],
+    'og_image_height'=> $ppShare['height'],
+    'og_image_alt'   => $ppShare['alt'],
+    'article'        => array_filter([
+        'published_time' => pp_iso8601($post['published_at'] ?? ''),
+        'modified_time'  => pp_iso8601(($post['updated_at'] ?? '') !== '' ? $post['updated_at'] : ($post['published_at'] ?? '')),
+        'section'        => pp_desk_label($post['category_slug'] ?? null, $post['category_name'] ?? ''),
+        'author'         => trim((string) ($post['byline'] ?? '')),
+    ], static fn ($v) => $v !== ''),
+    'jsonld'         => $jsonld,
 ], (string) $post['category_slug']);
 ?>
 

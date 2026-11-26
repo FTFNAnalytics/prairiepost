@@ -162,7 +162,9 @@ function standard_card(array $p, array $o = []): string
 
 /**
  * Page head + masthead + nav.
- * $meta keys: title, description, canonical, og_image, og_type, jsonld (array),
+ * $meta keys: title, description, canonical, og_image, og_image_width,
+ *   og_image_height, og_image_alt, og_type, article (published_time,
+ *   modified_time, section, author), jsonld (array),
  *   private (bool) — a page that takes credentials (the newsroom sign-in):
  *       always noindex, and never the pasted analytics snippet, so no
  *       third-party script runs beside a password field;
@@ -181,8 +183,22 @@ function page_header(array $meta = [], string $activeDesk = ''): void
     if (!empty($meta['keep_query'])) {
         $canonical = $meta['canonical'] ?? (site_url() . ($_SERVER['REQUEST_URI'] ?? '/'));
     }
-    $ogImage = $meta['og_image'] ?? (site_url() . site_asset('og-default.png'));
     $ogType  = $meta['og_type'] ?? 'website';
+    // A caller that names an image (a story's feature photograph) also names
+    // its size. Everyone else shares the paper's own card — never the
+    // flagship's landscape, which is what site_asset() would fall back to.
+    if (isset($meta['og_image']) && $meta['og_image'] !== '') {
+        $ogImage = (string) $meta['og_image'];
+        $ogW = $meta['og_image_width'] ?? null;
+        $ogH = $meta['og_image_height'] ?? null;
+    } else {
+        $ppShare = pp_default_share_image();
+        $ogImage = $ppShare['url'];
+        $ogW = $ppShare['width'];
+        $ogH = $ppShare['height'];
+    }
+    $ogTitle = (isset($meta['title']) && $meta['title'] !== '') ? (string) $meta['title'] : $siteTitle;
+    $ogAlt = (string) ($meta['og_image_alt'] ?? $ogTitle);
     $private = !empty($meta['private']);
     $styles  = array_values(array_filter((array) ($meta['styles'] ?? []),
         static fn ($css) => is_string($css) && preg_match('#^/assets/css/[a-z0-9-]+\.css$#', $css) === 1));
@@ -196,7 +212,7 @@ function page_header(array $meta = [], string $activeDesk = ''): void
 <?php if ($private || !pp_indexing_enabled()): ?><meta name="robots" content="noindex, nofollow">
 <?php endif; ?><?php if ($description !== ''): ?><meta name="description" content="<?= e($description) ?>">
 <?php endif; ?><link rel="canonical" href="<?= e($canonical) ?>">
-<link rel="icon" type="image/svg+xml" href="<?= e(site_asset('favicon.svg')) ?>">
+<?php pp_emit_icon_tags(); ?>
 <link rel="alternate" type="application/rss+xml" title="<?= e($siteTitle) ?>" href="<?= e(site_url()) ?>/feed/">
 <link rel="stylesheet" href="/assets/css/prairie.css">
 <?php
@@ -211,13 +227,19 @@ if ($ppHasChrome && is_file(PP_ROOT . '/assets/css/' . $ppCssFile . '.css')): ?>
 <?php endif; ?><?php if (site_asset('brand.css') !== '/assets/img/brand.css'): ?><link rel="stylesheet" href="<?= e(site_asset('brand.css')) ?>">
 <?php endif; ?><?php foreach ($styles as $css): ?><link rel="stylesheet" href="<?= e($css) ?>">
 <?php endforeach; ?>
-<meta property="og:site_name" content="<?= e($siteTitle) ?>">
-<meta property="og:title" content="<?= e($meta['title'] ?? $siteTitle) ?>">
-<?php if ($description !== ''): ?><meta property="og:description" content="<?= e($description) ?>">
-<?php endif; ?><meta property="og:type" content="<?= e($ogType) ?>">
-<meta property="og:url" content="<?= e($canonical) ?>">
-<meta property="og:image" content="<?= e($ogImage) ?>">
-<meta name="twitter:card" content="summary_large_image">
+<?php pp_emit_social_tags([
+    'site_name'    => $siteTitle,
+    'title'        => $ogTitle,
+    'description'  => $description,
+    'type'         => $ogType,
+    'url'          => $canonical,
+    'image'        => $ogImage,
+    'image_width'  => $ogW,
+    'image_height' => $ogH,
+    'image_alt'    => $ogAlt,
+    'locale'       => pp_locale(),
+    'article'      => $meta['article'] ?? [],
+]); ?>
 <?php if (!empty($meta['jsonld'])): ?>
 <script type="application/ld+json"><?= pp_json_for_html($meta['jsonld']) ?></script>
 <?php endif; ?>
