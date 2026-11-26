@@ -74,10 +74,19 @@ function pp_icon_hex_rgb(string $hex): array
     return [hexdec(substr($hex, 0, 2)), hexdec(substr($hex, 2, 2)), hexdec(substr($hex, 4, 2))];
 }
 
-/** The paper's ink, then its accent — a real hex, else the network ink. */
+/**
+ * Browser chrome colour. A paper may name it as "theme" in palette.json
+ * (the four Manitoba papers do: the masthead, not whichever ink key comes
+ * first). Otherwise the palette's ink, then its accent.
+ */
 function pp_theme_color(): string
 {
-    $palette = pp_brand_file()['palette'] ?? [];
+    $brand = pp_brand_file();
+    $named = $brand['theme'] ?? null;
+    if (is_string($named) && preg_match('/^#[0-9A-Fa-f]{6}$/', $named)) {
+        return $named;
+    }
+    $palette = $brand['palette'] ?? [];
     foreach (['ink', 'accent', 'hill'] as $key) {
         $value = $palette[$key] ?? null;
         if (is_string($value) && preg_match('/^#[0-9A-Fa-f]{6}$/', $value)) {

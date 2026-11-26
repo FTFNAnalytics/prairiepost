@@ -75,6 +75,22 @@ foreach ($sites as $dir) {
 }
 ok(is_file("$root/assets/img/og-default.png"), 'the flagship keeps its designed landscape');
 
+// Red River's meander used to be an SVG mask, which paints blank as a tab
+// icon. The path itself is the cut, in the mark's clay, not the white reverse.
+$river = (string) file_get_contents("$root/assets/sites/red-river-register/favicon.svg");
+ok($river === (string) file_get_contents("$root/assets/sites/red-river-register/mark.svg"), 'Red River favicon and mark are the same drawing');
+ok(preg_match('/<mask\b/i', $river) !== 1, 'Red River icon has no SVG mask');
+ok(str_contains($river, 'fill="#7E3517"'), 'Red River icon keeps the clay mark');
+foreach ([
+    'portage-press' => '#041E42',
+    'bison-bulletin' => '#8B0000',
+    'brandon-bulletin' => '#E6BF2E',
+    'red-river-register' => '#7E3517',
+] as $slug => $theme) {
+    $brand = json_decode((string) file_get_contents("$root/assets/sites/$slug/palette.json"), true);
+    ok(strtoupper((string) ($brand['theme'] ?? '')) === $theme, "$slug names theme-color $theme");
+}
+
 /* --- A monogram, for a paper that has no mark ------------------------------ */
 
 define('PP_ROOT', $root);
