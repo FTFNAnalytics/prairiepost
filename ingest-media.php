@@ -50,8 +50,9 @@ $agent = pp_ingest_authenticate();
 
 /* --- Rate limit: uploads per token per hour, from the audit trail --------- */
 // Counted under the name pp_ingest_audit() stores: 'hermes:' and the token's
-// name, cut to audit_log.user_name.
-$limit = 60;
+// name, cut to audit_log.user_name. The number is 200 unless
+// PP_INGEST_MEDIA_LIMIT_PER_HOUR says otherwise (app/ingest.php).
+$limit = pp_ingest_hourly_limit('media');
 $stmt = db()->prepare("SELECT COUNT(*) FROM audit_log WHERE user_name = ? AND action = 'ingest-media' AND created_at > ?");
 $stmt->execute([mb_substr('hermes:' . $agent['name'], 0, 120), date('Y-m-d H:i:s', time() - 3600)]);
 if ((int) $stmt->fetchColumn() >= $limit) {

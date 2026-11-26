@@ -412,6 +412,56 @@ it beside each token's scope.
 
 ---
 
+## 12 · Ingest rate limits (since 26 Nov 2026)
+
+Each ingest token has three hourly limits, counted over a rolling hour,
+not per clock hour. They are sized so one publishing key can file,
+illustrate and correct a full news round across the network in an hour.
+Before 26 Nov every lane stopped at 60.
+
+| Lane | Default | Counted from | Setting |
+| --- | --- | --- | --- |
+| Filings, `POST /api/ingest` | **200** | the stories the token filed, on every paper | `PP_INGEST_STORY_LIMIT_PER_HOUR` |
+| Uploads, `POST /api/ingest-media` | **200** | the token's `ingest-media` audit rows | `PP_INGEST_MEDIA_LIMIT_PER_HOUR` |
+| Edits, `POST /api/ingest/update` and `PATCH /api/ingest/drafts/{ref}` | **120** on each lane | the token's audit rows for that lane | `PP_INGEST_EDIT_LIMIT_PER_HOUR` |
+
+**The defaults need no setting.** Rolling a release that carries them
+is the whole deployment. To change one, `pp_ingest_hourly_limit()`
+(`app/ingest.php`) reads, in order:
+
+1. the environment variable, as PHP-FPM receives it (the pool's
+   `env[…]`, or nginx's `fastcgi_param`);
+2. the same name in the tenant config, lower case and without `PP_`
+   (`ingest_media_limit_per_hour`), in `app/config.site.php`, which every
+   roll carries forward;
+3. the default above.
+
+Only a whole number from 1 to 100000 counts. Anything else (a typo, `0`,
+a negative) is skipped, so a mistaken setting can neither shut a lane
+nor lift its limit. Filings check one thing before all three: the target
+paper's own `ingest_hourly_limit` setting, when it holds such a number.
+No Settings field sets it; a launch pack's `settings` can.
+
+Prefer the config key to the environment. The web and the command line
+read the same file, so the check below shows what the papers enforce.
+An environment variable set in a pool or a block is invisible to the
+command line; look for it there instead. Editing `app/config.site.php`
+is the guarded config step (CLAUDE.md, lessons 2 and 6): one semantic
+entry per lane, behind a root-only backup.
+
+**What the papers enforce,** from a release root:
+
+    cd "$REL" && php -r 'require "app/bootstrap.php"; require "app/ingest.php";
+      foreach (["story", "media", "edit"] as $l) { echo $l, " ", pp_ingest_hourly_limit($l), "\n"; }'
+    grep -rn 'PP_INGEST_' /etc/php/*/fpm/pool.d/ /etc/nginx/ 2>/dev/null   # environment overrides, if any
+
+With nothing set, that prints `story 200`, `media 200` and `edit 120`,
+and the `grep` prints nothing. A token over a limit gets
+`429 {"ok":false,"error":"rate limit: at most 200 uploads per hour for this token"}`,
+naming the limit in force.
+
+---
+
 ## Troubleshooting quick table
 
 | Symptom | Cause → fix |

@@ -583,13 +583,13 @@ if ($engine === 'sqlite') {
 
 /* ---- 8. The hourly limit ------------------------------------------------------------- */
 $ins = fresh()->prepare("INSERT INTO audit_log (site_id, user_id, user_name, action, target, detail, ip, created_at) VALUES (?, 0, 'hermes:edit-agent', 'ingest-draft-edit', 'fixture', 'fixture', '', ?)");
-for ($i = 0; $i < 60; $i++) {
+for ($i = 0; $i < 120; $i++) {
     $ins->execute([$siteA, now()]);
 }
 $ins = null;
-[$code, $j] = $patch($agent, $ref, ['title' => 'Sixty-First Of The Hour', 'if_version' => ver($edDraft)]);
-ok($code === 429 && ($j['error'] ?? '') === 'rate limit: at most 60 draft edits per hour for this token'
-   && row($edDraft)['title'] !== 'Sixty-First Of The Hour', "8. the sixty-first draft edit of the hour: 429, nothing written (got $code)");
+[$code, $j] = $patch($agent, $ref, ['title' => 'One Over The Hour', 'if_version' => ver($edDraft)]);
+ok($code === 429 && ($j['error'] ?? '') === 'rate limit: at most 120 draft edits per hour for this token'
+   && row($edDraft)['title'] !== 'One Over The Hour', "8. the 121st draft edit of the hour: 429, nothing written (got $code)");
 
 if ($fails === 0) {
     echo "ingest-edit: all checks pass\n";

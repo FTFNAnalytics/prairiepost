@@ -353,12 +353,12 @@ foreach ($bad as $label => [$extra, $needle]) {
     ok($code === 422 && str_contains((string) ($j['error'] ?? ''), $needle), "8. $label: 422 (got $code " . json_encode($j) . ')');
 }
 $ins = fresh()->prepare("INSERT INTO audit_log (site_id, user_id, user_name, action, target, detail, ip, created_at) VALUES (?, 0, 'hermes:upd-agent', 'ingest-update', 'fixture', 'fixture', '', ?)");
-for ($i = 0; $i < 60; $i++) {
+for ($i = 0; $i < 120; $i++) {
     $ins->execute([$siteA, now()]);
 }
-[$code, $j] = $update($agent, ['site' => 'prairiedispatch', 'desk' => 'local-news', 'ref' => $ref, 'title' => 'Sixty-First Of The Hour'], 'paper-a.test', $pub);
-ok($code === 429 && ($j['error'] ?? '') === 'rate limit: at most 60 updates per hour for this token' && row($pub)['title'] === 'Original Headline On The Wire',
-   "8. the sixty-first update of the hour: 429, nothing written (got $code)");
+[$code, $j] = $update($agent, ['site' => 'prairiedispatch', 'desk' => 'local-news', 'ref' => $ref, 'title' => 'One Over The Hour'], 'paper-a.test', $pub);
+ok($code === 429 && ($j['error'] ?? '') === 'rate limit: at most 120 updates per hour for this token' && row($pub)['title'] === 'Original Headline On The Wire',
+   "8. the 121st update of the hour: 429, nothing written (got $code)");
 
 if ($fails === 0) {
     echo "ingest-update: all checks pass\n";
