@@ -144,71 +144,18 @@ function pp_create_site(PDO $pdo, string $slug, ?string $name = null): array
     return $stmt->fetch();
 }
 
-function pp_seed(PDO $pdo): void
+/**
+ * The founding paper's sample stories. They are demonstration copy:
+ * invented editorial about real places, signed by people who don't exist
+ * (CLAUDE.md, debt 1). pp_seed() files them, and app/indexing.php keeps the
+ * paper out of search engines while any of them is still live.
+ */
+function pp_seed_stories(): array
 {
-    /* --- The founding site ----------------------------------------------- */
-    $slug = slugify((string) pp_config('site_slug', 'prairiedispatch'));
-    $siteName = $slug === 'prairiedispatch'
-        ? 'The Prairie Dispatch'
-        : 'The ' . ucwords(str_replace('-', ' ', $slug));
-    $pdo->prepare('INSERT INTO sites (name, slug, created_at) VALUES (?, ?, ?)')
-        ->execute([$siteName, $slug, date('Y-m-d H:i:s')]);
-    $siteId = pp_seed_last_id($pdo, 'sites');
-
-    /* --- Desks: each one owns a colour ---------------------------------- */
-    $desks = [
-        // name, slug, colour, colour is fill-only, description, sort
-        ['News',               'news',        '#17301C', 0, 'Council, courts, and what happened overnight across the region.', 1],
-        ['Politics',           'politics',    '#2F6C99', 0, 'The province, the counties, and the money that moves between them.', 2],
-        ['Agriculture',        'agriculture', '#3F5A22', 0, 'Crops, cattle, contracts and the weather that decides all three.', 3],
-        ['Business & Markets', 'business',    '#7A661F', 0, 'Closing prices, main-street turnover, and who is building what.', 4],
-        ['Community',          'community',   '#6F5535', 0, 'Rinks, halls, fairs, and the people who keep them open.', 5],
-        ['Opinion',            'opinion',     '#9C3B22', 0, 'Signed columns and the editorial board. Rationed, like the red.', 6],
-        ['Weather',            'weather',     '#77B2D6', 1, 'The forecast to the horizon, and what it means for the field.', 7],
-    ];
-    $insCat = $pdo->prepare('INSERT INTO categories (name, slug, color, color_is_fill, description, sort) VALUES (?, ?, ?, ?, ?, ?)');
-    $catId = [];
-    foreach ($desks as $d) {
-        $insCat->execute($d);
-        $catId[$d[1]] = pp_seed_last_id($pdo, 'categories');
-    }
-
-    /* --- Settings -------------------------------------------------------- */
-    // No demonstration prices: closing prices are the newsroom's to enter,
-    // and show only while fresh (app/freshness.php).
-    $settings = pp_site_default_settings($siteName);
-    $insSet = $pdo->prepare('INSERT INTO settings (site_id, skey, svalue) VALUES (?, ?, ?)');
-    foreach ($settings as $k => $v) {
-        $insSet->execute([$siteId, $k, $v]);
-    }
-
-    /* --- Wire sources (verified working at build time) ------------------- */
-    $sources = [
-        ['Drumheller Mail',      'https://www.drumhellermail.com/news?format=feed&type=rss', 'local'],
-        ['ECA Review',           'https://ecareview.com/feed/',                              'local'],
-        ['Strathmore Times',     'https://strathmoretimes.com/feed/',                        'local'],
-        ['CBC Calgary',          'https://www.cbc.ca/webfeed/rss/rss-canada-calgary',        'local'],
-        ['CBC Edmonton',         'https://www.cbc.ca/webfeed/rss/rss-canada-edmonton',       'alberta'],
-        ['Global Calgary',       'https://globalnews.ca/calgary/feed/',                      'alberta'],
-        ['Global Edmonton',      'https://globalnews.ca/edmonton/feed/',                     'alberta'],
-        ['CBC Top Stories',      'https://www.cbc.ca/webfeed/rss/rss-topstories',            'canada'],
-        ['CBC Canada',           'https://www.cbc.ca/webfeed/rss/rss-canada',                'canada'],
-        ['Global National',      'https://globalnews.ca/canada/feed/',                       'canada'],
-        ['Canadian Cattlemen',   'https://www.canadiancattlemen.ca/feed/',                   'agriculture'],
-        ['Grainews',             'https://www.grainews.ca/feed/',                            'agriculture'],
-        ['Manitoba Co-operator', 'https://www.manitobacooperator.ca/feed/',                  'agriculture'],
-        ['Farmtario',            'https://farmtario.com/feed/',                              'agriculture'],
-    ];
-    $insSrc = $pdo->prepare('INSERT INTO sources (name, url, region, enabled) VALUES (?, ?, ?, 1)');
-    foreach ($sources as $s) {
-        $insSrc->execute($s);
-    }
-
-    /* --- Sample stories --------------------------------------------------- */
     $ago = fn (string $offset) => date('Y-m-d H:i:s', strtotime($offset));
     $p = fn (string ...$paras) => '<p>' . implode('</p><p>', $paras) . '</p>';
 
-    $stories = [
+    return [
         [
             'title' => 'Canola contracts move early as growers watch a dry June',
             'desk' => 'agriculture', 'dateline' => 'Three Hills', 'byline' => 'Dana Ruthven',
@@ -378,6 +325,70 @@ function pp_seed(PDO $pdo): void
             ),
         ],
     ];
+}
+
+function pp_seed(PDO $pdo): void
+{
+    /* --- The founding site ----------------------------------------------- */
+    $slug = slugify((string) pp_config('site_slug', 'prairiedispatch'));
+    $siteName = $slug === 'prairiedispatch'
+        ? 'The Prairie Dispatch'
+        : 'The ' . ucwords(str_replace('-', ' ', $slug));
+    $pdo->prepare('INSERT INTO sites (name, slug, created_at) VALUES (?, ?, ?)')
+        ->execute([$siteName, $slug, date('Y-m-d H:i:s')]);
+    $siteId = pp_seed_last_id($pdo, 'sites');
+
+    /* --- Desks: each one owns a colour ---------------------------------- */
+    $desks = [
+        // name, slug, colour, colour is fill-only, description, sort
+        ['News',               'news',        '#17301C', 0, 'Council, courts, and what happened overnight across the region.', 1],
+        ['Politics',           'politics',    '#2F6C99', 0, 'The province, the counties, and the money that moves between them.', 2],
+        ['Agriculture',        'agriculture', '#3F5A22', 0, 'Crops, cattle, contracts and the weather that decides all three.', 3],
+        ['Business & Markets', 'business',    '#7A661F', 0, 'Closing prices, main-street turnover, and who is building what.', 4],
+        ['Community',          'community',   '#6F5535', 0, 'Rinks, halls, fairs, and the people who keep them open.', 5],
+        ['Opinion',            'opinion',     '#9C3B22', 0, 'Signed columns and the editorial board. Rationed, like the red.', 6],
+        ['Weather',            'weather',     '#77B2D6', 1, 'The forecast to the horizon, and what it means for the field.', 7],
+    ];
+    $insCat = $pdo->prepare('INSERT INTO categories (name, slug, color, color_is_fill, description, sort) VALUES (?, ?, ?, ?, ?, ?)');
+    $catId = [];
+    foreach ($desks as $d) {
+        $insCat->execute($d);
+        $catId[$d[1]] = pp_seed_last_id($pdo, 'categories');
+    }
+
+    /* --- Settings -------------------------------------------------------- */
+    // No demonstration prices: closing prices are the newsroom's to enter,
+    // and show only while fresh (app/freshness.php).
+    $settings = pp_site_default_settings($siteName);
+    $insSet = $pdo->prepare('INSERT INTO settings (site_id, skey, svalue) VALUES (?, ?, ?)');
+    foreach ($settings as $k => $v) {
+        $insSet->execute([$siteId, $k, $v]);
+    }
+
+    /* --- Wire sources (verified working at build time) ------------------- */
+    $sources = [
+        ['Drumheller Mail',      'https://www.drumhellermail.com/news?format=feed&type=rss', 'local'],
+        ['ECA Review',           'https://ecareview.com/feed/',                              'local'],
+        ['Strathmore Times',     'https://strathmoretimes.com/feed/',                        'local'],
+        ['CBC Calgary',          'https://www.cbc.ca/webfeed/rss/rss-canada-calgary',        'local'],
+        ['CBC Edmonton',         'https://www.cbc.ca/webfeed/rss/rss-canada-edmonton',       'alberta'],
+        ['Global Calgary',       'https://globalnews.ca/calgary/feed/',                      'alberta'],
+        ['Global Edmonton',      'https://globalnews.ca/edmonton/feed/',                     'alberta'],
+        ['CBC Top Stories',      'https://www.cbc.ca/webfeed/rss/rss-topstories',            'canada'],
+        ['CBC Canada',           'https://www.cbc.ca/webfeed/rss/rss-canada',                'canada'],
+        ['Global National',      'https://globalnews.ca/canada/feed/',                       'canada'],
+        ['Canadian Cattlemen',   'https://www.canadiancattlemen.ca/feed/',                   'agriculture'],
+        ['Grainews',             'https://www.grainews.ca/feed/',                            'agriculture'],
+        ['Manitoba Co-operator', 'https://www.manitobacooperator.ca/feed/',                  'agriculture'],
+        ['Farmtario',            'https://farmtario.com/feed/',                              'agriculture'],
+    ];
+    $insSrc = $pdo->prepare('INSERT INTO sources (name, url, region, enabled) VALUES (?, ?, ?, 1)');
+    foreach ($sources as $s) {
+        $insSrc->execute($s);
+    }
+
+    /* --- Sample stories --------------------------------------------------- */
+    $stories = pp_seed_stories();
 
     // Front-page placements for the sample paper: canola is the hero; the
     // culvert, policing and grocery stories fill the featured band.

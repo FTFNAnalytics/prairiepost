@@ -30,7 +30,10 @@ their own Google Tag Manager container. No paper has a privacy page yet
 - each paper's own address (10.0, #101), merged 25 Nov;
 - the ingest hourly limits a full news round needs (#102, 26 Nov): 200
   filings, 200 uploads and 120 edits on each edit lane per token, from 60
-  on every lane (DEPLOY.md section 12).
+  on every lane (DEPLOY.md section 12);
+- the search-engine switch (#103, 26 Nov): an Open button per paper in
+  Settings, refused while any of its demonstration stories is live (0.4
+  below). The brief below pins #102's code and doesn't carry it.
 
 The brief that rolls all of it is `docs/briefs/roll-acb508aa4fd0.md`.
 It supersedes `roll-6e3cfab33b32.md` and `roll-1458b09870e0.md`. It
@@ -604,7 +607,9 @@ who looks one of those reporters up finds no one.
 Before any paper's indexing is switched on, and before Western Wire,
 Bleuet Blanc and Turtle Island launch:
 - an editor moves each pack's demonstration stories to draft with the
-  Stories list's bulk change, never by SQL;
+  Stories list's bulk change, never by SQL. Since #103, Settings won't
+  open a paper to search engines until this is done, and lists what's
+  left;
 - each of those papers takes a true-by-construction inaugural edition,
   as the newer papers launched with, so no front goes empty.
 
@@ -788,7 +793,8 @@ of 12.
   containers on Burrard, Edmonton, Grande Prairie, Portage, Prairie
   Dispatch, Surrey and Toronto. No paper has a privacy page yet. Settle
   this before more papers add tags, and before any paper's indexing is
-  switched on.
+  switched on. Settings names it beside the Open button (#103) but
+  doesn't refuse over it: the decision is the owner's.
 - **A tamper-evident audit log.** Today's audit rows are ordinary
   database rows, which anyone with write access to the database can
   change. Decide whether they should be hash-chained or shipped off the
@@ -837,6 +843,10 @@ and the ingest pipeline before any Hermes agent holds a token.
 > feeds, sitemaps and social cards carry an `X-Robots-Tag` header. None
 > had been enabled at the last check. `robots.txt` deliberately stays
 > `Allow`, because a crawler that is disallowed never sees the noindex.
+> Since #103 (26 Nov) an administrator opens a paper with one button in
+> Settings' "Search engines" panel. It refuses, and says why, while any
+> of the paper's demonstration stories is live (sixteen papers launched
+> with them) or while its pages name another host (`app/indexing.php`).
 
 The render-diff harness has caught three shipped-invisible defects
 (stray newline on twelve papers, wrong-layer EN DIRECT check, Pickering
