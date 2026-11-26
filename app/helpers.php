@@ -319,6 +319,10 @@ function dateline(array $post): string
  * A site drops overrides into assets/sites/<slug>/ (logo-primary.svg,
  * logo-reversed.svg, logo-stacked.svg, favicon.svg, og-default.png,
  * brand.css); anything missing falls back to the network default.
+ *
+ * That fallback is the flagship's art. Publisher logos, default share
+ * images and the icon set must not use it for any other paper — those
+ * go through pp_owned_asset() in app/icons.php.
  */
 function site_asset(string $file): string
 {

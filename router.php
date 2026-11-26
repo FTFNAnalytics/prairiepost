@@ -26,6 +26,28 @@ if (preg_match('#^/(app|data|tools|tests|vendor|docs)(/|$)#i', $decoded)
 }
 $path = $decoded;
 
+// Icons are per host, so they cannot be one file at the release root.
+// The same tree serves every paper; icon.php reads the host.
+if ($path === '/favicon.ico') {
+    $_GET['kind'] = 'ico';
+    require __DIR__ . '/icon.php';
+    return true;
+}
+if ($path === '/apple-touch-icon.png' || $path === '/apple-touch-icon-precomposed.png') {
+    $_GET['kind'] = '180';
+    require __DIR__ . '/icon.php';
+    return true;
+}
+if ($path === '/site.webmanifest') {
+    $_GET['kind'] = 'manifest';
+    require __DIR__ . '/icon.php';
+    return true;
+}
+if (preg_match('#^/icon-(16|32|48|180|192|512)\.png$#', $path, $m)) {
+    $_GET['kind'] = $m[1];
+    require __DIR__ . '/icon.php';
+    return true;
+}
 if (preg_match('#^/story/([a-z0-9-]+)/?$#', $path, $m)) {
     $_GET['slug'] = $m[1];
     require __DIR__ . '/article.php';

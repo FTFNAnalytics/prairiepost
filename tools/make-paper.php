@@ -8,7 +8,10 @@
  * Writes, and refuses to overwrite:
  *
  *     assets/sites/<slug>/palette.json     identity + chrome declaration
+ *     assets/sites/<slug>/favicon.svg      monogram, replaced at brand time
  *     assets/sites/<slug>/launch.php       pack skeleton with a domains entry
+ *     assets/sites/<slug>/icons/           raster favicon set (render-icons.php)
+ *     assets/sites/<slug>/og-default.png   default share card, when none exists
  *     assets/css/<template>.css            design-system stub
  *     app/views/front-<template>.php       front page stub
  *     app/views/article-<template>.php     article stub
@@ -35,6 +38,10 @@ if (!preg_match('/^[a-z0-9][a-z0-9-]*$/', $slug) || !preg_match('/^[a-z0-9]+$/',
     exit("Usage: php tools/make-paper.php <site-slug> <template> \"The Paper Name\"\n"
        . "  slug: lowercase, hyphens allowed.  template: lowercase, NO hyphens.\n");
 }
+define('PP_ROOT', $root);
+require $root . '/app/icons.php';
+$letters = pp_monogram_letters($name);
+$svgName = htmlspecialchars($name, ENT_QUOTES, 'UTF-8');
 
 $files = [
     "assets/sites/$slug/palette.json" => <<<JSON
@@ -52,9 +59,15 @@ $files = [
     "spot": "#9C3B22",
     "band": ["#F7F6F3", "#20242B"],
     "fonts": {"heading": "'Source Serif 4', Georgia, serif", "body": "'Source Serif 4', Georgia, serif"}
-  }
+    }
 }
 JSON,
+    "assets/sites/$slug/favicon.svg" => <<<SVG
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="$svgName">
+  <rect width="64" height="64" fill="#1F4E79"/>
+  <text x="32" y="44" text-anchor="middle" font-family="Georgia, 'Times New Roman', serif" font-size="28" font-weight="700" fill="#F7F6F3">$letters</text>
+</svg>
+SVG,
     "assets/sites/$slug/launch.php" => <<<PHP
 <?php
 /**
@@ -151,8 +164,13 @@ foreach ($files as $rel => $body) {
     file_put_contents($path, rtrim($body) . "\n");
     echo "  wrote $rel\n";
 }
+passthru(escapeshellarg(PHP_BINARY) . ' ' . escapeshellarg("$root/tools/render-icons.php") . ' ' . escapeshellarg($slug), $iconRc);
 echo "Scaffolded '$name' ($slug / t-$tpl) as files only — nothing shared was touched.\n";
-echo "Next: fill the launch pack, build $tpl.css and the five view files, then\n";
+if ($iconRc !== 0) {
+    echo "Icons were not rendered (exit $iconRc). Run: php tools/render-icons.php $slug\n";
+}
+echo "Next: fill the launch pack, replace favicon.svg with the real mark, re-run\n";
+echo "php tools/render-icons.php $slug, build $tpl.css and the five view files, then\n";
 echo "run the baseline (PLAN.md phase 0.1) before opening the PR.\n";
 echo "At brand time, replace palette.json's \"admin\" block with the paper's own newsroom\n";
 echo "theme (app/admin-theme.php documents it; tests/admin-brand.test.php checks it).\n";

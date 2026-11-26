@@ -33,18 +33,36 @@ $errors    = [
 <?php endif; ?>
 <meta name="description" content="<?= e(setting('meta_description')) ?>">
 <link rel="canonical" href="<?= e(site_url()) ?>/">
-<link rel="icon" type="image/svg+xml" href="<?= e(site_asset('favicon.svg')) ?>">
+<?php pp_emit_icon_tags(); ?>
 <link rel="stylesheet" href="/assets/css/civis.css">
-<meta property="og:site_name" content="<?= e($siteTitle) ?>">
-<meta property="og:title" content="<?= e($siteTitle) ?> — <?= e($tagline) ?>">
-<meta property="og:type" content="website">
-<meta property="og:url" content="<?= e(site_url()) ?>/">
+<?php
+$ppShare = pp_default_share_image();
+$ppLogo = pp_publisher_logo();
+pp_emit_social_tags([
+    'site_name'    => $siteTitle,
+    'title'        => $siteTitle . ' — ' . $tagline,
+    'description'  => setting('meta_description'),
+    'type'         => 'website',
+    'url'          => site_url() . '/',
+    'image'        => $ppShare['url'],
+    'image_width'  => $ppShare['width'],
+    'image_height' => $ppShare['height'],
+    'image_alt'    => $siteTitle,
+    'locale'       => pp_locale(),
+]);
+?>
 <script type="application/ld+json"><?= pp_json_for_html([
     '@context' => 'https://schema.org',
     '@type'    => 'Organization',
     'name'     => $siteTitle,
     'url'      => site_url(),
     'description' => setting('meta_description'),
+    'logo'     => [
+        '@type'  => 'ImageObject',
+        'url'    => $ppLogo['url'],
+        'width'  => $ppLogo['width'],
+        'height' => $ppLogo['height'],
+    ],
 ]) ?></script>
 <?php $analytics = setting('analytics_code'); if ($analytics !== '') { echo $analytics . "\n"; } ?>
 </head>

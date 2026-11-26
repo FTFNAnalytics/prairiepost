@@ -149,7 +149,10 @@ if (ok($slug !== '', 'the Telegraph has a published story to open')) {
     ok(str_contains($story, '<link rel="canonical" href="' . $url . '">'), "a story's canonical is on its own host ($url)");
     ok(str_contains($story, '<meta property="og:url" content="' . $url . '">'), "a story's og:url is too");
     ok(str_contains($story, '"mainEntityOfPage":"' . str_replace('/', '\/', $url) . '"'), "and its NewsArticle data");
-    ok(str_contains($story, '<meta property="og:image" content="' . "$own/card/$slug.png" . '">'), 'its share card is drawn by its own host');
+    ok(str_contains($story, '<meta property="og:image" content="' . "$own/assets/sites/toronto-telegraph/og-default.png" . '">'), 'a story without a feature image shares the paper\'s own card, on its own host');
+    ok(str_contains($story, '<meta property="og:image:width" content="1200">'), 'and publishes that card\'s width');
+    ok(!str_contains($story, 'assets/img/og-default.png') && !str_contains($story, 'assets/img/mark.svg'), 'the story head does not carry the flagship\'s art');
+    ok(str_contains($story, '<link rel="icon" href="/favicon.ico"'), 'and links a favicon a crawler can fetch at the root');
     $public = trim($ask($flagship, 'torontotelegraph.ca', '',
         'echo pp_post_public_url(db()->query("SELECT * FROM posts WHERE slug = ' . "'" . $slug . "'" . '")->fetch());'));
     ok($public === $url, "the URL the agents' publish lane returns agrees (got $public)");
