@@ -111,6 +111,43 @@ EOF
 apply_both() { # file -> the editors' exit codes are not the test
   pp_front_controller "$1" || true
   pp_tips_unlogged "$1" || true
+  pp_icon_routes "$1" || true
+}
+
+# Exact icon locations, one each, and only at server level. None of them
+# names /assets or /uploads, so a real file there still hits the static regex.
+icon_exact_ok() { # file
+  local path depth
+  for path in /favicon.ico /favicon.svg /apple-touch-icon.png /apple-touch-icon-precomposed.png \
+              /icon-16.png /icon-32.png /icon-48.png /icon-180.png /icon-192.png /icon-512.png \
+              /site.webmanifest; do
+    depth=$(awk -v p="$path" '
+      function delta(s,    i, c, n, q) {
+        n = 0; q = 0
+        for (i = 1; i <= length(s); i++) {
+          c = substr(s, i, 1)
+          if (c == "\"" && !q) q = 1
+          else if (c == "\"" && q) q = 0
+          else if (c == "#" && !q) break
+          else if (!q && c == "{") n++
+          else if (!q && c == "}") n--
+        }
+        return n
+      }
+      BEGIN { depth = 0; n = 0 }
+      {
+        if ($0 ~ "^[[:space:]]*location[[:space:]]+=[[:space:]]*" p "[[:space:]]*\\{") {
+          if (depth == 1) n++
+          else n += 100
+        }
+        depth += delta($0)
+        if (depth < 0) depth = 0
+      }
+      END { print n }
+    ' "$1")
+    [ "$depth" = 1 ] || return 1
+  done
+  ! grep -q 'location = /assets' "$1" && ! grep -q 'location = /uploads' "$1"
 }
 
 # --- The five nested blocks ------------------------------------------------
@@ -138,6 +175,9 @@ for name in edmontonecho grandeprairiegazette kermodechronicle prairiedispatch t
   before=$(cat "$WORK/$name.conf")
   apply_both "$WORK/$name.conf"
   ok '[ "$before" = "$(cat "$WORK/$name.conf")" ]' "$name: a second run changes nothing"
+  static=$(grep -cF 'location ~* \.(?:svg|png|jpe?g|gif|webp|ico|woff2?|ttf)$' "$WORK/$name.conf" || true)
+  ok '[ "$static" = 1 ]' "$name: the static-file regex is still there for /assets and /uploads"
+  ok 'icon_exact_ok "$WORK/$name.conf"' "$name: every icon and manifest URL is an exact server-level location"
   ok 'nginx_ok "$WORK/$name.conf"' "$name: nginx -t accepts the edited block"
   if ! nginx_ok "$WORK/$name.conf"; then
     sed 's/^/    /' "$WORK/nginx.err"
@@ -153,6 +193,7 @@ ok '[ $rc != 0 ] && [ "$orig" = "$(cat "$WORK/portage.conf")" ]' "portage: the f
 apply_both "$WORK/portage.conf"
 ok '[ "$(grep -c pp-tips-unlogged "$WORK/portage.conf")" = 1 ]' "portage: /tips is added once, beside its own PHP handler"
 ok '[ "$(grep -c "location = /router.php" "$WORK/portage.conf")" = 1 ]' "portage: still one router.php location"
+ok 'icon_exact_ok "$WORK/portage.conf"' "portage: the generated block gets the same exact icon locations"
 ok 'nginx_ok "$WORK/portage.conf"' "portage: nginx -t accepts it"
 
 # --- The shapes the release-flow fixture builds ----------------------------
@@ -162,12 +203,14 @@ apply_both "$WORK/kitchener.conf"
 ok '[ "$(grep -c pp-front-controller "$WORK/kitchener.conf")" = 1 ] && grep -qF "try_files \$uri \$uri/ /router.php\$is_args\$args;" "$WORK/kitchener.conf" && ! grep -qF "=404;" "$WORK/kitchener.conf"' \
   "a flat legacy block's only fallback becomes router.php"
 ok '[ "$(grep -c pp-tips-unlogged "$WORK/kitchener.conf")" = 1 ]' "a flat legacy block keeps /tips out of the access log, once"
+ok 'icon_exact_ok "$WORK/kitchener.conf"' "a flat legacy block gets the exact icon locations"
 ok 'nginx_ok "$WORK/kitchener.conf"' "a flat legacy block passes nginx -t"
 
 printf 'server {\n  root /var/www/old;\n  server_name civismedia.test;\n}\n' > "$WORK/civis.conf"
 civ=$(cat "$WORK/civis.conf")
 apply_both "$WORK/civis.conf"
 ok '[ "$civ" = "$(cat "$WORK/civis.conf")" ]' "a block with no PHP handler is left alone"
+ok '! grep -q pp-icon-routes "$WORK/civis.conf"' "a block with no PHP handler gains no icon locations"
 
 echo
 if [ "$fail" -eq 0 ]; then

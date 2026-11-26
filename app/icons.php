@@ -222,6 +222,17 @@ function pp_icon_response(string $kind): array
         $json = json_encode(pp_web_manifest(), JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
         return ['application/manifest+json; charset=UTF-8', $json === false ? '{}' : $json, 200];
     }
+    // /favicon.svg is the paper's own file. The link in the page names
+    // /assets/sites/<slug>/favicon.svg, which stays a static file; this
+    // route is only the well-known path a static-file regex would otherwise
+    // 404 when the file is not at the release root.
+    if ($kind === 'svg') {
+        $rel = pp_owned_asset('favicon.svg');
+        if ($rel === null || !is_file(PP_ROOT . $rel)) {
+            return ['text/plain; charset=UTF-8', 'Not found', 404];
+        }
+        return ['image/svg+xml', (string) file_get_contents(PP_ROOT . $rel), 200];
+    }
     $file = $kind === 'ico' ? 'favicon.ico' : (preg_match('/^(16|32|48|180|192|512)$/', $kind) ? 'icon-' . $kind . '.png' : '');
     if ($file === '' || !preg_match('/^[a-z0-9-]+$/', $slug)) {
         return ['text/plain; charset=UTF-8', 'Not found', 404];
