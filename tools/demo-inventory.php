@@ -1,18 +1,23 @@
 <?php
 /**
- * Inventory the launch-pack demonstration content, read-only (F06).
+ * Inventory the network's demonstration content, read-only (F06).
  *
  *   php tools/demo-inventory.php            summary per paper
  *   php tools/demo-inventory.php --csv      one row per matched story
  *
- * Provenance, not title-guessing: each paper's launch pack
- * (assets/sites/<slug>/launch.php) declares its demonstration stories,
- * and this tool matches those declared slugs against the database. What
- * it never does is delete — the launch-readiness cleanup is a later
- * phase's editorial decision, made from this report.
+ * Provenance, not title-guessing: a launch pack that says
+ * 'demonstration' => true declares its stories demonstration copy, and the
+ * core seed's sample stories are the founding paper's. The list is
+ * pp_demonstration_slugs() (app/indexing.php), the one Settings checks
+ * before it opens a paper to search engines, and a story counts for the
+ * paper it is mapped to, as it does there. The newer papers' inaugural
+ * editions are about the papers themselves, true by construction, and
+ * aren't demonstration copy. This tool never deletes: moving the stories
+ * to draft is the newsroom's editorial decision, made from this report.
  */
 
 require dirname(__DIR__) . '/app/bootstrap.php';
+require_once PP_ROOT . '/app/indexing.php';
 
 if (PHP_SAPI !== 'cli') {
     http_response_code(403);
@@ -22,7 +27,8 @@ if (PHP_SAPI !== 'cli') {
 $csv = in_array('--csv', $argv, true);
 $pdo = db();
 
-$bySlug = $pdo->prepare('SELECT id, status, filed_by, published_at FROM posts WHERE slug = ?');
+$onPaper = $pdo->prepare('SELECT p.id, p.status FROM posts p JOIN post_sites ps ON ps.post_id = p.id
+    JOIN sites s ON s.id = ps.site_id WHERE s.slug = ? AND p.slug = ?');
 $siteRow = $pdo->prepare('SELECT id, name FROM sites WHERE slug = ?');
 
 if ($csv) {
@@ -30,26 +36,24 @@ if ($csv) {
 }
 
 $totalDemo = 0;
-foreach (glob(PP_ROOT . '/assets/sites/*/launch.php') ?: [] as $packFile) {
-    $siteSlug = basename(dirname($packFile));
-    $pack = require $packFile;
-    $stories = (array) ($pack['stories'] ?? []);
+foreach (glob(PP_ROOT . '/assets/sites/*', GLOB_ONLYDIR) ?: [] as $dir) {
+    $siteSlug = basename($dir);
+    $slugs = pp_demonstration_slugs($siteSlug);
+    if (!$slugs) {
+        continue;
+    }
     $siteRow->execute([$siteSlug]);
     $site = $siteRow->fetch();
 
     $found = [];
     $missing = 0;
-    foreach ($stories as $story) {
-        $slug = (string) ($story['slug'] ?? slugify((string) ($story['title'] ?? '')));
-        if ($slug === '') {
-            continue;
-        }
-        $bySlug->execute([$slug]);
-        if ($row = $bySlug->fetch()) {
+    foreach ($slugs as $slug) {
+        $onPaper->execute([$siteSlug, $slug]);
+        if ($row = $onPaper->fetch()) {
             $found[] = ['slug' => $slug, 'id' => (int) $row['id'], 'status' => $row['status']];
             $totalDemo++;
             if ($csv) {
-                printf("%s,%d,%s,%s,launch-pack\n", $siteSlug, (int) $row['id'], $slug, $row['status']);
+                printf("%s,%d,%s,%s,demonstration\n", $siteSlug, (int) $row['id'], $slug, $row['status']);
             }
         } else {
             $missing++;
@@ -57,13 +61,13 @@ foreach (glob(PP_ROOT . '/assets/sites/*/launch.php') ?: [] as $packFile) {
     }
 
     if (!$csv) {
-        $live = count(array_filter($found, fn ($f) => $f['status'] === 'published'));
-        printf("%-24s %s pack declares %2d demo stor%s: %2d in the database (%d published), %d not present%s\n",
+        $live = count(array_filter($found, fn ($f) => in_array($f['status'], ['published', 'scheduled'], true)));
+        printf("%-24s %sdeclares %2d demonstration stor%s: %2d on the paper (%d live), %d not present%s\n",
             $siteSlug,
             $site ? '' : '(no site row) ',
-            count($stories), count($stories) === 1 ? 'y' : 'ies',
+            count($slugs), count($slugs) === 1 ? 'y' : 'ies',
             count($found), $live, $missing,
-            $missing ? ' (never seeded here, or already replaced)' : '');
+            $missing ? ' (never seeded here, or deleted)' : '');
     }
 }
 
@@ -78,6 +82,7 @@ if (!$csv) {
                           GROUP BY s.slug ORDER BY s.slug') as $r) {
         printf("%-24s %3d post(s) mapped, %d agent-filed\n", $r['slug'], (int) $r['n'], (int) $r['agent']);
     }
-    echo "\n$totalDemo launch-pack demonstration stor" . ($totalDemo === 1 ? 'y' : 'ies') . " present across the network.\n";
-    echo "Read-only: nothing was changed. The launch-readiness cleanup is a later phase.\n";
+    echo "\n$totalDemo demonstration stor" . ($totalDemo === 1 ? 'y' : 'ies') . " present across the network.\n";
+    echo "Read-only: nothing was changed. Settings won't open a paper to search engines while any of its\n"
+        . "demonstration stories is live (published or scheduled).\n";
 }

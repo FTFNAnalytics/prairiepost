@@ -703,6 +703,32 @@ holding a capability it should not have.
   Nothing is set on the server: the defaults are the numbers. DEPLOY.md
   section 12 has the settings and the check that prints what the papers
   enforce. `tests/ingest-limits.test.php` holds it.
+- **The search-engine switch — #103 (26 Nov), not rolled.** The owner's
+  order: "add a button the settings dashboard for each site that turns
+  on the indexing." A "Search engines" panel at the top of Settings
+  (`admin/settings.php`, administrators only) replaces the old checkbox:
+  - Open and Hide buttons write the paper's own `indexing_enabled`,
+    each a CSRF-guarded POST with an audit row (`indexing.on` /
+    `indexing.off`);
+  - Open refuses, and its button is disabled, while any of the paper's
+    demonstration stories is published or scheduled, or while its pages
+    name a host that isn't the paper's (`pp_indexing_readiness()`,
+    `app/indexing.php`). The panel lists those stories, each linked to
+    its editor;
+  - demonstration copy is declared. The fifteen packs of invented
+    editorial say `'demonstration' => true`, and the flagship's twelve
+    are the core seed's `pp_seed_stories()`. Those sixteen papers stay
+    shut until their newsrooms draft them (269 stories as seeded); the
+    ten inaugural-edition papers can open as soon as it rolls.
+    `tools/demo-inventory.php` now reports the same list;
+  - an About page without its own text, and the missing privacy page,
+    are named beside the button but don't refuse. The privacy page is
+    the owner's decision (PLAN.md, policy decisions).
+
+  Never retitle a demonstration story in its pack: production's copy
+  keeps the slug it was seeded with, and the check finds stories by
+  slug. No schema step and no new route; code-only, it rides any roll.
+  `tests/indexing-switch.test.php` holds it.
 - **The roll brief to run is `docs/briefs/roll-acb508aa4fd0.md`**
   (26 Nov). It pins `acb508aa4fd016dafeb0c12dbda25dc7de793bed`, #102's
   code commit: 4 commits after `6e3cfab`, 12 after `1458b09`, 26 after
@@ -763,7 +789,9 @@ tests. Check any new-paper work against the PLAN.md gate before starting
 it.
 
 1. **[HALF PAID — PLAN.md 0.4: every page is noindex until its paper's
-   `indexing_enabled` is set, and none is.]** What remains: the older
+   `indexing_enabled` is set, and none is. Since #103 Settings refuses to
+   set it while any of the paper's demonstration stories is live.]**
+   What remains: the older
    papers' content is invented editorial about a real city, including
    figures and votes attributed to real councils, publicly readable if
    not indexed. Fourteen of those packs sign it with about 80 people
@@ -884,7 +912,11 @@ Full detail and evidence: `docs/build/phase-01-handoff.md`.
 - **First administrator** comes from `php tools/setup-admin.php` on the
   server; the login page never creates accounts.
 - **Indexing is per-site opt-in** (`indexing_enabled`, default OFF —
-  every page noindex until an admin ticks the box in Settings).
+  every page noindex until an administrator presses Open in Settings'
+  "Search engines" panel). Open refuses while any of the paper's
+  demonstration stories is live or its pages name another host
+  (`pp_indexing_readiness()`); a pack of invented editorial says
+  `'demonstration' => true`. Never set the switch any other way.
 - **CI** (`tools/render-gate.sh`): `[render]` in a PR title excuses ONLY
   a classified rendered-output diff (baseline exit 10) — and PR titles
   are environment data, never shell source.

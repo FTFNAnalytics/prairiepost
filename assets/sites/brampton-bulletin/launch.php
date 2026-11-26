@@ -13,6 +13,12 @@ $img = fn (string $file) => '/assets/sites/brampton-bulletin/img/' . $file;
 
 return [
 
+    /* Demonstration copy. These stories are invented editorial about real
+       places, signed by people who don't exist (CLAUDE.md, debt 1). Settings
+       won't open this paper to search engines while any of them is live
+       (app/indexing.php); the newsroom moves them to draft first. */
+    'demonstration' => true,
+
     /* Every public hostname this paper answers on. The seeder writes these
        into the domains table, which bootstrap resolves tenants from. */
     'domains' => ['bramptonbulletin.com', 'www.bramptonbulletin.com'],

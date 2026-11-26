@@ -1,6 +1,7 @@
 <?php
 /** Site settings: identity, rail data, newsletter copy, ads, cron. Admin only. */
 require dirname(__DIR__) . '/app/bootstrap.php';
+require dirname(__DIR__) . '/app/indexing.php';
 require __DIR__ . '/_layout.php';
 require_admin();
 
@@ -29,6 +30,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         flash_set('New ingest token generated. Give it to the scraping agent — the old one stops working now.');
         redirect('settings.php');
     }
+    // Search engines: the one switch, this paper only (app/indexing.php).
+    // Opening re-checks what stands in the way here, whatever the page
+    // showed; hiding is never refused.
+    if (($_POST['action'] ?? '') === 'indexing_on') {
+        $ready = pp_indexing_readiness();
+        if ($ready['blockers']) {
+            flash_set('Not opened to search engines. ' . $ready['blockers'][0], true);
+        } elseif (!pp_indexing_enabled()) {
+            set_setting('indexing_enabled', '1');
+            pp_audit('indexing.on', 'settings', $ready['address']);
+            flash_set(setting('site_title') . ' is open to search engines. Its pages no longer ask them to stay away.');
+        }
+        redirect('settings.php');
+    }
+    if (($_POST['action'] ?? '') === 'indexing_off') {
+        if (pp_indexing_enabled()) {
+            set_setting('indexing_enabled', '0');
+            pp_audit('indexing.off', 'settings', site_url());
+            flash_set(setting('site_title') . ' is hidden from search engines again. Every page asks them to stay away.');
+        }
+        redirect('settings.php');
+    }
 
     $changed = [];
     foreach ($textKeys as $key) {
@@ -40,12 +63,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             set_setting($key, $new);
         }
     }
-    // Search-engine indexing: a checkbox, so an unchecked box doesn't POST —
-    // the marker says the panel was on the form, and the value written is
-    // for THIS site's settings row only. Admin-only (this whole page is).
-    if (isset($_POST['indexing_marker'])) {
-        set_setting('indexing_enabled', isset($_POST['indexing_enabled']) ? '1' : '0');
-    }
+    // Search-engine indexing is not on this form: its own panel above it
+    // opens and hides the paper with one button each (indexing_on/_off).
 
     // Agent auto-queue checkboxes (hub): unchecked boxes don't POST, so the
     // marker field tells us the panel was on the submitted form at all.
@@ -177,6 +196,51 @@ flash_show();
 <h1 class="pagetitle">Settings</h1>
 <p class="pagesub">Everything here takes effect immediately. The design system itself — colours, type, the horizon rule — lives in the stylesheet and is deliberately not a setting.</p>
 
+<?php
+$ixOn = pp_indexing_enabled();
+$ix = pp_indexing_readiness();
+$ixLast = pp_indexing_last_change();
+$ixName = (string) setting('site_title');
+?>
+<div class="panel" id="search-engines">
+  <h2>Search engines</h2>
+  <?php if ($ixOn): ?>
+  <p style="margin:0 0 10px"><span class="chip chip--ok">Open</span>
+    Search engines may index <?= e($ixName) ?>: its pages no longer ask them to stay away.
+    <?php if ($ixLast && $ixLast['action'] === 'indexing.on'): ?>Opened <?= e(fmt_date((string) $ixLast['created_at'], 'M j, Y')) ?> by <?= e((string) $ixLast['user_name']) ?>.<?php endif; ?></p>
+  <?php else: ?>
+  <p style="margin:0 0 10px"><span class="chip chip--draft">Hidden</span>
+    Every page of <?= e($ixName) ?> asks search engines to stay away (<span class="mono">noindex</span>).
+    This switch is this paper's alone.
+    <?php if ($ixLast && $ixLast['action'] === 'indexing.off'): ?>Hidden <?= e(fmt_date((string) $ixLast['created_at'], 'M j, Y')) ?> by <?= e((string) $ixLast['user_name']) ?>.<?php endif; ?></p>
+  <?php endif; ?>
+  <?php /* What stands in the way: it refuses Open while hidden, and still shows once open (a story put back up afterwards). */ ?>
+  <?php if ($ix['blockers']): ?>
+  <p style="margin:0 0 6px"><strong><?= $ixOn ? 'Search engines can see this now:' : 'Not ready yet:' ?></strong></p>
+  <ul style="margin:0 0 10px;padding-left:20px">
+    <?php foreach ($ix['blockers'] as $why): ?><li><?= e($why) ?></li><?php endforeach; ?>
+  </ul>
+  <?php if ($ix['live']): ?>
+  <details style="margin:0 0 10px"><summary>The demonstration stories still live (<?= count($ix['live']) ?>)</summary>
+    <ul style="margin:6px 0 0;padding-left:20px">
+      <?php foreach ($ix['live'] as $row): ?><li><a href="post-edit.php?id=<?= (int) $row['id'] ?>"><?= e((string) $row['title']) ?></a> <span class="chip chip--<?= e((string) $row['status']) ?>"><?= e((string) $row['status']) ?></span></li><?php endforeach; ?>
+    </ul></details>
+  <?php endif; ?>
+  <?php elseif (!$ixOn): ?>
+  <p style="margin:0 0 10px">Its pages name <span class="mono"><?= e($ix['address']) ?></span> as their address, and none of its demonstration launch stories is live.</p>
+  <?php endif; ?>
+  <?php if ($ixOn): ?>
+  <form method="post" class="inline"><?= csrf_field() ?><input type="hidden" name="action" value="indexing_off">
+    <button class="btn btn--ghost" type="submit" onclick="return confirm(<?= e(json_encode('Hide ' . $ixName . ' from search engines? Every page asks them to stay away again, and they drop its pages over the following weeks.')) ?>)">Hide from search engines</button></form>
+  <?php else: ?>
+  <form method="post" class="inline"><?= csrf_field() ?><input type="hidden" name="action" value="indexing_on">
+    <button class="btn" type="submit"<?= $ix['blockers'] ? ' disabled' : '' ?> onclick="return confirm(<?= e(json_encode('Open ' . $ixName . ' to search engines? Its pages stop asking them to stay away, and they start listing them over the following days.')) ?>)">Open to search engines</button></form>
+  <?php endif; ?>
+  <?php if ($ix['notes']): ?>
+  <p class="help" style="margin-top:10px"><?= e(implode(' ', $ix['notes'])) ?></p>
+  <?php endif; ?>
+</div>
+
 <form method="post">
   <?= csrf_field() ?>
   <!-- First submit in tree order = the Enter-key default. This silent one
@@ -212,13 +276,6 @@ flash_show();
         <textarea id="meta_description" name="meta_description" style="min-height:64px"><?= e(setting('meta_description')) ?></textarea>
         <label for="footer_line">Footer line</label>
         <textarea id="footer_line" name="footer_line" style="min-height:64px"><?= e(setting('footer_line')) ?></textarea>
-        <input type="hidden" name="indexing_marker" value="1">
-        <label style="display:flex;align-items:center;gap:8px;text-transform:none;letter-spacing:.04em;margin-top:12px">
-          <input type="checkbox" name="indexing_enabled" value="1" style="width:auto"<?= pp_indexing_enabled() ? ' checked' : '' ?>>
-          Search engines may index this paper
-        </label>
-        <p class="help">Off by default: every page carries <span class="mono">noindex</span> until this paper is
-        editorially ready and this box is ticked. This site only — the other papers keep their own switch.</p>
       </div>
     </div>
   </div>
