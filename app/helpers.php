@@ -317,8 +317,9 @@ function dateline(array $post): string
 /**
  * URL for a brand asset, preferring the current site's own version.
  * A site drops overrides into assets/sites/<slug>/ (logo-primary.svg,
- * logo-reversed.svg, logo-stacked.svg, favicon.svg, og-default.png,
- * brand.css); anything missing falls back to the network default.
+ * logo-reversed.svg, logo-stacked.svg, favicon.svg, favicon.ico,
+ * favicon-32.png, apple-touch-icon.png, og-default.png, brand.css);
+ * anything missing falls back to the network default.
  */
 function site_asset(string $file): string
 {
@@ -333,6 +334,71 @@ function site_asset(string $file): string
 function site_asset_path(string $file): string
 {
     return PP_ROOT . site_asset($file);
+}
+
+/**
+ * A brand-asset URL when that file is actually on disk, else null.
+ * site_asset() always returns a path, including the network fallback, so a
+ * link built from it 404s for a paper that has neither its own file nor a
+ * network one. Icon tags use this and simply omit what isn't there.
+ */
+function pp_existing_asset(string $file): ?string
+{
+    if (!preg_match('/^[a-z0-9][a-z0-9.-]*$/', $file)) {
+        return null;
+    }
+    $url = site_asset($file);
+    return is_file(PP_ROOT . $url) ? $url : null;
+}
+
+/**
+ * The colour a browser should paint around the page: the palette's
+ * "theme" when the paper names one, else the newsroom accent. Empty when
+ * neither is a #RRGGBB colour, so the tag is left off rather than invented.
+ */
+function pp_theme_color(): string
+{
+    $brand = pp_brand_file();
+    foreach ([$brand['theme'] ?? null, $brand['admin']['accent'] ?? null] as $hex) {
+        if (is_string($hex) && preg_match('/^#[0-9A-Fa-f]{6}$/', $hex) === 1) {
+            return $hex;
+        }
+    }
+    return '';
+}
+
+/**
+ * Tab icon, touch icon and theme-color for the current paper.
+ *
+ * A paper with the new files (favicon.ico, a 32px PNG, an apple-touch
+ * icon) gets the set Safari, iOS and Google's favicon crawler actually
+ * use; an SVG-only favicon is what those skip. A paper without the files
+ * keeps the SVG link it has today and gains no href that would 404.
+ * Browsers that request /favicon.ico or /apple-touch-icon.png by name
+ * are answered by icon.php, from the same files.
+ */
+function pp_head_icons(): void
+{
+    $ico = pp_existing_asset('favicon.ico');
+    if ($ico !== null) {
+        echo '<link rel="icon" href="' . e($ico) . '" sizes="any">' . "\n";
+    }
+    $png = pp_existing_asset('favicon-32.png');
+    if ($png !== null) {
+        echo '<link rel="icon" type="image/png" sizes="32x32" href="' . e($png) . '">' . "\n";
+    }
+    $svg = pp_existing_asset('favicon.svg');
+    if ($svg !== null) {
+        echo '<link rel="icon" type="image/svg+xml" href="' . e($svg) . '">' . "\n";
+    }
+    $apple = pp_existing_asset('apple-touch-icon.png');
+    if ($apple !== null) {
+        echo '<link rel="apple-touch-icon" href="' . e($apple) . '">' . "\n";
+    }
+    $theme = pp_theme_color();
+    if ($theme !== '') {
+        echo '<meta name="theme-color" content="' . e($theme) . '">' . "\n";
+    }
 }
 
 /**

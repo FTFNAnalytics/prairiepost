@@ -1,12 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 108" role="img" aria-label="The Red River Register">
   <title>The Red River Register</title>
-  <defs>
-    <mask id="cut">
-      <rect width="80" height="108" fill="#fff"/>
-      <path d="M40 2 C 18 26, 62 44, 40 64 C 24 79, 56 92, 40 106" fill="none" stroke="#000" stroke-width="7" stroke-linecap="round"/>
-    </mask>
-  </defs>
-  <g fill="#7E3517" mask="url(#cut)">
-    <path d="M8 8h28v92H8zM44 8h28v92H44z"/>
-  </g>
+  <!-- The meander is cut out of the path. An SVG mask paints blank as a tab icon. -->
+  <path fill="#7E3517" fill-rule="evenodd" d="M 8 8 L 8 100 L 36 100 L 36 85.443359 C 34.278168 82.452262 32.569733 79.202303 32.035156 75.410156 C 31.47962 71.469317 32.629613 67.057761 36 63.125 L 36 34.458984 C 33.522155 29.909087 31.051026 25.003512 30.339844 19.443359 C 29.873191 15.794988 30.312582 11.909849 31.947266 8 L 8 8 z M 44 8 L 44 34.515625 C 46.45838 38.969963 48.922544 43.586778 49.652344 48.761719 C 50.39566 54.03251 48.824508 59.787596 44 64.955078 L 44 85.294922 C 45.715462 88.252861 47.420998 91.42619 47.962891 95.134766 C 48.192025 96.702904 48.123986 98.347957 47.740234 100 L 72 100 L 72 8 L 44 8 z"/>
 </svg>

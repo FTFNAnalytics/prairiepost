@@ -196,8 +196,7 @@ function page_header(array $meta = [], string $activeDesk = ''): void
 <?php if ($private || !pp_indexing_enabled()): ?><meta name="robots" content="noindex, nofollow">
 <?php endif; ?><?php if ($description !== ''): ?><meta name="description" content="<?= e($description) ?>">
 <?php endif; ?><link rel="canonical" href="<?= e($canonical) ?>">
-<link rel="icon" type="image/svg+xml" href="<?= e(site_asset('favicon.svg')) ?>">
-<link rel="alternate" type="application/rss+xml" title="<?= e($siteTitle) ?>" href="<?= e(site_url()) ?>/feed/">
+<?php pp_head_icons(); ?><link rel="alternate" type="application/rss+xml" title="<?= e($siteTitle) ?>" href="<?= e(site_url()) ?>/feed/">
 <link rel="stylesheet" href="/assets/css/prairie.css">
 <?php
 // The paper's stylesheet, by convention rather than by name: a migrated
@@ -218,6 +217,7 @@ if ($ppHasChrome && is_file(PP_ROOT . '/assets/css/' . $ppCssFile . '.css')): ?>
 <meta property="og:url" content="<?= e($canonical) ?>">
 <meta property="og:image" content="<?= e($ogImage) ?>">
 <meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="<?= e($ogImage) ?>">
 <?php if (!empty($meta['jsonld'])): ?>
 <script type="application/ld+json"><?= pp_json_for_html($meta['jsonld']) ?></script>
 <?php endif; ?>

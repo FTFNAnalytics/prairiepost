@@ -1,5 +1,6 @@
 {
   "zone": "America/Winnipeg",
+  "theme": "#E6BF2E",
   "weather": {"city": "mb-52", "place": "Brandon"},
   "palette": {
     "ink":      "#111111",

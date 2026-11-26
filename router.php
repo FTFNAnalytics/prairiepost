@@ -68,6 +68,11 @@ $map = [
     '/about'        => '/about.php',
     '/tips'         => '/tips.php',
     '/tips/'        => '/tips.php',
+    // Browsers and Google's favicon crawler request these by name, whatever
+    // the <link rel="icon"> says. icon.php serves the current paper's file.
+    '/favicon.ico'  => '/icon.php',
+    '/apple-touch-icon.png' => '/icon.php',
+    '/apple-touch-icon-precomposed.png' => '/icon.php',
     '/api/ingest'   => '/ingest.php',
     '/api/ingest/'  => '/ingest.php',
     '/api/ingest/lookup'  => '/ingest-lookup.php',

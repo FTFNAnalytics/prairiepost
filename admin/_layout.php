@@ -115,7 +115,7 @@ function admin_header(string $title, string $active = '', string $actions = ''):
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title><?= e($title) ?> — <?= pp_is_hub() ? 'Control room' : 'Newsroom' ?> — <?= e(setting('site_title', 'The Prairie Dispatch')) ?></title>
 <meta name="robots" content="noindex,nofollow">
-<link rel="icon" type="image/svg+xml" href="<?= e(site_asset('favicon.svg')) ?>">
+<?php pp_head_icons(); ?>
 <link rel="stylesheet" href="/assets/css/admin.css?v=<?= e(pp_admin_sheet_version()) ?>">
 <?php if ($theme && $theme['css'] !== ''): ?>
 <style><?= $theme['css'] ?></style>

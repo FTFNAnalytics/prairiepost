@@ -104,7 +104,7 @@ if (!pp_is_hub()) {
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Sign in — Newsroom — <?= e(setting('site_title', 'The Prairie Dispatch')) ?></title>
 <meta name="robots" content="noindex,nofollow">
-<link rel="icon" type="image/svg+xml" href="<?= e(site_asset('favicon.svg')) ?>">
+<?php pp_head_icons(); ?>
 <link rel="stylesheet" href="/assets/css/admin.css">
 </head>
 <body>

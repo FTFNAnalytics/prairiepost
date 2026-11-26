@@ -1,5 +1,6 @@
 {
   "zone": "America/Winnipeg",
+  "theme": "#8B0000",
   "weather": {"city": "mb-38", "place": "Winnipeg"},
   "palette": {
     "ink":     "#111111",

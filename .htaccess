@@ -48,6 +48,10 @@ RewriteRule ^card/([a-z0-9-]+)\.png$ card.php?slug=$1 [L]
 RewriteRule ^corrections/?$ corrections.php [L]
 RewriteRule ^about/?$ about.php [L]
 RewriteRule ^tips/?$ tips.php [L,QSA]
+# Well-known icon URLs. The file is per paper, so it cannot live at the
+# web root of a shared tree; icon.php serves the tenant's own.
+RewriteRule ^favicon\.ico$ icon.php [L]
+RewriteRule ^apple-touch-icon(-precomposed)?\.png$ icon.php [L]
 RewriteRule ^newsletter(/.*)?$ newsletter.php?path=$1 [L,QSA]
 </IfModule>
 
