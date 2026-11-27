@@ -132,6 +132,12 @@ against this list before shipping them.
    `tools/test-nginx-edits.sh`), never only against blocks written for
    the test.
 
+   A `router.php` fallback still doesn't reach a route whose path ends
+   in an extension a block's static-file regex names (`.ico`, `.png`,
+   `.svg`…). nginx picks the regex before `location /`, and a missing
+   file is a static 404. Such a route needs an exact `location =` in
+   the upgrader, as `pp_icon_routes()` gives the icon URLs (#108).
+
 8. **The first request after a pull runs pending migrations.** Any
    curl during nginx/TLS verification can trigger it. Schedule the
    all-papers regression spot-check immediately after the first request
@@ -240,6 +246,27 @@ holding a capability it should not have.
 
 ## Current operational state (as of the story-lookup roll, 21 Nov 2026)
 
+- **Newest (26 Nov, late): production is on `117c158a545b`, at schema
+  26.** `docs/briefs/roll-f07735dd1e3d.md` records that roll as
+  succeeded. Its report hasn't reached this file.
+  - It carries everything through #107: #90–#98, #101, #102, #104,
+    #105 and #107. Where a bullet below calls one of those "not
+    rolled", this bullet is newer.
+  - Checked from outside the same night:
+    - `/tips` answers 200 on Toronto and Kelowna;
+    - Toronto's canonical names `torontotelegraph.ca` (#101);
+    - all 27 fronts answer 200 with exactly one `noindex`, so no paper
+      is open to search engines;
+    - `/favicon.ico` 404s on Edmonton and Prairie Dispatch, two of the
+      five hand-written blocks #108 fixes, and is 200 on Portage and
+      Bison.
+  - The ingest limits in force are #102's code: 200 filings, 200
+    uploads and 120 edits per lane, per token per hour, unless the box
+    sets an override. The roll's D15 table proves it, and hasn't
+    reached this file.
+  - Not rolled: #103 (the search-engine switch) and #108 (icon URLs on
+    the hand-written blocks). Their brief is
+    `docs/briefs/roll-f07735dd1e3d.md`.
 - **25 Nov, checked from outside: thirteen papers call themselves
   prairiedispatch.ca.** On Bison, Brandon, Burrard, Cariboo, Kitchener,
   London, Mississauga, Portage, Red River, Rideau, Steeltown, Surrey and
@@ -712,7 +739,7 @@ holding a capability it should not have.
   section 12 has the settings and the check that prints what the papers
   enforce. `tests/ingest-limits.test.php` holds it.
 - **The search-engine switch — MERGED (26 Nov, #103, at `2f336b1`), not
-  rolled.** The owner's
+  rolled; it rolls with #108's brief.** The owner's
   order: "add a button the settings dashboard for each site that turns
   on the indexing." A "Search engines" panel at the top of Settings
   (`admin/settings.php`, administrators only) replaces the old checkbox:
@@ -738,8 +765,8 @@ holding a capability it should not have.
   keeps the slug it was seeded with, and the check finds stories by
   slug. No schema step and no new route; code-only, it rides any roll.
   `tests/indexing-switch.test.php` holds it.
-- **Each paper's own icons and share card — MERGED (26 Nov, #104 and
-  #105), not rolled.**
+- **Each paper's own icons and share card — LIVE (#104 and #105, rolled
+  with `117c158` on 26 Nov).**
   - Every paper serves an icon set drawn from its own mark
     (`assets/sites/<slug>/icons/`), its own `og-default.png`,
     `twitter:image` and `theme-color`.
@@ -747,6 +774,8 @@ holding a capability it should not have.
     `/site.webmanifest` are routes (`icon.php`), one file per host.
   - Before, `/favicon.ico` was a 404, and a missing mark or card fell
     back to the flagship's.
+  - On the five hand-written blocks below the icon URLs still 404 until
+    #108 rolls.
 
   `tests/icons.test.php` holds it.
 - **The 388f1bd roll stopped at `nginx -t` (26 Nov); fixed by #107.**
@@ -754,31 +783,44 @@ holding a capability it should not have.
     `location ^~ /admin/` in five hand-written blocks: Edmonton, Grande
     Prairie, Kermode, Prairie Dispatch and Pacific Post (lesson 7). It
     then put every vhost and cron file back before the schema step.
-  - Production was reported still on `7cb82fb9c20a`, at schema 25.
   - #107 (`117c158`) inserts only beside a PHP handler that is a direct
     child of `server`, and points only the server-level `location /`
-    at `router.php`. The upgrader's sha256 is now `dd1fb181…`.
-- **The roll brief to run is `docs/briefs/roll-2f336b118242.md`**
-  (26 Nov). It pins `2f336b118242387c0057fc5e40366c21e0da230c`, the
-  merge of #103: 4 commits after `117c158`, 13 after `acb508a` and 50
-  after `7cb82fb`. Its upgrader is the same file as `117c158`'s.
-  - It is a short brief over `roll-acb508aa4fd0.md`'s Steps A–D, plus
-    `roll-388f1bd03ffe.md`'s icon checks.
-  - It restates `roll-117c158a545b.md`'s stopped-roll handling and the
-    five blocks' `nginx -t` expectation.
-  - It adds D16 (the switch arrived, no paper is open, every front still
-    `noindex`) and D17 (`tools/demo-inventory.php`, verbatim).
-  - D16 and D17 were run here on nginx 1.24 and php-fpm 8.3 against a
-    release tree built from the pin.
-- **Superseded, in order:**
-  - `docs/briefs/roll-117c158a545b.md` (26 Nov, the upgrader fix);
-  - `docs/briefs/roll-388f1bd03ffe.md` (26 Nov, the icons; its upgrader
-    failed `nginx -t`);
-  - `docs/briefs/roll-acb508aa4fd0.md`, which pins
-    `acb508aa4fd016dafeb0c12dbda25dc7de793bed`, #102's code commit.
-    Its Steps A–D are still the procedure every later brief carries out.
-    It added A16 and D15: the ingest limits before the roll, and the
-    live ones after it, reported as a table.
+    at `router.php`. The upgrader's sha256 became `dd1fb181…`, and the
+    `117c158` roll then succeeded (see the first bullet).
+- **Icon URLs reach `router.php` on every block — MERGED (27 Nov,
+  #108), not rolled.**
+  - The five hand-written blocks carry
+    `location ~* \.(?:svg|png|…|ico)$`, which nginx picks before
+    `location /`. So `/favicon.ico` and the touch icons were answered
+    from disk, and 404'd.
+  - The upgrader's `pp_icon_routes()` adds an exact `location =` per
+    icon and manifest URL, passed to `router.php`. An exact match beats
+    any regex.
+  - `/assets` and `/uploads` keep the static location.
+  - It is idempotent by its `pp-icon-routes` marker, and
+    `tools/test-nginx-edits.sh` covers it. The upgrader's sha256 is now
+    `06e1c268…`.
+- **The roll brief to run is `docs/briefs/roll-f07735dd1e3d.md`**
+  (#108's, 26–27 Nov). It pins
+  `f07735dd1e3db5cfcf4a36cf046f05f30d267baa`, #108's code commit, whose
+  parent is the merge of #103. So it rolls #103 and #108 together.
+  - It is code-only from `117c158a545b`: the schema stays 26.
+  - It checks every icon URL on all 27 hosts.
+  - S1–S4, added in #109, check that the switch arrived, that no paper
+    is open, and that every front still says `noindex`. They print
+    `tools/demo-inventory.php` verbatim.
+  - S1–S4 were run here on nginx 1.24 and php-fpm 8.3 against a release
+    tree built from the pin. The release-root line was run on copies of
+    block files.
+- **Done or superseded:**
+  - `docs/briefs/roll-117c158a545b.md` ran (26 Nov);
+  - `docs/briefs/roll-388f1bd03ffe.md` stopped at `nginx -t`, and
+    `117c158` replaced it;
+  - `docs/briefs/roll-acb508aa4fd0.md` was the procedure the `117c158`
+    roll carried out. It pins
+    `acb508aa4fd016dafeb0c12dbda25dc7de793bed`, #102's code commit, and
+    added A16 and D15: the ingest limits before the roll, and the live
+    ones after it, reported as a table.
 - **Superseded: `docs/briefs/roll-6e3cfab33b32.md`**
   (25 Nov). It pins `6e3cfab33b323a7facc93e96eb268eecc27b46cc`, #101's
   code commit: the address fix, 8 commits after `1458b09`, 22 after
