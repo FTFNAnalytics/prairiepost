@@ -1,19 +1,30 @@
 # Roadmap — the platform plan and where it stands
 
-## Current state · 24 Nov 2026
+## Current state · 27 Nov 2026
 
 **Live:** 27 sites, which is 26 papers and the CivisMedia hub, at
-schema version 25. Steeltown Standard and Toronto Telegraph are in that
-count; their launch report hasn't reached the repository. One foundation
+schema version 26 since the 26 Nov roll. Steeltown Standard and Toronto
+Telegraph are in that count; their launch report hasn't reached the
+repository. One foundation
 paper, `terminal-city-times`, waits for its brand package. Twelve more
 mastheads are named in `NETWORK-EXPANSION.md`; none is registered or
 built.
 
-**Rolled:** `7cb82fb` (the Stories list's bulk status change, and each
-paper's newsroom wearing that paper's branding), a code-only roll from
-`feb2b1f4f6eb`. Its report hasn't reached the repository, but all 27
-domains serve `assets/js/bulk.js`, which only that tree carries (checked
-from outside on 24 Nov).
+**Rolled, 26 Nov:** `117c158a545b`, at schema 26. It carries
+everything through #107: #90–#98, #101, #102, #104, #105 and #107.
+- `roll-f07735dd1e3d.md` records that roll as succeeded. Its report
+  hasn't reached the repository.
+- Checked from outside the same night:
+  - `/tips` answers 200;
+  - Toronto's canonical names `torontotelegraph.ca`;
+  - all 27 fronts carry exactly one `noindex`;
+  - `/favicon.ico` 404s on five hand-written blocks (#108 fixes that).
+- The 388f1bd roll before it stopped at `nginx -t` and put everything
+  back (#107 fixed the upgrader).
+
+**Rolled before that:** `7cb82fb` (the Stories list's bulk status
+change, and each paper's newsroom wearing that paper's branding), a
+code-only roll from `feb2b1f4f6eb`, checked from outside on 24 Nov.
 
 **Analytics:** eight papers load analytics as of 24 Nov. Kermode
 Chronicle carries a Google Analytics tag, and seven papers each carry
@@ -21,27 +32,22 @@ their own Google Tag Manager container. No paper has a privacy page yet
 (see the policy decisions below).
 
 **Merged, not rolled:**
-- photo metadata stripping (9.1 below, #91) and the image-hold fix for an
-  editor's publish (9.5, #90), whose brief was
-  `docs/briefs/roll-72f8adccbcca.md`;
-- live weather (9.6, #94), the whiteboard and tips form (9.10, #95), the
-  launch-day widgets retired (9.7, #96), each paper's own clock (9.8,
-  #97), and the routing half of 9.2 (#98), all merged 25 Nov;
-- each paper's own address (10.0, #101), merged 25 Nov;
-- the ingest hourly limits a full news round needs (#102, 26 Nov): 200
-  filings, 200 uploads and 120 edits on each edit lane per token, from 60
-  on every lane (DEPLOY.md section 12);
 - the search-engine switch (#103, 26 Nov): an Open button per paper in
   Settings, refused while any of its demonstration stories is live (0.4
-  below). The brief below pins #102's code and doesn't carry it.
+  below);
+- icon URLs that reach `router.php` on the hand-written blocks (#108,
+  27 Nov). Their static-file regex answered `/favicon.ico` and the
+  touch icons from disk, so five papers 404'd them.
 
-The brief that rolls all of it is `docs/briefs/roll-acb508aa4fd0.md`.
-It supersedes `roll-6e3cfab33b32.md` and `roll-1458b09870e0.md`. It
-raises the schema to 26 (forward only), and the upgrader converts the
-hand-written nginx blocks. Afterwards it adds the weather job's cron line,
-cleans the stored images if the earlier brief's cleanup never ran, and
-reports the live ingest limits (D15). On 26 Nov production was still on
-the 24 Nov release: `/tips` answered 404 everywhere.
+The brief that rolls both is `docs/briefs/roll-f07735dd1e3d.md`, which
+pins `f07735d`, #108's code commit on top of the merge of #103.
+- It is code-only from `117c158a545b`: the schema stays 26.
+- The upgrader adds one exact location per icon URL to every block
+  with a PHP handler.
+- It checks every icon URL on all 27 hosts.
+- S1–S4 confirm the switch arrived, no paper opened and every front
+  still carries `noindex`, and list what each paper must draft before
+  it can open.
 
 The 24 Nov audit's loose ends are 9.6–9.10. The owner settled its three
 open questions on 25 Nov (decided, under the policy decisions below).
@@ -77,8 +83,8 @@ newsroom's working copy of that plan; this file is the repository's.
 | 2 Template registry | Done. 2.3 is in the backlog by owner decision. |
 | 3 Hermes ingest | Done, and extended (above). |
 | Hub 1–8 | See `PLAN-CIVIS.md` and `DEPLOY-CIVIS.md`. |
-| **9 Exposure and upkeep** | **Next. 9.1 and 9.5 merged 24 Nov (#91, #90); 9.6–9.8, 9.10 and 9.2's routing half merged 25 Nov (#94–#98). All of it rolls with `roll-acb508aa4fd0`, which supersedes the `72f8adccbcca`, `1458b09870e0` and `6e3cfab33b32` briefs. 9.2's catch-all, 9.3, 9.4 open.** |
-| 10 The reader's paper | Proposed 25 Nov from a review of all 27 sites against news and design practice. 10.0's address fix is code (#101), and rolls with the next roll. 10.2, 10.3 and 10.5 wait on owner decisions. |
+| **9 Exposure and upkeep** | **Next. 9.1 and 9.5 merged 24 Nov (#91, #90); 9.6–9.8, 9.10 and 9.2's routing half merged 25 Nov (#94–#98). All of it is live since the `117c158a545b` roll (26 Nov). 9.2's catch-all, 9.3, 9.4 open.** |
+| 10 The reader's paper | Proposed 25 Nov from a review of all 27 sites against news and design practice. 10.0's address fix (#101) is live since the 26 Nov roll. 10.2, 10.3 and 10.5 wait on owner decisions. |
 
 ---
 
@@ -133,8 +139,9 @@ filed.
 **9.2 — Convert the 14 legacy nginx blocks, and add the catch-all.**
 This is 1.2's remainder and 1.3, which was never built.
 
-*The routing half is merged (25 Nov, #98) and runs on the next roll,
-`docs/briefs/roll-acb508aa4fd0.md`.* `upgrade-papers.sh` now changes each hand-written
+*The routing half (25 Nov, #98) is live since the `117c158a545b` roll
+(26 Nov), with #107's fix for blocks that nest a PHP handler in `/admin/`
+and, once rolled, #108's exact icon locations.* `upgrade-papers.sh` now changes each hand-written
 block it repoints: the `try_files $uri $uri/ =404` fallback of
 `location /` becomes `router.php`, behind the same internal-only exact
 location generated blocks use. The block's rewrite lines stay and go on
@@ -225,8 +232,8 @@ a read-only query that counts them.
 appears in `GET /api/ingest-queue` afterwards, whatever its later
 status. `tests/publish-flow.test.php` checks this in #90.
 
-**9.6 — Live weather.** *Merged 25 Nov (#94), not rolled;
-`docs/briefs/roll-acb508aa4fd0.md` rolls it and adds the cron line.* Until now a paper's weather was a line an editor
+**9.6 — Live weather.** *Merged 25 Nov (#94), and rolled with `117c158a545b`
+on 26 Nov; that roll's procedure adds the cron line (C1).* Until now a paper's weather was a line an editor
 typed into Settings at launch, and nothing ever changed it. On 24 Nov
 sixteen papers printed launch-day weather beside today's date; Brampton
 read "Brampton, Ont. · 27°C · Humid, smog advisory" in late November.
@@ -379,8 +386,8 @@ falls back.
 *Acceptance:* the emailed link opens the story, and every paper and the
 hub answer `/about` with a page.
 
-**9.10 — The whiteboard and the tips form.** *Merged 25 Nov (#95), not
-rolled; `docs/briefs/roll-acb508aa4fd0.md` rolls it (schema 26). The owner's order of
+**9.10 — The whiteboard and the tips form.** *Merged 25 Nov (#95), and
+live since the `117c158a545b` roll (schema 26, 26 Nov). The owner's order of
 25 Nov: "Draw on the whiteboard from the Calgary Dispatch. Have the tips
 form go to a new whiteboard on each site admin portal."*
 
@@ -522,11 +529,16 @@ current:
   canola;
 - London shows 18°C.
 
-`docs/briefs/roll-acb508aa4fd0.md` puts ECCC's readings in the weather's
-place (9.6), retires the stale widgets (9.7) and puts each paper on its
-own clock (9.8). It also makes `/about` and `/tips` answer on every
-block (9.2, 9.10); today `/about` is a 404 on 11 papers and the hub.
-Judge the rest of this phase on the live sites only after the roll.
+The 26 Nov roll (`117c158a545b`) carries the code for all of this:
+- ECCC's readings in the weather's place (9.6). They appear once the
+  procedure's cron line (C1) runs.
+- The retired widgets (9.7), and each paper's own clock (9.8).
+- `/about` and `/tips` on every block (9.2, 9.10). On 25 Nov `/about`
+  was a 404 on 11 papers and the hub. The night of the roll, `/tips`
+  answered 200 on Toronto and Kelowna.
+
+Judge the rest of this phase on the live sites now, against that roll's
+report.
 
 **10.1 — Pictures that aren't the headline again.** Of the 124
 uploaded images on the 27 fronts, 99 are the image agent's

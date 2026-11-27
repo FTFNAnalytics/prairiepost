@@ -113,3 +113,70 @@ indexing switch is off. Do not turn any paper on.
 Report the 27 hosts as a table of those status codes, and say whether
 the five that 404'd (Edmonton, Grande Prairie, Kermode, Pacific Post,
 Prairie Dispatch) now answer `200`.
+
+## The search-engine switch (#103), after the icon checks
+
+This pin is the first release to carry #103: a "Search engines" panel
+at the top of each paper's Settings page. Its Open button refuses while
+any of the paper's demonstration stories is published or scheduled. The
+roll turns nothing on. These four checks only read; don't press the
+button. The two-failure hard stop applies.
+
+First, the papers' new release root, taken from the enabled blocks:
+
+    NEW=$(cat /etc/nginx/sites-enabled/* | sed 's/#.*//' | grep -Eo '/var/www/prairiepost-f07735dd1e3d-[A-Za-z0-9._-]+' | sort -u | grep -v -- '-civismedia$')
+    printf '%s\n' "$NEW"
+
+Expect one line, `/var/www/prairiepost-f07735dd1e3d-shared`. No line,
+or more than one: STOP.
+
+S1. **The switch is in the tree.**
+
+    test -f "$NEW/app/indexing.php" && grep -c 'id="search-engines"' "$NEW/admin/settings.php"
+
+Expect `1`.
+
+S2. **No paper is open to search engines.**
+
+    (cd "$NEW" && php -r 'require "app/bootstrap.php"; $s = db()->prepare("SELECT s.slug FROM settings t JOIN sites s ON s.id = t.site_id WHERE t.skey = ? AND t.svalue = ? ORDER BY s.slug"); $s->execute(["indexing_enabled", "1"]); $r = $s->fetchAll(PDO::FETCH_COLUMN); echo $r ? implode("\n", $r) : "no paper is open to search engines", "\n";')
+
+Expect `no paper is open to search engines`. The roll changes no
+setting, so a paper this lists was opened before it, with the old
+checkbox. Report it, and change nothing.
+
+S3. **Every front still asks search engines to stay away.** These are
+the 27 hosts from the table above:
+
+    for H in civismedia.ca bisonbulletin.ca bleuetblanc.ca bramptonbulletin.com brandonbulletin.com burrardbrief.ca cariboocompass.ca edmontonecho.com www.grandeprairiegazette.ca kelownacurrent.ca kermodechronicle.ca kitchenerchronicle.com londonlookout.com mississaugamonitor.com pickeringpost.ca portagepress.ca prairiedispatch.ca redriverregister.ca rideaureview.ca steeltownstandard.ca sudburystandard.ca surreystandard.ca thepacificpost.com torontotelegraph.ca tricitiestorch.ca turtleislandtimes.ca westernwire.ca; do
+      printf '%-28s %s\n' "$H" "$(curl -s -m 20 --resolve "$H:443:127.0.0.1" "https://$H/" | grep -c '<meta name="robots" content="noindex, nofollow">')"
+    done
+
+Expect `1` on every line. A `0` on a paper S2 listed is that paper
+being open: report it. Any other `0` fails this check.
+
+S4. **What each paper must draft before it can open.** This is
+information, not a gate. The tool only reads.
+
+    (cd "$NEW" && php tools/demo-inventory.php)
+
+Its first block has one line per paper that launched with demonstration
+copy: the fifteen older packs, and `prairiedispatch` for the core seed.
+Each line starts with `declares`, and none should say
+`(no site row)`. A line reads:
+
+    kitchener-chronicle      declares 19 demonstration stories: 19 on the paper (19 live), 0 not present
+
+In a freshly seeded network all 269 such stories are live. Production's
+numbers show what the newsrooms have changed since. The ten newer
+papers and the hub have no `declares` line: they launched with editions
+about themselves. After that block come each paper's counts of mapped
+and agent-filed posts, then the total.
+
+Report S1–S3's results, the root `NEW` named, and S4's whole output
+verbatim.
+
+These commands were run before this brief was merged, on nginx 1.24
+and php-fpm 8.3 over verified TLS. They ran against a release tree
+built from this pin, with a production-style config and a seeded
+database. S3's loop ran on the hosts that harness serves. The `NEW`
+line was run on copies of block files.
