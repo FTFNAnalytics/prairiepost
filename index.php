@@ -31,6 +31,9 @@ page_header([
         'url'         => site_url(),
         'slogan'      => setting('tagline', 'News to the horizon'),
         'inLanguage'  => str_replace('_', '-', pp_locale()),
+        'publishingPrinciples' => site_url() . '/standards',
+        'correctionsPolicy'    => site_url() . '/corrections',
+        'ownershipFundingInfo' => site_url() . '/about',
         'logo'        => [
             '@type'  => 'ImageObject',
             'url'    => ($ppLogo = pp_publisher_logo())['url'],

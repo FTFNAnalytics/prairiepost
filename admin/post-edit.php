@@ -75,13 +75,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($error === '') {
         $regions = setting_json('regions');
         $region = (string) ($_POST['region'] ?? '');
+        $postType = ($_POST['post_type'] ?? '') === 'link' ? 'link' : 'story';
         $fields = [
             'title' => $title,
-            'post_type' => ($_POST['post_type'] ?? '') === 'link' ? 'link' : 'story',
+            'post_type' => $postType,
             'source_name' => trim((string) ($_POST['source_name'] ?? '')),
             'region' => isset($regions[$region]) ? $region : '',
             'category_id' => (int) ($_POST['category_id'] ?? 0) ?: null,
-            'byline' => trim((string) ($_POST['byline'] ?? '')),
+            'byline' => pp_normalize_byline((string) ($_POST['byline'] ?? ''), $postType),
             'dateline' => trim((string) ($_POST['dateline'] ?? '')),
             'lede' => $lede,
             'body' => $body,

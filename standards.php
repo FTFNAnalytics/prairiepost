@@ -21,7 +21,7 @@ if ($body === '') {
             . '<h2>Indépendance éditoriale</h2>'
             . '<p>Les décisions journalistiques sont prises indépendamment des annonceurs, des commanditaires et des intérêts politiques. Tout contenu publicitaire ou commandité est clairement identifié.</p>'
             . '<h2>Sources et vérification</h2>'
-            . '<p>Les reportages s’appuient sur des documents publics, des comptes rendus officiels et des témoignages directs. Lorsque des systèmes automatisés ou d’assistance rédactionnelle contribuent à la veille ou à la préparation d’un texte, la rédaction en fait mention et assume la responsabilité éditoriale.</p>'
+            . '<p>Nos reportages s’appuient sur des documents publics, des comptes rendus officiels et des témoignages directs. Chaque texte publié engage la responsabilité éditoriale de la rédaction.</p>'
             . '<h2>Corrections</h2>'
             . '<p>Nous corrigeons promptement et ouvertement toute erreur factuelle. Les corrections apparaissent en tête de l’article concerné et dans notre <a href="' . e(url('corrections')) . '">registre public des corrections</a>.</p>'
             . ($fundPara !== '' ? '<h2>Financement et propriété</h2>' . $fundPara : '')
@@ -31,8 +31,8 @@ if ($body === '') {
         $body = '<p>' . e($siteTitle) . ' is committed to accurate, fair, and independent local journalism.</p>'
             . '<h2>Editorial independence</h2>'
             . '<p>Newsroom decisions are made independently of advertisers, sponsors, and political interests. Paid placements and advertisements are always clearly labelled.</p>'
-            . '<h2>Sourcing, verification &amp; automation</h2>'
-            . '<p>Our reporting relies on public records, official proceedings, and primary sources. Where automated workflows or AI-assisted tools support monitoring or drafting, stories are clearly disclosed and remain subject to editorial oversight.</p>'
+            . '<h2>Sourcing &amp; verification</h2>'
+            . '<p>Our reporting relies on public records, official proceedings, and primary sources. Every published story is subject to newsroom editorial oversight.</p>'
             . '<h2>Corrections policy</h2>'
             . '<p>We correct factual errors promptly and transparently. Every correction is displayed at the top of the story and archived in our public <a href="' . e(url('corrections')) . '">corrections file</a>.</p>'
             . ($fundPara !== '' ? '<h2>Ownership &amp; funding</h2>' . $fundPara : '')
@@ -44,7 +44,7 @@ page_header([
     'title'       => $heading,
     'description' => $isFr
         ? "Normes journalistiques, indépendance et politique de corrections — $siteTitle."
-        : "Editorial standards, sourcing, automation disclosure, and corrections policy for $siteTitle.",
+        : "Editorial standards, sourcing, and corrections policy for $siteTitle.",
     'canonical'   => site_url() . '/standards',
 ], 'standards');
 ?>

@@ -182,16 +182,16 @@ ok($c === 200 && str_contains($b, 'Privacy policy') && str_contains($b, 'privacy
     "English /privacy serves 200 with privacy officer (got $c)");
 
 [$c, $b] = s2_http('GET', '/standards', [], $work . '/anon', $base, 'paper-a.test');
-ok($c === 200 && str_contains($b, 'Editorial standards') && str_contains($b, 'Independently published by Civis Media Inc.') && str_contains($b, '/corrections'),
-    "English /standards serves 200 with funding note and corrections link (got $c)");
+ok($c === 200 && str_contains($b, 'Editorial standards') && str_contains($b, 'Independently published by Civis Media Inc.') && str_contains($b, '/corrections') && stripos($b, 'automated') === false,
+    "English /standards serves 200 with funding note, corrections link, and no automated-report wording (got $c)");
 
 [$c, $b] = s2_http('GET', '/privacy', [], $work . '/anon', $base, 'bleuet.test');
 ok($c === 200 && str_contains($b, 'Politique de confidentialité') && str_contains($b, 'Loi 25'),
     "French /privacy serves 200 with Quebec Law 25 copy (got $c)");
 
 [$c, $b] = s2_http('GET', '/standards', [], $work . '/anon', $base, 'bleuet.test');
-ok($c === 200 && str_contains($b, 'Normes éditoriales') && str_contains($b, 'Corrections'),
-    "French /standards serves 200 with French editorial standards copy (got $c)");
+ok($c === 200 && str_contains($b, 'Normes éditoriales') && str_contains($b, 'Corrections') && stripos($b, 'automatis') === false,
+    "French /standards serves 200 with French editorial standards copy and no automated wording (got $c)");
 
 // Custom privacy_body sanitizes script tags.
 set_setting('privacy_body', '<p>Custom policy.</p><script>alert(1)</script>', $paperAId);
@@ -200,7 +200,7 @@ ok($c === 200 && str_contains($b, 'Custom policy.') && !str_contains($b, '<scrip
     'custom privacy_body renders sanitized HTML');
 
 /* =========================================================================
- * 3. JSON-LD Author @type & NewsMediaOrganization Policy Links
+ * 3. JSON-LD Author @type, Newsroom Staff normalization & NewsMediaOrganization
  * ========================================================================= */
 
 $extractLd = function (string $html): array {
@@ -222,20 +222,27 @@ ok(($ldHuman['publisher']['@type'] ?? '') === 'NewsMediaOrganization'
 
 [, $htmlAuto] = s2_http('GET', '/story/automated-council-notice', [], $work . '/anon', $base, 'paper-a.test');
 $ldAuto = $extractLd($htmlAuto);
-ok(($ldAuto['author']['@type'] ?? '') === 'Organization' && ($ldAuto['author']['name'] ?? '') === 'Automated report',
-    'Automated report emits @type: Organization (not Person)');
+ok(($ldAuto['author']['@type'] ?? '') === 'Organization' && ($ldAuto['author']['name'] ?? '') === 'Newsroom Staff',
+    'legacy Automated report normalizes to Newsroom Staff with @type: Organization');
+ok(stripos($htmlAuto, 'Automated report') === false && str_contains($htmlAuto, 'Newsroom Staff'),
+    'public article HTML never prints Automated report and shows Newsroom Staff');
+
+pp_set_site_placement($pAuto, $paperAId, 'hero');
+[, $htmlFrontA] = s2_http('GET', '/', [], $work . '/anon', $base, 'paper-a.test');
+ok(stripos($htmlFrontA, 'Automated report') === false && str_contains($htmlFrontA, 'Newsroom Staff'),
+    'public front page never prints Automated report and shows Newsroom Staff');
 
 [, $htmlAi] = s2_http('GET', '/story/ai-assisted-explainer', [], $work . '/anon', $base, 'paper-a.test');
 $ldAi = $extractLd($htmlAi);
-ok(($ldAi['author']['@type'] ?? '') === 'Organization',
+ok(($ldAi['author']['@type'] ?? '') === 'Organization' && ($ldAi['author']['name'] ?? '') === 'Newsroom Staff',
     'Newsroom Staff byline emits @type: Organization');
 
 /* =========================================================================
- * 4. Shared AI & Hermes Disclosure Partial (Default + Bespoke Templates)
+ * 4. Shared Optional AI Disclosure Partial (OFF by default, works across all templates when enabled)
  * ========================================================================= */
 
 ok(!str_contains($htmlAi, 'pp-disclosure') && !str_contains($htmlAuto, 'pp-disclosure'),
-    'disclosure stays hidden when ai_disclosure setting is blank');
+    'AI disclosure stays strictly OFF when ai_disclosure setting is blank');
 
 set_setting('ai_disclosure', '1', $paperAId);
 set_setting('ai_disclosure', '1', $paperCId);
@@ -247,10 +254,12 @@ set_setting('ai_disclosure', '1', $paperCId);
 [, $htmlKcHermes] = s2_http('GET', '/story/automated-council-notice', [], $work . '/anon', $base, 'kitchener.test');
 
 ok(!str_contains($htmlHumanOn, 'pp-disclosure'), 'standard newsroom story never carries AI disclosure');
-ok(str_contains($htmlAiOn, 'Prepared with AI assistance and reviewed by an editor.'), 'default template renders AI disclosure');
-ok(str_contains($htmlHermesOn, 'Filed via automated newsroom workflow and published under editorial oversight.'), 'default template renders Hermes disclosure');
-ok(str_contains($htmlKcAi, 'Prepared with AI assistance and reviewed by an editor.'), 'bespoke article-kitchener.php renders shared AI disclosure');
-ok(str_contains($htmlKcHermes, 'Filed via automated newsroom workflow and published under editorial oversight.'), 'bespoke article-kitchener.php renders shared Hermes disclosure');
+ok(str_contains($htmlAiOn, 'Prepared with AI assistance and reviewed by an editor.'), 'default template renders AI disclosure when explicitly enabled');
+ok(str_contains($htmlHermesOn, 'Prepared with AI assistance and reviewed by an editor.') && stripos($htmlHermesOn, 'Automated report') === false,
+    'default template renders clean disclosure without Automated report when explicitly enabled');
+ok(str_contains($htmlKcAi, 'Prepared with AI assistance and reviewed by an editor.'), 'bespoke article-kitchener.php renders shared disclosure when explicitly enabled');
+ok(str_contains($htmlKcHermes, 'Prepared with AI assistance and reviewed by an editor.') && stripos($htmlKcHermes, 'Automated report') === false,
+    'bespoke article-kitchener.php renders Newsroom Staff and clean disclosure when explicitly enabled');
 
 /* =========================================================================
  * 5. IndexNow Key Verification & Fail-Closed Publish Notifications

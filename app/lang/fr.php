@@ -58,14 +58,10 @@ return [
     // --- empty states ---------------------------------------------------
     'Nothing filed yet.'  => 'Rien de publié pour l’instant.',
 
-    // --- provenance (agent-filed stories) --------------------------------
-    'Automated report' => 'Rapport automatisé',
-    'This story was compiled by a monitoring system from the public records below and reviewed under this newsroom\'s editorial policy.'
-        => 'Ce texte a été composé par un système de veille à partir des documents publics ci-dessous, sous la politique éditoriale de la rédaction.',
+    // --- newsroom defaults & optional disclosure -------------------------
+    'Newsroom Staff' => 'La rédaction',
     'Prepared with AI assistance and reviewed by an editor.'
         => 'Préparé avec l’assistance de l’intelligence artificielle et révisé par la rédaction.',
-    'Filed via automated newsroom workflow and published under editorial oversight.'
-        => 'Produit par un flux rédactionnel automatisé et publié sous supervision éditoriale.',
     'Privacy policy'      => 'Politique de confidentialité',
     'Editorial standards' => 'Normes éditoriales',
     'retrieved' => 'consulté le',

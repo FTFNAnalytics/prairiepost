@@ -16,7 +16,7 @@ function pp_edition_posts(): array
             ORDER BY CASE WHEN ps.placement = \'hero\' THEN 0 ELSE 1 END, p.published_at DESC LIMIT 25';
     $stmt = db()->prepare($sql);
     $stmt->execute([now(), $since]);
-    return $stmt->fetchAll();
+    return pp_normalize_public_posts($stmt->fetchAll());
 }
 
 /** Compile today's edition. Returns [subject, html, post_count]. */

@@ -445,9 +445,9 @@ $ixName = (string) setting('site_title');
       </div>
     </div>
     <?php else: ?>
-    <label for="ai_disclosure">AI &amp; automated workflow disclosure · blank = off (the default)</label>
-    <input type="text" id="ai_disclosure" name="ai_disclosure" value="<?= e(setting('ai_disclosure')) ?>" placeholder="1">
-    <p class="help">Printed on stories with <span class="mono">origin = ai</span> or <span class="mono">origin = hermes</span> across every paper template. Set to <span class="mono">1</span> for the standard bilingual wording, or write your own custom note.</p>
+    <label for="ai_disclosure">AI disclosure · blank = OFF (default until explicitly enabled)</label>
+    <input type="text" id="ai_disclosure" name="ai_disclosure" value="<?= e(setting('ai_disclosure')) ?>" placeholder="leave blank to keep off">
+    <p class="help">Off by default. When explicitly enabled (<span class="mono">1</span> for standard wording, or custom text), prints across every paper template.</p>
     <?php endif; ?>
   </div>
 
