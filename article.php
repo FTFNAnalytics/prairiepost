@@ -37,7 +37,11 @@ if (!preg_match('/bot|crawl|spider|slurp|preview/i', $_SERVER['HTTP_USER_AGENT']
 // A wire link has no story page of its own — the permalink sends the reader
 // straight to the outlet that reported it (the read is counted above).
 if (is_link_post($post)) {
-    header('Location: ' . $post['source_url'], true, 302);
+    $target = trim((string) $post['source_url']);
+    if (!preg_match('#^https?://#i', $target) || preg_match('/[\r\n\x00-\x1f]/', $target)) {
+        redirect('/');
+    }
+    header('Location: ' . $target, true, 302);
     exit;
 }
 

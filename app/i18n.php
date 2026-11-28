@@ -103,6 +103,24 @@ function pp_date(string $format, ?int $ts = null): string
 }
 
 /**
+ * date() on the paper's own declared zone even inside the newsroom
+ * (ignoring PP_NEWSROOM_CLOCK), so newsletter scheduling and manual sends
+ * always agree on the paper's local calendar day and hour.
+ */
+function pp_paper_date(string $format, ?int $ts = null): string
+{
+    static $zones = [];
+    $slug = function_exists('pp_current_site_slug') ? pp_current_site_slug() : '';
+    if (!isset($zones[$slug])) {
+        $zone = function_exists('pp_brand_file') ? (pp_brand_file()['zone'] ?? null) : null;
+        $zones[$slug] = is_string($zone) && $zone !== '' && in_array($zone, DateTimeZone::listIdentifiers(), true)
+            ? new DateTimeZone($zone)
+            : new DateTimeZone(date_default_timezone_get());
+    }
+    return (new DateTimeImmutable('@' . ($ts ?? time())))->setTimezone($zones[$slug])->format($format);
+}
+
+/**
  * Format a timestamp with an ICU pattern, in the paper's locale and timezone.
  * Falls back to a date() pattern when intl is unavailable, so the site still
  * renders — in English — rather than fataling.
@@ -110,7 +128,7 @@ function pp_date(string $format, ?int $ts = null): string
 function pp_fmt(int $ts, string $icu, string $fallback): string
 {
     if (!class_exists('IntlDateFormatter')) {
-        return date($fallback, $ts);
+        return pp_date($fallback, $ts);
     }
     static $cache = [];
     $zone = pp_paper_zone()->getName();
