@@ -1,14 +1,19 @@
 {
     "zone": "America/Halifax",
     "palette": {
-        "ink": "#1A1A1A",
-        "paper": "#FFFFFF",
-        "surface": "#F2F4F6",
-        "accent": "#182330",
-        "deep": "#0F161D",
-        "secondary": "#758BA0",
-        "muted": "#4B5563",
-        "line": "#B5BDC6"
+        "ink": "#17232B",
+        "paper": "#EEF0EE",
+        "surface": "#E2E6E4",
+        "accent": "#1D6A85",
+        "secondary": "#124A5E",
+        "red": "#C0392B",
+        "muted": "#5A5F62",
+        "line": "#CCCFCF",
+        "board": "#CCCFCF",
+        "sky": "#E2E6E4",
+        "hill": "#1D6A85",
+        "field": "#124A5E",
+        "stubble": "#17232B"
     },
     "desk_labels": {
         "news": "News",
@@ -20,13 +25,13 @@
         "opinion": "Opinion"
     },
     "desks": {
-        "news": "#182330",
-        "politics": "#182330",
-        "business": "#182330",
-        "environment": "#182330",
-        "culture": "#182330",
-        "sports": "#182330",
-        "opinion": "#182330"
+        "news": "#1D6A85",
+        "politics": "#1D6A85",
+        "business": "#1D6A85",
+        "environment": "#1D6A85",
+        "culture": "#1D6A85",
+        "sports": "#1D6A85",
+        "opinion": "#1D6A85"
     },
     "chrome": {
         "template": "easterly",
@@ -41,27 +46,21 @@
         ]
     },
     "admin": {
-        "accent": "#182330",
-        "spot": "#A23A2E",
+        "accent": "#1D6A85",
+        "spot": "#C0392B",
         "strip": [
-            "#0F161D",
-            "#B5BDC6"
+            "#17232B",
+            "#CCCFCF"
         ],
         "band": [
-            "#FFFFFF",
-            "#182330"
+            "#EEF0EE",
+            "#17232B"
         ],
         "nav": [
-            "#182330",
-            "#FFFFFF"
+            "#1D6A85",
+            "#EEF0EE"
         ],
-        "mark": "mark.svg",
-        "wordmark": {
-            "font": "'Archivo Narrow', 'Archivo', 'Arial Narrow', sans-serif",
-            "weight": 700,
-            "case": "uppercase",
-            "spacing": "0.02em"
-        },
+        "logo": "lockup.svg",
         "fonts": {
             "heading": "'Archivo', 'Helvetica Neue', Arial, sans-serif",
             "body": "'Source Serif 4', Georgia, serif"

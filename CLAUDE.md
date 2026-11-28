@@ -478,6 +478,23 @@ holding a capability it should not have.
   - `America/Yellowknife` is only an alias in PHP's zone list, so a
     Yellowknife-based paper fails the clock test until `app/weather.php`
     points `nt` at America/Edmonton.
+- **The Easterly is branded (28 Nov), the first package applied.**
+  - The owner's package held six colours, the E. mark, the logotype and
+    the lockup. `docs/brand-packages.md` maps each colour to where it
+    shows. Oilskin is for print only and never appears on the site.
+  - The mark and logotype are traced SVGs in `assets/sites/easterly/`.
+    The masthead is the package's lockup over a full-width section bar,
+    since seven desks no longer fit beside the logotype.
+  - The package gives links their own colour (Harbour), apart from the
+    dark grounds (North Atlantic). So "a colour package sets the values
+    and nothing else" didn't hold here: the stylesheet paints its dark
+    grounds with `--ea-deep`, not `--ea-primary`. The next packages may
+    need the same, and the brand-packages doc says how to tell.
+  - The chrome gained a breaking strip in the package's red, read only
+    through `pp_breaking_live()`.
+  - Launch still waits on the domain and on the six-story inaugural
+    edition, which needs the owner's answer on whether the paper reports
+    or links (`DEPLOY-EASTERLY.md`).
 - **The expansion name slate is in `NETWORK-EXPANSION.md`** (chosen
   23 Nov 2026): twelve mastheads for the North, Atlantic Canada,
   Quebec and Saskatchewan, with their domains, the reasons, the open

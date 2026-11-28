@@ -1,26 +1,32 @@
-/* The Easterly — design system (easterly template). FOUNDATION build,
-   Nov 2026: Toronto Telegraph's layout and type, unbranded. Every
-   colour is a role variable in the first rule below; a colour package
-   sets those values (and palette.json) and nothing else. One change
-   from Telegraph: the Subscribe button keeps its side padding, which
-   Telegraph's nav link rule overrides, and never shrinks below its
-   label. Archivo, Archivo Narrow and Source Serif 4 are declared in
-   /assets/css/fonts.css (self-hosted; every family this file names
-   resolves to a face the page loads). */
+/* The Easterly — design system (easterly template). Toronto Telegraph's
+   layout and type, in the owner's brand package (28 Nov 2026): its six
+   colours, the E. mark and the logotype (traced, assets/sites/easterly/).
+   The Subscribe button keeps its side padding, which Telegraph's nav
+   link rule overrides, and never shrinks below its label.
+
+   The package gives links and actions their own colour (Harbour) apart
+   from the dark grounds (North Atlantic), so the lead panel, subscribe
+   box and footer band paint with --ea-deep, not --ea-primary as on the
+   foundation; accents on those grounds use --ea-on-dark, and buttons
+   on them use --ea-primary. Oilskin (#E6B31E) is for print plates only
+   and never appears here. Archivo, Archivo Narrow and Source Serif 4 are
+   declared in /assets/css/fonts.css (self-hosted; every family this
+   file names resolves to a face the page loads). */
 @import url('/assets/css/fonts.css');
 
 body.t-easterly {
-  --ea-ink:       #1A1A1A;  /* body text */
-  --ea-paper:     #FFFFFF;  /* page ground; white text on dark grounds */
-  --ea-surface:   #F2F4F6;  /* soft panels: empty states, quotes */
-  --ea-primary:   #182330;  /* links, masthead rule, chips, buttons, hero and footer grounds */
-  --ea-deep:      #0F161D;  /* utility strip */
-  --ea-secondary: #758BA0;  /* second wordmark line, hovers, kickers on dark, buttons */
-  --ea-muted:     #4B5563;  /* meta text */
-  --ea-line:      #B5BDC6;  /* borders; utility-strip text */
-  --ea-rule:      #DCE1E6;  /* hairlines between rows */
-  --ea-on-dark:   #DDE3EA;  /* body text on the primary ground */
-  --ea-foot-text: #CBD2DA;  /* footer links */
+  --ea-ink:       #17232B;  /* North Atlantic: all type */
+  --ea-paper:     #EEF0EE;  /* Sea Fog: the page ground; type on dark grounds */
+  --ea-surface:   #E2E6E4;  /* Salt Spray: soft panels, inputs */
+  --ea-primary:   #1D6A85;  /* Harbour: links and actions (buttons, chips), the masthead rule */
+  --ea-deep:      #17232B;  /* North Atlantic: the dark grounds (utility strip, lead panel, subscribe box, footer band) */
+  --ea-secondary: #124A5E;  /* Harbour Deep: small accent text and hovers on light grounds */
+  --ea-signal:    #C0392B;  /* Lighthouse: breaking news and the mark's full stop, nothing else */
+  --ea-muted:     #5A5F62;  /* the package's caption grey: meta text, the tagline */
+  --ea-line:      #CCCFCF;  /* the package's swatch rule: borders */
+  --ea-rule:      #D5D7D7;  /* hairlines between rows: the swatch rule, a step lighter */
+  --ea-on-dark:   #E2E6E4;  /* Salt Spray: text and accents on the dark grounds */
+  --ea-foot-text: #CCCFCF;  /* footer links */
   margin: 0;
   background: var(--ea-paper);
   color: var(--ea-ink);
@@ -37,41 +43,55 @@ body.t-easterly {
 .ea-util { background: var(--ea-deep); color: var(--ea-line); font-family: 'Archivo', sans-serif; font-size: 13px; letter-spacing: .04em; }
 .ea-util .in { max-width: 1140px; margin: 0 auto; padding: 6px 20px; display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
 .ea-util a { color: var(--ea-paper); }
-.ea-util a:hover { color: var(--ea-secondary); }
-.ea-util .sep { margin: 0 8px; color: var(--ea-secondary); }
+.ea-util a:hover { color: var(--ea-paper); text-decoration: underline; text-underline-offset: 3px; }
+.ea-util .sep { margin: 0 8px; color: var(--ea-muted); }
 
 /* ---- masthead ---- */
 .ea-head { background: var(--ea-paper); border-bottom: 4px solid var(--ea-primary); }
 .ea-head .in { max-width: 1140px; margin: 0 auto; padding: 14px 20px; display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
-.ea-lock { display: inline-flex; align-items: center; gap: 13px; }
-.ea-lock img { width: 60px; height: 60px; }
-.ea-name { display: flex; flex-direction: column; line-height: .95; }
-.ea-name .top { font-family: 'Archivo Narrow', 'Archivo', sans-serif; font-weight: 700; font-size: 32px; letter-spacing: .02em; color: var(--ea-primary); text-transform: uppercase; }
-.ea-name .mid { font-family: 'Archivo Narrow', 'Archivo', sans-serif; font-weight: 700; font-size: 32px; letter-spacing: .02em; color: var(--ea-secondary); text-transform: uppercase; }
-.ea-name .sub { font-family: 'Archivo', sans-serif; font-weight: 600; font-size: 10.5px; letter-spacing: .3em; color: var(--ea-ink); text-transform: uppercase; margin-top: 6px; }
-.ea-nav { margin-left: auto; display: flex; align-items: center; gap: 20px; flex-wrap: wrap; font-family: 'Archivo', sans-serif; font-weight: 600; font-size: 15px; }
+/* The lockup as the package sets it: the E., then the logotype over the
+   tagline. Sizes are in em of .ea-lock's font-size, so one value scales
+   the whole lockup; at 10px it is the package's lockup at a quarter. */
+.ea-lock { display: inline-flex; align-items: flex-start; gap: 3.405em; font-size: 10px; line-height: 1; }
+.ea-lock .mk { display: block; width: 7.15em; height: 6.1em; margin-top: .5em; }
+.ea-name { display: flex; flex-direction: column; align-items: flex-start; }
+.ea-name .wm { display: block; width: 27.11em; height: 4.65em; }
+.ea-name .sub { font-family: 'Source Serif 4', Georgia, serif; font-weight: 400; font-size: 1.5em; line-height: 1; letter-spacing: .09em; color: var(--ea-muted); text-transform: uppercase; white-space: nowrap; margin: .487em 0 0 -.1em; }
+/* Seven desks do not fit beside the logotype, so the nav is the
+   masthead's second row: a full-width section bar under a hairline,
+   with Subscribe at its right end. */
+.ea-nav { flex: 1 0 100%; display: flex; align-items: center; gap: 8px 20px; flex-wrap: wrap; padding-top: 10px; border-top: 1px solid var(--ea-rule); font-family: 'Archivo', sans-serif; font-weight: 600; font-size: 15px; }
 .ea-nav a { color: var(--ea-ink); padding: 4px 0; border-bottom: 3px solid transparent; }
 .ea-nav a:hover { color: var(--ea-primary); }
 .ea-nav a[aria-current="page"] { color: var(--ea-primary); border-bottom-color: var(--ea-secondary); }
 .ea-sub-btn { display: inline-block; flex-shrink: 0; white-space: nowrap; background: var(--ea-primary); color: var(--ea-paper) !important; font-family: 'Archivo', sans-serif; font-weight: 600; font-size: 15px; padding: 10px 22px; border-radius: 4px; }
 .ea-sub-btn:hover { background: var(--ea-secondary); }
-.ea-nav a.ea-sub-btn { padding: 10px 22px; border-bottom: 0; }
-.ea-btn { display: inline-block; background: var(--ea-secondary); color: var(--ea-paper) !important; font-family: 'Archivo', sans-serif; font-weight: 600; font-size: 15px; padding: 11px 22px; border-radius: 4px; }
-.ea-btn:hover { background: var(--ea-primary); }
+.ea-nav a.ea-sub-btn { padding: 10px 22px; border-bottom: 0; margin-left: auto; }
+.ea-btn { display: inline-block; background: var(--ea-primary); color: var(--ea-paper) !important; font-family: 'Archivo', sans-serif; font-weight: 600; font-size: 15px; padding: 11px 22px; border-radius: 4px; }
+.ea-btn:hover { background: var(--ea-secondary); }
+
+/* ---- breaking (Lighthouse; shown only while pp_breaking_live()) ---- */
+.ea-brk { background: var(--ea-signal); color: var(--ea-paper); font-family: 'Archivo', sans-serif; }
+.ea-brk .in { max-width: 1140px; margin: 0 auto; padding: 9px 20px; display: flex; gap: 14px; align-items: baseline; flex-wrap: wrap; }
+.ea-brk .lbl { font-weight: 800; font-size: 12.5px; letter-spacing: .14em; text-transform: uppercase; }
+.ea-brk a { color: var(--ea-paper); font-weight: 600; font-size: 15.5px; }
+.ea-brk a:hover { color: var(--ea-paper); text-decoration: underline; text-underline-offset: 3px; }
 
 /* ---- hero ---- */
 .ea-hero { position: relative; background: var(--ea-deep); color: var(--ea-paper); overflow: hidden; }
 .ea-hero img.bg { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
-.ea-hero .scrim { position: absolute; inset: 0; background: linear-gradient(90deg, var(--ea-primary) 28%, color-mix(in srgb, var(--ea-primary) 82%, transparent) 52%, color-mix(in srgb, var(--ea-primary) 6%, transparent) 100%); }
+.ea-hero .scrim { position: absolute; inset: 0; background: linear-gradient(90deg, var(--ea-deep) 28%, color-mix(in srgb, var(--ea-deep) 82%, transparent) 52%, color-mix(in srgb, var(--ea-deep) 6%, transparent) 100%); }
 .ea-hero .pad { position: relative; max-width: 1140px; margin: 0 auto; padding: 62px 20px 66px; display: flex; flex-direction: column; gap: 15px; }
 .ea-hero .pad > * { max-width: 600px; }
-.ea-hero .kick { font-family: 'Archivo', sans-serif; font-weight: 700; font-size: 13.5px; letter-spacing: .16em; text-transform: uppercase; color: var(--ea-secondary); }
+.ea-hero .kick { font-family: 'Archivo', sans-serif; font-weight: 700; font-size: 13.5px; letter-spacing: .16em; text-transform: uppercase; color: var(--ea-on-dark); }
 .ea-hero h1 { margin: 0; font-family: 'Archivo', sans-serif; font-weight: 800; font-size: 44px; line-height: 1.05; letter-spacing: .005em; text-transform: uppercase; }
 .ea-hero h1 a { color: var(--ea-paper); }
-.ea-hero h1 a:hover { color: var(--ea-secondary); }
+.ea-hero h1 a:hover { color: var(--ea-paper); text-decoration: underline; text-decoration-color: var(--ea-primary); text-decoration-thickness: 4px; text-underline-offset: 6px; }
 .ea-hero .meta { font-family: 'Source Serif 4', Georgia, serif; font-size: 17.5px; line-height: 1.55; color: var(--ea-on-dark); }
 .ea-hero .ea-btn { align-self: flex-start; }
-.ea-hero--noart .wm { position: absolute; right: -30px; bottom: -70px; width: 330px; opacity: .16; }
+/* The whole E. at a sixth of its strength, its baseline on the panel's
+   bottom edge (the full stop's overshoot, 2% of the mark, runs below). */
+.ea-hero--noart .wm { position: absolute; right: 48px; bottom: -6px; width: 300px; opacity: .16; }
 
 /* ---- section title ---- */
 .ea-ttl { display: flex; align-items: center; gap: 14px; margin: 32px 0 18px; }
@@ -118,10 +138,10 @@ body.t-easterly {
 .ea-trend .n { flex: 0 0 auto; width: 24px; height: 24px; border-radius: 4px; background: var(--ea-primary); color: var(--ea-paper); font-family: 'Archivo', sans-serif; font-weight: 700; font-size: 13px; display: flex; align-items: center; justify-content: center; margin-top: 2px; }
 .ea-trend a { font-family: 'Archivo', sans-serif; font-weight: 600; font-size: 15px; line-height: 1.35; color: var(--ea-ink); }
 .ea-trend a:hover { color: var(--ea-primary); }
-.ea-subbox { background: var(--ea-primary); border-radius: 4px; color: var(--ea-paper); padding: 20px 18px; }
+.ea-subbox { background: var(--ea-deep); border-radius: 4px; color: var(--ea-paper); padding: 20px 18px; }
 .ea-subbox h3 { margin: 0 0 6px; font-family: 'Archivo', sans-serif; font-weight: 800; font-size: 19px; }
 .ea-subbox p { margin: 0 0 14px; font-size: 14.5px; line-height: 1.5; color: var(--ea-on-dark); }
-.ea-subbox .ea-btn { background: var(--ea-secondary); }
+.ea-subbox .ea-btn { background: var(--ea-primary); }
 .ea-subbox .ea-btn:hover { background: var(--ea-paper); color: var(--ea-primary) !important; }
 
 /* ---- article ---- */
@@ -144,16 +164,15 @@ body.t-easterly {
 .ea-empty { background: var(--ea-surface); border-left: 4px solid var(--ea-primary); padding: 18px 20px; font-size: 16px; margin: 26px 0; }
 
 /* ---- footer ---- */
-.ea-foot { background: var(--ea-primary); color: var(--ea-foot-text); margin-top: 46px; }
+.ea-foot { background: var(--ea-deep); color: var(--ea-foot-text); margin-top: 46px; }
 .ea-foot .cols { max-width: 1140px; margin: 0 auto; padding: 34px 20px 20px; display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 26px; }
-.ea-foot .ea-name .top { color: var(--ea-paper); }
-.ea-foot .ea-name .mid { color: var(--ea-secondary); }
-.ea-foot .ea-name .sub { color: var(--ea-line); }
-.ea-foot h4 { margin: 0 0 10px; font-family: 'Archivo', sans-serif; font-weight: 700; font-size: 13.5px; letter-spacing: .12em; text-transform: uppercase; color: var(--ea-secondary); }
+.ea-foot a.ea-lock { display: inline-flex; font-size: 10px; padding: 0; }
+.ea-foot .ea-name .sub { color: var(--ea-foot-text); }
+.ea-foot h4 { margin: 0 0 10px; font-family: 'Archivo', sans-serif; font-weight: 700; font-size: 13.5px; letter-spacing: .12em; text-transform: uppercase; color: var(--ea-on-dark); }
 .ea-foot a { display: block; color: var(--ea-foot-text); font-family: 'Archivo', sans-serif; font-size: 14.5px; padding: 3px 0; }
 .ea-foot a:hover { color: var(--ea-paper); }
 .ea-foot .legal { max-width: 1140px; margin: 0 auto; padding: 14px 20px 24px; border-top: 1px solid color-mix(in srgb, var(--ea-paper) 16%, transparent); display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; font-family: 'Archivo', sans-serif; font-size: 13.5px; }
-.ea-foot .legal .strong { color: var(--ea-secondary); }
+.ea-foot .legal .strong { color: var(--ea-on-dark); }
 
 /* ---- responsive ---- */
 @media (max-width: 980px) {
@@ -161,6 +180,7 @@ body.t-easterly {
   .ea-grid { grid-template-columns: repeat(2, 1fr); }
   .ea-foot .cols { grid-template-columns: 1fr 1fr; }
   .ea-hero h1 { font-size: 34px; }
+  .ea-hero--noart .wm { right: 20px; bottom: -4px; width: 190px; }
 }
 @media (max-width: 620px) {
   .ea-grid { grid-template-columns: 1fr; }
@@ -169,5 +189,5 @@ body.t-easterly {
   .ea-foot .cols { grid-template-columns: 1fr; }
   .ea-hero h1 { font-size: 28px; }
   .ea-article h1 { font-size: 28px; }
-  .ea-name .top, .ea-name .mid { font-size: 26px; }
+  .ea-lock, .ea-foot a.ea-lock { font-size: 7.2px; }
 }

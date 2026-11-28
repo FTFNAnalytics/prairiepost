@@ -1,8 +1,12 @@
 <?php
-/* The Easterly — masthead chrome. FOUNDATION build (Nov 2026): Toronto
-   Telegraph's masthead, unbranded. In scope from page_header():
-   $siteTitle, $tagline, $activeDesk. The placeholder roundel and the
-   two-line wordmark wait for the brand package. */
+/* The Easterly — masthead chrome. Toronto Telegraph's masthead in the
+   owner's brand package (28 Nov 2026): the E. mark and the logotype,
+   traced from the package (mark.svg, wordmark.svg), over the tagline as
+   the package's lockup sets them. In scope from page_header():
+   $siteTitle, $tagline, $activeDesk. The breaking strip is Lighthouse
+   red, the package's colour for breaking news, and shows only while
+   pp_breaking_live() holds (app/freshness.php); its label is "Breaking"
+   in the served HTML, uppercased by CSS. */
 ?>
 <div class="ea-util">
   <div class="in">
@@ -19,8 +23,8 @@
 <header class="ea-head">
   <div class="in">
     <a class="ea-lock" href="/" aria-label="<?= e($siteTitle) ?> — front page">
-      <img src="<?= e(site_asset('mark.svg')) ?>" alt="">
-      <span class="ea-name"><span class="top">The</span><span class="mid">Easterly</span><span class="sub"><?= e($tagline) ?></span></span>
+      <img class="mk" src="<?= e(site_asset('mark.svg')) ?>" alt="" width="72" height="61">
+      <span class="ea-name"><img class="wm" src="<?= e(site_asset('wordmark.svg')) ?>" alt="" width="271" height="47"><span class="sub"><?= e($tagline) ?></span></span>
     </a>
     <nav class="ea-nav" aria-label="<?= e(pp_t('Sections')) ?>">
       <a href="/"<?= ($GLOBALS['pp_front_page'] ?? false) ? ' aria-current="page"' : '' ?>><?= e(pp_t('Home')) ?></a>
@@ -32,4 +36,12 @@
     </nav>
   </div>
 </header>
+<?php if (pp_breaking_live()): ?>
+<div class="ea-brk">
+  <div class="in">
+    <span class="lbl">Breaking</span>
+    <a href="<?= e(setting('breaking_url')) ?>"><?= e(setting('breaking_label')) ?></a>
+  </div>
+</div>
+<?php endif; ?>
 <main id="content">

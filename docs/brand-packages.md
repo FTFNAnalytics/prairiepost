@@ -6,12 +6,13 @@ Telegraph's design: the same layout, type and page furniture, in a
 placeholder slate colour scheme with a monogram roundel for a mark. Each
 has a launch pack with its domains, desks and wire feeds, and no stories.
 Terminal City Times has been a foundation since 22 Sep, in its own
-heritage-broadsheet design.
+heritage-broadsheet design. The first package, The Easterly's, arrived
+and was applied on 28 Nov (below).
 
 | Paper | Slug and template | Covers | Domain | State |
 | --- | --- | --- | --- | --- |
 | Citadel Courier | `citadel-courier`, `citadel` | Halifax and Nova Scotia | citadelcourier.ca | Foundation; domain unregistered |
-| The Easterly | `easterly`, `easterly` | Atlantic Canada, region-wide | easterly.ca | Foundation; domain unregistered |
+| The Easterly | `easterly`, `easterly` | Atlantic Canada, region-wide | easterly.ca | Branded 28 Nov; domain unregistered |
 | Le Memphré | `memphre`, `memphre` | Magog and Lake Memphrémagog (French) | memphre.ca | Foundation; domain unregistered |
 | Les Chutes | `chutes`, `chutes` | Quebec City (French) | chutesquebec.ca | Foundation; domain unregistered |
 | Borealis Bulletin | `borealis-bulletin`, `borealis` | Yukon, NWT and Nunavut | borealisbulletin.ca | Foundation; domain unregistered |
@@ -76,14 +77,34 @@ approve.
   Nova Scotia? The working assumption is Halifax, with The Easterly
   carrying the region. Also decide whether to hold citadelcourier.com.
 
-**The Easterly.**
-- Placeholders:
-  - tagline "Atlantic Canada, on the east wind";
-  - newsletter "The Morning Tide";
-  - desks News, Politics, Business, Environment, Culture, Sports,
-    Opinion.
+**The Easterly.** The package arrived on 28 Nov and is applied. It
+held six colours (`easterly-colours.css`), the E. mark, the logotype and
+the lockup, as PNGs.
+- Colours, as the package assigns them:
+
+  | Package name | Hex | Where it shows |
+  | --- | --- | --- |
+  | Sea Fog | `#EEF0EE` | The page ground; type on dark grounds |
+  | Salt Spray | `#E2E6E4` | Soft panels; text on dark grounds |
+  | North Atlantic | `#17232B` | All type; the dark grounds (utility strip, lead panel, subscribe box, footer band) |
+  | Harbour | `#1D6A85` | Links, buttons, desk chips, the masthead rule |
+  | Harbour Deep | `#124A5E` | Small accent text and hovers |
+  | Lighthouse | `#C0392B` | The breaking strip and the mark's full stop only |
+  | Oilskin | `#E6B31E` | Print plates only: never on the site |
+
+  The lockup's caption grey `#5A5F62` is the meta-text colour, and the
+  colour sheet's swatch rule `#CCCFCF` the border colour.
+- Mark and logotype: traced to SVG. The full stop is a fitted circle.
+  The masthead is the package's lockup: the mark, then the logotype
+  over the tagline in Source Serif 4, at the lockup's proportions.
+- Tagline "News from Atlantic Canada", the lockup's line.
+- Still placeholders: newsletter "The Morning Tide", footer line
+  "Atlantic Canada, read as one region."
+- Desks unchanged: News, Politics, Business, Environment, Culture,
+  Sports, Opinion.
 - Weather: none, as with Western Wire, since it has no home city.
 - Clock: Atlantic time.
+- The six-story inaugural edition waits on the second decision below.
 - Decide:
   - whether Atlantic time suits, given Newfoundland runs half an hour
     ahead;
@@ -145,6 +166,34 @@ Each package becomes one brand build, as a pull request:
    notes about the paper itself, true by construction.
 
 The build also revises the paper's `DEPLOY-<NAME>.md` to launch form.
+
+### What the first package taught (The Easterly, 28 Nov)
+
+- **A package can give links their own colour, apart from the dark
+  grounds.** The Easterly's links and buttons are Harbour blue, but its
+  dark colour is the ink. Telegraph paints both with one primary colour,
+  and Harbour Deep on Harbour is 1.6:1, so the check above would fail.
+  The Easterly's stylesheet paints its dark grounds with `deep`, the
+  accents on them with `on-dark`, and buttons on them with `primary`.
+  Check a package's pairs before mapping it, and do the same when its
+  secondary colour can't sit on its primary.
+- **A wide logotype moves the nav.** Seven desks don't fit beside a
+  logotype the width of the Easterly's. Its nav became the masthead's
+  second row, a full-width section bar with Subscribe at its end.
+- **Tracing:**
+  - Isolate each colour layer.
+  - Upscale and threshold with `mkbitmap -n -s 4 -3 -t 0.5`.
+  - Trace with `potrace -s -u 10 -t 4 -O 0.2 -a 1.0`.
+  - Move the result 3/8 px right and 3/8 px up. The 4× upscale
+    offsets the trace by that much.
+  - Diff a render against the PNG: the Easterly's traces differ in 0.02%
+    (mark) and 0.04% (logotype) of pixels.
+  - Fit a round element, like the full stop, as an exact circle.
+  - Verify a lockup by rendering the masthead at the scale where one CSS
+    pixel equals one package pixel, and diffing the two.
+- **A package's red is easy to overuse.** Lighthouse is for breaking
+  news and the full stop. The Easterly's chrome gained a breaking strip
+  for it, read through `pp_breaking_live()`.
 Then the VPS agent gets a launch brief: DNS, the generated nginx block,
 the certificate, and the seed. Each paper opens to search engines only
 when its newsroom presses Open in Settings.

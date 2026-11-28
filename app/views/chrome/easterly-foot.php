@@ -1,14 +1,16 @@
 <?php
-/* The Easterly — footer chrome. FOUNDATION build (Nov 2026): Toronto
-   Telegraph's footer band, unbranded. Closes <main> and the document. */
+/* The Easterly — footer chrome. Toronto Telegraph's footer band in the
+   owner's brand package (28 Nov 2026): North Atlantic, with the lockup
+   reversed (Sea Fog E. and logotype, the full stop stays Lighthouse).
+   Closes <main> and the document. */
 ?>
 </main>
 <footer class="ea-foot">
   <div class="cols">
     <div>
-      <a class="ea-lock" href="/">
-        <img src="<?= e(site_asset('mark-reversed.svg')) ?>" alt="">
-        <span class="ea-name"><span class="top">The</span><span class="mid">Easterly</span><span class="sub"><?= e(setting('tagline')) ?></span></span>
+      <a class="ea-lock" href="/" aria-label="<?= e($siteTitle) ?> — front page">
+        <img class="mk" src="<?= e(site_asset('mark-reversed.svg')) ?>" alt="" width="72" height="61">
+        <span class="ea-name"><img class="wm" src="<?= e(site_asset('wordmark-reversed.svg')) ?>" alt="" width="271" height="47"><span class="sub"><?= e(setting('tagline')) ?></span></span>
       </a>
       <p style="font-size:14px;line-height:1.6;margin-top:10px"><?= e(setting('footer_line', setting('tagline'))) ?></p>
     </div>

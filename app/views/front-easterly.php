@@ -1,10 +1,11 @@
 <?php
-/* The Easterly — front page. FOUNDATION build (Nov 2026): Toronto
-   Telegraph's front, unbranded. $hero resolved by index.php: the photo
-   hero under the primary scrim (the primary panel with the reversed
-   roundel when the lead has no art), Featured Stories cards beside the
-   rail — weather, the latest five, the subscribe box. Renders the empty
-   state cleanly: the paper carries no stories before its brand build. */
+/* The Easterly — front page. Toronto Telegraph's front in the owner's
+   brand package (28 Nov 2026). $hero resolved by index.php: the photo
+   hero under the North Atlantic scrim (the North Atlantic panel with the
+   reversed E. seated on its bottom edge when the lead has no art),
+   Featured Stories cards beside the rail — weather, the latest five,
+   the subscribe box. Renders the empty state cleanly: the paper carries
+   no stories before its inaugural edition. */
 $eaSeen = $hero ? [(int) $hero['id']] : [];
 $eaGrid = latest_posts(3, $eaSeen);
 $eaSeen = array_merge($eaSeen, array_column($eaGrid, 'id'));
