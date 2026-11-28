@@ -121,9 +121,9 @@ function pp_compile_edition(): array
 }
 
 /** Send (or record) today's edition. Returns a human-readable summary. */
-function pp_send_edition(bool $force = false, bool $testOnly = false, string $testAddress = ''): string
+function pp_send_edition(bool $force = false, bool $testOnly = false, string $testAddress = '', ?int $now = null): string
 {
-    $today = date('Y-m-d');
+    $today = pp_paper_date('Y-m-d', $now);
     [$subject, $html, $count] = pp_compile_edition();
 
     if ($testOnly) {
@@ -159,20 +159,20 @@ function pp_send_edition(bool $force = false, bool $testOnly = false, string $te
         . ($failed ? " ($failed failed — check the mail settings)" : '') . '.';
 }
 
-/** Called by the cron: send once per day, after the configured hour. */
-function pp_maybe_send_daily(): string
+/** Called by the cron: send once per day, after the configured hour on the paper's clock. */
+function pp_maybe_send_daily(?int $now = null): string
 {
     if (setting('newsletter_enabled', '0') !== '1') {
         return 'newsletter: disabled';
     }
     $hour = (int) (setting('newsletter_send_hour', '6') ?: 6);
-    if ((int) date('G') < $hour) {
+    if ((int) pp_paper_date('G', $now) < $hour) {
         return 'newsletter: before the ' . $hour . " o'clock send";
     }
-    if (newsletter_by_date(date('Y-m-d'))) {
+    if (newsletter_by_date(pp_paper_date('Y-m-d', $now))) {
         return 'newsletter: already sent today';
     }
-    return 'newsletter: ' . pp_send_edition();
+    return 'newsletter: ' . pp_send_edition(false, false, '', $now);
 }
 
 /** Confirmation email for double opt-in. */

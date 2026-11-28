@@ -254,6 +254,22 @@ function set_post_sites(int $postId, array $siteIds): void
     }
 }
 
+/**
+ * Clear existing hero placement ONLY on stories running on the given site(s),
+ * leaving every other paper's front-page hero untouched.
+ */
+function pp_clear_hero_for_sites(array $siteIds, int $excludePostId = 0): void
+{
+    $siteIds = array_values(array_unique(array_filter(array_map('intval', $siteIds), fn ($id) => $id > 0)));
+    if (!$siteIds) {
+        return;
+    }
+    $marks = implode(',', array_fill(0, count($siteIds), '?'));
+    $sql = "UPDATE posts SET placement = '' WHERE placement = 'hero' AND id != ? "
+         . "AND id IN (SELECT post_id FROM post_sites WHERE site_id IN ($marks))";
+    db()->prepare($sql)->execute([$excludePostId, ...$siteIds]);
+}
+
 /* --- Categories ---------------------------------------------------------- */
 
 function categories_all(): array
@@ -581,13 +597,24 @@ function pp_sync_campaign_ads(int $campaignId, array $siteIds, array $fields): a
 function pp_counts(): array
 {
     $db = db();
+    $siteId = current_site_id();
     $sub = $db->prepare('SELECT COUNT(*) AS n FROM subscribers WHERE site_id = ?');
-    $sub->execute([current_site_id()]);
+    $sub->execute([$siteId]);
+    $countStatus = static function (string $status) use ($db, $siteId): int {
+        if (pp_is_hub()) {
+            $stmt = $db->prepare('SELECT COUNT(*) AS n FROM posts WHERE status = ?');
+            $stmt->execute([$status]);
+        } else {
+            $stmt = $db->prepare('SELECT COUNT(*) AS n FROM posts p WHERE p.status = ? AND (EXISTS (SELECT 1 FROM post_sites ps WHERE ps.post_id = p.id AND ps.site_id = ?) OR NOT EXISTS (SELECT 1 FROM post_sites ps WHERE ps.post_id = p.id))');
+            $stmt->execute([$status, $siteId]);
+        }
+        return (int) $stmt->fetch()['n'];
+    };
     return [
-        'published'   => (int) $db->query("SELECT COUNT(*) AS n FROM posts WHERE status = 'published'")->fetch()['n'],
-        'drafts'      => (int) $db->query("SELECT COUNT(*) AS n FROM posts WHERE status = 'draft'")->fetch()['n'],
-        'in_review'   => (int) $db->query("SELECT COUNT(*) AS n FROM posts WHERE status = 'in_review'")->fetch()['n'],
-        'scheduled'   => (int) $db->query("SELECT COUNT(*) AS n FROM posts WHERE status = 'scheduled'")->fetch()['n'],
+        'published'   => $countStatus('published'),
+        'drafts'      => $countStatus('draft'),
+        'in_review'   => $countStatus('in_review'),
+        'scheduled'   => $countStatus('scheduled'),
         'subscribers' => (int) $sub->fetch()['n'],
         'sources'     => (int) $db->query('SELECT COUNT(*) AS n FROM sources WHERE enabled = 1')->fetch()['n'],
     ];
@@ -596,13 +623,21 @@ function pp_counts(): array
 /** Stories waiting for an editor, oldest submission first. */
 function review_queue(int $limit = 20): array
 {
+    $siteClause = '';
+    $params = [];
+    if (!pp_is_hub()) {
+        $siteClause = ' AND (EXISTS (SELECT 1 FROM post_sites ps WHERE ps.post_id = p.id AND ps.site_id = ?) OR NOT EXISTS (SELECT 1 FROM post_sites ps WHERE ps.post_id = p.id))';
+        $params[] = current_site_id();
+    }
     $sql = "SELECT p.*, c.name AS category_name, u.name AS author_name
             FROM posts p
             LEFT JOIN categories c ON c.id = p.category_id
             LEFT JOIN users u ON u.id = p.author_id
-            WHERE p.status = 'in_review'
-            ORDER BY p.updated_at ASC LIMIT " . (int) $limit;
-    return db()->query($sql)->fetchAll();
+            WHERE p.status = 'in_review'" . $siteClause . '
+            ORDER BY p.updated_at ASC LIMIT ' . (int) $limit;
+    $stmt = db()->prepare($sql);
+    $stmt->execute($params);
+    return $stmt->fetchAll();
 }
 
 /* --- The media monitoring desk ------------------------------------------ */

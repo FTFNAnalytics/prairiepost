@@ -50,7 +50,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 $counts = pp_counts();
 $items = news_items_for_region($region, 40);
 if ($editor) {
-    $drafts = db()->query("SELECT id, title, updated_at FROM posts WHERE status = 'draft' ORDER BY updated_at DESC LIMIT 6")->fetchAll();
+    if ($hub) {
+        $drafts = db()->query("SELECT id, title, updated_at FROM posts WHERE status = 'draft' ORDER BY updated_at DESC LIMIT 6")->fetchAll();
+    } else {
+        $stmt = db()->prepare("SELECT p.id, p.title, p.updated_at FROM posts p
+            WHERE p.status = 'draft' AND (EXISTS (SELECT 1 FROM post_sites ps WHERE ps.post_id = p.id AND ps.site_id = ?) OR NOT EXISTS (SELECT 1 FROM post_sites ps WHERE ps.post_id = p.id))
+            ORDER BY p.updated_at DESC LIMIT 6");
+        $stmt->execute([current_site_id()]);
+        $drafts = $stmt->fetchAll();
+    }
 } else {
     $stmt = db()->prepare("SELECT id, title, updated_at FROM posts WHERE status IN ('draft','in_review') AND author_id = ? ORDER BY updated_at DESC LIMIT 6");
     $stmt->execute([(int) $user['id']]);
@@ -61,7 +69,7 @@ $queue = $editor ? review_queue() : [];
 if ($editor && !$hub) {
     $fpHero = featured_post();
     $fpBand = front_featured_posts($fpHero ? [(int) $fpHero['id']] : []);
-    $fpLeads = db()->query("SELECT p.id, p.title, c.name AS desk FROM posts p
+    $fpLeads = db()->query("SELECT p.id, p.title, c.name AS desk FROM posts p" . pp_site_join() . "
         LEFT JOIN categories c ON c.id = p.category_id
         WHERE p.placement = 'desk_lead' AND p.status = 'published' ORDER BY c.sort")->fetchAll();
 }

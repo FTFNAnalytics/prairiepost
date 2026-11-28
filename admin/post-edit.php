@@ -46,11 +46,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $status = 'draft';
     }
     $publishedAt = trim((string) ($_POST['published_at'] ?? ''));
+    $sourceUrlInput = trim((string) ($_POST['source_url'] ?? ''));
+    $imageInput = trim((string) ($_POST['image'] ?? ''));
 
     if ($error !== '') {
         // Refused above — fall through to re-render with the reason.
     } elseif ($title === '') {
         $error = 'The story needs a headline before it can be saved.';
+    } elseif ($sourceUrlInput !== '' && (!preg_match('#^https?://#i', $sourceUrlInput) || strlen($sourceUrlInput) > 600 || preg_match('/[\r\n\x00-\x1f]/', $sourceUrlInput))) {
+        $error = 'The source URL must be a valid http:// or https:// address (at most 600 characters).';
+    } elseif ($imageInput !== '' && (!preg_match('#^(https?://|/uploads/|/assets/)#i', $imageInput) || strlen($imageInput) > 600 || preg_match('/[\r\n\x00-\x1f"\'<>]/', $imageInput))) {
+        $error = 'The image path must be an /uploads/ path or an http:// or https:// URL.';
     } else {
         if ($publishedAt !== '') {
             $ts = strtotime($publishedAt);
@@ -77,11 +83,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             'dateline' => trim((string) ($_POST['dateline'] ?? '')),
             'lede' => $lede,
             'body' => $body,
-            'image' => trim((string) ($_POST['image'] ?? '')),
+            'image' => $imageInput,
             'image_caption' => trim((string) ($_POST['image_caption'] ?? '')),
             'image_credit' => trim((string) ($_POST['image_credit'] ?? '')),
             'meta_description' => mb_substr(trim((string) ($_POST['meta_description'] ?? '')), 0, 255),
-            'source_url' => trim((string) ($_POST['source_url'] ?? '')),
+            'source_url' => $sourceUrlInput,
             'status' => $status,
             'published_at' => $publishedAt ?: null,
             'updated_at' => now(),
@@ -119,7 +125,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $fields['canonical_site_id'] = ($canonPick && in_array($canonPick, $sitesPick, true)) ? $canonPick : null;
             $fields['review_note'] = trim((string) ($_POST['review_note'] ?? ''));
             if ($placement === 'hero') {
-                db()->exec("UPDATE posts SET placement = '' WHERE placement = 'hero'");
+                $heroSites = isset($_POST['sites'])
+                    ? ($sitesPick ?: (pp_is_hub() ? [] : [current_site_id()]))
+                    : ($post ? (site_ids_for_post((int) $post['id']) ?: (pp_is_hub() ? [] : [current_site_id()]))
+                             : (pp_is_hub() ? [] : [current_site_id()]));
+                pp_clear_hero_for_sites($heroSites, (int) ($post['id'] ?? 0));
             }
             $newCorrection = trim((string) ($_POST['correction'] ?? ''));
             $fields['correction'] = $newCorrection;
@@ -132,7 +142,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
 
         if ($post) {
-            $fields['slug'] = unique_post_slug($title, (int) $post['id']);
+            // Preserve the live URL once a story has ever been published or
+            // scheduled: changing a slug without 301 redirects breaks every
+            // inbound link, social share and indexed result.
+            $preserveSlug = (pp_post_locked($post) || !empty($post['published_at']))
+                && trim((string) ($post['slug'] ?? '')) !== '';
+            if (!$preserveSlug) {
+                $fields['slug'] = unique_post_slug($title, (int) $post['id']);
+            }
             // Authors' writes are conditional on the story STILL being in a
             // state they may write to — the check and the write are one
             // statement, so an editor publishing mid-edit wins the race and
