@@ -8,6 +8,7 @@ require dirname(__DIR__) . '/app/bootstrap.php';
 require __DIR__ . '/_layout.php';
 $user = require_login();
 $editor = is_editor($user);
+$canPublish = pp_can_publish($user);
 
 $id = (int) ($_GET['id'] ?? 0);
 $post = null;
@@ -21,13 +22,14 @@ if ($id) {
     }
     if (!can_edit_post($user, $post)) {
         http_response_code(403);
-        exit('That story belongs to another author. Editors can open anything; authors open their own.');
+        exit('That story belongs to another author or paper. Editors can open stories on their assigned papers; authors open their own.');
     }
 }
 
-$allowedStatuses = $editor
+$allowedStatuses = $canPublish
     ? ['draft', 'in_review', 'published', 'scheduled']
     : ['draft', 'in_review'];
+$allowedEditorSites = pp_user_allowed_site_ids($user, ['admin', 'editor']);
 
 $error = '';
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -94,43 +96,70 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         ];
 
         // Publishing or scheduling by hand consumes the publish-on-image
-        // flag, as the Stories list's bulk publish does. The flag is the
-        // filing agent's standing order ("approved copy: publish it when its
-        // art arrives"), and a person publishing the story spends it. Left
-        // set, it outlives the publish: an editor who later moves the story
-        // back to draft puts it back on the image agent's worklist, and the
-        // next image through /api/ingest-publish republishes it with no
-        // person deciding. Scheduling spends it too, because a person has
-        // approved the story for publication either way: the cron flip that
-        // takes it live (pp_publish_due) never touches the flag, and pulling
-        // a scheduled story back to draft is the same call as unpublishing
-        // one. A draft or review save leaves the flag set; no one has
-        // decided to publish, so the story keeps waiting for its art. Only
-        // an editor can choose these statuses, and the field rides in this
-        // save's single write, so a refused save leaves the flag as it was.
+        // flag, as the Stories list's bulk publish does.
         if ($status === 'published' || $status === 'scheduled') {
             $fields['awaiting_image'] = 0;
         }
 
+        $placement = '';
+        $existingSites = $post ? site_ids_for_post((int) $post['id']) : [];
+        $existingPlacements = $post ? pp_post_site_placements((int) $post['id']) : [];
+        $finalSites = $existingSites;
+        $finalPlacements = $existingPlacements;
+        $recordRedirectFrom = '';
+
         if ($editor) {
-            $placement = (string) ($_POST['placement'] ?? '');
-            if (!in_array($placement, ['', 'hero', 'featured', 'desk_lead'], true)) {
-                $placement = '';
-            }
+            $placement = pp_valid_placement((string) ($_POST['placement'] ?? ''));
             $fields['placement'] = $placement;
+            $fields['review_note'] = trim((string) ($_POST['review_note'] ?? ''));
+
+            // Resolve the target site set, respecting tenant-scoped editors:
+            // a scoped editor can only toggle papers they manage; sibling papers
+            // outside their scope stay attached untouched.
+            if (isset($_POST['sites'])) {
+                $picked = array_values(array_unique(array_filter(array_map('intval', (array) $_POST['sites']), fn ($sid) => $sid > 0)));
+                if ($allowedEditorSites !== null) {
+                    $picked = array_values(array_intersect($picked, $allowedEditorSites));
+                    $untouched = array_values(array_diff($existingSites, $allowedEditorSites));
+                    $finalSites = array_values(array_unique(array_merge($untouched, $picked)));
+                } else {
+                    $finalSites = $picked;
+                }
+                if (!$finalSites && !pp_is_hub()) {
+                    $finalSites = [current_site_id()];
+                }
+            } elseif (!$finalSites && !pp_is_hub()) {
+                $finalSites = [current_site_id()];
+            }
+
+            // Build per-site placement map:
+            // - On a paper, the main "placement" selector rules for current_site_id().
+            // - site_placement[sid] overrides individual sites (for sites this editor manages).
+            // - Newly added sites without an explicit site_placement inherit $placement.
+            $postedSitePl = is_array($_POST['site_placement'] ?? null) ? $_POST['site_placement'] : [];
+            $nextPlacements = [];
+            foreach ($finalSites as $sid) {
+                $canManageSite = $allowedEditorSites === null || in_array($sid, $allowedEditorSites, true);
+                if (!$canManageSite) {
+                    $nextPlacements[$sid] = $existingPlacements[$sid] ?? '';
+                } elseif (!pp_is_hub() && $sid === current_site_id()) {
+                    $nextPlacements[$sid] = $placement;
+                } elseif (array_key_exists($sid, $postedSitePl) || array_key_exists((string) $sid, $postedSitePl)) {
+                    $raw = $postedSitePl[$sid] ?? $postedSitePl[(string) $sid] ?? '';
+                    $nextPlacements[$sid] = pp_valid_placement((string) $raw);
+                } elseif (array_key_exists($sid, $existingPlacements)) {
+                    $nextPlacements[$sid] = pp_is_hub() ? $placement : $existingPlacements[$sid];
+                } else {
+                    $nextPlacements[$sid] = $placement;
+                }
+            }
+            $finalPlacements = $nextPlacements;
+
             // The home paper must actually run the story; anything else
             // (deselected, or never chosen) stays self-canonical everywhere.
             $canonPick = (int) ($_POST['canonical_site_id'] ?? 0);
-            $sitesPick = array_map('intval', (array) ($_POST['sites'] ?? []));
-            $fields['canonical_site_id'] = ($canonPick && in_array($canonPick, $sitesPick, true)) ? $canonPick : null;
-            $fields['review_note'] = trim((string) ($_POST['review_note'] ?? ''));
-            if ($placement === 'hero') {
-                $heroSites = isset($_POST['sites'])
-                    ? ($sitesPick ?: (pp_is_hub() ? [] : [current_site_id()]))
-                    : ($post ? (site_ids_for_post((int) $post['id']) ?: (pp_is_hub() ? [] : [current_site_id()]))
-                             : (pp_is_hub() ? [] : [current_site_id()]));
-                pp_clear_hero_for_sites($heroSites, (int) ($post['id'] ?? 0));
-            }
+            $fields['canonical_site_id'] = ($canonPick && in_array($canonPick, $finalSites, true)) ? $canonPick : null;
+
             $newCorrection = trim((string) ($_POST['correction'] ?? ''));
             $fields['correction'] = $newCorrection;
             $hadCorrection = trim((string) ($post['correction'] ?? ''));
@@ -139,16 +168,30 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             } elseif ($newCorrection === '') {
                 $fields['corrected_at'] = null;
             }
+        } elseif (!pp_is_hub() && !$finalSites) {
+            $finalSites = [current_site_id()];
         }
 
         if ($post) {
             // Preserve the live URL once a story has ever been published or
-            // scheduled: changing a slug without 301 redirects breaks every
-            // inbound link, social share and indexed result.
-            $preserveSlug = (pp_post_locked($post) || !empty($post['published_at']))
-                && trim((string) ($post['slug'] ?? '')) !== '';
-            if (!$preserveSlug) {
-                $fields['slug'] = unique_post_slug($title, (int) $post['id']);
+            // scheduled unless an editor explicitly edits the URL slug field
+            // (in which case we record a 301 redirect from the old slug).
+            $oldSlug = trim((string) ($post['slug'] ?? ''));
+            $wasLive = pp_post_locked($post) || !empty($post['published_at']);
+            $requestedSlug = $editor && isset($_POST['slug']) ? trim((string) $_POST['slug']) : '';
+            if ($wasLive && $oldSlug !== '') {
+                if ($requestedSlug !== '' && slugify($requestedSlug) !== $oldSlug) {
+                    $fields['slug'] = unique_post_slug($requestedSlug, (int) $post['id']);
+                    if ($fields['slug'] !== $oldSlug) {
+                        $recordRedirectFrom = $oldSlug;
+                    }
+                }
+            } else {
+                if ($requestedSlug !== '' && slugify($requestedSlug) !== $oldSlug) {
+                    $fields['slug'] = unique_post_slug($requestedSlug, (int) $post['id']);
+                } else {
+                    $fields['slug'] = unique_post_slug($title, (int) $post['id']);
+                }
             }
             // Authors' writes are conditional on the story STILL being in a
             // state they may write to — the check and the write are one
@@ -176,19 +219,30 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             pp_post_snapshot($id, 'create', $user['name']);
         }
 
-        // Dependent writes (tags, site mapping, agent queue) only after a
-        // write that actually landed — a refused save must change nothing.
+        // Dependent writes (tags, site mapping, per-site hero clearing, 301
+        // redirects, agent queue) only after a write that actually landed.
         if ($error === '') {
             set_post_tags($id, (string) ($_POST['tags'] ?? ''));
 
-            // Syndication: editors pick sites; authors' stories default to this
-            // site. On the hub no paper is "this site" — an unassigned story
-            // stays unmapped and shows as running nowhere on the network desk.
-            if ($editor && isset($_POST['sites'])) {
-                $picked = array_map('intval', (array) $_POST['sites']);
-                set_post_sites($id, $picked ?: (pp_is_hub() ? [] : [current_site_id()]));
+            if ($editor) {
+                $heroSites = [];
+                foreach ($finalPlacements as $sid => $pl) {
+                    if ($pl === 'hero') {
+                        $heroSites[] = (int) $sid;
+                    }
+                }
+                if ($heroSites) {
+                    pp_clear_hero_for_sites($heroSites, $id);
+                }
+                set_post_sites($id, $finalSites, $finalPlacements);
+                pp_sync_legacy_post_placement($id);
             } elseif (!pp_is_hub() && !site_ids_for_post($id)) {
                 set_post_sites($id, [current_site_id()]);
+            }
+
+            if ($recordRedirectFrom !== '') {
+                $redirSites = $finalSites ?: (pp_is_hub() ? [] : [current_site_id()]);
+                pp_record_slug_redirect($id, $recordRedirectFrom, $redirSites, (string) ($fields['slug'] ?? ''));
             }
 
             // The agent desk's auto-queue fires on the transition to published —
@@ -219,7 +273,12 @@ if ($id && empty($error)) {
     $tagsValue = (string) $_POST['tags'];
 }
 $postSites = $id ? site_ids_for_post($id) : (pp_is_hub() ? [] : [current_site_id()]);
+$postSitePlacements = $id ? pp_post_site_placements($id) : [];
 $allSites = pp_paper_sites();   // the brochure hub never carries a story
+if ($allowedEditorSites !== null) {
+    $allSites = array_values(array_filter($allSites, fn ($s) => in_array((int) $s['id'], $allowedEditorSites, true)));
+}
+$slugRedirects = $id ? pp_slug_redirects_for_post($id) : [];
 
 $v = fn (string $key, string $default = '') => e((string) ($post[$key] ?? $default));
 $st = (string) ($post['status'] ?? 'draft');
@@ -326,18 +385,29 @@ if (($post['origin'] ?? '') === 'ai') {
         <select id="status" name="status">
           <option value="draft"<?= $st === 'draft' ? ' selected' : '' ?>>Draft — visible to the newsroom only</option>
           <option value="in_review"<?= $st === 'in_review' ? ' selected' : '' ?>>Submit for review — an editor signs off</option>
-          <?php if ($editor): ?>
+          <?php if ($canPublish): ?>
           <option value="published"<?= $st === 'published' ? ' selected' : '' ?>>Published — live on the site</option>
           <option value="scheduled"<?= $st === 'scheduled' ? ' selected' : '' ?>>Scheduled — goes live at the set time</option>
           <?php endif; ?>
         </select>
         <?php if ($editor): ?>
+        <?php if ($canPublish): ?>
         <label for="published_at">Publish time</label>
         <input type="datetime-local" id="published_at" name="published_at"
                value="<?= !empty($post['published_at']) ? e(date('Y-m-d\TH:i', strtotime($post['published_at']))) : '' ?>">
         <p class="help">Leave blank on publish to use right now.</p>
+        <?php endif; ?>
         <label for="review_note">Note to the author · shown when you send a story back</label>
         <textarea id="review_note" name="review_note" class="prose" style="min-height:64px"><?= $v('review_note') ?></textarea>
+        <?php if ($id): ?>
+        <label for="slug">URL slug · changing a live slug emits an automatic 301 redirect</label>
+        <input type="text" id="slug" name="slug" value="<?= $v('slug') ?>" maxlength="191" class="mono">
+        <?php if ($slugRedirects): ?>
+        <p class="help">Redirecting here (301): <?php foreach ($slugRedirects as $oldS): ?><span class="chip chip--used">/story/<?= e($oldS) ?></span> <?php endforeach; ?></p>
+        <?php else: ?>
+        <p class="help">Headline edits keep the live URL stable unless you change this field deliberately.</p>
+        <?php endif; ?>
+        <?php endif; ?>
         <?php else: ?>
         <p class="help">Publishing and scheduling happen at the editor's desk. Submit for review when the story is ready.</p>
         <?php endif; ?>
@@ -365,8 +435,12 @@ if (($post['origin'] ?? '') === 'ai') {
         </select>
         <?php endif; ?>
         <?php if ($editor): ?>
-        <label for="placement">Front page placement</label>
-        <?php $pl = (string) ($post['placement'] ?? ''); ?>
+        <label for="placement"><?= pp_is_hub() ? 'Default front page placement' : 'Front page placement (this paper)' ?></label>
+        <?php
+          $pl = (!pp_is_hub() && array_key_exists(current_site_id(), $postSitePlacements))
+              ? (string) $postSitePlacements[current_site_id()]
+              : (string) ($post['placement'] ?? '');
+        ?>
         <select id="placement" name="placement">
           <option value=""<?= $pl === '' ? ' selected' : '' ?>>None — runs in the normal flow</option>
           <option value="hero"<?= $pl === 'hero' ? ' selected' : '' ?>>Hero — the lead story (replaces the current hero)</option>
@@ -377,20 +451,34 @@ if (($post['origin'] ?? '') === 'ai') {
         <textarea id="correction" name="correction" class="prose" style="min-height:64px" placeholder="An earlier version of this story said… In fact…"><?= $v('correction') ?></textarea>
         <p class="help">A correction renders in Bin Red above the story and joins the public corrections file.</p>
         <?php if (count($allSites) > 1): ?>
-        <label>Runs on <span style="float:right;letter-spacing:.08em">home</span></label>
+        <label>Runs on <span style="float:right;letter-spacing:.08em">placement · home</span></label>
         <?php $canonCur = (int) ($post['canonical_site_id'] ?? 0); ?>
-        <?php foreach ($allSites as $site): ?>
-        <label style="display:flex;align-items:center;gap:8px;text-transform:none;letter-spacing:.04em;margin:6px 0">
-          <input type="checkbox" name="sites[]" value="<?= (int) $site['id'] ?>" style="width:auto"<?= in_array((int) $site['id'], $postSites, true) ? ' checked' : '' ?>>
-          <?= e($site['name']) ?><?= (int) $site['id'] === current_site_id() ? ' (this site)' : '' ?>
-          <input type="radio" name="canonical_site_id" value="<?= (int) $site['id'] ?>" style="width:auto;margin-left:auto" title="Home paper — the other copies point their search canonical here"<?= $canonCur === (int) $site['id'] ? ' checked' : '' ?>>
-        </label>
+        <?php foreach ($allSites as $site):
+          $sid = (int) $site['id'];
+          $isHere = !pp_is_hub() && $sid === current_site_id();
+          $sPl = (string) ($postSitePlacements[$sid] ?? '');
+        ?>
+        <div style="display:flex;align-items:center;gap:8px;margin:6px 0">
+          <label style="display:flex;align-items:center;gap:8px;text-transform:none;letter-spacing:.04em;margin:0;flex:1">
+            <input type="checkbox" name="sites[]" value="<?= $sid ?>" style="width:auto"<?= in_array($sid, $postSites, true) ? ' checked' : '' ?>>
+            <?= e($site['name']) ?><?= $isHere ? ' (this site)' : '' ?>
+          </label>
+          <?php if (!$isHere): ?>
+          <select name="site_placement[<?= $sid ?>]" aria-label="Placement on <?= e($site['name']) ?>" style="width:auto;padding:2px 6px;font-size:.82rem">
+            <option value=""<?= $sPl === '' ? ' selected' : '' ?>>Normal</option>
+            <option value="hero"<?= $sPl === 'hero' ? ' selected' : '' ?>>Hero</option>
+            <option value="featured"<?= $sPl === 'featured' ? ' selected' : '' ?>>Featured</option>
+            <option value="desk_lead"<?= $sPl === 'desk_lead' ? ' selected' : '' ?>>Desk lead</option>
+          </select>
+          <?php endif; ?>
+          <input type="radio" name="canonical_site_id" value="<?= $sid ?>" style="width:auto" title="Home paper — the other copies point their search canonical here"<?= $canonCur === $sid ? ' checked' : '' ?>>
+        </div>
         <?php endforeach; ?>
         <label style="display:flex;align-items:center;gap:8px;text-transform:none;letter-spacing:.04em;margin:6px 0">
           <input type="radio" name="canonical_site_id" value="0" style="width:auto"<?= $canonCur === 0 ? ' checked' : '' ?>>
           No home paper — each copy is its own canonical
         </label>
-        <p class="help">A story runs on every site ticked here — one filing, the whole network. For widely-syndicated stories, mark one ticked paper <em>home</em> and the other copies point their search canonical there, so a single paper accrues the ranking.</p>
+        <p class="help">A story runs on every site ticked here — each paper keeps its own front-page placement independently. Mark one ticked paper <em>home</em> to point sibling canonicals there.</p>
         <?php else: ?>
         <input type="hidden" name="sites[]" value="<?= current_site_id() ?>">
         <?php endif; ?>

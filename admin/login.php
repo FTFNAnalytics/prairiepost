@@ -35,15 +35,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $user = user_by_email($email);
             $verified = password_verify((string) ($_POST['password'] ?? ''), $user['pass_hash'] ?? PP_DECOY_HASH);
             if ($user && $verified) {
-                $_SESSION['uid'] = (int) $user['id'];
-                pp_session_stamp((int) ($user['session_epoch'] ?? 0));
-                session_regenerate_id(true);
-                pp_login_record($user['email'], true);
-                pp_audit('login', $user['email'], '', $user);
-                redirect('index.php');
+                if (pp_user_site_role($user) === null) {
+                    pp_audit('login.denied', $user['email'], 'no membership on ' . pp_current_site_slug(), $user);
+                    http_response_code(403);
+                    $error = 'Your account does not have access to this paper.';
+                } else {
+                    $_SESSION['uid'] = (int) $user['id'];
+                    pp_session_stamp((int) ($user['session_epoch'] ?? 0));
+                    session_regenerate_id(true);
+                    pp_login_record($user['email'], true);
+                    pp_audit('login', $user['email'], '', $user);
+                    redirect('index.php');
+                }
+            } else {
+                pp_login_record($email, false);
+                $error = 'That email and passphrase don\'t match an account. Check both and try again.';
             }
-            pp_login_record($email, false);
-            $error = 'That email and passphrase don\'t match an account. Check both and try again.';
         }
     }
 }

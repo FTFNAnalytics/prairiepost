@@ -4,6 +4,8 @@ require dirname(__DIR__) . '/app/bootstrap.php';
 require __DIR__ . '/_layout.php';
 $user = require_login();
 $editor = is_editor($user);
+$canPublish = pp_can_publish($user);
+$allowedSites = pp_user_allowed_site_ids($user);
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     csrf_check();
@@ -16,8 +18,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $seen = is_array($_POST['stories'] ?? null) ? $_POST['stories'] : [];
         if (!in_array($newStatus, ['published', 'in_review', 'draft'], true) || !$seen) {
             flash_set('Tick at least one story and choose a status, then Apply.', true);
-        } elseif ($newStatus === 'published' && !$editor) {
-            flash_set('Only editors can publish. Send your stories to review and an editor will take them from there.', true);
+        } elseif ($newStatus === 'published' && !$canPublish) {
+            flash_set('Only editors with publish permission can publish. Send your stories to review and an editor will take them from there.', true);
         } else {
             $r = pp_bulk_set_status($user, $seen, $newStatus);
             flash_set(pp_bulk_status_summary($r, $newStatus), !$r['changed']);
@@ -31,20 +33,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
     if ($action === 'delete' && $target) {
         // Authors clear their own unpublished, unscheduled work; editors
-        // delete anything. Same policy as every other post write.
+        // delete anything on their papers. Same policy as every other post write.
         if (pp_post_write_denied($user, $target, 'delete') !== null) {
             flash_set("Only editors can delete a published or scheduled story, or another author's work.", true);
         } else {
             db()->prepare('DELETE FROM posts WHERE id = ?')->execute([$id]);
             db()->prepare('DELETE FROM post_tags WHERE post_id = ?')->execute([$id]);
             db()->prepare('DELETE FROM post_sites WHERE post_id = ?')->execute([$id]);
+            db()->prepare('DELETE FROM slug_redirects WHERE post_id = ?')->execute([$id]);
             flash_set('Story deleted. It is gone from the site and the archive.');
         }
     }
-    if ($action === 'feature' && $target && $editor) {
-        $heroSites = site_ids_for_post($id) ?: (pp_is_hub() ? [] : [current_site_id()]);
-        pp_clear_hero_for_sites($heroSites, $id);
-        db()->prepare("UPDATE posts SET placement = 'hero' WHERE id = ?")->execute([$id]);
+    if ($action === 'feature' && $target && $editor && can_edit_post($user, $target)) {
+        if (!pp_is_hub()) {
+            pp_set_site_placement($id, current_site_id(), 'hero');
+        } else {
+            $heroSites = site_ids_for_post($id);
+            foreach ($heroSites as $sid) {
+                pp_set_site_placement($id, (int) $sid, 'hero');
+            }
+            if (!$heroSites) {
+                db()->prepare("UPDATE posts SET placement = 'hero' WHERE id = ?")->execute([$id]);
+            }
+        }
         flash_set('Set as the front-page hero.');
     }
     redirect('posts.php?' . http_build_query(array_filter([
@@ -57,7 +68,8 @@ $hub = pp_is_hub();
 $status = (string) ($_GET['status'] ?? '');
 $catFilter = (int) ($_GET['category'] ?? 0);
 $q = trim((string) ($_GET['q'] ?? ''));
-$scope = $hub ? 'all' : ((string) ($_GET['scope'] ?? 'this') === 'all' ? 'all' : 'this');
+$canSeeAllPapers = $allowedSites === null || count($allowedSites) > 1;
+$scope = $hub ? 'all' : (($canSeeAllPapers && (string) ($_GET['scope'] ?? 'this') === 'all') ? 'all' : 'this');
 $page = max(1, (int) ($_GET['page'] ?? 1));
 $perPage = 25;
 
@@ -70,6 +82,10 @@ if (!$editor) {
 if ($scope === 'this') {
     $where[] = '(EXISTS (SELECT 1 FROM post_sites ps WHERE ps.post_id = p.id AND ps.site_id = ?) OR NOT EXISTS (SELECT 1 FROM post_sites ps WHERE ps.post_id = p.id))';
     $params[] = current_site_id();
+} elseif ($allowedSites !== null) {
+    $marks = implode(',', array_fill(0, count($allowedSites), '?'));
+    $where[] = "EXISTS (SELECT 1 FROM post_sites ps WHERE ps.post_id = p.id AND ps.site_id IN ($marks))";
+    array_push($params, ...$allowedSites);
 }
 if (in_array($status, ['draft', 'in_review', 'published', 'scheduled'], true)) {
     $where[] = 'p.status = ?';
@@ -93,16 +109,31 @@ $total = (int) $countStmt->fetch()['n'];
 $pages = max(1, (int) ceil($total / $perPage));
 $page = min($page, $pages);
 
-$stmt = db()->prepare('SELECT p.*, c.name AS category_name, c.color AS category_color FROM posts p
-    LEFT JOIN categories c ON c.id = p.category_id' . $whereSql . '
-    ORDER BY COALESCE(p.published_at, p.updated_at) DESC
-    LIMIT ' . $perPage . ' OFFSET ' . (($page - 1) * $perPage));
-$stmt->execute($params);
+$selectParams = $params;
+if ($scope === 'this' && !$hub) {
+    $listSql = 'SELECT p.*, c.name AS category_name, c.color AS category_color,
+        COALESCE(ps_cur.placement, p.placement) AS effective_placement
+        FROM posts p
+        LEFT JOIN categories c ON c.id = p.category_id
+        LEFT JOIN post_sites ps_cur ON ps_cur.post_id = p.id AND ps_cur.site_id = ?' . $whereSql . '
+        ORDER BY COALESCE(p.published_at, p.updated_at) DESC
+        LIMIT ' . $perPage . ' OFFSET ' . (($page - 1) * $perPage);
+    array_unshift($selectParams, current_site_id());
+} else {
+    $listSql = 'SELECT p.*, c.name AS category_name, c.color AS category_color,
+        p.placement AS effective_placement
+        FROM posts p
+        LEFT JOIN categories c ON c.id = p.category_id' . $whereSql . '
+        ORDER BY COALESCE(p.published_at, p.updated_at) DESC
+        LIMIT ' . $perPage . ' OFFSET ' . (($page - 1) * $perPage);
+}
+$stmt = db()->prepare($listSql);
+$stmt->execute($selectParams);
 $posts = $stmt->fetchAll();
 
 // Rows the bulk bar may offer: the same write policy a single save asks.
 // Authors see only their own stories, and only drafts and in-review work
-// is theirs to move; editors may move anything.
+// is theirs to move; editors may move anything on their papers.
 $bulkable = [];
 foreach ($posts as $p) {
     if (pp_post_write_denied($user, $p, 'status') === null) {
@@ -126,7 +157,7 @@ flash_show();
     <span class="bulkbar__count" id="bulk-count" aria-live="polite">Tick stories to change several at once</span>
     <select name="new_status" aria-label="New status for the selected stories">
       <option value="">Change status to…</option>
-      <?php if ($editor): ?><option value="published">Published — live now</option><?php endif; ?>
+      <?php if ($canPublish): ?><option value="published">Published — live now</option><?php endif; ?>
       <option value="in_review">In review</option>
       <option value="draft">Draft</option>
     </select>
@@ -138,7 +169,7 @@ flash_show();
 <p class="pagesub"><?= $total ?> <?= $total === 1 ? 'story' : 'stories' ?><?= !$editor ? ' of yours.' : ($scope === 'this' ? ' on this paper.' : ' in the system.') ?></p>
 
 <form method="get" class="formrow">
-  <?php if (!$hub): ?>
+  <?php if (!$hub && $canSeeAllPapers): ?>
   <select name="scope" aria-label="Scope">
     <option value="this"<?= $scope === 'this' ? ' selected' : '' ?>>This paper</option>
     <option value="all"<?= $scope === 'all' ? ' selected' : '' ?>>All papers</option>
@@ -166,7 +197,7 @@ flash_show();
       <th class="tbl__check"><?php if ($bulkable): ?><input type="checkbox" id="bulk-all" aria-label="Select every story on this page"><?php endif; ?></th>
       <th>Story</th><th>Desk</th><th>Status</th><th>When</th><th></th>
     </tr>
-    <?php foreach ($posts as $p): ?>
+    <?php foreach ($posts as $p): $rowPl = (string) ($p['effective_placement'] ?? ''); ?>
     <tr>
       <td class="tbl__check">
         <?php if (isset($bulkable[(int) $p['id']])): ?>
@@ -175,9 +206,9 @@ flash_show();
       </td>
       <td>
         <a class="rowtitle" href="post-edit.php?id=<?= (int) $p['id'] ?>"><?= e($p['title']) ?></a>
-        <?php if ($p['placement'] === 'hero'): ?> <span class="chip chip--scheduled">Hero</span>
-        <?php elseif ($p['placement'] === 'featured'): ?> <span class="chip chip--scheduled">Featured</span>
-        <?php elseif ($p['placement'] === 'desk_lead'): ?> <span class="chip chip--used">Desk lead</span><?php endif; ?>
+        <?php if ($rowPl === 'hero'): ?> <span class="chip chip--scheduled">Hero</span>
+        <?php elseif ($rowPl === 'featured'): ?> <span class="chip chip--scheduled">Featured</span>
+        <?php elseif ($rowPl === 'desk_lead'): ?> <span class="chip chip--used">Desk lead</span><?php endif; ?>
         <?php if (!empty($p['filed_by'])): ?> <span class="chip chip--in_review" title="Filed by the Hermes agent '<?= e($p['filed_by']) ?>' — review the sources box before publishing">Agent: <?= e($p['filed_by']) ?></span><?php endif; ?>
         <div class="mono" style="color:#5A6A5C"><?= e($p['byline']) ?><?= $p['dateline'] ? ' · ' . e(mb_strtoupper($p['dateline'])) : '' ?></div>
       </td>
@@ -185,7 +216,7 @@ flash_show();
       <td><span class="chip chip--<?= e($p['status']) ?>"><?= e(str_replace('_', ' ', $p['status'])) ?></span><?php if (!empty($p['awaiting_image']) && $p['status'] === 'draft'): ?> <span class="chip" title="Filed publish-on-image: publishes the moment its featured image arrives via the ingest API">awaiting image</span><?php endif; ?></td>
       <td class="mono"><?= e(fmt_date($p['published_at'] ?: $p['updated_at'], 'M j, Y g:i a')) ?></td>
       <td style="white-space:nowrap">
-        <?php if ($editor && $p['status'] === 'published' && $p['placement'] !== 'hero'): ?>
+        <?php if ($editor && $p['status'] === 'published' && $rowPl !== 'hero'): ?>
         <form method="post" class="inline"><?= csrf_field() ?><input type="hidden" name="action" value="feature"><input type="hidden" name="id" value="<?= (int) $p['id'] ?>"><button class="btn btn--ghost btn--small" type="submit">Make hero</button></form>
         <?php endif; ?>
         <?php if (pp_post_write_denied($user, $p, 'delete') === null): ?>

@@ -97,6 +97,12 @@ $pdo->exec('ALTER TABLE post_revisions DROP COLUMN image_alt');
 // Step 26's: the whiteboard table (its index goes with it) and the tips form key.
 $pdo->exec('DROP TABLE whiteboard_notes');
 $pdo->prepare("DELETE FROM settings WHERE site_id = 0 AND skey = 'tips_form_key'")->execute();
+// Step 27's: per-site placement, tenant memberships, network admin flag, slug redirects.
+try { $pdo->exec('DROP INDEX idx_post_sites_site_placement' . ($engine === 'mysql' ? ' ON post_sites' : '')); } catch (Throwable) {}
+$pdo->exec('ALTER TABLE post_sites DROP COLUMN placement');
+$pdo->exec('ALTER TABLE users DROP COLUMN is_network_admin');
+$pdo->exec('DROP TABLE site_memberships');
+$pdo->exec('DROP TABLE slug_redirects');
 $pdo->prepare("UPDATE settings SET svalue = '18' WHERE site_id = 0 AND skey = 'schema_version'")->execute();
 $pdo->prepare('INSERT INTO posts (title, slug, body, status, author_id, created_at, updated_at) VALUES (?,?,?,?,?,?,?)')
     ->execute(['Upgrade survivor', 'upgrade-survivor-' . bin2hex(random_bytes(3)), '<p>x</p>', 'published', 1, date('Y-m-d H:i:s'), date('Y-m-d H:i:s')]);
@@ -151,6 +157,11 @@ $p2->exec('ALTER TABLE ingest_agents DROP COLUMN edit_drafts');
 $p2->exec('ALTER TABLE post_revisions DROP COLUMN image_alt');
 $p2->exec('DROP TABLE whiteboard_notes');
 $p2->prepare("DELETE FROM settings WHERE site_id = 0 AND skey = 'tips_form_key'")->execute();
+try { $p2->exec('DROP INDEX idx_post_sites_site_placement' . ($engine === 'mysql' ? ' ON post_sites' : '')); } catch (Throwable) {}
+$p2->exec('ALTER TABLE post_sites DROP COLUMN placement');
+$p2->exec('ALTER TABLE users DROP COLUMN is_network_admin');
+$p2->exec('DROP TABLE site_memberships');
+$p2->exec('DROP TABLE slug_redirects');
 $p2->prepare("UPDATE settings SET svalue = '18' WHERE site_id = 0 AND skey = 'schema_version'")->execute();
 $p2->exec('DELETE FROM schema_migrations');
 $p2->exec('INSERT INTO schema_migrations (version, name, checksum, status, started_at, finished_at) '

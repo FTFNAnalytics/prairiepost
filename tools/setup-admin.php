@@ -98,8 +98,8 @@ try {
         exit(1);
     }
 
-    $pdo->prepare('INSERT INTO users (name, email, pass_hash, role, slug, created_at) VALUES (?, ?, ?, ?, ?, ?)')
-        ->execute([$name, $email, password_hash($pass, PASSWORD_DEFAULT), 'admin', unique_user_slug($name), now()]);
+    $pdo->prepare('INSERT INTO users (name, email, pass_hash, role, is_network_admin, slug, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)')
+        ->execute([$name, $email, password_hash($pass, PASSWORD_DEFAULT), 'admin', 1, unique_user_slug($name), now()]);
     $uid = pp_last_id('users');
     $commit();
 } catch (Throwable $e) {
