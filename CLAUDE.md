@@ -455,7 +455,8 @@ holding a capability it should not have.
   - The five:
     - `citadel-courier` (`citadel`, Halifax);
     - `easterly` (`easterly`, Atlantic Canada, no weather city);
-    - `memphre` (`memphre`, Magog, French);
+    - `memphre` (`memphre`, Magog, French; Sherbrooke since its brand
+      build);
     - `chutes` (`chutes`, Quebec City, French);
     - `borealis-bulletin` (`borealis`, the North, Whitehorse as a
       placeholder home).
@@ -528,6 +529,30 @@ holding a capability it should not have.
     the homepage mock-up. The guide's delivery-company slogans and the
     article mock-up's "Since 1873" are not used.
   - Launch waits on the domain and the inaugural edition.
+- **Le Memphré is branded (28 Nov), the fourth package applied.**
+  - The package is coherent: brand guidelines (a Word file) and a draft
+    website, with one logo, one palette and one type pairing. Both are
+    in English, and the slate made Le Memphré a French paper. The build
+    keeps it French, with the package's lines translated. The language
+    is the owner's first open question (`docs/brand-packages.md`).
+  - Colours are the guidelines' four. Teal is 3.1:1 on white, so teal
+    text (links, desk chips) uses `--me-link`, the same hue deepened to
+    5.5:1. Teal itself paints bars, rules and the breaking strip. Type is
+    the guidelines' own: `--me-head` (Playfair Display, also the
+    wordmark as live text) and `--me-ui` (Source Sans 3).
+  - The serpent and the logo's three-line wave are traced, in the
+    guidelines' blue-to-teal gradient. On the Dark Blue footer and icons
+    the serpent is reversed, which the guidelines' "do not recolor" may
+    not allow. The owner decides.
+  - The footprint moved with the guidelines, from Magog to Sherbrooke and
+    the Eastern Townships: the weather (ECCC `qc-136`), the copyright
+    line, the desk descriptions and a Sherbrooke wire region. That is
+    all of L'Estrien's territory (`NETWORK-EXPANSION.md`, Still open).
+  - The draft site's stories are not used. A launch carries only notes
+    about the paper (debt item 1).
+  - Launch waits on the language, the domain (memphre.ca, or
+    lememphre.ca, which the package's addresses use) and the inaugural
+    edition.
 - **The expansion name slate is in `NETWORK-EXPANSION.md`** (chosen
   23 Nov 2026): twelve mastheads for the North, Atlantic Canada,
   Quebec and Saskatchewan, with their domains, the reasons, the open

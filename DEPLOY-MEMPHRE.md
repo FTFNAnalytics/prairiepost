@@ -10,7 +10,7 @@ serpent. The launch pack still has zero stories. **Do not launch it
 from this state.** Before any launch order:
 
 1. **The domain is registered.** `memphre.ca` was unregistered on
-   28 Nov 2026 (RDAP), and so was lememphre.com and lememphre.ca. The owner registers
+   28 Nov 2026 (RDAP), and so were lememphre.com and lememphre.ca. The owner registers
    it and points it at the VPS. If the brand package names a different
    hostname, that is a question for the owner, not a correction to apply.
    The guidelines and draft site give their addresses at lememphre.ca:

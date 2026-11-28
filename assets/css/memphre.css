@@ -190,7 +190,9 @@ body.t-memphre {
 /* ---- footer ---- */
 .me-foot { background: var(--me-deep); color: var(--me-foot-text); margin-top: 46px; }
 .me-foot .cols { max-width: 1140px; margin: 0 auto; padding: 34px 20px 20px; display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 26px; }
-.me-foot a.me-lock { display: inline-flex; font-size: 10px; padding: 0; }
+/* At 85% the lockup fits the footer's first column down to the
+   two-column breakpoint, where that column takes the whole row. */
+.me-foot a.me-lock { display: inline-flex; font-size: 8.5px; padding: 0; }
 .me-foot .me-name .wm { color: var(--me-paper); }
 .me-foot .me-name .wv { display: none; }
 /* The footer line under the lockup says what the tagline says, and the
@@ -208,6 +210,7 @@ body.t-memphre {
   .me-home { grid-template-columns: 1fr; }
   .me-grid { grid-template-columns: repeat(2, 1fr); }
   .me-foot .cols { grid-template-columns: 1fr 1fr; }
+  .me-foot .cols > div:first-child { grid-column: 1 / -1; }
   .me-hero h1 { font-size: 36px; }
   .me-hero--noart .wm { right: 20px; bottom: 0; width: 200px; }
 }

@@ -6,15 +6,15 @@ Telegraph's design: the same layout, type and page furniture, in a
 placeholder slate colour scheme with a monogram roundel for a mark. Each
 has a launch pack with its domains, desks and wire feeds, and no stories.
 Terminal City Times has been a foundation since 22 Sep, in its own
-heritage-broadsheet design. The first three packages, The Easterly's,
-Les Chutes' and Citadel Courier's, arrived and were applied on 28 Nov
+heritage-broadsheet design. Four packages, The Easterly's, Les Chutes',
+Citadel Courier's and Le Memphré's, arrived and were applied on 28 Nov
 (below).
 
 | Paper | Slug and template | Covers | Domain | State |
 | --- | --- | --- | --- | --- |
 | Citadel Courier | `citadel-courier`, `citadel` | Halifax and Nova Scotia | citadelcourier.ca | Branded 28 Nov; domain unregistered |
 | The Easterly | `easterly`, `easterly` | Atlantic Canada, region-wide | easterly.ca | Branded 28 Nov; domain unregistered |
-| Le Memphré | `memphre`, `memphre` | Magog and Lake Memphrémagog (French) | memphre.ca | Foundation; domain unregistered |
+| Le Memphré | `memphre`, `memphre` | Sherbrooke and the Eastern Townships (French) | memphre.ca | Branded 28 Nov; language and domain open |
 | Les Chutes | `chutes`, `chutes` | Quebec City and eastern Quebec (French) | chutesquebec.ca | Branded 28 Nov; domain unregistered |
 | Borealis Bulletin | `borealis-bulletin`, `borealis` | Yukon, NWT and Nunavut | borealisbulletin.ca | Foundation; domain unregistered |
 | Terminal City Times | `terminal-city-times`, `terminalcity` | Vancouver | terminalcitytimes.ca | Foundation; domain registered 22 Sep |
@@ -153,15 +153,68 @@ the lockup, as PNGs.
 - Still open: whether to hold theeasterly.com, and the newsletter's name
   and footer line.
 
-**Le Memphré.**
-- Placeholders:
-  - tagline "Magog et le lac Memphrémagog";
-  - newsletter "L’infolettre du Memphré";
-  - desks Actualités, Économie, Environnement, Culture, Sports, Idées.
-- Weather and clock: Magog, which has its own Environment Canada page.
-- Decide the footprint:
-  - Magog and the towns around the lake, or all of Estrie?
-  - Is L'Estrien, named but not built, to be the Estrie paper above it?
+**Le Memphré.** The package arrived on 28 Nov and is applied. It held
+brand guidelines (a Word file marked "Draft Version · November 2026")
+and a draft website: five HTML pages, a stylesheet, the logo as a PNG
+and two photographs. Unlike the other generated packages it agrees with
+itself, with one logo, one palette and one type pairing. Both parts are
+written in English, and the slate made Le Memphré a French paper:
+- **Colours:** the guidelines' four.
+
+  | Package name | Hex | Where it shows |
+  | --- | --- | --- |
+  | Primary Blue | `#085492` | Headlines, navigation, the Subscribe button, the numbered latest list, the byline rule |
+  | Dark Blue | `#053A6E` | The wordmark; the dark grounds (utility strip, lead panel, subscribe box, footer band) |
+  | Teal | `#28A1AC` | Accent bars and rules, the masthead rule, the breaking strip (under ink, 4.7:1), buttons on dark grounds. Never text on white (3.1:1) |
+  | Light Teal | `#E6F6F7` | Soft fills (quotes, the empty state); text on dark grounds |
+
+  The guidelines want Teal for links and category labels, but as text it
+  fails AA. Text in teal uses `#1A747C`, the same hue deepened to 5.5:1:
+  links and desk chips. The draft site's stylesheet gives the rest: ink
+  `#1A2A3A`, meta grey `#5A6A7A`, borders `#D0D8E0` and footer links
+  `#A0D0E0` (6.9:1 on Dark Blue).
+- **Type:** the guidelines' own. Playfair Display sets the wordmark and
+  the headlines, and Source Sans 3 the body, navigation and interface.
+  Both are self-hosted, and `memphre.css` declares Playfair Display
+  itself (lesson 9). The draft site's Google Fonts links are not
+  carried over.
+- **Mark:** the logo's serpent, traced and filled with the guidelines'
+  blue-to-teal gradient, and the three-line wave under the name, traced
+  as `waves.svg`. The wordmark is live text. The logo's blue on Dark Blue
+  is 1.5:1, so on the footer band and the icons the serpent is reversed,
+  Light Teal to Teal. The guidelines say not to recolour the logo.
+- **Tagline:** the guidelines' subtitle in French, "L’actualité de
+  Sherbrooke et des Cantons-de-l’Est" ("News for Sherbrooke & the
+  Eastern Townships"). Their tagline, "Stories from the Heart of the
+  Townships", has no French version yet. Footer line: the draft site's
+  in French, "L’information indépendante de Sherbrooke et des
+  Cantons-de-l’Est."
+- **Footprint:** the guidelines' Sherbrooke and the Eastern Townships,
+  not the foundation's Magog and the lake. Sherbrooke now sets the
+  weather (ECCC `qc-136`) and the copyright line. The desk descriptions
+  name the region, and the newsroom's wire pull has a Sherbrooke region
+  (the Sherbrooke Record, 10 items on 28 Nov) beside Magog and Estrie.
+- **Share card:** drawn in the network's layout, from the masthead lockup.
+- **Not used:** the draft site's stories. They read as news about real
+  places (a council decision, rabies in wildlife, an air ambulance), and
+  a launch carries only notes about the paper (CLAUDE.md, debt item 1).
+- Still a placeholder: newsletter "L’infolettre du Memphré".
+- Desks unchanged: Actualités, Économie, Environnement, Culture, Sports,
+  Idées. The draft site's nav has two sections, Local News and Culture.
+- Weather and clock: Sherbrooke, on Eastern time.
+- Decide:
+  - the language: French, as built, or English, as the package is
+    written. English means `chrome.lang: en` and the package's own
+    words;
+  - the domain: memphre.ca, from the slate, or lememphre.ca, which the
+    package's addresses use (brand@ and info@). Both were free on
+    28 Nov;
+  - the tagline, in whichever language the paper takes;
+  - the serpent on dark grounds: reversed as built, the full-colour
+    logo on a white panel, or no mark there;
+  - whether L'Estrien, slated as Estrie's paper, is still wanted
+    (`NETWORK-EXPANSION.md`);
+  - what the paper reports itself, for the inaugural edition.
 
 **Les Chutes.** The package arrived on 28 Nov and is applied. It held a
 README, two logos, a palette sheet, homepage, article and phone mock-ups,
@@ -248,6 +301,9 @@ Each package becomes one brand build, as a pull request:
    notes about the paper itself, true by construction.
 
 The build also revises the paper's `DEPLOY-<NAME>.md` to launch form.
+Then the VPS agent gets a launch brief: DNS, the generated nginx block,
+the certificate, and the seed. Each paper opens to search engines only
+when its newsroom presses Open in Settings.
 
 ### What the first package taught (The Easterly, 28 Nov)
 
@@ -308,8 +364,27 @@ The build also revises the paper's `DEPLOY-<NAME>.md` to launch form.
   masthead outgrows the footer's first column, between 981 and about
   1100 px in the four-column footer and everywhere in the two-column
   one. Measure the lockup's images and text, not its link box, which the
-  grid clamps. All three branded papers now draw the footer lockup at
-  85%, and below 981 px give its column a row of its own.
-Then the VPS agent gets a launch brief: DNS, the generated nginx block,
-the certificate, and the seed. Each paper opens to search engines only
-when its newsroom presses Open in Settings.
+  grid clamps. Every branded paper now draws the footer lockup at 85%,
+  and below 981 px gives its column a row of its own.
+
+### What the fourth package taught (Le Memphré, 28 Nov)
+
+- **A package can be written in another language than the paper.**
+  Le Memphré's guidelines and draft site are English, and the slate made
+  it a French paper. Translate the package's lines and ask about the
+  language. Don't switch the paper's language on the package's evidence
+  alone: the chrome, the dates and the bylines all follow it.
+- **A package can move a paper's footprint, and the home city is in
+  more places than the tagline.** The guidelines centre Sherbrooke, not
+  Magog. Moving it meant the weather city in `palette.json`, the
+  copyright line in the footer partial, the desk descriptions, the
+  newsletter copy, the meta description, a wire region and the runbook.
+  Search the paper's files for the old city's name before calling it
+  done.
+- **A draft website is a design reference, not content.** Take its
+  colours, type and lines. Leave its stories, photographs and email
+  addresses until the owner says they are the paper's.
+- **Guidelines that forbid recolouring still put the logo on a dark
+  ground.** Le Memphré's footer is Dark Blue by the guidelines' own
+  rule, and the logo's blue on it is 1.5:1. Build the reversed version
+  so the page works, and ask.

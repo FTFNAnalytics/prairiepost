@@ -7,8 +7,9 @@ built.** This file is the record.
 **28 Nov 2026:** five of the twelve are built as unbranded foundations on
 Toronto Telegraph's design, the owner's choice of the network's cleanest:
 Citadel Courier, The Easterly, Le Memphré, Les Chutes and Borealis
-Bulletin. Each waits on its brand package (`docs/brand-packages.md` says
-what one carries). Their domains were still unregistered on 28 Nov, and
+Bulletin. Each waited on its brand package (`docs/brand-packages.md` says
+what one carries). Four arrived and were applied the same day; Borealis
+Bulletin's has not. Their domains were still unregistered on 28 Nov, and
 nothing is registered yet. An earlier brainstorm lived only in a
 chat and was lost when that chat was compacted, so the slate, the reasons
 behind it and the rejected names all live here now.
@@ -113,6 +114,10 @@ forms that were free at the same check:
 - **Estrie:** L'Estrien and Le Memphré cover the same region. Either
   Le Memphré is the Magog and lake-country local under L'Estrien's
   regional umbrella, or one is the other's alternate. Undecided.
+  On 28 Nov the owner's brand guidelines gave Le Memphré the whole
+  region, Sherbrooke and the Eastern Townships, and its brand build
+  follows them. Whether L'Estrien is still wanted is the owner's
+  question (`docs/brand-packages.md`).
 - **A second Saskatchewan city:** Saskatoon Sentinel was free on 22 Nov.
 - **English-language Montreal:** The Montreal Mercury
   (montrealmercury.ca and .com free on 22 Nov), if one is wanted. The
