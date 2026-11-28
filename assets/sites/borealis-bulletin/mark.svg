@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="120" height="120" role="img" aria-label="Borealis Bulletin">
+  <title>Borealis Bulletin</title>
+  <!--
+    Borealis Bulletin — Polar Compass & Aurora Roundel (for light chrome).
+    Inspired by the Telegraph roundel grammar, grounded in Arctic sky and
+    land: an open 60th-parallel compass ring in Aurora Emerald (#2E9E76)
+    with cardinal degree ticks, a sharp Polaris North Star breaching true
+    north, dual sweeping auroral ribbons, and the Canadian Shield / boreal
+    horizon line in Polar Midnight (#0B1E2D). Explicit hex colours, zero masks.
+  -->
+  <!-- Outer 60th-parallel compass ring (open at top for Polaris needle) -->
+  <path d="M 73.5,11.2 A 50.5,50.5 0 1 1 46.5,11.2" fill="none" stroke="#2E9E76" stroke-width="6.5" stroke-linecap="butt"/>
+  <!-- Inner fine cartographic latitude ring -->
+  <circle cx="60" cy="60" r="42" fill="none" stroke="#4C9DB8" stroke-width="1.25" stroke-dasharray="3 4"/>
+  <!-- Cardinal compass ticks (E, S, W) -->
+  <rect x="97" y="58.5" width="7" height="3" fill="#0B1E2D"/>
+  <rect x="16" y="58.5" width="7" height="3" fill="#0B1E2D"/>
+  <rect x="58.5" y="97" width="3" height="7" fill="#0B1E2D"/>
+  <!-- Polaris North Star — minor diagonal rays -->
+  <polygon points="60,33 68.5,27.5 63.2,36 60,33" fill="#4C9DB8"/>
+  <polygon points="60,33 51.5,27.5 56.8,36 60,33" fill="#4C9DB8"/>
+  <polygon points="60,39 68.5,44.5 63.2,36 60,39" fill="#4C9DB8"/>
+  <polygon points="60,39 51.5,44.5 56.8,36 60,39" fill="#4C9DB8"/>
+  <!-- Polaris North Star — primary 4-point compass needle (reaches true north) -->
+  <polygon points="60,5 64.4,31.5 83,36 64.4,40.5 60,52.5 55.6,40.5 37,36 55.6,31.5" fill="#0B1E2D"/>
+  <!-- Sweeping Aurora Borealis ribbon (primary, cleanly framed inside compass ticks) -->
+  <path d="M 24,67 C 35,55 48,54 60,60 C 72,66 84,63 94,52 L 94,61 C 84,71 72,74 59,68 C 47,63 36,64 24,75 Z" fill="#2E9E76"/>
+  <!-- Secondary glacier-teal aurora wave -->
+  <path d="M 26,78 C 38,70 50,69 62,74 C 73,78 84,76 93,68 L 93,74 C 84,81 73,84 61,79 C 49,75 39,76 26,83 Z" fill="#4C9DB8"/>
+  <!-- 60th Parallel horizon datum & Canadian Shield ridge -->
+  <path d="M 30,88 L 44,83 L 55,86.5 L 69,81 L 81,85.5 L 90,88 L 90,92 L 30,92 Z" fill="#0B1E2D"/>
+</svg>

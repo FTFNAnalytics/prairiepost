@@ -1,0 +1,225 @@
+/* Le Memphré — design system (memphre template). Toronto Telegraph's
+   layout, in the owner's brand guidelines (Nov 2026, "Draft Version"):
+   their four colours, their lake serpent (traced from the logo, in the
+   guidelines' blue-to-teal gradient) and their type — Playfair Display
+   for the wordmark and headlines, Source Sans 3 for body, navigation and
+   interface. Source Sans 3 is declared in /assets/css/fonts.css;
+   Playfair Display is declared below, because this sheet names it
+   (lesson 9). Nothing loads from a font CDN.
+
+   The guidelines assign Primary Blue to headings, navigation and primary
+   buttons, Dark Blue to deep backgrounds and the footer, Light Teal to
+   soft fills, and Teal to links, category labels and accent bars. Teal
+   reads at 3.1:1 on white, below AA, so text in teal (links, category
+   chips) uses --me-link, the same hue deepened to 5.5:1; the guidelines'
+   Teal itself paints only bars, rules and the breaking strip (under
+   ink, 4.7:1). As on the Easterly, the dark grounds paint with
+   --me-deep, accents on them with --me-glint (the draft site's footer
+   link colour), and buttons on them are Teal with ink type. */
+@import url('/assets/css/fonts.css');
+@font-face {
+  font-family: 'Playfair Display';
+  font-style: normal;
+  font-weight: 400 900;
+  font-display: swap;
+  src: url('/assets/fonts/playfair-display-latin.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Playfair Display';
+  font-style: italic;
+  font-weight: 400 900;
+  font-display: swap;
+  src: url('/assets/fonts/playfair-display-italic-latin.woff2') format('woff2');
+}
+
+body.t-memphre {
+  --me-ink:       #1A2A3A;  /* the draft site's text colour: body type */
+  --me-paper:     #FFFFFF;  /* the page; type on dark grounds */
+  --me-surface:   #E6F6F7;  /* Light Teal: soft backgrounds and section fills */
+  --me-primary:   #085492;  /* Primary Blue: headings, navigation, primary buttons, key interface */
+  --me-deep:      #053A6E;  /* Dark Blue: the dark grounds (utility strip, lead panel, subscribe box, footer band), the wordmark */
+  --me-secondary: #053A6E;  /* hovers on Primary Blue */
+  --me-link:      #1A747C;  /* Teal, deepened to AA (5.5:1 on white): links and category chips */
+  --me-accent:    #28A1AC;  /* Teal: accent bars and rules, the breaking strip; never text on white (3.1:1) */
+  --me-glint:     #A0D0E0;  /* the draft site's footer links: accents and links on the dark grounds */
+  --me-muted:     #5A6A7A;  /* the draft site's muted text: meta */
+  --me-line:      #D0D8E0;  /* the draft site's border: borders */
+  --me-rule:      #E7ECF0;  /* hairlines between rows: the border, half on white */
+  --me-on-dark:   #E6F6F7;  /* Light Teal: text on the dark grounds */
+  --me-foot-text: #A0D0E0;  /* footer links, as the draft site sets them */
+  --me-head: 'Playfair Display', Georgia, 'Times New Roman', serif;      /* the wordmark and headlines */
+  --me-ui:   'Source Sans 3', 'Segoe UI', system-ui, Arial, sans-serif;  /* body, navigation and interface */
+  margin: 0;
+  background: var(--me-paper);
+  color: var(--me-ink);
+  font-family: var(--me-ui);
+  font-size: 17px;
+  line-height: 1.65;
+}
+.t-memphre a { color: var(--me-link); text-decoration: none; }
+.t-memphre a:hover { color: var(--me-primary); }
+.t-memphre img { max-width: 100%; height: auto; display: block; }
+.me-wrap { max-width: 1140px; margin: 0 auto; padding: 0 20px; }
+
+/* ---- utility strip ---- */
+.me-util { background: var(--me-deep); color: var(--me-on-dark); font-family: var(--me-ui); font-size: 13px; letter-spacing: .04em; }
+.me-util .in { max-width: 1140px; margin: 0 auto; padding: 6px 20px; display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.me-util a { color: var(--me-paper); }
+.me-util a:hover { color: var(--me-paper); text-decoration: underline; text-underline-offset: 3px; }
+.me-util .sep { margin: 0 8px; color: var(--me-glint); }
+
+/* ---- masthead ---- */
+.me-head { background: var(--me-paper); border-bottom: 4px solid var(--me-accent); }
+.me-head .in { max-width: 1140px; margin: 0 auto; padding: 14px 20px; display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+/* The lockup: the serpent, then the wordmark set in Playfair Display in
+   Dark Blue (the logo's), the logo's three-line wave, and the tagline in
+   Source Sans 3. Sizes are in em of .me-lock's font-size, so one value
+   scales the lockup. */
+.me-lock { display: inline-flex; align-items: center; gap: 1.4em; font-size: 10px; line-height: 1; }
+.me-lock .mk { display: block; width: 9.79em; height: 9em; }
+.me-name { display: flex; flex-direction: column; align-items: flex-start; }
+.me-name .wm { font-family: var(--me-head); font-weight: 600; font-size: 4.5em; line-height: 1; letter-spacing: -.005em; color: var(--me-deep); white-space: nowrap; }
+.me-name .wv { display: block; width: 11em; height: 2.78em; margin: .35em 0 0 .2em; }
+.me-name .sub { font-family: var(--me-ui); font-weight: 600; font-size: 1.5em; line-height: 1.2; color: var(--me-muted); white-space: nowrap; margin-top: .3em; }
+/* Seven desks do not fit beside the logotype, so the nav is the
+   masthead's second row: a full-width section bar under a hairline,
+   with Subscribe at its right end. */
+.me-nav { flex: 1 0 100%; display: flex; align-items: center; gap: 8px 20px; flex-wrap: wrap; padding-top: 10px; border-top: 1px solid var(--me-rule); font-family: var(--me-ui); font-weight: 600; font-size: 15px; }
+.me-nav a { color: var(--me-primary); padding: 4px 0; border-bottom: 3px solid transparent; }
+.me-nav a:hover { color: var(--me-link); }
+.me-nav a[aria-current="page"] { color: var(--me-deep); border-bottom-color: var(--me-accent); }
+.me-sub-btn { display: inline-block; flex-shrink: 0; white-space: nowrap; background: var(--me-primary); color: var(--me-paper) !important; font-family: var(--me-ui); font-weight: 600; font-size: 15px; padding: 10px 22px; border-radius: 4px; }
+.me-sub-btn:hover { background: var(--me-secondary); }
+.me-nav a.me-sub-btn { padding: 10px 22px; border-bottom: 0; margin-left: auto; }
+.me-btn { display: inline-block; background: var(--me-accent); color: var(--me-ink) !important; font-family: var(--me-ui); font-weight: 600; font-size: 15px; padding: 11px 22px; border-radius: 4px; }
+.me-btn:hover { background: var(--me-on-dark); }
+
+/* ---- breaking (Teal, the guidelines' colour for highlights, under ink; shown only while pp_breaking_live()) ---- */
+.me-brk { background: var(--me-accent); color: var(--me-ink); font-family: var(--me-ui); }
+.me-brk .in { max-width: 1140px; margin: 0 auto; padding: 9px 20px; display: flex; gap: 14px; align-items: baseline; flex-wrap: wrap; }
+.me-brk .lbl { font-weight: 800; font-size: 12.5px; letter-spacing: .14em; text-transform: uppercase; }
+.me-brk a { color: var(--me-ink); font-weight: 600; font-size: 15.5px; }
+.me-brk a:hover { color: var(--me-ink); text-decoration: underline; text-underline-offset: 3px; }
+
+/* ---- hero ---- */
+.me-hero { position: relative; background: var(--me-deep); color: var(--me-paper); overflow: hidden; }
+.me-hero img.bg { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.me-hero .scrim { position: absolute; inset: 0; background: linear-gradient(90deg, var(--me-deep) 28%, color-mix(in srgb, var(--me-deep) 82%, transparent) 52%, color-mix(in srgb, var(--me-deep) 6%, transparent) 100%); }
+.me-hero .pad { position: relative; max-width: 1140px; margin: 0 auto; padding: 62px 20px 66px; display: flex; flex-direction: column; gap: 15px; }
+.me-hero .pad > * { max-width: 600px; }
+.me-hero .kick { font-family: var(--me-ui); font-weight: 700; font-size: 13.5px; letter-spacing: .16em; text-transform: uppercase; color: var(--me-glint); }
+.me-hero h1 { margin: 0; font-family: var(--me-head); font-weight: 700; font-size: 44px; line-height: 1.12; letter-spacing: 0; }
+.me-hero h1 a { color: var(--me-paper); }
+.me-hero h1 a:hover { color: var(--me-paper); text-decoration: underline; text-decoration-color: var(--me-glint); text-decoration-thickness: 3px; text-underline-offset: 6px; }
+.me-hero .meta { font-family: var(--me-ui); font-size: 17.5px; line-height: 1.6; color: var(--me-on-dark); }
+.me-hero .me-btn { align-self: flex-start; }
+/* The whole serpent at a sixth of its strength, swimming on the panel's
+   bottom edge. */
+.me-hero--noart .wm { position: absolute; right: 48px; bottom: 0; width: 330px; opacity: .16; }
+
+/* ---- section title ---- */
+.me-ttl { display: flex; align-items: center; gap: 14px; margin: 32px 0 18px; }
+.me-ttl h2 { margin: 0; font-family: var(--me-head); font-weight: 700; font-size: 25px; color: var(--me-primary); }
+.me-ttl::after { content: ""; flex: 1; height: 3px; background: var(--me-accent); }
+
+/* ---- two-column home ---- */
+.me-home { display: grid; grid-template-columns: 1fr 320px; gap: 34px; align-items: start; }
+
+/* ---- featured cards ---- */
+.me-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+.me-card { background: var(--me-paper); border: 1px solid var(--me-line); border-radius: 4px; overflow: hidden; display: flex; flex-direction: column; }
+.me-card .txt { padding: 13px 15px 15px; display: flex; flex-direction: column; gap: 7px; }
+.me-card h3 { margin: 0; font-family: var(--me-head); font-weight: 700; font-size: 20px; line-height: 1.25; }
+.me-card h3 a { color: var(--me-primary); }
+.me-card h3 a:hover { color: var(--me-link); }
+.me-chip { align-self: flex-start; display: inline-block; background: var(--me-link); color: var(--me-paper); font-family: var(--me-ui); font-weight: 700; font-size: 11.5px; letter-spacing: .1em; text-transform: uppercase; padding: 3px 9px; border-radius: 3px; }
+.me-card .meta, .me-row .meta, .me-rail .meta { font-family: var(--me-ui); font-size: 13px; color: var(--me-muted); }
+.me-card.noart .txt { border-top: 4px solid var(--me-accent); }
+
+/* ---- story rows ---- */
+.me-row { display: grid; grid-template-columns: 1fr 200px; gap: 18px; padding: 17px 0; border-bottom: 1px solid var(--me-rule); align-items: start; }
+.me-row.noart { grid-template-columns: 1fr; }
+.me-row h3 { margin: 5px 0 6px; font-family: var(--me-head); font-weight: 700; font-size: 22px; line-height: 1.25; }
+.me-row h3 a { color: var(--me-primary); }
+.me-row h3 a:hover { color: var(--me-link); }
+.me-row p { margin: 0 0 6px; font-size: 15.5px; color: var(--me-muted); }
+.me-row img { border-radius: 4px; }
+
+/* ---- rail ---- */
+.me-rail { display: flex; flex-direction: column; gap: 22px; margin-top: 32px; }
+.me-box { border: 1px solid var(--me-line); border-radius: 4px; padding: 16px 18px; }
+.me-box .hd { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 10px; }
+.me-box .hd h3 { margin: 0; font-family: var(--me-head); font-weight: 700; font-size: 20px; color: var(--me-primary); }
+.me-box .hd a { font-family: var(--me-ui); font-size: 13.5px; color: var(--me-link); font-weight: 600; }
+.me-weather .now { display: flex; align-items: baseline; gap: 12px; }
+.me-weather .temp { font-family: var(--me-ui); font-weight: 800; font-size: 38px; color: var(--me-primary); }
+.me-weather .cond { font-family: var(--me-ui); font-size: 15px; color: var(--me-muted); }
+.me-weather .src { margin-top: 10px; font-family: var(--me-ui); font-size: 12px; line-height: 1.45; color: var(--me-muted); }
+.me-weather .src a { color: inherit; text-decoration: underline; text-underline-offset: 2px; }
+.me-trend ol { list-style: none; margin: 0; padding: 0; }
+.me-trend li { display: flex; gap: 12px; align-items: flex-start; padding: 9px 0; border-bottom: 1px solid var(--me-rule); }
+.me-trend li:last-child { border-bottom: 0; }
+.me-trend .n { flex: 0 0 auto; width: 24px; height: 24px; border-radius: 4px; background: var(--me-primary); color: var(--me-paper); font-family: var(--me-ui); font-weight: 700; font-size: 13px; display: flex; align-items: center; justify-content: center; margin-top: 2px; }
+.me-trend a { font-family: var(--me-head); font-weight: 700; font-size: 16px; line-height: 1.32; color: var(--me-primary); }
+.me-trend a:hover { color: var(--me-link); }
+.me-subbox { background: var(--me-deep); border-radius: 4px; color: var(--me-paper); padding: 20px 18px; }
+.me-subbox h3 { margin: 0 0 6px; font-family: var(--me-head); font-weight: 700; font-size: 21px; }
+.me-subbox p { margin: 0 0 14px; font-size: 15px; line-height: 1.5; color: var(--me-on-dark); }
+.me-subbox .me-btn { background: var(--me-accent); }
+.me-subbox .me-btn:hover { background: var(--me-on-dark); color: var(--me-ink) !important; }
+
+/* ---- article ---- */
+.me-article { max-width: 760px; margin: 30px auto 0; }
+.me-article h1 { margin: 8px 0 12px; font-family: var(--me-head); font-weight: 700; font-size: 40px; line-height: 1.15; letter-spacing: 0; color: var(--me-primary); }
+.me-article .lede { font-size: 20px; line-height: 1.5; color: var(--me-muted); margin: 0 0 10px; }
+.me-byline { font-family: var(--me-ui); font-size: 13.5px; letter-spacing: .04em; color: var(--me-muted); text-transform: uppercase; border-top: 3px solid var(--me-primary); border-bottom: 1px solid var(--me-rule); padding: 8px 0; margin: 0 0 16px; }
+.me-article .body { font-size: 17.5px; }
+.me-article .body a { border-bottom: 1px solid var(--me-accent); }
+.me-article .body blockquote { margin: 26px 0; padding: 16px 22px; border-left: 4px solid var(--me-accent); background: var(--me-surface); font-size: 19px; }
+.me-article figure { margin: 18px 0; }
+.me-article figcaption { font-family: var(--me-ui); font-size: 13px; color: var(--me-muted); padding-top: 6px; }
+.me-related { max-width: 760px; margin: 30px auto 0; }
+
+/* ---- section front ---- */
+.me-section { padding-bottom: 12px; }
+.me-more { margin: 22px 0; }
+
+/* ---- empty state ---- */
+.me-empty { background: var(--me-surface); border-left: 4px solid var(--me-accent); padding: 18px 20px; font-size: 16px; margin: 26px 0; }
+
+/* ---- footer ---- */
+.me-foot { background: var(--me-deep); color: var(--me-foot-text); margin-top: 46px; }
+.me-foot .cols { max-width: 1140px; margin: 0 auto; padding: 34px 20px 20px; display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 26px; }
+/* At 85% the lockup fits the footer's first column down to the
+   two-column breakpoint, where that column takes the whole row. */
+.me-foot a.me-lock { display: inline-flex; font-size: 8.5px; padding: 0; }
+.me-foot .me-name .wm { color: var(--me-paper); }
+.me-foot .me-name .wv { display: none; }
+/* The footer line under the lockup says what the tagline says, and the
+   tagline is too long to sit beside the serpent without breaking at its
+   hyphens, so the footer's lockup carries the name alone. */
+.me-foot .me-name .sub { display: none; }
+.me-foot h4 { margin: 0 0 10px; font-family: var(--me-ui); font-weight: 700; font-size: 13px; letter-spacing: .12em; text-transform: uppercase; color: var(--me-on-dark); }
+.me-foot a { display: block; color: var(--me-foot-text); font-family: var(--me-ui); font-size: 14.5px; padding: 3px 0; }
+.me-foot a:hover { color: var(--me-paper); }
+.me-foot .legal { max-width: 1140px; margin: 0 auto; padding: 14px 20px 24px; border-top: 1px solid color-mix(in srgb, var(--me-paper) 16%, transparent); display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; font-family: var(--me-ui); font-size: 13.5px; }
+.me-foot .legal .strong { color: var(--me-glint); }
+
+/* ---- responsive ---- */
+@media (max-width: 980px) {
+  .me-home { grid-template-columns: 1fr; }
+  .me-grid { grid-template-columns: repeat(2, 1fr); }
+  .me-foot .cols { grid-template-columns: 1fr 1fr; }
+  .me-foot .cols > div:first-child { grid-column: 1 / -1; }
+  .me-hero h1 { font-size: 36px; }
+  .me-hero--noart .wm { right: 20px; bottom: 0; width: 200px; }
+}
+@media (max-width: 620px) {
+  .me-grid { grid-template-columns: 1fr; }
+  .me-row { grid-template-columns: 1fr; }
+  .me-row img { order: -1; }
+  .me-foot .cols { grid-template-columns: 1fr; }
+  .me-hero h1 { font-size: 29px; }
+  .me-article h1 { font-size: 30px; }
+  .me-lock, .me-foot a.me-lock { font-size: 7.2px; }
+}

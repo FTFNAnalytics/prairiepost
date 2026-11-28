@@ -1,0 +1,83 @@
+{
+    "zone": "America/Edmonton",
+    "theme": "#0B1E2D",
+    "weather": {
+        "city": "nt-24",
+        "place": "Yellowknife"
+    },
+    "palette": {
+        "ink": "#121C24",
+        "paper": "#FFFFFF",
+        "surface": "#EEF4F5",
+        "accent": "#0F5243",
+        "midnight": "#0B1E2D",
+        "fjord": "#133147",
+        "aurora": "#2E9E76",
+        "glacier": "#4C9DB8",
+        "copper": "#9E4A1E",
+        "red": "#9E4A1E",
+        "muted": "#4C5E6B",
+        "line": "#B7C6CE",
+        "board": "#B7C6CE",
+        "sky": "#EEF4F5",
+        "hill": "#0F5243",
+        "field": "#4C9DB8",
+        "stubble": "#0B1E2D"
+    },
+    "desk_labels": {
+        "local-news": "Territories",
+        "arctic-north": "Arctic & North",
+        "environment": "Land & Climate",
+        "business": "Economy",
+        "communities": "Communities",
+        "opinion": "Opinion"
+    },
+    "desks": {
+        "local-news": "#0F5243",
+        "arctic-north": "#0B1E2D",
+        "environment": "#0F5243",
+        "business": "#133147",
+        "communities": "#0F5243",
+        "opinion": "#9E4A1E"
+    },
+    "chrome": {
+        "template": "borealis",
+        "nav": [
+            "local-news",
+            "arctic-north",
+            "environment",
+            "business",
+            "communities",
+            "opinion"
+        ]
+    },
+    "admin": {
+        "accent": "#0F5243",
+        "spot": "#9E4A1E",
+        "strip": [
+            "#0B1E2D",
+            "#A9C3CF"
+        ],
+        "band": [
+            "#FFFFFF",
+            "#0B1E2D"
+        ],
+        "nav": [
+            "#0B1E2D",
+            "#FFFFFF",
+            "#D9EFE6",
+            "#0B1E2D"
+        ],
+        "mark": "mark.svg",
+        "wordmark": {
+            "font": "'Archivo Narrow', 'Archivo', 'Arial Narrow', sans-serif",
+            "weight": 700,
+            "case": "uppercase",
+            "spacing": "0.02em"
+        },
+        "fonts": {
+            "heading": "'Archivo', 'Helvetica Neue', Arial, sans-serif",
+            "body": "'Source Serif 4', Georgia, serif"
+        }
+    }
+}
