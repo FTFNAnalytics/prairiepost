@@ -1,0 +1,200 @@
+/* Les Chutes — design system (chutes template). Toronto Telegraph's
+   layout, in the owner's brand package (28 Nov 2026): the README's five
+   colours, its waterfall mark (the "logo principal", traced) and its
+   type — Newsreader for titles and the wordmark, Inter for body and
+   interface, both self-hosted in /assets/css/fonts.css (every family this
+   file names resolves to a face the page loads).
+
+   As on the Easterly, links and actions (Bleu Québec) are apart from the
+   dark grounds (Bleu profond): the utility strip, lead panel, subscribe
+   box and footer band paint with --ch-deep, accents on them with
+   --ch-glint, and buttons on them with --ch-primary. Gold is used
+   sparingly, as the package asks: the current section's underline, the
+   rule over a card without art, the footer's headings and the breaking
+   strip. It never sets text on white, where it reads at 2.1:1. */
+@import url('/assets/css/fonts.css');
+
+body.t-chutes {
+  --ch-ink:       #002B5C;  /* Bleu profond: all type */
+  --ch-paper:     #FFFFFF;  /* Blanc: the page; type on dark grounds */
+  --ch-surface:   #E9F5FA;  /* Bleu clair, a quarter on white: soft panels */
+  --ch-primary:   #325EA8;  /* Bleu Québec, the dominant colour: links, buttons, chips, the masthead rule */
+  --ch-deep:      #002B5C;  /* Bleu profond: the dark grounds (utility strip, lead panel, subscribe box, footer band) */
+  --ch-secondary: #002B5C;  /* hovers and small accents on light grounds */
+  --ch-glint:     #A8D8EA;  /* Bleu clair: accents on the dark grounds (kickers, separators) */
+  --ch-gold:      #D4AF37;  /* Or, sparingly: see above; never text on white */
+  --ch-muted:     #4B5563;  /* meta text */
+  --ch-line:      #CCD5DE;  /* borders: Bleu profond, a fifth on white */
+  --ch-rule:      #E6EAEF;  /* hairlines between rows: Bleu profond, a tenth on white */
+  --ch-on-dark:   #D4ECF5;  /* Bleu clair, half on white: text on the dark grounds */
+  --ch-foot-text: #D4ECF5;  /* footer links */
+  --ch-head: 'Newsreader', Georgia, 'Times New Roman', serif;  /* titles and the wordmark */
+  --ch-ui:   'Inter', 'Helvetica Neue', Arial, sans-serif;      /* body and interface */
+  margin: 0;
+  background: var(--ch-paper);
+  color: var(--ch-ink);
+  font-family: var(--ch-ui);
+  font-size: 17px;
+  line-height: 1.65;
+}
+.t-chutes a { color: var(--ch-primary); text-decoration: none; }
+.t-chutes a:hover { color: var(--ch-secondary); }
+.t-chutes img { max-width: 100%; height: auto; display: block; }
+.ch-wrap { max-width: 1140px; margin: 0 auto; padding: 0 20px; }
+
+/* ---- utility strip ---- */
+.ch-util { background: var(--ch-deep); color: var(--ch-on-dark); font-family: var(--ch-ui); font-size: 13px; letter-spacing: .04em; }
+.ch-util .in { max-width: 1140px; margin: 0 auto; padding: 6px 20px; display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.ch-util a { color: var(--ch-paper); }
+.ch-util a:hover { color: var(--ch-paper); text-decoration: underline; text-underline-offset: 3px; }
+.ch-util .sep { margin: 0 8px; color: var(--ch-glint); }
+
+/* ---- masthead ---- */
+.ch-head { background: var(--ch-paper); border-bottom: 4px solid var(--ch-primary); }
+.ch-head .in { max-width: 1140px; margin: 0 auto; padding: 14px 20px; display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+/* The lockup: the waterfall, then the wordmark set in Newsreader over the
+   tagline in Inter, as the package's homepage mock-up sets them. Sizes
+   are in em of .ch-lock's font-size, so one value scales the lockup. */
+.ch-lock { display: inline-flex; align-items: center; gap: 1.5em; font-size: 10px; line-height: 1; }
+.ch-lock .mk { display: block; width: 7.66em; height: 6em; }
+.ch-name { display: flex; flex-direction: column; align-items: flex-start; }
+.ch-name .wm { font-family: var(--ch-head); font-weight: 600; font-size: 4.6em; line-height: .95; letter-spacing: -.012em; color: var(--ch-ink); white-space: nowrap; }
+.ch-name .sub { font-family: var(--ch-ui); font-weight: 500; font-size: 1.45em; line-height: 1.2; color: var(--ch-ink); white-space: nowrap; margin-top: .45em; }
+/* Seven desks do not fit beside the logotype, so the nav is the
+   masthead's second row: a full-width section bar under a hairline,
+   with Subscribe at its right end. */
+.ch-nav { flex: 1 0 100%; display: flex; align-items: center; gap: 8px 20px; flex-wrap: wrap; padding-top: 10px; border-top: 1px solid var(--ch-rule); font-family: var(--ch-ui); font-weight: 600; font-size: 15px; }
+.ch-nav a { color: var(--ch-ink); padding: 4px 0; border-bottom: 3px solid transparent; }
+.ch-nav a:hover { color: var(--ch-primary); }
+.ch-nav a[aria-current="page"] { color: var(--ch-primary); border-bottom-color: var(--ch-gold); }
+.ch-sub-btn { display: inline-block; flex-shrink: 0; white-space: nowrap; background: var(--ch-primary); color: var(--ch-paper) !important; font-family: var(--ch-ui); font-weight: 600; font-size: 15px; padding: 10px 22px; border-radius: 4px; }
+.ch-sub-btn:hover { background: var(--ch-secondary); }
+.ch-nav a.ch-sub-btn { padding: 10px 22px; border-bottom: 0; margin-left: auto; }
+.ch-btn { display: inline-block; background: var(--ch-primary); color: var(--ch-paper) !important; font-family: var(--ch-ui); font-weight: 600; font-size: 15px; padding: 11px 22px; border-radius: 4px; }
+.ch-btn:hover { background: var(--ch-secondary); }
+
+/* ---- breaking (gold, the package's colour for what matters; shown only while pp_breaking_live()) ---- */
+.ch-brk { background: var(--ch-gold); color: var(--ch-ink); font-family: var(--ch-ui); }
+.ch-brk .in { max-width: 1140px; margin: 0 auto; padding: 9px 20px; display: flex; gap: 14px; align-items: baseline; flex-wrap: wrap; }
+.ch-brk .lbl { font-weight: 800; font-size: 12.5px; letter-spacing: .14em; text-transform: uppercase; }
+.ch-brk a { color: var(--ch-ink); font-weight: 600; font-size: 15.5px; }
+.ch-brk a:hover { color: var(--ch-ink); text-decoration: underline; text-underline-offset: 3px; }
+
+/* ---- hero ---- */
+.ch-hero { position: relative; background: var(--ch-deep); color: var(--ch-paper); overflow: hidden; }
+.ch-hero img.bg { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.ch-hero .scrim { position: absolute; inset: 0; background: linear-gradient(90deg, var(--ch-deep) 28%, color-mix(in srgb, var(--ch-deep) 82%, transparent) 52%, color-mix(in srgb, var(--ch-deep) 6%, transparent) 100%); }
+.ch-hero .pad { position: relative; max-width: 1140px; margin: 0 auto; padding: 62px 20px 66px; display: flex; flex-direction: column; gap: 15px; }
+.ch-hero .pad > * { max-width: 600px; }
+.ch-hero .kick { font-family: var(--ch-ui); font-weight: 700; font-size: 13.5px; letter-spacing: .16em; text-transform: uppercase; color: var(--ch-glint); }
+.ch-hero h1 { margin: 0; font-family: var(--ch-head); font-weight: 600; font-size: 48px; line-height: 1.08; letter-spacing: -.01em; }
+.ch-hero h1 a { color: var(--ch-paper); }
+.ch-hero h1 a:hover { color: var(--ch-paper); text-decoration: underline; text-decoration-color: var(--ch-glint); text-decoration-thickness: 3px; text-underline-offset: 6px; }
+.ch-hero .meta { font-family: var(--ch-ui); font-size: 17.5px; line-height: 1.6; color: var(--ch-on-dark); }
+.ch-hero .ch-btn { align-self: flex-start; }
+/* The whole waterfall at a sixth of its strength, its pool on the
+   panel's bottom edge. */
+.ch-hero--noart .wm { position: absolute; right: 48px; bottom: 0; width: 330px; opacity: .16; }
+
+/* ---- section title ---- */
+.ch-ttl { display: flex; align-items: center; gap: 14px; margin: 32px 0 18px; }
+.ch-ttl h2 { margin: 0; font-family: var(--ch-head); font-weight: 600; font-size: 26px; color: var(--ch-ink); }
+.ch-ttl::after { content: ""; flex: 1; height: 1px; background: var(--ch-line); }
+
+/* ---- two-column home ---- */
+.ch-home { display: grid; grid-template-columns: 1fr 320px; gap: 34px; align-items: start; }
+
+/* ---- featured cards ---- */
+.ch-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+.ch-card { background: var(--ch-paper); border: 1px solid var(--ch-line); border-radius: 4px; overflow: hidden; display: flex; flex-direction: column; }
+.ch-card .txt { padding: 13px 15px 15px; display: flex; flex-direction: column; gap: 7px; }
+.ch-card h3 { margin: 0; font-family: var(--ch-head); font-weight: 600; font-size: 21px; line-height: 1.2; }
+.ch-card h3 a { color: var(--ch-ink); }
+.ch-card h3 a:hover { color: var(--ch-primary); }
+.ch-chip { align-self: flex-start; display: inline-block; background: var(--ch-primary); color: var(--ch-paper); font-family: var(--ch-ui); font-weight: 700; font-size: 11.5px; letter-spacing: .1em; text-transform: uppercase; padding: 3px 9px; border-radius: 3px; }
+.ch-card .meta, .ch-row .meta, .ch-rail .meta { font-family: var(--ch-ui); font-size: 13px; color: var(--ch-muted); }
+.ch-card.noart .txt { border-top: 4px solid var(--ch-gold); }
+
+/* ---- story rows ---- */
+.ch-row { display: grid; grid-template-columns: 1fr 200px; gap: 18px; padding: 17px 0; border-bottom: 1px solid var(--ch-rule); align-items: start; }
+.ch-row.noart { grid-template-columns: 1fr; }
+.ch-row h3 { margin: 5px 0 6px; font-family: var(--ch-head); font-weight: 600; font-size: 23px; line-height: 1.2; }
+.ch-row h3 a { color: var(--ch-ink); }
+.ch-row h3 a:hover { color: var(--ch-primary); }
+.ch-row p { margin: 0 0 6px; font-size: 15.5px; color: var(--ch-muted); }
+.ch-row img { border-radius: 4px; }
+
+/* ---- rail ---- */
+.ch-rail { display: flex; flex-direction: column; gap: 22px; margin-top: 32px; }
+.ch-box { border: 1px solid var(--ch-line); border-radius: 4px; padding: 16px 18px; }
+.ch-box .hd { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 10px; }
+.ch-box .hd h3 { margin: 0; font-family: var(--ch-head); font-weight: 600; font-size: 21px; color: var(--ch-ink); }
+.ch-box .hd a { font-family: var(--ch-ui); font-size: 13.5px; color: var(--ch-secondary); font-weight: 600; }
+.ch-weather .now { display: flex; align-items: baseline; gap: 12px; }
+.ch-weather .temp { font-family: var(--ch-ui); font-weight: 800; font-size: 38px; color: var(--ch-primary); }
+.ch-weather .cond { font-family: var(--ch-ui); font-size: 15px; color: var(--ch-muted); }
+.ch-weather .src { margin-top: 10px; font-family: var(--ch-ui); font-size: 12px; line-height: 1.45; color: var(--ch-muted); }
+.ch-weather .src a { color: inherit; text-decoration: underline; text-underline-offset: 2px; }
+.ch-trend ol { list-style: none; margin: 0; padding: 0; }
+.ch-trend li { display: flex; gap: 12px; align-items: flex-start; padding: 9px 0; border-bottom: 1px solid var(--ch-rule); }
+.ch-trend li:last-child { border-bottom: 0; }
+.ch-trend .n { flex: 0 0 auto; width: 24px; height: 24px; border-radius: 4px; background: var(--ch-primary); color: var(--ch-paper); font-family: var(--ch-ui); font-weight: 700; font-size: 13px; display: flex; align-items: center; justify-content: center; margin-top: 2px; }
+.ch-trend a { font-family: var(--ch-head); font-weight: 600; font-size: 17px; line-height: 1.3; color: var(--ch-ink); }
+.ch-trend a:hover { color: var(--ch-primary); }
+.ch-subbox { background: var(--ch-deep); border-radius: 4px; color: var(--ch-paper); padding: 20px 18px; }
+.ch-subbox h3 { margin: 0 0 6px; font-family: var(--ch-head); font-weight: 600; font-size: 22px; }
+.ch-subbox p { margin: 0 0 14px; font-size: 14.5px; line-height: 1.5; color: var(--ch-on-dark); }
+.ch-subbox .ch-btn { background: var(--ch-primary); }
+.ch-subbox .ch-btn:hover { background: var(--ch-paper); color: var(--ch-primary) !important; }
+
+/* ---- article ---- */
+.ch-article { max-width: 760px; margin: 30px auto 0; }
+.ch-article h1 { margin: 8px 0 12px; font-family: var(--ch-head); font-weight: 600; font-size: 42px; line-height: 1.12; letter-spacing: -.01em; color: var(--ch-ink); }
+.ch-article .lede { font-size: 20px; line-height: 1.5; color: var(--ch-muted); margin: 0 0 10px; }
+.ch-byline { font-family: var(--ch-ui); font-size: 13.5px; letter-spacing: .04em; color: var(--ch-muted); text-transform: uppercase; border-top: 3px solid var(--ch-primary); border-bottom: 1px solid var(--ch-rule); padding: 8px 0; margin: 0 0 16px; }
+.ch-article .body { font-size: 17.5px; }
+.ch-article .body a { border-bottom: 1px solid var(--ch-secondary); }
+.ch-article .body blockquote { margin: 26px 0; padding: 16px 22px; border-left: 4px solid var(--ch-secondary); background: var(--ch-surface); font-size: 19px; }
+.ch-article figure { margin: 18px 0; }
+.ch-article figcaption { font-family: var(--ch-ui); font-size: 13px; color: var(--ch-muted); padding-top: 6px; }
+.ch-related { max-width: 760px; margin: 30px auto 0; }
+
+/* ---- section front ---- */
+.ch-section { padding-bottom: 12px; }
+.ch-more { margin: 22px 0; }
+
+/* ---- empty state ---- */
+.ch-empty { background: var(--ch-surface); border-left: 4px solid var(--ch-primary); padding: 18px 20px; font-size: 16px; margin: 26px 0; }
+
+/* ---- footer ---- */
+.ch-foot { background: var(--ch-deep); color: var(--ch-foot-text); margin-top: 46px; }
+.ch-foot .cols { max-width: 1140px; margin: 0 auto; padding: 34px 20px 20px; display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 26px; }
+/* The footer lockup at 85%, so it stays inside its column down to the
+   four-column grid's narrowest (981px); below that it has its own row. */
+.ch-foot a.ch-lock { display: inline-flex; font-size: 8.5px; padding: 0; }
+.ch-foot .ch-name .wm { color: var(--ch-paper); }
+.ch-foot .ch-name .sub { color: var(--ch-foot-text); }
+.ch-foot h4 { margin: 0 0 10px; font-family: var(--ch-ui); font-weight: 700; font-size: 13px; letter-spacing: .12em; text-transform: uppercase; color: var(--ch-gold); }
+.ch-foot a { display: block; color: var(--ch-foot-text); font-family: var(--ch-ui); font-size: 14.5px; padding: 3px 0; }
+.ch-foot a:hover { color: var(--ch-paper); }
+.ch-foot .legal { max-width: 1140px; margin: 0 auto; padding: 14px 20px 24px; border-top: 1px solid color-mix(in srgb, var(--ch-paper) 16%, transparent); display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; font-family: var(--ch-ui); font-size: 13.5px; }
+.ch-foot .legal .strong { color: var(--ch-glint); }
+
+/* ---- responsive ---- */
+@media (max-width: 980px) {
+  .ch-home { grid-template-columns: 1fr; }
+  .ch-grid { grid-template-columns: repeat(2, 1fr); }
+  .ch-foot .cols { grid-template-columns: 1fr 1fr; }
+  .ch-foot .cols > div:first-child { grid-column: 1 / -1; }
+  .ch-hero h1 { font-size: 38px; }
+  .ch-hero--noart .wm { right: 20px; bottom: 0; width: 200px; }
+}
+@media (max-width: 620px) {
+  .ch-grid { grid-template-columns: 1fr; }
+  .ch-row { grid-template-columns: 1fr; }
+  .ch-row img { order: -1; }
+  .ch-foot .cols { grid-template-columns: 1fr; }
+  .ch-hero h1 { font-size: 31px; }
+  .ch-article h1 { font-size: 31px; }
+  .ch-lock, .ch-foot a.ch-lock { font-size: 7.2px; }
+}

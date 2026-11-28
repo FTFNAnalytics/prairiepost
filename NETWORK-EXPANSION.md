@@ -2,7 +2,15 @@
 
 **Status (23 Nov 2026):** twelve names chosen by the owner for the regions
 the network doesn't cover yet. **Nothing is registered and nothing is
-built.** This file is the record. An earlier brainstorm lived only in a
+built.** This file is the record.
+
+**28 Nov 2026:** five of the twelve are built as unbranded foundations on
+Toronto Telegraph's design, the owner's choice of the network's cleanest:
+Citadel Courier, The Easterly, Le Memphré, Les Chutes and Borealis
+Bulletin. Each waited on its brand package (`docs/brand-packages.md` says
+what one carries). Four arrived and were applied the same day; Borealis
+Bulletin's has not. Their domains were still unregistered on 28 Nov, and
+nothing is registered yet. An earlier brainstorm lived only in a
 chat and was lost when that chat was compacted, so the slate, the reasons
 behind it and the rejected names all live here now.
 
@@ -106,6 +114,10 @@ forms that were free at the same check:
 - **Estrie:** L'Estrien and Le Memphré cover the same region. Either
   Le Memphré is the Magog and lake-country local under L'Estrien's
   regional umbrella, or one is the other's alternate. Undecided.
+  On 28 Nov the owner's brand guidelines gave Le Memphré the whole
+  region, Sherbrooke and the Eastern Townships, and its brand build
+  follows them. Whether L'Estrien is still wanted is the owner's
+  question (`docs/brand-packages.md`).
 - **A second Saskatchewan city:** Saskatoon Sentinel was free on 22 Nov.
 - **English-language Montreal:** The Montreal Mercury
   (montrealmercury.ca and .com free on 22 Nov), if one is wanted. The
@@ -191,7 +203,9 @@ registered when checked on 22 or 23 Nov.
    `php tools/make-paper.php <slug> <template> "<Name>"` scaffolds the
    files, and the launch pack gets its six-story inaugural edition (about
    the paper itself, as CLAUDE.md describes) at brand-build time, never
-   earlier.
+   earlier. Since 28 Nov the owner wants new papers on Toronto Telegraph's
+   design with their own branding and colours; the five foundations above
+   are that design, with every colour in one block of role variables.
 4. French titles launch on the i18n layer Le Bleuet Blanc introduced
    (`chrome.lang` set to `fr` in `palette.json`); see
    DEPLOY-BLEUETBLANC.md.

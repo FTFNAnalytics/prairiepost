@@ -2,6 +2,13 @@
 
 ## Current state · 27 Nov 2026
 
+**Next papers:** five foundations on Toronto Telegraph's design
+(28 Nov): Citadel Courier, The Easterly, Le Memphré, Les Chutes and
+Borealis Bulletin. The Easterly's, Les Chutes', Citadel Courier's and
+Le Memphré's brand packages were applied the same day; Borealis
+Bulletin waits on its own.
+All five wait on their domains (`docs/brand-packages.md`).
+
 **Live:** 27 sites, which is 26 papers and the CivisMedia hub, at
 schema version 26 since the 26 Nov roll. Steeltown Standard and Toronto
 Telegraph are in that count; their launch report hasn't reached the

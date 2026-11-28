@@ -1,0 +1,80 @@
+{
+    "zone": "America/Toronto",
+    "theme": "#053A6E",
+    "weather": {
+        "city": "qc-136",
+        "place": "Sherbrooke"
+    },
+    "palette": {
+        "ink": "#1A2A3A",
+        "paper": "#FFFFFF",
+        "surface": "#E6F6F7",
+        "accent": "#085492",
+        "deep": "#053A6E",
+        "teal": "#28A1AC",
+        "link": "#1A747C",
+        "muted": "#5A6A7A",
+        "line": "#D0D8E0",
+        "board": "#D0D8E0",
+        "sky": "#E6F6F7",
+        "hill": "#28A1AC",
+        "field": "#085492",
+        "stubble": "#053A6E"
+    },
+    "desk_labels": {
+        "actualites": "Actualités",
+        "economie": "Économie",
+        "environnement": "Environnement",
+        "culture-qc": "Culture",
+        "sports-qc": "Sports",
+        "idees": "Idées"
+    },
+    "desks": {
+        "actualites": "#1A747C",
+        "economie": "#1A747C",
+        "environnement": "#1A747C",
+        "culture-qc": "#1A747C",
+        "sports-qc": "#1A747C",
+        "idees": "#1A747C"
+    },
+    "chrome": {
+        "template": "memphre",
+        "lang": "fr",
+        "nav": [
+            "actualites",
+            "economie",
+            "environnement",
+            "culture-qc",
+            "sports-qc",
+            "idees"
+        ]
+    },
+    "admin": {
+        "accent": "#085492",
+        "spot": "#A23A2E",
+        "strip": [
+            "#053A6E",
+            "#A0D0E0"
+        ],
+        "band": [
+            "#FFFFFF",
+            "#053A6E"
+        ],
+        "nav": [
+            "#085492",
+            "#FFFFFF"
+        ],
+        "mark": "mark.svg",
+        "wordmark": {
+            "font": "'Playfair Display', Georgia, serif",
+            "weight": 600,
+            "case": "none",
+            "spacing": "normal",
+            "color": "#053A6E"
+        },
+        "fonts": {
+            "heading": "'Playfair Display', Georgia, serif",
+            "body": "'Source Sans 3', 'Segoe UI', Arial, sans-serif"
+        }
+    }
+}
