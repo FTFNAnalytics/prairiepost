@@ -127,7 +127,18 @@ function pp_schema_ddl(string $driver): array
             totp_secret VARCHAR(64) NOT NULL DEFAULT '',
             totp_enabled INTEGER NOT NULL DEFAULT 0,
             session_epoch INTEGER NOT NULL DEFAULT 0,
-            created_at $dt NOT NULL
+            created_at $dt NOT NULL,
+            is_network_admin INTEGER NOT NULL DEFAULT 0
+        )$suffix",
+
+        "CREATE TABLE site_memberships (
+            id $id,
+            user_id INTEGER NOT NULL,
+            site_id INTEGER NOT NULL,
+            role VARCHAR(20) NOT NULL DEFAULT 'author',
+            can_publish INTEGER NOT NULL DEFAULT 0,
+            created_at $dt NOT NULL,
+            CONSTRAINT uq_site_membership UNIQUE (user_id, site_id)
         )$suffix",
 
         "CREATE TABLE categories (
@@ -179,7 +190,17 @@ function pp_schema_ddl(string $driver): array
         "CREATE TABLE post_sites (
             post_id INTEGER NOT NULL,
             site_id INTEGER NOT NULL,
+            placement VARCHAR(20) NOT NULL DEFAULT '',
             PRIMARY KEY (post_id, site_id)
+        )$suffix",
+
+        "CREATE TABLE slug_redirects (
+            id $id,
+            site_id INTEGER NOT NULL,
+            old_slug VARCHAR(191) NOT NULL,
+            post_id INTEGER NOT NULL,
+            created_at $dt NOT NULL,
+            CONSTRAINT uq_slug_redirect UNIQUE (site_id, old_slug)
         )$suffix",
 
         "CREATE TABLE tags (
@@ -587,6 +608,10 @@ function pp_schema_ddl(string $driver): array
         'CREATE INDEX idx_media_request_outputs_request ON media_request_outputs (request_id)',
         'CREATE INDEX idx_media_request_events_request ON media_request_events (request_id, id)',
         'CREATE INDEX idx_media_orders_request ON media_orders (request_id, state)',
+        'CREATE INDEX idx_post_sites_site_placement ON post_sites (site_id, placement)',
+        'CREATE INDEX idx_site_memberships_user ON site_memberships (user_id)',
+        'CREATE INDEX idx_site_memberships_site ON site_memberships (site_id)',
+        'CREATE INDEX idx_slug_redirects_post ON slug_redirects (post_id)',
     ];
 }
 
@@ -1567,6 +1592,56 @@ function pp_migrations(): array
             $pdo->prepare('INSERT INTO settings (site_id, skey, svalue) VALUES (0, ?, ?)')
                 ->execute(['tips_form_key', bin2hex(random_bytes(32))]);
             $pdo->exec("UPDATE settings SET svalue = '26' WHERE site_id = 0 AND skey = 'schema_version'");
+        },
+
+        27 => function (PDO $pdo, string $driver): void {
+            // Multi-tenant scaling foundation (Sprint 1):
+            // 1. post_sites.placement lets syndicated stories carry independent
+            //    hero / featured / desk_lead placement per paper without clobbering
+            //    sibling papers. Backfilled from posts.placement so existing fronts
+            //    remain byte-identical.
+            // 2. users.is_network_admin + site_memberships allow tenant-scoped
+            //    editors and authors restricted to specific papers while preserving
+            //    existing admin accounts as network admins.
+            // 3. slug_redirects stores per-site 301 redirect mappings whenever an
+            //    editor intentionally changes a published story's slug.
+            $id = $driver === 'mysql' ? 'INT UNSIGNED AUTO_INCREMENT PRIMARY KEY'
+                : ($driver === 'pgsql' ? 'INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY' : 'INTEGER PRIMARY KEY AUTOINCREMENT');
+            $dt = $driver === 'pgsql' ? 'TIMESTAMP' : 'DATETIME';
+            $suffix = $driver === 'mysql' ? ' ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci' : '';
+
+            $pdo->exec("ALTER TABLE post_sites ADD COLUMN placement VARCHAR(20) NOT NULL DEFAULT ''");
+            $pdo->exec('CREATE INDEX idx_post_sites_site_placement ON post_sites (site_id, placement)');
+            $pdo->exec("UPDATE post_sites
+                SET placement = COALESCE((SELECT p.placement FROM posts p WHERE p.id = post_sites.post_id), '')
+                WHERE EXISTS (SELECT 1 FROM posts p WHERE p.id = post_sites.post_id AND p.placement != '')");
+
+            $pdo->exec('ALTER TABLE users ADD COLUMN is_network_admin INTEGER NOT NULL DEFAULT 0');
+            $pdo->exec("UPDATE users SET is_network_admin = 1 WHERE role = 'admin'");
+
+            $pdo->exec("CREATE TABLE site_memberships (
+                id $id,
+                user_id INTEGER NOT NULL,
+                site_id INTEGER NOT NULL,
+                role VARCHAR(20) NOT NULL DEFAULT 'author',
+                can_publish INTEGER NOT NULL DEFAULT 0,
+                created_at $dt NOT NULL,
+                CONSTRAINT uq_site_membership UNIQUE (user_id, site_id)
+            )$suffix");
+            $pdo->exec('CREATE INDEX idx_site_memberships_user ON site_memberships (user_id)');
+            $pdo->exec('CREATE INDEX idx_site_memberships_site ON site_memberships (site_id)');
+
+            $pdo->exec("CREATE TABLE slug_redirects (
+                id $id,
+                site_id INTEGER NOT NULL,
+                old_slug VARCHAR(191) NOT NULL,
+                post_id INTEGER NOT NULL,
+                created_at $dt NOT NULL,
+                CONSTRAINT uq_slug_redirect UNIQUE (site_id, old_slug)
+            )$suffix");
+            $pdo->exec('CREATE INDEX idx_slug_redirects_post ON slug_redirects (post_id)');
+
+            $pdo->exec("UPDATE settings SET svalue = '27' WHERE site_id = 0 AND skey = 'schema_version'");
         },
 
     ];

@@ -118,23 +118,99 @@ function require_login(): array
         exit('The control room is limited to approved addresses. Yours isn\'t on the list — a network administrator can add it under Settings → Security.');
     }
 
+    // Tenant-scoped accounts (those with explicit site_memberships rows and
+    // is_network_admin = 0) can only enter papers they are assigned to.
+    if (pp_user_site_role($user) === null) {
+        http_response_code(403);
+        exit('Your account does not have access to this paper.');
+    }
+
     return $user;
+}
+
+/**
+ * Network administrators hold full access across every paper and the hub.
+ * Legacy admin accounts created without site_memberships rows continue to
+ * act as network admins until explicitly scoped.
+ */
+function pp_is_network_admin(?array $user): bool
+{
+    if ($user === null) {
+        return false;
+    }
+    if (!empty($user['is_network_admin'])) {
+        return true;
+    }
+    return ($user['role'] ?? '') === 'admin' && pp_user_memberships((int) ($user['id'] ?? 0)) === [];
+}
+
+/**
+ * Effective role for $user on $siteId (defaults to the current site):
+ * 'admin', 'editor', 'author', or null when a tenant-scoped account has no
+ * membership on that site.
+ */
+function pp_user_site_role(?array $user, ?int $siteId = null): ?string
+{
+    if ($user === null) {
+        return null;
+    }
+    if (pp_is_network_admin($user)) {
+        return 'admin';
+    }
+    $memberships = pp_user_memberships((int) ($user['id'] ?? 0));
+    if ($memberships === []) {
+        return (string) ($user['role'] ?? 'author');
+    }
+    $sid = $siteId ?? current_site_id();
+    return isset($memberships[$sid]) ? (string) $memberships[$sid]['role'] : null;
+}
+
+function pp_is_site_admin(?array $user, ?int $siteId = null): bool
+{
+    return pp_user_site_role($user, $siteId) === 'admin';
+}
+
+/** Whether $user may publish or schedule stories on $siteId (defaults to current site). */
+function pp_can_publish(?array $user, ?int $siteId = null): bool
+{
+    if ($user === null) {
+        return false;
+    }
+    if (pp_is_network_admin($user)) {
+        return true;
+    }
+    $memberships = pp_user_memberships((int) ($user['id'] ?? 0));
+    if ($memberships === []) {
+        return in_array((string) ($user['role'] ?? ''), ['admin', 'editor'], true);
+    }
+    $sid = $siteId ?? current_site_id();
+    return isset($memberships[$sid]) && (int) ($memberships[$sid]['can_publish'] ?? 0) === 1;
 }
 
 function require_admin(): array
 {
     $user = require_login();
-    if ($user['role'] !== 'admin') {
+    if (!pp_is_site_admin($user)) {
         http_response_code(403);
         exit('That page needs an administrator account.');
     }
     return $user;
 }
 
-/** Editors and admins run the paper; authors write for it. */
-function is_editor(?array $user): bool
+function require_network_admin(): array
 {
-    return $user !== null && in_array($user['role'], ['admin', 'editor'], true);
+    $user = require_login();
+    if (!pp_is_network_admin($user)) {
+        http_response_code(403);
+        exit('That page needs a network administrator account.');
+    }
+    return $user;
+}
+
+/** Editors and admins run the paper; authors write for it. */
+function is_editor(?array $user, ?int $siteId = null): bool
+{
+    return in_array(pp_user_site_role($user, $siteId), ['admin', 'editor'], true);
 }
 
 function require_editor(): array
@@ -147,10 +223,39 @@ function require_editor(): array
     return $user;
 }
 
-/** Authors may open only their own stories; editors and admins open any. */
+/**
+ * Whether $user has editor/admin rights on at least one site where $post runs
+ * (or on the current site for an unmapped draft).
+ */
+function pp_is_editor_for_post(array $user, array $post): bool
+{
+    $allowedSites = pp_user_allowed_site_ids($user);
+    if ($allowedSites === null) {
+        return is_editor($user);
+    }
+    $postSites = !empty($post['id']) ? site_ids_for_post((int) $post['id']) : [];
+    if ($postSites === []) {
+        return is_editor($user);
+    }
+    foreach (array_intersect($postSites, $allowedSites) as $sid) {
+        if (is_editor($user, (int) $sid)) {
+            return true;
+        }
+    }
+    return false;
+}
+
+/** Authors may open only their own stories; editors and admins open any on their papers. */
 function can_edit_post(array $user, array $post): bool
 {
-    return is_editor($user) || (int) ($post['author_id'] ?? 0) === (int) $user['id'];
+    $allowedSites = pp_user_allowed_site_ids($user);
+    if ($allowedSites !== null) {
+        $postSites = !empty($post['id']) ? site_ids_for_post((int) $post['id']) : [];
+        if ($postSites !== [] && array_intersect($postSites, $allowedSites) === []) {
+            return false;
+        }
+    }
+    return pp_is_editor_for_post($user, $post) || (int) ($post['author_id'] ?? 0) === (int) $user['id'];
 }
 
 /** A post the approval gate has signed off on: live now, or queued to go live. */
@@ -164,15 +269,22 @@ function pp_post_locked(array $post): bool
  * The one policy every mutating endpoint asks, against the post's
  * PERSISTED state — not the state the form was rendered from.
  *
- * Editors and admins: anything. Authors: their own stories only, and only
- * while the story is still theirs to shape (draft / in review). Once an
- * editor has published or scheduled it, changing it — by edit, restore,
- * autosave or delete — is the approval gate's job, so the author is
+ * Editors and admins: anything on their assigned papers. Authors: their own
+ * stories only, and only while the story is still theirs to shape (draft / in
+ * review). Once an editor has published or scheduled it, changing it — by edit,
+ * restore, autosave or delete — is the approval gate's job, so the author is
  * refused and told why. Returns null when allowed, the refusal otherwise.
  */
 function pp_post_write_denied(array $user, array $post, string $action = 'edit'): ?string
 {
-    if (is_editor($user)) {
+    $allowedSites = pp_user_allowed_site_ids($user);
+    if ($allowedSites !== null) {
+        $postSites = !empty($post['id']) ? site_ids_for_post((int) $post['id']) : [];
+        if ($postSites !== [] && array_intersect($postSites, $allowedSites) === []) {
+            return 'That story belongs to another paper.';
+        }
+    }
+    if (pp_is_editor_for_post($user, $post)) {
         return null;
     }
     if ((int) ($post['author_id'] ?? 0) !== (int) $user['id']) {

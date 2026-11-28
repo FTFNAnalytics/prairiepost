@@ -126,7 +126,7 @@ $insPost = $pdo->prepare('INSERT INTO posts
      meta_description, source_url, source_name, post_type, region,
      status, is_featured, placement, views, published_at, created_at, updated_at)
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
-$insMap = $pdo->prepare('INSERT INTO post_sites (post_id, site_id) VALUES (?, ?)');
+$insMap = $pdo->prepare('INSERT INTO post_sites (post_id, site_id, placement) VALUES (?, ?, ?)');
 $selPost = $pdo->prepare('SELECT id FROM posts WHERE slug = ?');
 $selTag = $pdo->prepare('SELECT id FROM tags WHERE slug = ?');
 $insTag = $pdo->prepare('INSERT INTO tags (name, slug) VALUES (?, ?)');
@@ -163,16 +163,17 @@ foreach ($pack['stories'] ?? [] as $s) {
         $collisions++;
         continue;
     }
+    $pl = (string) ($s['placement'] ?? '');
     $insPost->execute([
         $s['title'], $pslug, $catId[$s['desk']], $s['byline'] ?? '', $s['dateline'] ?? '',
         $s['lede'], $s['body'] ?? '', $s['image'] ?? '', $s['image_caption'] ?? '', $s['image_credit'] ?? '',
         excerpt($s['lede'], 155), $s['source_url'] ?? '', $s['source_name'] ?? '',
         ($s['type'] ?? '') === 'link' ? 'link' : 'story', $s['region'] ?? '',
-        'published', (int) ($s['featured'] ?? 0), $s['placement'] ?? '',
+        'published', (int) ($s['featured'] ?? 0), $pl,
         (int) ($s['views'] ?? 0), $s['published'], $s['published'], $s['published'],
     ]);
     $postId = pp_seed_last_id($pdo, 'posts');
-    $insMap->execute([$postId, $siteId]);
+    $insMap->execute([$postId, $siteId, $pl]);
     foreach (array_filter(array_map('trim', explode(',', $s['tags'] ?? ''))) as $name) {
         $tslug = slugify($name);
         $selTag->execute([$tslug]);
