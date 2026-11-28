@@ -10,7 +10,7 @@
  */
 require dirname(__DIR__) . '/app/bootstrap.php';
 require __DIR__ . '/_layout.php';
-$user = require_admin();
+$user = require_network_admin();
 if (!pp_is_hub()) {
     redirect('ads.php');
 }

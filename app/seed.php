@@ -403,21 +403,22 @@ function pp_seed(PDO $pdo): void
         (title, slug, category_id, byline, dateline, lede, body, image, image_caption, image_credit,
          meta_description, status, is_featured, placement, published_at, created_at, updated_at)
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
-    $insMap = $pdo->prepare('INSERT INTO post_sites (post_id, site_id) VALUES (?, ?)');
+    $insMap = $pdo->prepare('INSERT INTO post_sites (post_id, site_id, placement) VALUES (?, ?, ?)');
     $selTag = $pdo->prepare('SELECT id FROM tags WHERE slug = ?');
     $insTag = $pdo->prepare('INSERT INTO tags (name, slug) VALUES (?, ?)');
     $insPT  = $pdo->prepare('INSERT INTO post_tags (post_id, tag_id) VALUES (?, ?)');
 
     foreach ($stories as $s) {
         $slug = slugify($s['title']);
+        $pl = $placements[$slug] ?? '';
         $insPost->execute([
             $s['title'], $slug, $catId[$s['desk']], $s['byline'], $s['dateline'],
             $s['lede'], $s['body'], $s['image'], $s['image_caption'], $s['image_credit'],
-            excerpt($s['lede'], 155), 'published', $s['featured'], $placements[$slug] ?? '',
+            excerpt($s['lede'], 155), 'published', $s['featured'], $pl,
             $s['published'], $s['published'], $s['published'],
         ]);
         $postId = pp_seed_last_id($pdo, 'posts');
-        $insMap->execute([$postId, $siteId]);
+        $insMap->execute([$postId, $siteId, $pl]);
         foreach (array_filter(array_map('trim', explode(',', $s['tags'] ?? ''))) as $name) {
             $tslug = slugify($name);
             $selTag->execute([$tslug]);

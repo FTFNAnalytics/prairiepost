@@ -58,7 +58,7 @@ function admin_header(string $title, string $active = '', string $actions = ''):
         $items['agents'] = ['agents.php', 'Agent desk'];
         $items['social'] = ['social.php', 'Social desk'];
     }
-    if ($hub && $user && $user['role'] === 'admin') {
+    if ($hub && pp_is_network_admin($user)) {
         $items['entities'] = ['entities.php', 'Entities'];
     }
     if (is_editor($user)) {
@@ -66,8 +66,8 @@ function admin_header(string $title, string $active = '', string $actions = ''):
         $items['categories']  = ['categories.php', 'Desks'];
         $items['sources']     = ['sources.php', 'Sources'];
         if ($hub) {
-            // Network campaigns are the hub's advertising desk, admin-only.
-            if ($user['role'] === 'admin') {
+            // Network campaigns are the hub's advertising desk, network-admin only.
+            if (pp_is_network_admin($user)) {
                 $items['ads'] = ['network-ads.php', 'Advertising'];
             }
             $items['media'] = ['media-requests.php', 'Submissions'];
@@ -85,14 +85,16 @@ function admin_header(string $title, string $active = '', string $actions = ''):
         // The living project document — every newsroom role can read it.
         $items['roadmap'] = ['roadmap.php', 'Roadmap'];
     }
-    if ($user && $user['role'] === 'admin') {
+    if (pp_is_network_admin($user)) {
         $items['users'] = ['users.php', 'Accounts'];
+    }
+    if (pp_is_site_admin($user)) {
         $items['settings'] = ['settings.php', 'Settings'];
-        if ($hub) {
-            $items['apikeys'] = ['api-keys.php', 'API keys'];
-            $items['audit'] = ['audit.php', 'Audit'];
-            $items['ops'] = ['ops.php', 'Ops'];
-        }
+    }
+    if ($hub && pp_is_network_admin($user)) {
+        $items['apikeys'] = ['api-keys.php', 'API keys'];
+        $items['audit'] = ['audit.php', 'Audit'];
+        $items['ops'] = ['ops.php', 'Ops'];
     }
     $items['profile'] = ['profile.php', 'Your profile'];
     // The dateline rail's live status — one small indexed query.

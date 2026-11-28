@@ -13,7 +13,7 @@ function pp_edition_posts(): array
     $since = date('Y-m-d H:i:s', strtotime('-24 hours'));
     $sql = 'SELECT ' . PP_POST_COLS . ' FROM posts p' . pp_site_join() . PP_POST_JOINS . '
             WHERE ' . pp_published_where() . ' AND p.published_at >= ?
-            ORDER BY CASE WHEN p.placement = \'hero\' THEN 0 ELSE 1 END, p.published_at DESC LIMIT 25';
+            ORDER BY CASE WHEN ps.placement = \'hero\' THEN 0 ELSE 1 END, p.published_at DESC LIMIT 25';
     $stmt = db()->prepare($sql);
     $stmt->execute([now(), $since]);
     return $stmt->fetchAll();

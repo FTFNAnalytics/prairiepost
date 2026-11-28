@@ -30,7 +30,7 @@ function featured_post(): ?array
 {
     $sql = 'SELECT ' . PP_POST_COLS . ' FROM posts p' . pp_site_join() . PP_POST_JOINS . '
             WHERE ' . pp_published_where() . "
-            ORDER BY CASE WHEN p.placement = 'hero' THEN 0 ELSE 1 END, p.published_at DESC LIMIT 1";
+            ORDER BY CASE WHEN ps.placement = 'hero' THEN 0 ELSE 1 END, p.published_at DESC LIMIT 1";
     $stmt = db()->prepare($sql);
     $stmt->execute([now()]);
     return $stmt->fetch() ?: null;
@@ -46,7 +46,7 @@ function front_featured_posts(array $excludeIds = [], int $limit = 4): array
         $params = array_merge($params, array_map('intval', $excludeIds));
     }
     $sql = 'SELECT ' . PP_POST_COLS . ' FROM posts p' . pp_site_join() . PP_POST_JOINS . '
-            WHERE ' . pp_published_where() . " AND p.placement = 'featured'" . $not . '
+            WHERE ' . pp_published_where() . " AND ps.placement = 'featured'" . $not . '
             ORDER BY p.published_at DESC LIMIT ' . (int) $limit;
     $stmt = db()->prepare($sql);
     $stmt->execute($params);
@@ -79,7 +79,7 @@ function posts_in_category(int $categoryId, int $limit, array $excludeIds = [], 
     }
     $sql = 'SELECT ' . PP_POST_COLS . ' FROM posts p' . pp_site_join() . PP_POST_JOINS . '
             WHERE ' . pp_published_where() . ' AND p.category_id = ?' . $not . "
-            ORDER BY CASE WHEN p.placement = 'desk_lead' THEN 0 ELSE 1 END, p.published_at DESC LIMIT " . (int) $limit . ' OFFSET ' . (int) $offset;
+            ORDER BY CASE WHEN ps.placement = 'desk_lead' THEN 0 ELSE 1 END, p.published_at DESC LIMIT " . (int) $limit . ' OFFSET ' . (int) $offset;
     $stmt = db()->prepare($sql);
     $stmt->execute($params);
     return $stmt->fetchAll();
@@ -242,21 +242,114 @@ function site_ids_for_post(int $postId): array
     return array_map('intval', array_column($stmt->fetchAll(), 'site_id'));
 }
 
-function set_post_sites(int $postId, array $siteIds): void
+/** Per-site placement map for a post: [site_id => ''|'hero'|'featured'|'desk_lead']. */
+function pp_post_site_placements(int $postId): array
 {
-    $pdo = db();
-    $pdo->prepare('DELETE FROM post_sites WHERE post_id = ?')->execute([$postId]);
-    $ins = $pdo->prepare('INSERT INTO post_sites (post_id, site_id) VALUES (?, ?)');
-    foreach (array_unique(array_map('intval', $siteIds)) as $siteId) {
-        if ($siteId > 0) {
-            $ins->execute([$postId, $siteId]);
-        }
+    $stmt = db()->prepare('SELECT site_id, placement FROM post_sites WHERE post_id = ?');
+    $stmt->execute([$postId]);
+    $out = [];
+    foreach ($stmt as $row) {
+        $out[(int) $row['site_id']] = (string) ($row['placement'] ?? '');
     }
+    return $out;
+}
+
+function pp_valid_placement(string $placement): string
+{
+    return in_array($placement, ['', 'hero', 'featured', 'desk_lead'], true) ? $placement : '';
 }
 
 /**
- * Clear existing hero placement ONLY on stories running on the given site(s),
- * leaving every other paper's front-page hero untouched.
+ * Sync the deprecated posts.placement mirror column from post_sites.placement
+ * so legacy readers/tests stay consistent with per-site placements.
+ */
+function pp_sync_legacy_post_placement(int $postId): void
+{
+    $placements = pp_post_site_placements($postId);
+    $cur = null;
+    if (!pp_is_hub()) {
+        $site = pp_current_site_or_null();
+        if ($site && array_key_exists((int) $site['id'], $placements)) {
+            $cur = $placements[(int) $site['id']];
+        }
+    }
+    if ($cur === null) {
+        if (in_array('hero', $placements, true)) {
+            $cur = 'hero';
+        } elseif (in_array('featured', $placements, true)) {
+            $cur = 'featured';
+        } elseif (in_array('desk_lead', $placements, true)) {
+            $cur = 'desk_lead';
+        } else {
+            $cur = '';
+        }
+    }
+    db()->prepare('UPDATE posts SET placement = ? WHERE id = ?')->execute([$cur, $postId]);
+}
+
+/**
+ * Replace a post's site mapping while preserving existing per-site placements.
+ * When $placements is provided as [site_id => placement], those values rule for
+ * the named sites; when omitted, newly added sites inherit posts.placement so
+ * legacy single-placement callers keep working unchanged.
+ */
+function set_post_sites(int $postId, array $siteIds, ?array $placements = null): void
+{
+    $pdo = db();
+    $existing = pp_post_site_placements($postId);
+    $fallback = '';
+    if ($placements === null) {
+        $s = $pdo->prepare('SELECT placement FROM posts WHERE id = ?');
+        $s->execute([$postId]);
+        $fallback = pp_valid_placement((string) ($s->fetchColumn() ?: ''));
+    }
+
+    $pdo->prepare('DELETE FROM post_sites WHERE post_id = ?')->execute([$postId]);
+    $ins = $pdo->prepare('INSERT INTO post_sites (post_id, site_id, placement) VALUES (?, ?, ?)');
+    foreach (array_unique(array_map('intval', $siteIds)) as $siteId) {
+        if ($siteId <= 0) {
+            continue;
+        }
+        if ($placements !== null && array_key_exists($siteId, $placements)) {
+            $pl = pp_valid_placement((string) $placements[$siteId]);
+        } elseif (array_key_exists($siteId, $existing)) {
+            $pl = pp_valid_placement($existing[$siteId]);
+        } else {
+            $pl = $fallback;
+        }
+        $ins->execute([$postId, $siteId, $pl]);
+    }
+}
+
+/** Set a post's placement on a single site, clearing only that site's prior hero. */
+function pp_set_site_placement(int $postId, int $siteId, string $placement): void
+{
+    $placement = pp_valid_placement($placement);
+    if ($siteId <= 0) {
+        return;
+    }
+    if ($placement === 'hero') {
+        pp_clear_hero_for_sites([$siteId], $postId);
+    }
+    $pdo = db();
+    $upd = $pdo->prepare('UPDATE post_sites SET placement = ? WHERE post_id = ? AND site_id = ?');
+    $upd->execute([$placement, $postId, $siteId]);
+    if ($upd->rowCount() === 0) {
+        // Check existence (MySQL rowCount can be 0 when value is unchanged).
+        $chk = $pdo->prepare('SELECT 1 FROM post_sites WHERE post_id = ? AND site_id = ?');
+        $chk->execute([$postId, $siteId]);
+        if (!$chk->fetch()) {
+            $pdo->prepare('INSERT INTO post_sites (post_id, site_id, placement) VALUES (?, ?, ?)')
+                ->execute([$postId, $siteId, $placement]);
+        }
+    }
+    pp_sync_legacy_post_placement($postId);
+}
+
+/**
+ * Clear existing hero placement ONLY on the given site(s), leaving every other
+ * paper's front-page hero — and a syndicated story's hero status on sibling
+ * papers — completely untouched.
  */
 function pp_clear_hero_for_sites(array $siteIds, int $excludePostId = 0): void
 {
@@ -264,10 +357,180 @@ function pp_clear_hero_for_sites(array $siteIds, int $excludePostId = 0): void
     if (!$siteIds) {
         return;
     }
+    $pdo = db();
     $marks = implode(',', array_fill(0, count($siteIds), '?'));
-    $sql = "UPDATE posts SET placement = '' WHERE placement = 'hero' AND id != ? "
-         . "AND id IN (SELECT post_id FROM post_sites WHERE site_id IN ($marks))";
-    db()->prepare($sql)->execute([$excludePostId, ...$siteIds]);
+    $find = $pdo->prepare("SELECT DISTINCT post_id FROM post_sites WHERE placement = 'hero' AND post_id != ? AND site_id IN ($marks)");
+    $find->execute([$excludePostId, ...$siteIds]);
+    $affected = array_map('intval', array_column($find->fetchAll(), 'post_id'));
+
+    $pdo->prepare("UPDATE post_sites SET placement = '' WHERE placement = 'hero' AND post_id != ? AND site_id IN ($marks)")
+        ->execute([$excludePostId, ...$siteIds]);
+
+    // Keep deprecated posts.placement synced: clear posts.placement = 'hero'
+    // on affected posts that are no longer hero on any site (and also catch any
+    // legacy rows that had posts.placement = 'hero' with an empty ps.placement).
+    $pdo->prepare("UPDATE posts SET placement = '' WHERE placement = 'hero' AND id != ? "
+        . "AND id IN (SELECT post_id FROM post_sites WHERE site_id IN ($marks)) "
+        . "AND NOT EXISTS (SELECT 1 FROM post_sites ps2 WHERE ps2.post_id = posts.id AND ps2.placement = 'hero')")
+        ->execute([$excludePostId, ...$siteIds]);
+    foreach ($affected as $pid) {
+        $still = $pdo->prepare("SELECT 1 FROM post_sites WHERE post_id = ? AND placement = 'hero' LIMIT 1");
+        $still->execute([$pid]);
+        if (!$still->fetch()) {
+            $pdo->prepare("UPDATE posts SET placement = '' WHERE id = ? AND placement = 'hero'")->execute([$pid]);
+        }
+    }
+}
+
+/* --- Slug redirects (301) ------------------------------------------------ */
+
+/**
+ * Record an old slug -> post_id 301 redirect for the given site(s), removing
+ * any conflicting reverse redirect for $newSlug so loops can never form.
+ */
+function pp_record_slug_redirect(int $postId, string $oldSlug, array $siteIds, string $newSlug = ''): void
+{
+    $oldSlug = trim($oldSlug);
+    $newSlug = trim($newSlug);
+    if ($postId <= 0 || $oldSlug === '' || $oldSlug === $newSlug) {
+        return;
+    }
+    $siteIds = array_values(array_unique(array_filter(array_map('intval', $siteIds), fn ($id) => $id > 0)));
+    if (!$siteIds) {
+        return;
+    }
+    $pdo = db();
+    $driver = $pdo->getAttribute(PDO::ATTR_DRIVER_NAME);
+    $sql = $driver === 'mysql'
+        ? 'INSERT INTO slug_redirects (site_id, old_slug, post_id, created_at) VALUES (?, ?, ?, ?)
+           ON DUPLICATE KEY UPDATE post_id = VALUES(post_id), created_at = VALUES(created_at)'
+        : 'INSERT INTO slug_redirects (site_id, old_slug, post_id, created_at) VALUES (?, ?, ?, ?)
+           ON CONFLICT(site_id, old_slug) DO UPDATE SET post_id = excluded.post_id, created_at = excluded.created_at';
+    $upsert = $pdo->prepare($sql);
+    $delLoop = $pdo->prepare('DELETE FROM slug_redirects WHERE site_id = ? AND old_slug = ?');
+    $ts = now();
+    foreach ($siteIds as $sid) {
+        if ($newSlug !== '') {
+            $delLoop->execute([$sid, $newSlug]);
+        }
+        $upsert->execute([$sid, $oldSlug, $postId, $ts]);
+    }
+}
+
+/** Resolve an old slug on the current (or given) site to a live published post. */
+function pp_slug_redirect_target(string $oldSlug, ?int $siteId = null): ?array
+{
+    $oldSlug = trim($oldSlug);
+    if ($oldSlug === '') {
+        return null;
+    }
+    $sid = $siteId ?? current_site_id();
+    $stmt = db()->prepare('SELECT p.id, p.slug FROM slug_redirects sr
+        JOIN posts p ON p.id = sr.post_id
+        JOIN post_sites ps ON ps.post_id = p.id AND ps.site_id = sr.site_id
+        WHERE sr.site_id = ? AND sr.old_slug = ? AND ' . pp_published_where() . '
+        LIMIT 1');
+    $stmt->execute([$sid, $oldSlug, now()]);
+    $row = $stmt->fetch();
+    if (!$row || (string) $row['slug'] === '' || (string) $row['slug'] === $oldSlug) {
+        return null;
+    }
+    return $row;
+}
+
+/** List distinct old slugs currently redirecting to a post. */
+function pp_slug_redirects_for_post(int $postId): array
+{
+    if ($postId <= 0) {
+        return [];
+    }
+    if (!pp_is_hub()) {
+        $stmt = db()->prepare('SELECT DISTINCT old_slug FROM slug_redirects WHERE post_id = ? AND site_id = ? ORDER BY old_slug');
+        $stmt->execute([$postId, current_site_id()]);
+    } else {
+        $stmt = db()->prepare('SELECT DISTINCT old_slug FROM slug_redirects WHERE post_id = ? ORDER BY old_slug');
+        $stmt->execute([$postId]);
+    }
+    return array_column($stmt->fetchAll(), 'old_slug');
+}
+
+/* --- Tenant-scoped memberships (RBAC) ------------------------------------ */
+
+/**
+ * Per-site memberships for a user: [site_id => ['site_id' => int, 'role' => string, 'can_publish' => int]].
+ * An empty array means the user is an unscoped legacy account (governed by users.role).
+ */
+function pp_user_memberships(int $userId, bool $fresh = false): array
+{
+    if ($userId <= 0) {
+        return [];
+    }
+    if ($fresh) {
+        unset($GLOBALS['pp_memberships_cache'][$userId]);
+    }
+    if (!isset($GLOBALS['pp_memberships_cache'][$userId])) {
+        $stmt = db()->prepare('SELECT site_id, role, can_publish FROM site_memberships WHERE user_id = ? ORDER BY site_id');
+        $stmt->execute([$userId]);
+        $map = [];
+        foreach ($stmt as $row) {
+            $sid = (int) $row['site_id'];
+            $map[$sid] = [
+                'site_id'     => $sid,
+                'role'        => (string) $row['role'],
+                'can_publish' => (int) $row['can_publish'],
+            ];
+        }
+        $GLOBALS['pp_memberships_cache'][$userId] = $map;
+    }
+    return $GLOBALS['pp_memberships_cache'][$userId];
+}
+
+/**
+ * Replace all site memberships for a user.
+ * $memberships: [site_id => ['role' => 'admin'|'editor'|'author', 'can_publish' => 0|1]].
+ */
+function pp_set_user_memberships(int $userId, array $memberships): void
+{
+    if ($userId <= 0) {
+        return;
+    }
+    $pdo = db();
+    $pdo->prepare('DELETE FROM site_memberships WHERE user_id = ?')->execute([$userId]);
+    $ins = $pdo->prepare('INSERT INTO site_memberships (user_id, site_id, role, can_publish, created_at) VALUES (?, ?, ?, ?, ?)');
+    $ts = now();
+    foreach ($memberships as $siteId => $cfg) {
+        $sid = (int) $siteId;
+        $role = (string) ($cfg['role'] ?? '');
+        if ($sid <= 0 || !in_array($role, ['admin', 'editor', 'author'], true)) {
+            continue;
+        }
+        $canPub = !empty($cfg['can_publish']) ? 1 : 0;
+        $ins->execute([$userId, $sid, $role, $canPub, $ts]);
+    }
+    unset($GLOBALS['pp_memberships_cache'][$userId]);
+}
+
+/**
+ * Site IDs this user is allowed to operate on, or null when unrestricted
+ * (network admin or unscoped legacy account with zero memberships).
+ * Optional $roles filters memberships to those roles (e.g. ['admin', 'editor']).
+ */
+function pp_user_allowed_site_ids(array $user, ?array $roles = null): ?array
+{
+    if (pp_is_network_admin($user)) {
+        return null;
+    }
+    $memberships = pp_user_memberships((int) ($user['id'] ?? 0));
+    if ($memberships === []) {
+        return null;
+    }
+    $ids = [];
+    foreach ($memberships as $sid => $m) {
+        if ($roles === null || in_array($m['role'], $roles, true)) {
+            $ids[] = (int) $sid;
+        }
+    }
+    return $ids;
 }
 
 /* --- Categories ---------------------------------------------------------- */

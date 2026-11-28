@@ -6,6 +6,15 @@ require __DIR__ . '/app/views/ui.php';
 $slug = (string) ($_GET['slug'] ?? '');
 $post = $slug !== '' ? post_by_slug($slug) : null;
 
+if (!$post && $slug !== '') {
+    $redir = pp_slug_redirect_target($slug);
+    if ($redir && !empty($redir['slug']) && $redir['slug'] !== $slug) {
+        header('Location: ' . url('story/' . $redir['slug']), true, 301);
+        header('Cache-Control: public, max-age=3600');
+        exit;
+    }
+}
+
 if (!$post) {
     http_response_code(404);
     page_header(['title' => 'Story not found']);
