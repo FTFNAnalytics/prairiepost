@@ -1461,6 +1461,7 @@ function pp_bulk_set_status(array $user, array $seen, string $target): array
             }
             require_once PP_ROOT . '/app/agents.php';
             pp_agent_auto_enqueue($id);
+            pp_indexnow_notify_post($id);
         }
     }
 

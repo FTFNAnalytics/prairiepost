@@ -251,6 +251,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 require_once dirname(__DIR__) . '/app/agents.php';
                 pp_agent_auto_enqueue($id);
             }
+            if ($status === 'published') {
+                pp_indexnow_notify_post($id);
+            }
 
             flash_set(match ($status) {
                 'published' => 'Published. The story is live.',

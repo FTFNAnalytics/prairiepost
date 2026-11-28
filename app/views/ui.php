@@ -119,6 +119,17 @@ function story_card(array $post, bool $withPhoto = true): string
 }
 
 /**
+ * Render the shared AI / automated workflow disclosure line for a story
+ * (origin = 'ai' or 'hermes') when the paper's `ai_disclosure` setting is on.
+ */
+function pp_article_disclosure(array $post): string
+{
+    ob_start();
+    require PP_ROOT . '/app/views/partials/_article-disclosure.php';
+    return (string) ob_get_clean();
+}
+
+/**
  * One card for the standard template, used by the front page, the section
  * index and the article page's related row.
  *

@@ -362,6 +362,48 @@ function fmt_date(?string $dt, string $format = 'M j, Y'): string
 }
 
 /**
+ * Schema.org author object for NewsArticle JSON-LD.
+ * Emits @type: Organization for newsroom, staff, desk, or automated bylines
+ * (such as "Automated report" or the paper's masthead name) and @type: Person
+ * only for named human authors.
+ */
+function pp_jsonld_author(array $post, string $siteTitle): array
+{
+    $byline = trim((string) ($post['byline'] ?? ''));
+    $authorSlug = trim((string) ($post['author_slug'] ?? ''));
+    $autoByline = trim((string) (pp_brand_file()['automated_byline'] ?? ''));
+
+    $isOrg = $byline === '';
+    if (!$isOrg && $authorSlug === '') {
+        $norm = mb_strtolower($byline);
+        $siteNorm = mb_strtolower(trim($siteTitle));
+        $autoNorm = mb_strtolower($autoByline);
+        if (
+            $norm === $siteNorm
+            || ($autoNorm !== '' && $norm === $autoNorm)
+            || preg_match('/^(automated report|rapport automatis[eé]|staff|newsroom|editorial board|la r[eé]daction|wire|news desk|staff reporter|local journalism|civis media)(\b|$)/iu', $byline) === 1
+            || preg_match('/\b(newsroom|staff|desk|editorial|bureau|automated|wire)\b/iu', $byline) === 1
+        ) {
+            $isOrg = true;
+        }
+    }
+
+    if ($isOrg) {
+        return [
+            '@type' => 'Organization',
+            'name'  => $byline !== '' ? $byline : $siteTitle,
+            'url'   => site_url(),
+        ];
+    }
+
+    return array_filter([
+        '@type' => 'Person',
+        'name'  => $byline,
+        'url'   => $authorSlug !== '' ? site_url() . '/author/' . $authorSlug : null,
+    ]);
+}
+
+/**
  * Reading time in whole minutes, at 200 words a minute, rounded up.
  * Counts the lede with the body so a short piece isn't reported as zero.
  */
