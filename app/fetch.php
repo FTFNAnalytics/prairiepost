@@ -191,6 +191,7 @@ function pp_publish_due(PDO $db): int
     require_once PP_ROOT . '/app/agents.php';
     foreach ($due as $postId) {
         pp_agent_auto_enqueue((int) $postId);
+        pp_indexnow_notify_post((int) $postId);
     }
     return count($due);
 }

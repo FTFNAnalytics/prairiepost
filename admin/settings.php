@@ -10,8 +10,11 @@ $textKeys = [
     'newsletter_heading', 'newsletter_copy', 'markets_note', 'analytics_code',
     'breaking_label', 'breaking_url', 'contact_email',
     'field_notes_text', 'field_notes_url',
-    'ad_top', 'ad_rail', 'ad_article',
-    'ai_model', 'ai_disclosure', 'monitor_retention_days',
+    'ad_top', 'ad_rail', 'ad_article', 'ads_txt',
+    'about_heading', 'about_standfirst', 'about_body',
+    'privacy_heading', 'privacy_body', 'privacy_officer',
+    'standards_heading', 'standards_body', 'funding_note',
+    'ai_model', 'ai_daily_limit', 'ai_disclosure', 'monitor_retention_days',
     'ga4_property_id', 'gsc_site_url',
 ];
 $jsonKeys = ['regions', 'markets', 'traffic_items', 'events_items'];
@@ -22,6 +25,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         set_setting('cron_secret', bin2hex(random_bytes(16)));
         pp_audit('cron_secret.rotated', 'settings');
         flash_set('New cron secret generated. Update the cron job URL to match.');
+        redirect('settings.php');
+    }
+    if (($_POST['action'] ?? '') === 'new_indexnow_key') {
+        $k = pp_indexnow_generate_key();
+        pp_audit('indexnow_key.rotated', 'settings', substr($k, 0, 8) . '…');
+        flash_set('IndexNow key generated. Verification file is live at /' . $k . '.txt.');
         redirect('settings.php');
     }
     if (($_POST['action'] ?? '') === 'new_monitor_token' && pp_is_hub()) {
@@ -239,6 +248,19 @@ $ixName = (string) setting('site_title');
   <?php if ($ix['notes']): ?>
   <p class="help" style="margin-top:10px"><?= e(implode(' ', $ix['notes'])) ?></p>
   <?php endif; ?>
+  <?php $inKey = pp_indexnow_key(); ?>
+  <hr style="border:0;border-top:1px solid var(--pp-board);margin:14px 0">
+  <p style="margin:0 0 8px"><strong>IndexNow instant indexing</strong> (Bing, DuckDuckGo, Copilot):
+    <?php if ($inKey !== ''): ?>
+      <span class="chip chip--ok">Key ready</span>
+      <span class="mono"><a href="/<?= e($inKey) ?>.txt" target="_blank">/<?= e($inKey) ?>.txt</a></span>
+      <?= $ixOn ? ' — pings automatically on publish.' : ' — waiting until this paper is opened to search engines.' ?>
+    <?php else: ?>
+      <span class="chip chip--draft">Off</span> Generate a key to ping IndexNow automatically when stories publish.
+    <?php endif; ?>
+  </p>
+  <form method="post" class="inline"><?= csrf_field() ?><input type="hidden" name="action" value="new_indexnow_key">
+    <button class="btn btn--ghost btn--small" type="submit"><?= $inKey !== '' ? 'Rotate IndexNow key' : 'Generate IndexNow key' ?></button></form>
 </div>
 
 <form method="post">
@@ -387,15 +409,45 @@ $ixName = (string) setting('site_title');
   <?php endif; ?>
 
   <div class="panel">
+    <h2>Trust &amp; policy pages</h2>
+    <p class="pagesub" style="margin-bottom:12px">Built-in publisher transparency routes (<a href="/about" target="_blank">/about</a>, <a href="/standards" target="_blank">/standards</a>, <a href="/privacy" target="_blank">/privacy</a>) wired into every article's <span class="mono">NewsMediaOrganization</span> JSON-LD. Leave body fields blank to use the bilingual defaults.</p>
+    <div class="formgrid">
+      <div>
+        <label for="about_body">About page body · HTML allowed (<a href="/about" target="_blank">/about</a>)</label>
+        <textarea id="about_body" name="about_body" class="prose" style="min-height:80px"><?= e(setting('about_body')) ?></textarea>
+        <label for="funding_note">Ownership &amp; funding note · shown on /standards and /about</label>
+        <input type="text" id="funding_note" name="funding_note" value="<?= e(setting('funding_note')) ?>" placeholder="Independently published by Civis Media Inc.">
+        <label for="privacy_officer">Privacy officer contact · email or name for PIPEDA / Quebec Law 25</label>
+        <input type="text" id="privacy_officer" name="privacy_officer" value="<?= e(setting('privacy_officer')) ?>" placeholder="privacy@example.ca">
+      </div>
+      <div>
+        <label for="standards_body">Editorial standards body · HTML allowed (<a href="/standards" target="_blank">/standards</a>)</label>
+        <textarea id="standards_body" name="standards_body" class="prose" style="min-height:80px"><?= e(setting('standards_body')) ?></textarea>
+        <label for="privacy_body">Privacy policy body · HTML allowed (<a href="/privacy" target="_blank">/privacy</a>)</label>
+        <textarea id="privacy_body" name="privacy_body" class="prose" style="min-height:80px"><?= e(setting('privacy_body')) ?></textarea>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel">
     <h2>The research desk</h2>
     <?php if (pp_is_hub()): ?>
-    <label for="ai_model">Model id · blank uses <span class="mono">claude-opus-5</span></label>
-    <input type="text" id="ai_model" name="ai_model" class="mono" value="<?= e(setting('ai_model')) ?>" placeholder="claude-opus-5">
-    <p class="help">The API key is not a setting — it lives in <code>config.php</code> on the server (<code>anthropic_api_key</code>), never in the database.</p>
+    <div class="formgrid">
+      <div>
+        <label for="ai_model">Model id · blank uses <span class="mono">claude-sonnet-4-6</span></label>
+        <input type="text" id="ai_model" name="ai_model" class="mono" value="<?= e(setting('ai_model')) ?>" placeholder="claude-sonnet-4-6">
+        <p class="help">The API key is not a setting — it lives in <code>config.php</code> on the server (<code>anthropic_api_key</code>), never in the database.</p>
+      </div>
+      <div>
+        <label for="ai_daily_limit">Daily AI call limit · blank = 50/day, 0 = unlimited</label>
+        <input type="text" id="ai_daily_limit" name="ai_daily_limit" class="mono" value="<?= e(setting('ai_daily_limit')) ?>" placeholder="50" style="max-width:120px">
+        <p class="help">Calls today: <span class="mono"><?= (int) pp_ai_calls_today() ?></span><?= pp_ai_daily_limit() > 0 ? ' / ' . (int) pp_ai_daily_limit() : ' (unlimited)' ?>.</p>
+      </div>
+    </div>
     <?php else: ?>
-    <label for="ai_disclosure">AI-assistance disclosure · blank = off (the default)</label>
-    <input type="text" id="ai_disclosure" name="ai_disclosure" value="<?= e(setting('ai_disclosure')) ?>" placeholder="1">
-    <p class="help">Printed under the byline on stories drafted with the desk's help (<span class="mono">origin = ai</span>). Set to <span class="mono">1</span> for the standard line — “Prepared with AI assistance and reviewed by an editor.” — or write your own wording. Every AI-assisted story is verified, rewritten and signed by its journalist either way; this only chooses whether readers see a note.</p>
+    <label for="ai_disclosure">AI disclosure · blank = OFF (default until explicitly enabled)</label>
+    <input type="text" id="ai_disclosure" name="ai_disclosure" value="<?= e(setting('ai_disclosure')) ?>" placeholder="leave blank to keep off">
+    <p class="help">Off by default. When explicitly enabled (<span class="mono">1</span> for standard wording, or custom text), prints across every paper template.</p>
     <?php endif; ?>
   </div>
 
@@ -407,6 +459,8 @@ $ixName = (string) setting('site_title');
         <textarea id="ad_top" name="ad_top" class="mono"><?= e(setting('ad_top')) ?></textarea>
         <label for="ad_rail">Ad slot · rail</label>
         <textarea id="ad_rail" name="ad_rail" class="mono"><?= e(setting('ad_rail')) ?></textarea>
+        <label for="ads_txt">ads.txt · served dynamically at <a href="/ads.txt" target="_blank">/ads.txt</a> (blank = 404)</label>
+        <textarea id="ads_txt" name="ads_txt" class="mono" style="min-height:84px" placeholder="google.com, pub-0000000000000000, DIRECT, f08c47fec0942fa0"><?= e(setting('ads_txt')) ?></textarea>
       </div>
       <div>
         <label for="ad_article">Ad slot · after story text</label>
