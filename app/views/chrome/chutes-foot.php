@@ -1,14 +1,16 @@
 <?php
-/* Les Chutes — footer chrome. FOUNDATION build (Nov 2026): Toronto
-   Telegraph's footer band, unbranded. Closes <main> and the document. */
+/* Les Chutes — footer chrome. Toronto Telegraph's footer band in the
+   owner's brand package (28 Nov 2026): Bleu profond, with the waterfall
+   reversed in Bleu clair and the wordmark in white. Closes <main> and
+   the document. */
 ?>
 </main>
 <footer class="ch-foot">
   <div class="cols">
     <div>
-      <a class="ch-lock" href="/">
-        <img src="<?= e(site_asset('mark-reversed.svg')) ?>" alt="">
-        <span class="ch-name"><span class="top">Les</span><span class="mid">Chutes</span><span class="sub"><?= e(setting('tagline')) ?></span></span>
+      <a class="ch-lock" href="/" aria-label="<?= e($siteTitle) ?> — page d’accueil">
+        <img class="mk" src="<?= e(site_asset('mark-reversed.svg')) ?>" alt="" width="77" height="60">
+        <span class="ch-name"><span class="wm">Les Chutes</span><span class="sub"><?= e(setting('tagline')) ?></span></span>
       </a>
       <p style="font-size:14px;line-height:1.6;margin-top:10px"><?= e(setting('footer_line', setting('tagline'))) ?></p>
     </div>

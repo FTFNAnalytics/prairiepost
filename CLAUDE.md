@@ -495,6 +495,21 @@ holding a capability it should not have.
   - Launch still waits on the domain and on the six-story inaugural
     edition, which needs the owner's answer on whether the paper reports
     or links (`DEPLOY-EASTERLY.md`).
+- **Les Chutes is branded (28 Nov), the second package applied.**
+  - The package's images disagree with each other: nine different
+    waterfalls, five taglines and two type pairings. The build follows
+    its README, the only text, and the files the README names.
+    `docs/brand-packages.md` lists every choice and the owner's open
+    questions.
+  - Colours are the README's five, with gold kept to accents and the
+    breaking strip. Type is two font roles, `--ch-head` (Newsreader, also
+    the wordmark, as live text) and `--ch-ui` (Inter).
+  - The masthead uses the traced "logo principal" waterfall. The icons
+    use the package's app icon.
+  - The footprint is the README's, Québec and eastern Quebec. The wire
+    pull has an Est-du-Québec region of three Radio-Canada feeds.
+  - Launch waits on the domain, chutesquebec.ca or leschutes.com (the
+    guide prints the second), and on the inaugural edition.
 - **The expansion name slate is in `NETWORK-EXPANSION.md`** (chosen
   23 Nov 2026): twelve mastheads for the North, Atlantic Canada,
   Quebec and Saskatchewan, with their domains, the reasons, the open

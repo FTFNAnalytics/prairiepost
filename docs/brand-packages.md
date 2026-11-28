@@ -6,15 +6,15 @@ Telegraph's design: the same layout, type and page furniture, in a
 placeholder slate colour scheme with a monogram roundel for a mark. Each
 has a launch pack with its domains, desks and wire feeds, and no stories.
 Terminal City Times has been a foundation since 22 Sep, in its own
-heritage-broadsheet design. The first package, The Easterly's, arrived
-and was applied on 28 Nov (below).
+heritage-broadsheet design. The first two packages, The Easterly's and
+Les Chutes', arrived and were applied on 28 Nov (below).
 
 | Paper | Slug and template | Covers | Domain | State |
 | --- | --- | --- | --- | --- |
 | Citadel Courier | `citadel-courier`, `citadel` | Halifax and Nova Scotia | citadelcourier.ca | Foundation; domain unregistered |
 | The Easterly | `easterly`, `easterly` | Atlantic Canada, region-wide | easterly.ca | Branded 28 Nov; domain unregistered |
 | Le Memphré | `memphre`, `memphre` | Magog and Lake Memphrémagog (French) | memphre.ca | Foundation; domain unregistered |
-| Les Chutes | `chutes`, `chutes` | Quebec City (French) | chutesquebec.ca | Foundation; domain unregistered |
+| Les Chutes | `chutes`, `chutes` | Quebec City and eastern Quebec (French) | chutesquebec.ca | Branded 28 Nov; domain unregistered |
 | Borealis Bulletin | `borealis-bulletin`, `borealis` | Yukon, NWT and Nunavut | borealisbulletin.ca | Foundation; domain unregistered |
 | Terminal City Times | `terminal-city-times`, `terminalcity` | Vancouver | terminalcitytimes.ca | Foundation; domain registered 22 Sep |
 
@@ -122,17 +122,58 @@ the lockup, as PNGs.
   - Magog and the towns around the lake, or all of Estrie?
   - Is L'Estrien, named but not built, to be the Estrie paper above it?
 
-**Les Chutes.**
-- Placeholders:
-  - tagline "La capitale, de la falaise au fleuve";
-  - newsletter "L’infolettre des Chutes";
-  - desks Actualités, Politique, Économie, Culture, Sports, Idées.
+**Les Chutes.** The package arrived on 28 Nov and is applied. It held a
+README, two logos, a palette sheet, homepage, article and phone mock-ups,
+an app icon, a social banner and a brand guide, all as JPEG images.
+The images disagree with each other, so the build follows the README,
+the package's only text, and the files it names:
+- **Colours:** the five the README, palette sheet and guide all give.
+
+  | Package name | Hex | Where it shows |
+  | --- | --- | --- |
+  | Bleu Québec (principal) | `#325EA8` | Links, buttons, desk chips, the masthead rule, the waterfall |
+  | Bleu profond (marine) | `#002B5C` | All type; the dark grounds (utility strip, lead panel, subscribe box, footer band) |
+  | Blanc | `#FFFFFF` | The page; type on dark grounds |
+  | Bleu clair (cyan d'eau, glace) | `#A8D8EA` | Kickers and accents on dark grounds; the reversed waterfall; a quarter-tint for soft panels |
+  | Or (accent) | `#D4AF37` | Sparingly, as the guide asks: the current section's underline, the rule over a card without art, the footer's headings, the breaking strip. Never text on white (2.1:1) |
+
+  The images themselves draw the mark in other blues (`#1C7BD0`, `#0050A0`).
+  The traces use the README's.
+- **Type:** the README's first choices: Newsreader for titles and the
+  wordmark, Inter for body and interface. The guide image names
+  Playfair Display and Source Sans 3 instead. All four are self-hosted,
+  so either set is a small change.
+- **Mark:** the nine images draw nine different waterfalls. The masthead
+  uses file 01, the README's "logo principal", traced and set in Bleu
+  Québec (reversed in Bleu clair on Bleu profond). The icons use file 07,
+  the README's "icône / favicon", without its "LC" letters.
+- **Wordmark:** live text in Newsreader, since the README asks only for
+  "typographie élégante" and the images set it five ways.
+- **Tagline:** "L’actualité de Québec et de l’Est-du-Québec", the
+  homepage mock-up's line, which matches the README. The images offer
+  four others, among them the guide's "Vivre l'essentiel", a tourism
+  line.
+- **Footprint:** the README's "Québec et l'est du Québec". The pack's
+  descriptions say so, and the newsroom's wire pull has an
+  Est-du-Québec region (Radio-Canada's Bas-Saint-Laurent,
+  Gaspésie–Îles-de-la-Madeleine and Côte-Nord feeds, 50 items each on
+  28 Nov).
+- **Share card:** the package's banner is a template with an empty
+  panel, so the card is drawn in the network's layout.
+- Still a placeholder: newsletter "L’infolettre des Chutes".
+- Desks unchanged: Actualités, Politique, Économie, Culture, Sports,
+  Idées. The mock-ups show three other sets, one with an Est-du-Québec
+  desk.
 - Weather and clock: Québec.
 - Decide:
-  - the city, or the whole Capitale-Nationale;
-  - whether Lévis counts as local;
-  - whether to also hold leschutes.com, the exact masthead, which was
-    free on 28 Nov.
+  - which waterfall, if not the "logo principal";
+  - the type, the README's or the guide's;
+  - whether Lévis counts as local, and whether eastern Quebec gets a
+    desk of its own;
+  - the domain: chutesquebec.ca, or leschutes.com, which the guide
+    prints and which was free on 28 Nov;
+  - what the paper reports itself and what it links, for the inaugural
+    edition.
 
 **Borealis Bulletin.**
 - Placeholders:
@@ -194,6 +235,23 @@ The build also revises the paper's `DEPLOY-<NAME>.md` to launch form.
 - **A package's red is easy to overuse.** Lighthouse is for breaking
   news and the full stop. The Easterly's chrome gained a breaking strip
   for it, read through `pp_breaking_live()`.
+
+### What the second package taught (Les Chutes, 28 Nov)
+
+- **A generated package can disagree with itself.** Les Chutes' images
+  drew nine different marks, five taglines and two type pairings. Follow
+  the package's own text and the files it names, show the owner every
+  variant on one sheet, and ask, rather than averaging the images.
+- **Read colours from the spec, not from the pictures.** The images'
+  blues were not the README's. Trace the shapes and fill them with the
+  specified colours.
+- **Smooth a mask from a JPEG before tracing it.** Nearest-colour masks
+  of a compressed image stair-step, and potrace keeps every step. A
+  1.8 px blur before `mkbitmap` cut the icon's paths from 59 KB to 12 KB
+  at 0.15% of pixels changed.
+- **Type is a role too.** Les Chutes' stylesheet names its faces once,
+  as `--ch-head` and `--ch-ui`. The next package that names other faces
+  changes two lines.
 Then the VPS agent gets a launch brief: DNS, the generated nginx block,
 the certificate, and the seed. Each paper opens to search engines only
 when its newsroom presses Open in Settings.

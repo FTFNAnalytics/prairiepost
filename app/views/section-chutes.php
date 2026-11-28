@@ -1,6 +1,6 @@
 <?php
-/* Les Chutes — section front. FOUNDATION build (Nov 2026): Toronto
-   Telegraph's desk page, unbranded ($cat, $posts, $page, $pages
+/* Les Chutes — section front. Toronto Telegraph's desk page in the
+   owner's brand package (28 Nov 2026) ($cat, $posts, $page, $pages
    resolved by section.php). The ruled desk title over hairlined rows;
    desk descriptions are shared network-wide, so the name is the page. */
 // Bylines in French: the shared dateline() prints "By" and English times.
