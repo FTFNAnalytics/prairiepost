@@ -1,7 +1,7 @@
 <?php
-/* Le Memphré — article. FOUNDATION build (Nov 2026): Toronto Telegraph's
-   article, unbranded ($post resolved). Chip kicker over the bold sans
-   headline, ruled byline strip, classic serif body. */
+/* Le Memphré — article. Toronto Telegraph's article in the owner's brand
+   guidelines (Nov 2026) ($post resolved). Chip kicker over the Playfair
+   Display headline, ruled byline strip, Source Sans 3 body. */
 // Bylines in French: the shared dateline() prints "By" and English times.
 $meSig = static function (array $p): string {
     $bits = [];

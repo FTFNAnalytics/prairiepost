@@ -1,10 +1,11 @@
 <?php
-/* Le Memphré — front page. FOUNDATION build (Nov 2026): Toronto
-   Telegraph's front, unbranded. $hero resolved by index.php: the photo
-   hero under the primary scrim (the primary panel with the reversed
-   roundel when the lead has no art), Featured Stories cards beside the
-   rail — weather, the latest five, the subscribe box. Renders the empty
-   state cleanly: the paper carries no stories before its brand build. */
+/* Le Memphré — front page. Toronto Telegraph's front in the owner's
+   brand guidelines (Nov 2026). $hero resolved by index.php: the photo
+   hero under the Dark Blue scrim (the Dark Blue panel with the reversed
+   serpent on its bottom edge when the lead has no art), Featured Stories
+   cards beside the rail — weather, the latest five, the subscribe box.
+   Renders the empty state cleanly: the paper carries no stories before
+   its inaugural edition. */
 // Bylines in French: the shared dateline() prints "By" and English times.
 $meSig = static function (array $p): string {
     $bits = [];
@@ -126,7 +127,7 @@ $meW = array_pad(explode('|', pp_weather_line()), 2, '');
       <?php endif; ?>
       <div class="me-subbox">
         <h3><?= e(setting('newsletter_heading', 'L’infolettre du Memphré')) ?></h3>
-        <p><?= e(setting('newsletter_copy', 'La une du Memphré dans votre boîte courriel chaque matin de semaine : ce que Magog et le lac ont décidé, construit et débattu.')) ?></p>
+        <p><?= e(setting('newsletter_copy', 'La une du Memphré dans votre boîte courriel chaque matin de semaine : ce que Sherbrooke et les Cantons-de-l’Est ont décidé, construit et débattu.')) ?></p>
         <a class="me-btn" href="<?= e(url('newsletter/')) ?>"><?= e(pp_t('Subscribe')) ?></a>
       </div>
     </aside>

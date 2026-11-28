@@ -1,8 +1,12 @@
 <?php
-/* Le Memphré — masthead chrome. FOUNDATION build (Nov 2026): Toronto
-   Telegraph's masthead, unbranded. In scope from page_header():
-   $siteTitle, $tagline, $activeDesk. The placeholder roundel and the
-   two-line wordmark wait for the brand package. */
+/* Le Memphré — masthead chrome. Toronto Telegraph's masthead in the
+   owner's brand guidelines (Nov 2026): the lake serpent (mark.svg, traced
+   from the logo), the wordmark set in Playfair Display, the logo's
+   three-line wave (waves.svg) and the tagline. In scope from
+   page_header(): $siteTitle, $tagline, $activeDesk. The breaking strip
+   is Teal under ink and shows only while pp_breaking_live() holds
+   (app/freshness.php); its label is "Dernière heure" in the served HTML,
+   uppercased by CSS. */
 ?>
 <div class="me-util">
   <div class="in">
@@ -19,8 +23,8 @@
 <header class="me-head">
   <div class="in">
     <a class="me-lock" href="/" aria-label="<?= e($siteTitle) ?> — page d’accueil">
-      <img src="<?= e(site_asset('mark.svg')) ?>" alt="">
-      <span class="me-name"><span class="top">Le</span><span class="mid">Memphré</span><span class="sub"><?= e($tagline) ?></span></span>
+      <img class="mk" src="<?= e(site_asset('mark.svg')) ?>" alt="" width="98" height="90">
+      <span class="me-name"><span class="wm">Le Memphré</span><img class="wv" src="<?= e(site_asset('waves.svg')) ?>" alt="" width="110" height="28"><span class="sub"><?= e($tagline) ?></span></span>
     </a>
     <nav class="me-nav" aria-label="<?= e(pp_t('Sections')) ?>">
       <a href="/"<?= ($GLOBALS['pp_front_page'] ?? false) ? ' aria-current="page"' : '' ?>><?= e(pp_t('Home')) ?></a>
@@ -32,4 +36,12 @@
     </nav>
   </div>
 </header>
+<?php if (pp_breaking_live()): ?>
+<div class="me-brk">
+  <div class="in">
+    <span class="lbl"><?= e(pp_t('Breaking')) ?></span>
+    <a href="<?= e(setting('breaking_url')) ?>"><?= e(setting('breaking_label')) ?></a>
+  </div>
+</div>
+<?php endif; ?>
 <main id="content">

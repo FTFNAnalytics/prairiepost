@@ -1,18 +1,25 @@
 {
     "zone": "America/Toronto",
+    "theme": "#053A6E",
     "weather": {
-        "city": "qc-83",
-        "place": "Magog"
+        "city": "qc-136",
+        "place": "Sherbrooke"
     },
     "palette": {
-        "ink": "#1A1A1A",
+        "ink": "#1A2A3A",
         "paper": "#FFFFFF",
-        "surface": "#F2F4F6",
-        "accent": "#182330",
-        "deep": "#0F161D",
-        "secondary": "#758BA0",
-        "muted": "#4B5563",
-        "line": "#B5BDC6"
+        "surface": "#E6F6F7",
+        "accent": "#085492",
+        "deep": "#053A6E",
+        "teal": "#28A1AC",
+        "link": "#1A747C",
+        "muted": "#5A6A7A",
+        "line": "#D0D8E0",
+        "board": "#D0D8E0",
+        "sky": "#E6F6F7",
+        "hill": "#28A1AC",
+        "field": "#085492",
+        "stubble": "#053A6E"
     },
     "desk_labels": {
         "actualites": "Actualités",
@@ -23,12 +30,12 @@
         "idees": "Idées"
     },
     "desks": {
-        "actualites": "#182330",
-        "economie": "#182330",
-        "environnement": "#182330",
-        "culture-qc": "#182330",
-        "sports-qc": "#182330",
-        "idees": "#182330"
+        "actualites": "#1A747C",
+        "economie": "#1A747C",
+        "environnement": "#1A747C",
+        "culture-qc": "#1A747C",
+        "sports-qc": "#1A747C",
+        "idees": "#1A747C"
     },
     "chrome": {
         "template": "memphre",
@@ -43,30 +50,31 @@
         ]
     },
     "admin": {
-        "accent": "#182330",
+        "accent": "#085492",
         "spot": "#A23A2E",
         "strip": [
-            "#0F161D",
-            "#B5BDC6"
+            "#053A6E",
+            "#A0D0E0"
         ],
         "band": [
             "#FFFFFF",
-            "#182330"
+            "#053A6E"
         ],
         "nav": [
-            "#182330",
+            "#085492",
             "#FFFFFF"
         ],
         "mark": "mark.svg",
         "wordmark": {
-            "font": "'Archivo Narrow', 'Archivo', 'Arial Narrow', sans-serif",
-            "weight": 700,
-            "case": "uppercase",
-            "spacing": "0.02em"
+            "font": "'Playfair Display', Georgia, serif",
+            "weight": 600,
+            "case": "none",
+            "spacing": "normal",
+            "color": "#053A6E"
         },
         "fonts": {
-            "heading": "'Archivo', 'Helvetica Neue', Arial, sans-serif",
-            "body": "'Source Serif 4', Georgia, serif"
+            "heading": "'Playfair Display', Georgia, serif",
+            "body": "'Source Sans 3', 'Segoe UI', Arial, sans-serif"
         }
     }
 }
