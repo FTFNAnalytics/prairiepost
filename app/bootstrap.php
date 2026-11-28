@@ -64,6 +64,7 @@ require PP_ROOT . '/app/freshness.php';
 require PP_ROOT . '/app/media.php';
 require PP_ROOT . '/app/ai.php';
 require PP_ROOT . '/app/google.php';
+require PP_ROOT . '/app/indexnow.php';
 
 function pp_config(string $key, $default = null)
 {

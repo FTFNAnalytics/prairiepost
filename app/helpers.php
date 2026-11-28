@@ -361,6 +361,70 @@ function fmt_date(?string $dt, string $format = 'M j, Y'): string
     return $ts ? pp_date($format, $ts) : '';
 }
 
+/** Default publication byline when no named reporter is credited. */
+function pp_default_byline(): string
+{
+    return pp_t('Newsroom Staff');
+}
+
+/**
+ * Normalize a story's byline for publication: replace any legacy
+ * "Automated report" / "Rapport automatisé" label with the default
+ * Newsroom Staff byline.
+ */
+function pp_normalize_byline(?string $byline, string $postType = 'story'): string
+{
+    $clean = trim((string) $byline);
+    if ($clean !== '' && preg_match('/^(automated report|rapport automatis[eé])$/iu', $clean) === 1) {
+        return pp_default_byline();
+    }
+    if ($clean === '' && $postType !== 'link') {
+        return pp_default_byline();
+    }
+    return $clean;
+}
+
+/**
+ * Schema.org author object for NewsArticle JSON-LD.
+ * Emits @type: Organization for newsroom, staff, desk, or masthead bylines
+ * and @type: Person only for named human authors.
+ */
+function pp_jsonld_author(array $post, string $siteTitle): array
+{
+    $byline = pp_normalize_byline((string) ($post['byline'] ?? ''), (string) ($post['post_type'] ?? 'story'));
+    $authorSlug = trim((string) ($post['author_slug'] ?? ''));
+    $autoByline = trim((string) (pp_brand_file()['automated_byline'] ?? ''));
+
+    $isOrg = $byline === '';
+    if (!$isOrg && $authorSlug === '') {
+        $norm = mb_strtolower($byline);
+        $siteNorm = mb_strtolower(trim($siteTitle));
+        $autoNorm = mb_strtolower($autoByline);
+        if (
+            $norm === $siteNorm
+            || ($autoNorm !== '' && $norm === $autoNorm)
+            || preg_match('/^(newsroom staff|staff|newsroom|editorial board|la r[eé]daction|wire|news desk|staff reporter|local journalism|civis media)(\b|$)/iu', $byline) === 1
+            || preg_match('/\b(newsroom|staff|desk|editorial|bureau|wire)\b/iu', $byline) === 1
+        ) {
+            $isOrg = true;
+        }
+    }
+
+    if ($isOrg) {
+        return [
+            '@type' => 'Organization',
+            'name'  => $byline !== '' ? $byline : pp_default_byline(),
+            'url'   => site_url(),
+        ];
+    }
+
+    return array_filter([
+        '@type' => 'Person',
+        'name'  => $byline,
+        'url'   => $authorSlug !== '' ? site_url() . '/author/' . $authorSlug : null,
+    ]);
+}
+
 /**
  * Reading time in whole minutes, at 200 words a minute, rounded up.
  * Counts the lede with the body so a short piece isn't reported as zero.

@@ -298,7 +298,7 @@ if (!$agent['may_publish']) {
     $draftReason = 'draft_only token: this credential files drafts for the newsroom to publish'
         . ($withheld ? ' (' . implode('; ', $withheld) . ')' : '');
 }
-$byline = pp_hermes_setting($siteId, 'automated_byline', 'Automated report');
+$byline = pp_normalize_byline(pp_hermes_setting($siteId, 'automated_byline', 'Newsroom Staff'));
 $now = now();
 
 $imagePath = '';
