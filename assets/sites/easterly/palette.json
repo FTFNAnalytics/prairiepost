@@ -1,0 +1,69 @@
+{
+    "zone": "America/Halifax",
+    "palette": {
+        "ink": "#17232B",
+        "paper": "#EEF0EE",
+        "surface": "#E2E6E4",
+        "accent": "#1D6A85",
+        "secondary": "#124A5E",
+        "red": "#C0392B",
+        "muted": "#5A5F62",
+        "line": "#CCCFCF",
+        "board": "#CCCFCF",
+        "sky": "#E2E6E4",
+        "hill": "#1D6A85",
+        "field": "#124A5E",
+        "stubble": "#17232B"
+    },
+    "desk_labels": {
+        "news": "News",
+        "politics": "Politics",
+        "business": "Business",
+        "environment": "Environment",
+        "culture": "Culture",
+        "sports": "Sports",
+        "opinion": "Opinion"
+    },
+    "desks": {
+        "news": "#1D6A85",
+        "politics": "#1D6A85",
+        "business": "#1D6A85",
+        "environment": "#1D6A85",
+        "culture": "#1D6A85",
+        "sports": "#1D6A85",
+        "opinion": "#1D6A85"
+    },
+    "chrome": {
+        "template": "easterly",
+        "nav": [
+            "news",
+            "politics",
+            "business",
+            "environment",
+            "culture",
+            "sports",
+            "opinion"
+        ]
+    },
+    "admin": {
+        "accent": "#1D6A85",
+        "spot": "#C0392B",
+        "strip": [
+            "#17232B",
+            "#CCCFCF"
+        ],
+        "band": [
+            "#EEF0EE",
+            "#17232B"
+        ],
+        "nav": [
+            "#1D6A85",
+            "#EEF0EE"
+        ],
+        "logo": "lockup.svg",
+        "fonts": {
+            "heading": "'Archivo', 'Helvetica Neue', Arial, sans-serif",
+            "body": "'Source Serif 4', Georgia, serif"
+        }
+    }
+}

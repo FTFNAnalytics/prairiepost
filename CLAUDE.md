@@ -441,18 +441,99 @@ holding a capability it should not have.
   `docs/briefs/launch-steeltown-toronto.md` (launch-only from the live
   release, no pin; it checks for a stopped or running roll first, and
   adds `client_max_body_size 10m` to the two new blocks because the
-  live release's template predates it). Only `terminal-city-times`
+  live release's template predates it). `terminal-city-times`
   (DEPLOY-TERMINALCITY.md) remains
   foundation-only, awaiting its brand package. Foundations get
   their six-story inaugural editions at brand-build time, never
   earlier. The wider slate (Rideau siblings, Atlantic papers)
   awaits packages.
+- **Five more foundations, on Toronto Telegraph's design (28 Nov).**
+  - The owner's order: "get the foundations ready unbranded, and I'll
+    get colour packages… Toronto Telegraph is probably our cleanest
+    overall design. I'd replicate that with the new sites, just with
+    their own branding and colours."
+  - The five:
+    - `citadel-courier` (`citadel`, Halifax);
+    - `easterly` (`easterly`, Atlantic Canada, no weather city);
+    - `memphre` (`memphre`, Magog, French);
+    - `chutes` (`chutes`, Quebec City, French);
+    - `borealis-bulletin` (`borealis`, the North, Whitehorse as a
+      placeholder home).
+  - Each stylesheet is Telegraph's, with every one of its eleven colours
+    turned into a role variable (primary, deep, secondary…) declared
+    once at the top. A colour package sets those values and
+    `palette.json`, and nothing else.
+  - The one deliberate change from Telegraph: the Subscribe button
+    keeps its side padding. Telegraph's `.tg-nav a` rule overrides it
+    on the live site too.
+  - The French two use `pp_t()`, the French date and clock helpers, and
+    their own bylines, since `dateline()` prints "By".
+  - The packs have no stories, and no desk is new network-wide. Every
+    wire feed answered with RSS on 28 Nov.
+  - Their domains were unregistered on 28 Nov.
+  - `docs/brand-packages.md` lists what each package carries and each
+    paper's open decisions.
+  - Each runbook (`DEPLOY-CITADEL.md`, `-EASTERLY`, `-MEMPHRE`,
+    `-CHUTES`, `-BOREALIS`) blocks launch until the brand build.
+  - `America/Yellowknife` is only an alias in PHP's zone list, so a
+    Yellowknife-based paper fails the clock test until `app/weather.php`
+    points `nt` at America/Edmonton.
+- **The Easterly is branded (28 Nov), the first package applied.**
+  - The owner's package held six colours, the E. mark, the logotype and
+    the lockup. `docs/brand-packages.md` maps each colour to where it
+    shows. Oilskin is for print only and never appears on the site.
+  - The mark and logotype are traced SVGs in `assets/sites/easterly/`.
+    The masthead is the package's lockup over a full-width section bar,
+    since seven desks no longer fit beside the logotype.
+  - The package gives links their own colour (Harbour), apart from the
+    dark grounds (North Atlantic). So "a colour package sets the values
+    and nothing else" didn't hold here: the stylesheet paints its dark
+    grounds with `--ea-deep`, not `--ea-primary`. The next packages may
+    need the same, and the brand-packages doc says how to tell.
+  - The chrome gained a breaking strip in the package's red, read only
+    through `pp_breaking_live()`.
+  - The owner's answers (28 Nov): Atlantic time, its own reporting, and
+    the owner is registering easterly.ca.
+  - The inaugural edition is seven launch notes, one per desk, dated by
+    the seeder at launch through the older packs' `$ago` helper.
+  - Launch waits only on the domain (`DEPLOY-EASTERLY.md`).
+- **Les Chutes is branded (28 Nov), the second package applied.**
+  - The package's images disagree with each other: nine different
+    waterfalls, five taglines and two type pairings. The build follows
+    its README, the only text, and the files the README names.
+    `docs/brand-packages.md` lists every choice and the owner's open
+    questions.
+  - Colours are the README's five, with gold kept to accents and the
+    breaking strip. Type is two font roles, `--ch-head` (Newsreader, also
+    the wordmark, as live text) and `--ch-ui` (Inter).
+  - The masthead uses the traced "logo principal" waterfall. The icons
+    use the package's app icon.
+  - The footprint is the README's, Québec and eastern Quebec. The wire
+    pull has an Est-du-Québec region of three Radio-Canada feeds.
+  - Launch waits on the domain, chutesquebec.ca or leschutes.com (the
+    guide prints the second), and on the inaugural edition.
+- **Citadel Courier is branded (28 Nov), the third package applied.**
+  - The package's images disagree with each other again: nine marks,
+    five taglines, and a guide that sets headings in Inter and labels a
+    shield-castle the primary logo. The build follows the README and
+    the files it names. `docs/brand-packages.md` lists every choice.
+  - Colours are the README's six. Gold is kept to accents, and Courier
+    Red (`--cc-signal`) is the breaking strip. Type is `--cc-head`
+    (Newsreader, also the wordmark as live text) and `--cc-ui` (Inter),
+    the same pair as Les Chutes.
+  - The masthead uses the primary logo's traced fort. The icons use the
+    app icon's lighthouse in Light Sea Blue, because the spec's blue on
+    its navy is 1.6:1.
+  - The tagline "Halifax • Nova Scotia" and the footer line come from
+    the homepage mock-up. The guide's delivery-company slogans and the
+    article mock-up's "Since 1873" are not used.
+  - Launch waits on the domain and the inaugural edition.
 - **The expansion name slate is in `NETWORK-EXPANSION.md`** (chosen
   23 Nov 2026): twelve mastheads for the North, Atlantic Canada,
   Quebec and Saskatchewan, with their domains, the reasons, the open
-  questions and every rejected name. Nothing is registered or built
-  yet. Read it before proposing names for a new region; record new
-  name decisions there, never only in a chat.
+  questions and every rejected name. Five are built as foundations
+  (above); none is registered. Read it before proposing names for a
+  new region; record new name decisions there, never only in a chat.
 - **Deploys are pinned**: the VPS agent resolves the release branch
   head via the API, requires the exact full SHA from the brief, and
   fetches `upgrade-papers.sh` at that SHA. Rolls are preceded by a
