@@ -166,7 +166,9 @@ body.t-easterly {
 /* ---- footer ---- */
 .ea-foot { background: var(--ea-deep); color: var(--ea-foot-text); margin-top: 46px; }
 .ea-foot .cols { max-width: 1140px; margin: 0 auto; padding: 34px 20px 20px; display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 26px; }
-.ea-foot a.ea-lock { display: inline-flex; font-size: 10px; padding: 0; }
+/* The footer lockup at 85%, so it stays inside its column down to the
+   four-column grid's narrowest (981px); below that it has its own row. */
+.ea-foot a.ea-lock { display: inline-flex; font-size: 8.5px; padding: 0; }
 .ea-foot .ea-name .sub { color: var(--ea-foot-text); }
 .ea-foot h4 { margin: 0 0 10px; font-family: 'Archivo', sans-serif; font-weight: 700; font-size: 13.5px; letter-spacing: .12em; text-transform: uppercase; color: var(--ea-on-dark); }
 .ea-foot a { display: block; color: var(--ea-foot-text); font-family: 'Archivo', sans-serif; font-size: 14.5px; padding: 3px 0; }
@@ -179,6 +181,7 @@ body.t-easterly {
   .ea-home { grid-template-columns: 1fr; }
   .ea-grid { grid-template-columns: repeat(2, 1fr); }
   .ea-foot .cols { grid-template-columns: 1fr 1fr; }
+  .ea-foot .cols > div:first-child { grid-column: 1 / -1; }
   .ea-hero h1 { font-size: 34px; }
   .ea-hero--noart .wm { right: 20px; bottom: -4px; width: 190px; }
 }
