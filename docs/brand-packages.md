@@ -6,12 +6,13 @@ Telegraph's design: the same layout, type and page furniture, in a
 placeholder slate colour scheme with a monogram roundel for a mark. Each
 has a launch pack with its domains, desks and wire feeds, and no stories.
 Terminal City Times has been a foundation since 22 Sep, in its own
-heritage-broadsheet design. The first two packages, The Easterly's and
-Les Chutes', arrived and were applied on 28 Nov (below).
+heritage-broadsheet design. The first three packages, The Easterly's,
+Les Chutes' and Citadel Courier's, arrived and were applied on 28 Nov
+(below).
 
 | Paper | Slug and template | Covers | Domain | State |
 | --- | --- | --- | --- | --- |
-| Citadel Courier | `citadel-courier`, `citadel` | Halifax and Nova Scotia | citadelcourier.ca | Foundation; domain unregistered |
+| Citadel Courier | `citadel-courier`, `citadel` | Halifax and Nova Scotia | citadelcourier.ca | Branded 28 Nov; domain unregistered |
 | The Easterly | `easterly`, `easterly` | Atlantic Canada, region-wide | easterly.ca | Branded 28 Nov; domain unregistered |
 | Le Memphré | `memphre`, `memphre` | Magog and Lake Memphrémagog (French) | memphre.ca | Foundation; domain unregistered |
 | Les Chutes | `chutes`, `chutes` | Quebec City and eastern Quebec (French) | chutesquebec.ca | Branded 28 Nov; domain unregistered |
@@ -67,15 +68,55 @@ approve.
 
 ## Per paper: placeholders and open decisions
 
-**Citadel Courier.**
-- Placeholders:
-  - tagline "Halifax, from the hill to the harbour";
-  - newsletter "The Noon Gun", for the Citadel's daily noon gun;
-  - desks Halifax, City Hall, Province, Business, Sports, Opinion.
+**Citadel Courier.** The package arrived on 28 Nov and is applied. It
+held a README, two logos, a palette sheet, homepage, article and phone
+mock-ups, an app icon, a social banner and a brand guide, all as JPEG
+images. The images disagree with each other, so the build follows the
+README, the package's only text, and the files it names:
+- **Colours:** the six the README and the guide give.
+
+  | Package name | Hex | Where it shows |
+  | --- | --- | --- |
+  | Nova Scotia Blue (primary) | `#0047B6` | Links, buttons, desk chips, the masthead rule, the fort |
+  | Deep Navy | `#003262` | All type; the dark grounds (utility strip, lead panel, subscribe box, footer band) |
+  | Pure White | `#FFFFFF` | The page; type on dark grounds |
+  | Light Sea Blue | `#A8D5E2` | Kickers and accents on dark grounds; the reversed fort; the icon's lighthouse; a quarter-tint for soft panels |
+  | Gold Accent | `#FDD44F` | Sparingly: the current section's underline, the rule over a card without art, the footer's headings. Never text on white (1.4:1) |
+  | Crimson (Courier) Red | `#D21034` | The breaking strip only, as the guide's "urgency, alerts" |
+
+- **Type:** the README's first choices: Newsreader for titles and the
+  wordmark, Inter for body and interface, the same pair as Les Chutes.
+  The guide image sets headings in Inter SemiBold instead. Source
+  Serif 4 and Source Sans 3, the README's alternatives, are self-hosted
+  too, and would set the Courier apart from Les Chutes.
+- **Mark:** the nine images draw nine different marks. The masthead uses
+  file 01, the README's "primary logo": the fort, lighthouse and
+  newspaper, traced and set in Nova Scotia Blue and Deep Navy (reversed
+  in Light Sea Blue). The guide image labels a castle in a shield
+  "primary logo" instead, and that shield recurs in three images. The
+  icons use file 07, the README's "app icon / favicon": the lighthouse
+  on the wall, its body in Light Sea Blue, because the spec's blue on
+  Deep Navy is 1.6:1 and disappears at 16 px.
+- **Wordmark:** live text in Newsreader, mixed case as the primary logo
+  sets it.
+- **Tagline:** "Halifax • Nova Scotia", the homepage mock-up's line
+  under the wordmark. Footer line: "News that matters, from where you
+  live.", its footer. The guide's slogans ("Reliable. Trusted. On Your
+  Way.", "Delivering what matters") are a delivery company's, and the
+  article mock-up's "Since 1873" is untrue; neither is used.
+- **Footprint:** the README's "Halifax and Nova Scotia".
+- **Share card:** the package's banner is a template with an empty
+  panel, so the card is drawn in the network's layout.
+- Still a placeholder: newsletter "The Noon Gun".
+- Desks unchanged: Halifax, City Hall, Province, Business, Sports,
+  Opinion. The mock-ups show three other sets.
 - Weather and clock: Halifax.
-- Decide: the footprint. Is it Halifax Regional Municipality, or all of
-  Nova Scotia? The working assumption is Halifax, with The Easterly
-  carrying the region. Also decide whether to hold citadelcourier.com.
+- Decide:
+  - which mark: the fort, or the guide's shield;
+  - the type, the README's or the guide's;
+  - how the Courier and The Easterly divide Nova Scotia;
+  - whether to hold citadelcourier.com;
+  - what the paper reports itself, for the inaugural edition.
 
 **The Easterly.** The package arrived on 28 Nov and is applied. It
 held six colours (`easterly-colours.css`), the E. mark, the logotype and
@@ -103,14 +144,14 @@ the lockup, as PNGs.
 - Desks unchanged: News, Politics, Business, Environment, Culture,
   Sports, Opinion.
 - Weather: none, as with Western Wire, since it has no home city.
-- Clock: Atlantic time.
-- The six-story inaugural edition waits on the second decision below.
-- Decide:
-  - whether Atlantic time suits, given Newfoundland runs half an hour
-    ahead;
-  - whether it does its own reporting, or links the Atlantic papers'
-    stories the way Western Wire links the West's;
-  - whether to hold theeasterly.com.
+- The owner's answers, 28 Nov:
+  - Atlantic time for all four provinces;
+  - its own reporting, not links to sister papers;
+  - the owner is registering easterly.ca.
+- The inaugural edition is written: seven launch notes, one per desk,
+  dated when the seeder runs.
+- Still open: whether to hold theeasterly.com, and the newsletter's name
+  and footer line.
 
 **Le Memphré.**
 - Placeholders:
@@ -252,6 +293,23 @@ The build also revises the paper's `DEPLOY-<NAME>.md` to launch form.
 - **Type is a role too.** Les Chutes' stylesheet names its faces once,
   as `--ch-head` and `--ch-ui`. The next package that names other faces
   changes two lines.
+
+### What the third package taught (Citadel Courier, 28 Nov)
+
+- **Check every pair of spec colours the icon will use, not just text.**
+  Citadel's spec blue on its spec navy is 1.6:1, and the app icon drawn
+  in those two colours vanished at 16 px. The icon took the spec's light
+  blue instead, which also matches the reversed mark.
+- **A generated guide can carry another business's words.** Citadel's
+  guide read "Courier" as a delivery company ("Every delivery. Every
+  time.") and its article mock-up invented a founding year. Take words
+  only where they fit a newspaper and are true.
+- **Measure the footer lockup at every width.** A lockup sized for the
+  masthead outgrows the footer's first column, between 981 and about
+  1100 px in the four-column footer and everywhere in the two-column
+  one. Measure the lockup's images and text, not its link box, which the
+  grid clamps. All three branded papers now draw the footer lockup at
+  85%, and below 981 px give its column a row of its own.
 Then the VPS agent gets a launch brief: DNS, the generated nginx block,
 the certificate, and the seed. Each paper opens to search engines only
 when its newsroom presses Open in Settings.

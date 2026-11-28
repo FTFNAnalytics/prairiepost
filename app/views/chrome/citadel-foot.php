@@ -1,14 +1,16 @@
 <?php
-/* Citadel Courier — footer chrome. FOUNDATION build (Nov 2026): Toronto
-   Telegraph's footer band, unbranded. Closes <main> and the document. */
+/* Citadel Courier — footer chrome. Toronto Telegraph's footer band in the
+   owner's brand package (28 Nov 2026): Deep Navy, with the fort reversed
+   in Light Sea Blue and the wordmark in white. Closes <main> and the
+   document. */
 ?>
 </main>
 <footer class="cc-foot">
   <div class="cols">
     <div>
-      <a class="cc-lock" href="/">
-        <img src="<?= e(site_asset('mark-reversed.svg')) ?>" alt="">
-        <span class="cc-name"><span class="top">Citadel</span><span class="mid">Courier</span><span class="sub"><?= e(setting('tagline')) ?></span></span>
+      <a class="cc-lock" href="/" aria-label="<?= e($siteTitle) ?> — front page">
+        <img class="mk" src="<?= e(site_asset('mark-reversed.svg')) ?>" alt="" width="93" height="55">
+        <span class="cc-name"><span class="wm">Citadel Courier</span><span class="sub"><?= e(setting('tagline')) ?></span></span>
       </a>
       <p style="font-size:14px;line-height:1.6;margin-top:10px"><?= e(setting('footer_line', setting('tagline'))) ?></p>
     </div>

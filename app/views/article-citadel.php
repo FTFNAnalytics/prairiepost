@@ -1,7 +1,7 @@
 <?php
-/* Citadel Courier — article. FOUNDATION build (Nov 2026): Toronto Telegraph's
-   article, unbranded ($post resolved). Chip kicker over the bold sans
-   headline, ruled byline strip, classic serif body. */
+/* Citadel Courier — article. Toronto Telegraph's article in the owner's
+   brand package (28 Nov 2026) ($post resolved). Chip kicker over the
+   Newsreader headline, ruled byline strip, Inter body. */
 ?>
 <div class="cc-wrap">
   <article class="cc-article">

@@ -1,10 +1,11 @@
 <?php
-/* Citadel Courier — front page. FOUNDATION build (Nov 2026): Toronto
-   Telegraph's front, unbranded. $hero resolved by index.php: the photo
-   hero under the primary scrim (the primary panel with the reversed
-   roundel when the lead has no art), Featured Stories cards beside the
-   rail — weather, the latest five, the subscribe box. Renders the empty
-   state cleanly: the paper carries no stories before its brand build. */
+/* Citadel Courier — front page. Toronto Telegraph's front in the owner's
+   brand package (28 Nov 2026). $hero resolved by index.php: the photo
+   hero under the Deep Navy scrim (the Deep Navy panel with the reversed
+   fort on its bottom edge when the lead has no art), Featured Stories
+   cards beside the rail — weather, the latest five, the subscribe box.
+   Renders the empty state cleanly: the paper carries no stories before
+   its inaugural edition. */
 $ccSeen = $hero ? [(int) $hero['id']] : [];
 $ccGrid = latest_posts(3, $ccSeen);
 $ccSeen = array_merge($ccSeen, array_column($ccGrid, 'id'));

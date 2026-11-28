@@ -361,6 +361,70 @@ function fmt_date(?string $dt, string $format = 'M j, Y'): string
     return $ts ? pp_date($format, $ts) : '';
 }
 
+/** Default publication byline when no named reporter is credited. */
+function pp_default_byline(): string
+{
+    return pp_t('Newsroom Staff');
+}
+
+/**
+ * Normalize a story's byline for publication: replace any legacy
+ * "Automated report" / "Rapport automatisé" label with the default
+ * Newsroom Staff byline.
+ */
+function pp_normalize_byline(?string $byline, string $postType = 'story'): string
+{
+    $clean = trim((string) $byline);
+    if ($clean !== '' && preg_match('/^(automated report|rapport automatis[eé])$/iu', $clean) === 1) {
+        return pp_default_byline();
+    }
+    if ($clean === '' && $postType !== 'link') {
+        return pp_default_byline();
+    }
+    return $clean;
+}
+
+/**
+ * Schema.org author object for NewsArticle JSON-LD.
+ * Emits @type: Organization for newsroom, staff, desk, or masthead bylines
+ * and @type: Person only for named human authors.
+ */
+function pp_jsonld_author(array $post, string $siteTitle): array
+{
+    $byline = pp_normalize_byline((string) ($post['byline'] ?? ''), (string) ($post['post_type'] ?? 'story'));
+    $authorSlug = trim((string) ($post['author_slug'] ?? ''));
+    $autoByline = trim((string) (pp_brand_file()['automated_byline'] ?? ''));
+
+    $isOrg = $byline === '';
+    if (!$isOrg && $authorSlug === '') {
+        $norm = mb_strtolower($byline);
+        $siteNorm = mb_strtolower(trim($siteTitle));
+        $autoNorm = mb_strtolower($autoByline);
+        if (
+            $norm === $siteNorm
+            || ($autoNorm !== '' && $norm === $autoNorm)
+            || preg_match('/^(newsroom staff|staff|newsroom|editorial board|la r[eé]daction|wire|news desk|staff reporter|local journalism|civis media)(\b|$)/iu', $byline) === 1
+            || preg_match('/\b(newsroom|staff|desk|editorial|bureau|wire)\b/iu', $byline) === 1
+        ) {
+            $isOrg = true;
+        }
+    }
+
+    if ($isOrg) {
+        return [
+            '@type' => 'Organization',
+            'name'  => $byline !== '' ? $byline : pp_default_byline(),
+            'url'   => site_url(),
+        ];
+    }
+
+    return array_filter([
+        '@type' => 'Person',
+        'name'  => $byline,
+        'url'   => $authorSlug !== '' ? site_url() . '/author/' . $authorSlug : null,
+    ]);
+}
+
 /**
  * Reading time in whole minutes, at 200 words a minute, rounded up.
  * Counts the lede with the body so a short piece isn't reported as zero.
@@ -571,6 +635,7 @@ function pp_handle_image_upload(array $file): array
     if (file_put_contents($dir . '/' . $name, $clean) === false) {
         return [null, "The server couldn't write the file. Check that /uploads/ is writable."];
     }
+    pp_generate_image_derivatives($dir . '/' . $name, $mime);
     return ['/uploads/' . date('Y/m') . '/' . $name, null];
 }
 
@@ -618,7 +683,96 @@ function pp_store_image_bytes(string $bytes, string $baseName): array
     if (file_put_contents($dir . '/' . $name, $clean) === false) {
         return [null, 'the server could not write the file'];
     }
+    pp_generate_image_derivatives($dir . '/' . $name, $mime);
     return ['/uploads/' . date('Y/m') . '/' . $name, null];
+}
+
+/**
+ * Emit responsive WebP derivatives (480w and 960w) beside a stored raster
+ * upload when PHP GD supports WebP and the source image is wider than the
+ * target width. Non-fatal: returns the list of generated filesystem paths.
+ */
+function pp_generate_image_derivatives(string $filePath, string $mime): array
+{
+    if (!in_array($mime, ['image/jpeg', 'image/png', 'image/webp'], true)) {
+        return [];
+    }
+    if (!function_exists('imagecreatefromstring') || !function_exists('imagewebp')) {
+        return [];
+    }
+    $raw = @file_get_contents($filePath);
+    if ($raw === false || $raw === '') {
+        return [];
+    }
+    $src = @imagecreatefromstring($raw);
+    if (!$src) {
+        return [];
+    }
+    $origW = imagesx($src);
+    $origH = imagesy($src);
+    if ($origW <= 480 || $origH <= 0) {
+        imagedestroy($src);
+        return [];
+    }
+
+    $dir = dirname($filePath);
+    $stem = pathinfo($filePath, PATHINFO_FILENAME);
+    $created = [];
+    foreach ([480, 960] as $targetW) {
+        if ($origW <= $targetW) {
+            continue;
+        }
+        $targetH = max(1, (int) round($origH * ($targetW / $origW)));
+        $dst = imagecreatetruecolor($targetW, $targetH);
+        if (!$dst) {
+            continue;
+        }
+        imagealphablending($dst, false);
+        imagesavealpha($dst, true);
+        $transparent = imagecolorallocatealpha($dst, 0, 0, 0, 127);
+        imagefilledrectangle($dst, 0, 0, $targetW, $targetH, $transparent);
+        if (imagecopyresampled($dst, $src, 0, 0, 0, 0, $targetW, $targetH, $origW, $origH)) {
+            $outPath = $dir . '/' . $stem . '-' . $targetW . 'w.webp';
+            if (@imagewebp($dst, $outPath, 82)) {
+                $created[] = $outPath;
+            }
+        }
+        imagedestroy($dst);
+    }
+    imagedestroy($src);
+    return $created;
+}
+
+/**
+ * Build a responsive HTML srcset string for a local /uploads/ raster image
+ * when sibling -480w.webp / -960w.webp derivatives exist on disk.
+ */
+function pp_image_srcset(string $publicUrl): string
+{
+    if (!str_starts_with($publicUrl, '/uploads/') || str_contains($publicUrl, '..')) {
+        return '';
+    }
+    $ext = strtolower((string) pathinfo($publicUrl, PATHINFO_EXTENSION));
+    if (!in_array($ext, ['jpg', 'jpeg', 'png', 'webp'], true)) {
+        return '';
+    }
+    $dirUrl = dirname($publicUrl);
+    $stem = pathinfo($publicUrl, PATHINFO_FILENAME);
+    $entries = [];
+    foreach ([480, 960] as $w) {
+        $candUrl = $dirUrl . '/' . $stem . '-' . $w . 'w.webp';
+        if (is_file(PP_ROOT . $candUrl)) {
+            $entries[] = $candUrl . ' ' . $w . 'w';
+        }
+    }
+    if (!$entries) {
+        return '';
+    }
+    $origFile = PP_ROOT . $publicUrl;
+    $info = is_file($origFile) ? @getimagesize($origFile) : false;
+    $origW = is_array($info) && !empty($info[0]) ? (int) $info[0] : 1600;
+    $entries[] = $publicUrl . ' ' . $origW . 'w';
+    return implode(', ', $entries);
 }
 
 /**

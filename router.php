@@ -93,6 +93,12 @@ $map = [
     '/ad'           => '/ad.php',
     '/corrections'  => '/corrections.php',
     '/about'        => '/about.php',
+    '/about/'       => '/about.php',
+    '/privacy'      => '/privacy.php',
+    '/privacy/'     => '/privacy.php',
+    '/standards'    => '/standards.php',
+    '/standards/'   => '/standards.php',
+    '/ads.txt'      => '/ads-txt.php',
     '/tips'         => '/tips.php',
     '/tips/'        => '/tips.php',
     '/api/ingest'   => '/ingest.php',
@@ -116,6 +122,17 @@ $map = [
 ];
 if (isset($map[$path])) {
     require __DIR__ . $map[$path];
+    return true;
+}
+// IndexNow per-site key verification file: GET /<32-hex>.txt.
+if (preg_match('#^/([a-f0-9]{32})\.txt$#', $path, $m)) {
+    require_once __DIR__ . '/app/bootstrap.php';
+    if (pp_indexnow_serve_key($m[1])) {
+        return true;
+    }
+    http_response_code(404);
+    header('Content-Type: text/plain; charset=utf-8');
+    echo "Not found\n";
     return true;
 }
 // The one ingest route with a parameter in its path: the draft's reference.

@@ -1,14 +1,18 @@
 <?php
 /**
- * Citadel Courier — launch pack (FOUNDATION build, Nov 2026).
- * Seeded once by `PP_SITE=citadel-courier php tools/seed-launch.php`, at
- * launch, after the brand build. Never before: see DEPLOY-CITADEL.md.
+ * Citadel Courier — launch pack (foundation, Nov 2026; brand package
+ * applied 28 Nov 2026). Seeded once by
+ * `PP_SITE=citadel-courier php tools/seed-launch.php`, at launch. Never
+ * before: see DEPLOY-CITADEL.md.
  *
- * ZERO STORIES BY DESIGN: identity, desks and wire sources only. The
- * brand build replaces the placeholder tagline, newsletter name and
- * colours, and writes the six-story inaugural edition (launch notes
- * about the paper itself, true by construction; never invented local
- * news, CLAUDE.md debt item 1).
+ * ZERO STORIES SO FAR: identity, desks and wire sources only. The tagline
+ * is the package's homepage line under the wordmark and the footer line
+ * its homepage footer; the footprint is its README's, "Halifax and Nova
+ * Scotia". The desk colour is its Nova Scotia Blue. The newsletter name
+ * is still a placeholder, and the six-story inaugural edition (launch
+ * notes about the paper itself, true by construction; never invented
+ * local news, CLAUDE.md debt item 1) waits on the owner's answers in
+ * docs/brand-packages.md.
  *
  * Covers: Halifax and Nova Scotia. Named for the Halifax Citadel, the star-shaped fort on the hill above the harbour.
  *
@@ -28,19 +32,19 @@ return [
     'domains' => ['citadelcourier.ca', 'www.citadelcourier.ca'],
 
     'desks' => [
-        ['name' => 'Local News', 'slug' => 'local-news', 'color' => '#182330', 'description' => 'Halifax and the communities around the harbour: neighbourhoods, housing, transit and the people who live here.'],
-        ['name' => 'City Hall', 'slug' => 'city-hall', 'color' => '#182330', 'description' => 'Halifax Regional Council and its committees, read from the agenda and the record.'],
-        ['name' => 'Politics', 'slug' => 'politics', 'color' => '#182330', 'description' => 'Province House and the government of Nova Scotia, and what their decisions mean for the city.'],
-        ['name' => 'Business', 'slug' => 'business', 'color' => '#182330', 'description' => 'The port, the trades and the shops: how Halifax makes its living.'],
-        ['name' => 'Sports', 'slug' => 'sports', 'color' => '#182330', 'description' => 'The city\'s teams and athletes, from the junior rinks to the pitch.'],
-        ['name' => 'Opinion', 'slug' => 'opinion', 'color' => '#182330', 'description' => 'Signed columns and letters, always labelled as opinion.'],
+        ['name' => 'Local News', 'slug' => 'local-news', 'color' => '#0047B6', 'description' => 'Halifax and the communities around the harbour: neighbourhoods, housing, transit and the people who live here.'],
+        ['name' => 'City Hall', 'slug' => 'city-hall', 'color' => '#0047B6', 'description' => 'Halifax Regional Council and its committees, read from the agenda and the record.'],
+        ['name' => 'Politics', 'slug' => 'politics', 'color' => '#0047B6', 'description' => 'Province House and the government of Nova Scotia, and what their decisions mean for the city.'],
+        ['name' => 'Business', 'slug' => 'business', 'color' => '#0047B6', 'description' => 'The port, the trades and the shops: how Halifax makes its living.'],
+        ['name' => 'Sports', 'slug' => 'sports', 'color' => '#0047B6', 'description' => 'The city\'s teams and athletes, from the junior rinks to the pitch.'],
+        ['name' => 'Opinion', 'slug' => 'opinion', 'color' => '#0047B6', 'description' => 'Signed columns and letters, always labelled as opinion.'],
     ],
 
     'settings' => [
         'site_title' => 'Citadel Courier',
-        'tagline' => 'Halifax, from the hill to the harbour',
-        'meta_description' => 'Citadel Courier is a Halifax newspaper: the city, council, Province House, the port and the people around the harbour.',
-        'footer_line' => 'Halifax\'s paper, from the hill to the harbour.',
+        'tagline' => 'Halifax • Nova Scotia',
+        'meta_description' => 'Citadel Courier covers Halifax and Nova Scotia: the city, council, Province House, the port and the people around the harbour.',
+        'footer_line' => 'News that matters, from where you live.',
         'newsletter_heading' => 'The Noon Gun',
         'newsletter_copy' => 'The Courier\'s front page in your inbox at midday, when the Citadel fires its gun: what Halifax decided, built and argued about this morning.',
         'regions' => json_encode([
