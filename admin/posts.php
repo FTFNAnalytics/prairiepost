@@ -42,19 +42,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
     if ($action === 'feature' && $target && $editor) {
-        db()->exec("UPDATE posts SET placement = '' WHERE placement = 'hero'");
+        $heroSites = site_ids_for_post($id) ?: (pp_is_hub() ? [] : [current_site_id()]);
+        pp_clear_hero_for_sites($heroSites, $id);
         db()->prepare("UPDATE posts SET placement = 'hero' WHERE id = ?")->execute([$id]);
         flash_set('Set as the front-page hero.');
     }
     redirect('posts.php?' . http_build_query(array_filter([
         'status' => $_GET['status'] ?? '', 'category' => $_GET['category'] ?? '', 'q' => $_GET['q'] ?? '',
-        'page' => $_GET['page'] ?? '',
+        'scope' => $_GET['scope'] ?? '', 'page' => $_GET['page'] ?? '',
     ])));
 }
 
+$hub = pp_is_hub();
 $status = (string) ($_GET['status'] ?? '');
 $catFilter = (int) ($_GET['category'] ?? 0);
 $q = trim((string) ($_GET['q'] ?? ''));
+$scope = $hub ? 'all' : ((string) ($_GET['scope'] ?? 'this') === 'all' ? 'all' : 'this');
 $page = max(1, (int) ($_GET['page'] ?? 1));
 $perPage = 25;
 
@@ -63,6 +66,10 @@ $params = [];
 if (!$editor) {
     $where[] = 'p.author_id = ?';
     $params[] = (int) $user['id'];
+}
+if ($scope === 'this') {
+    $where[] = '(EXISTS (SELECT 1 FROM post_sites ps WHERE ps.post_id = p.id AND ps.site_id = ?) OR NOT EXISTS (SELECT 1 FROM post_sites ps WHERE ps.post_id = p.id))';
+    $params[] = current_site_id();
 }
 if (in_array($status, ['draft', 'in_review', 'published', 'scheduled'], true)) {
     $where[] = 'p.status = ?';
@@ -73,8 +80,9 @@ if ($catFilter) {
     $params[] = $catFilter;
 }
 if ($q !== '') {
-    $where[] = '(p.title LIKE ? OR p.byline LIKE ? OR p.dateline LIKE ?)';
-    $like = '%' . $q . '%';
+    $op = pp_like();
+    $where[] = "(p.title $op ? OR p.byline $op ? OR p.dateline $op ?)";
+    $like = '%' . str_replace(['%', '_'], ['\\%', '\\_'], $q) . '%';
     array_push($params, $like, $like, $like);
 }
 $whereSql = $where ? ' WHERE ' . implode(' AND ', $where) : '';
@@ -127,9 +135,15 @@ flash_show();
   <?php endif; ?>
   <a class="btn" href="post-edit.php">+ New story</a>
 </div>
-<p class="pagesub"><?= $total ?> <?= $total === 1 ? 'story' : 'stories' ?><?= $editor ? ' in the system.' : ' of yours.' ?></p>
+<p class="pagesub"><?= $total ?> <?= $total === 1 ? 'story' : 'stories' ?><?= !$editor ? ' of yours.' : ($scope === 'this' ? ' on this paper.' : ' in the system.') ?></p>
 
 <form method="get" class="formrow">
+  <?php if (!$hub): ?>
+  <select name="scope" aria-label="Scope">
+    <option value="this"<?= $scope === 'this' ? ' selected' : '' ?>>This paper</option>
+    <option value="all"<?= $scope === 'all' ? ' selected' : '' ?>>All papers</option>
+  </select>
+  <?php endif; ?>
   <select name="status" aria-label="Status">
     <option value="">Any status</option>
     <?php foreach (['published' => 'Published', 'draft' => 'Draft', 'in_review' => 'In review', 'scheduled' => 'Scheduled'] as $s => $label): ?>
@@ -174,7 +188,7 @@ flash_show();
         <?php if ($editor && $p['status'] === 'published' && $p['placement'] !== 'hero'): ?>
         <form method="post" class="inline"><?= csrf_field() ?><input type="hidden" name="action" value="feature"><input type="hidden" name="id" value="<?= (int) $p['id'] ?>"><button class="btn btn--ghost btn--small" type="submit">Make hero</button></form>
         <?php endif; ?>
-        <?php if ($editor || ($p['status'] !== 'published' && (int) $p['author_id'] === (int) $user['id'])): ?>
+        <?php if (pp_post_write_denied($user, $p, 'delete') === null): ?>
         <form method="post" class="inline" onsubmit="return confirm('Delete this story? It is removed from the site immediately.')"><?= csrf_field() ?><input type="hidden" name="action" value="delete"><input type="hidden" name="id" value="<?= (int) $p['id'] ?>"><button class="btn btn--danger btn--small" type="submit">Delete</button></form>
         <?php endif; ?>
       </td>
@@ -187,7 +201,7 @@ flash_show();
 <?php if ($pages > 1): ?>
 <div class="formrow" style="margin-top:16px">
   <?php for ($i = 1; $i <= $pages; $i++): ?>
-    <?php $qs = http_build_query(array_filter(['status' => $status, 'category' => $catFilter, 'q' => $q, 'page' => $i])); ?>
+    <?php $qs = http_build_query(array_filter(['status' => $status, 'category' => $catFilter, 'q' => $q, 'scope' => $scope === 'all' && !$hub ? 'all' : '', 'page' => $i])); ?>
     <?php if ($i === $page): ?><span class="chip chip--used"><?= $i ?></span>
     <?php else: ?><a class="btn btn--ghost btn--small" href="posts.php?<?= e($qs) ?>"><?= $i ?></a><?php endif; ?>
   <?php endfor; ?>

@@ -2,10 +2,14 @@
 /** Advertising: the three slots, the creatives that rotate through them. */
 require dirname(__DIR__) . '/app/bootstrap.php';
 require __DIR__ . '/_layout.php';
-require_editor();
+$user = require_editor();
+$isAdmin = ($user['role'] ?? '') === 'admin';
 
 $placements = ['top' => 'Front page — top', 'rail' => 'Rail', 'article' => 'After story text'];
-$kinds = ['house' => 'House ad — built from the brand', 'image' => 'Image + link', 'html' => 'Pasted embed code'];
+$kinds = ['house' => 'House ad — built from the brand', 'image' => 'Image + link'];
+if ($isAdmin) {
+    $kinds['html'] = 'Pasted embed code';
+}
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     csrf_check();
@@ -20,10 +24,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         redirect('ads.php');
     }
 
+    // Raw HTML embed ads execute unsanitized markup on public pages, so
+    // only administrators may create, change, pause or delete them.
+    if ($existing && ($existing['kind'] ?? '') === 'html' && !$isAdmin) {
+        flash_set('Only administrators can manage raw HTML embed ads.', true);
+        redirect('ads.php');
+    }
+
     if ($action === 'save') {
         $name = trim((string) ($_POST['name'] ?? ''));
         $placement = isset($placements[$_POST['placement'] ?? '']) ? $_POST['placement'] : 'rail';
-        $kind = isset($kinds[$_POST['kind'] ?? '']) ? $_POST['kind'] : 'house';
+        $requestedKind = (string) ($_POST['kind'] ?? 'house');
+        if ($requestedKind === 'html' && !$isAdmin) {
+            flash_set('Only administrators can create raw HTML embed ads.', true);
+            redirect('ads.php' . ($id ? '?edit=' . $id : ''));
+        }
+        $kind = isset($kinds[$requestedKind]) ? $requestedKind : 'house';
         $linkUrl = trim((string) ($_POST['link_url'] ?? ''));
         $image = trim((string) ($_POST['image'] ?? ''));
 
@@ -51,7 +67,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             'kind' => $kind,
             'image' => $image,
             'link_url' => $linkUrl,
-            'html' => (string) ($_POST['html'] ?? ''),
+            'html' => $isAdmin && $kind === 'html' ? (string) ($_POST['html'] ?? '') : '',
             'kicker' => trim((string) ($_POST['kicker'] ?? '')),
             'heading' => trim((string) ($_POST['heading'] ?? '')),
             'body_text' => trim((string) ($_POST['body_text'] ?? '')),
@@ -64,6 +80,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             flash_set('An ad needs a name — it only shows in this list, never to readers.', true);
         } elseif ($kind === 'image' && $image === '') {
             flash_set('An image ad needs a creative. Upload one or give its path.', true);
+        } elseif ($image !== '' && (!preg_match('#^(https?://|/uploads/|/assets/)#i', $image) || preg_match('/[\r\n\x00-\x1f"\'<>]/', $image))) {
+            flash_set('The image path must be an /uploads/ path or an http:// or https:// URL.', true);
         } elseif ($kind !== 'html' && $linkUrl !== '' && !preg_match('#^https?://#i', $linkUrl)) {
             flash_set('The link must start with http:// or https:// — clicks route through the counter first.', true);
         } elseif ($existing) {
@@ -81,10 +99,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
     if ($action === 'toggle' && $existing) {
-        db()->prepare('UPDATE ads SET enabled = 1 - enabled WHERE id = ?')->execute([$id]);
+        db()->prepare('UPDATE ads SET enabled = 1 - enabled WHERE id = ? AND site_id = ?')->execute([$id, current_site_id()]);
     }
     if ($action === 'delete' && $existing) {
-        db()->prepare('DELETE FROM ads WHERE id = ?')->execute([$id]);
+        db()->prepare('DELETE FROM ads WHERE id = ? AND site_id = ?')->execute([$id, current_site_id()]);
         flash_set('Ad deleted.');
     }
     redirect('ads.php');
@@ -93,6 +111,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 $editing = isset($_GET['edit']) ? ad_by_id((int) $_GET['edit']) : null;
 if ($editing && !empty($editing['campaign_id'])) {
     flash_set('That ad is part of a network campaign — it\'s managed from the control room, not here.', true);
+    $editing = null;
+}
+if ($editing && ($editing['kind'] ?? '') === 'html' && !$isAdmin) {
+    flash_set('Only administrators can edit raw HTML embed ads.', true);
     $editing = null;
 }
 $ads = ads_all();
@@ -121,6 +143,8 @@ flash_show();
       <td style="white-space:nowrap">
         <?php if (!empty($ad['campaign_id'])): ?>
         <span class="chip chip--scheduled" title="Filed once on the hub, running network-wide — edits happen there">Network campaign</span>
+        <?php elseif (($ad['kind'] ?? '') === 'html' && !$isAdmin): ?>
+        <span class="chip chip--used" title="Only administrators can manage raw HTML embed ads">Admin only</span>
         <?php else: ?>
         <a class="btn btn--ghost btn--small" href="ads.php?edit=<?= (int) $ad['id'] ?>">Edit</a>
         <form method="post" class="inline"><?= csrf_field() ?><input type="hidden" name="action" value="toggle"><input type="hidden" name="id" value="<?= (int) $ad['id'] ?>"><button class="btn btn--ghost btn--small" type="submit"><?= $ad['enabled'] ? 'Pause' : 'Resume' ?></button></form>
@@ -174,8 +198,10 @@ flash_show();
         <input type="text" id="image" name="image" value="<?= e($editing['image'] ?? '') ?>" placeholder="/uploads/2026/08/creative.png">
         <input type="file" name="image_file" accept="image/jpeg,image/png,image/webp,image/gif" style="margin-top:8px">
 
+        <?php if ($isAdmin): ?>
         <label for="html">Embed ad · pasted code</label>
         <textarea id="html" name="html" class="mono"><?= e((string) ($editing['html'] ?? '')) ?></textarea>
+        <?php endif; ?>
         <p class="help">Only the fields for the chosen kind are used; the others can stay empty.</p>
       </div>
     </div>
