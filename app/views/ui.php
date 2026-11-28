@@ -90,7 +90,9 @@ function story_photo(array $post, bool $withCaption = false): string
     if (empty($post['image'])) {
         return '';
     }
-    $img = '<img src="' . e($post['image']) . '" alt="' . e(($post['image_alt'] ?? '') ?: ($post['image_caption'] ?: $post['title'])) . '" loading="lazy">';
+    $srcset = pp_image_srcset((string) $post['image']);
+    $srcsetAttr = $srcset !== '' ? ' srcset="' . e($srcset) . '" sizes="(max-width: 640px) 480px, 960px"' : '';
+    $img = '<img src="' . e($post['image']) . '"' . $srcsetAttr . ' alt="' . e(($post['image_alt'] ?? '') ?: ($post['image_caption'] ?: $post['title'])) . '" loading="lazy">';
     if (!$withCaption || ($post['image_caption'] === '' && $post['image_credit'] === '')) {
         return '<a class="photo" href="' . e(post_href($post)) . '"' . post_link_attr($post) . ' tabindex="-1" aria-hidden="true">' . $img . '</a>';
     }
@@ -328,6 +330,9 @@ function page_footer(): void
          where PHP never runs, so the page itself reports which ads it
          carried. The /ad endpoint is never cached; every view counts. */ ?>
 <img src="<?= e(url('ad')) ?>?imp=<?= implode('-', $ppAdsShown) ?>" alt="" width="1" height="1" style="position:absolute;left:-9999px" aria-hidden="true">
+<?php endif; ?>
+<?php if (!empty($GLOBALS['ppViewPostId'])): ?>
+<img src="<?= e(url('ad')) ?>?v=<?= (int) $GLOBALS['ppViewPostId'] ?>" alt="" width="1" height="1" style="position:absolute;left:-9999px" aria-hidden="true">
 <?php endif; ?>
 
 <?php

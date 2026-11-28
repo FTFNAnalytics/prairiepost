@@ -42,25 +42,21 @@ foreach (db()->query('SELECT site_slug, hostname FROM domains ORDER BY LENGTH(ho
         $domains[$slug] = trim((string) $d['hostname']);
     }
 }
+require_once PP_ROOT . '/app/watch.php';
+$probed = pp_watch_probe_domains($domains, 10, 12, 'https');
 foreach ($domains as $slug => $domain) {
-    $code = 0;
-    $ch = curl_init("https://$domain/");
-    curl_setopt_array($ch, [
-        CURLOPT_NOBODY => false, CURLOPT_RETURNTRANSFER => true, CURLOPT_TIMEOUT => 12,
-        CURLOPT_CONNECTTIMEOUT => 8, CURLOPT_FOLLOWLOCATION => true, CURLOPT_MAXREDIRS => 3,
-        CURLOPT_USERAGENT => 'CivisWatch/1.0 (+network self-check)',
-    ]);
-    curl_exec($ch);
-    $code = (int) curl_getinfo($ch, CURLINFO_RESPONSE_CODE);
-    curl_close($ch);
+    $code = (int) ($probed[$domain] ?? 0);
     $snapshot['domains'][$domain] = $code;
     if ($code !== 200) {
         $problems[] = "$domain answers $code";
     }
+    if ($code === 0) {
+        continue; // unreachable host: skip redundant 5s TLS handshake timeout
+    }
 
     // Certificate expiry, while we're here (best effort, never a fatal).
     $ctx = stream_context_create(['ssl' => ['capture_peer_cert' => true, 'SNI_enabled' => true, 'verify_peer' => false, 'verify_peer_name' => false]]);
-    $sock = @stream_socket_client("ssl://$domain:443", $errno, $errstr, 8, STREAM_CLIENT_CONNECT, $ctx);
+    $sock = @stream_socket_client("ssl://$domain:443", $errno, $errstr, 5, STREAM_CLIENT_CONNECT, $ctx);
     if ($sock) {
         $cert = stream_context_get_params($sock)['options']['ssl']['peer_certificate'] ?? null;
         if ($cert && ($parsed = openssl_x509_parse($cert))) {

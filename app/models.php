@@ -124,8 +124,28 @@ function post_by_slug(string $slug): ?array
     return pp_normalize_public_post($stmt->fetch() ?: null);
 }
 
+/** PostgreSQL GIN-indexed FTS expression matching idx_posts_search_fts. */
+function pp_posts_fts_expr(): string
+{
+    return "to_tsvector('simple', coalesce(p.title, '') || ' ' || coalesce(p.lede, '') || ' ' || coalesce(p.body, '') || ' ' || coalesce(p.dateline, ''))";
+}
+
 function search_posts(string $q, int $limit, int $offset = 0): array
 {
+    $q = trim($q);
+    if ($q === '') {
+        return [];
+    }
+    if (db()->getAttribute(PDO::ATTR_DRIVER_NAME) === 'pgsql' && preg_match('/[\p{L}\p{N}]/u', $q) === 1) {
+        $tsv = pp_posts_fts_expr();
+        $sql = 'SELECT ' . PP_POST_COLS . ' FROM posts p' . pp_site_join() . PP_POST_JOINS . '
+                WHERE ' . pp_published_where() . " AND $tsv @@ plainto_tsquery('simple', ?)
+                ORDER BY ts_rank($tsv, plainto_tsquery('simple', ?)) DESC, p.published_at DESC
+                LIMIT " . (int) $limit . ' OFFSET ' . (int) $offset;
+        $stmt = db()->prepare($sql);
+        $stmt->execute([now(), $q, $q]);
+        return pp_normalize_public_posts($stmt->fetchAll());
+    }
     $like = '%' . str_replace(['%', '_'], ['\\%', '\\_'], $q) . '%';
     $op = pp_like();
     $sql = 'SELECT ' . PP_POST_COLS . ' FROM posts p' . pp_site_join() . PP_POST_JOINS . '
@@ -138,6 +158,17 @@ function search_posts(string $q, int $limit, int $offset = 0): array
 
 function count_search_posts(string $q): int
 {
+    $q = trim($q);
+    if ($q === '') {
+        return 0;
+    }
+    if (db()->getAttribute(PDO::ATTR_DRIVER_NAME) === 'pgsql' && preg_match('/[\p{L}\p{N}]/u', $q) === 1) {
+        $tsv = pp_posts_fts_expr();
+        $stmt = db()->prepare('SELECT COUNT(*) AS n FROM posts p' . pp_site_join()
+            . ' WHERE ' . pp_published_where() . " AND $tsv @@ plainto_tsquery('simple', ?)");
+        $stmt->execute([now(), $q]);
+        return (int) $stmt->fetch()['n'];
+    }
     $like = '%' . str_replace(['%', '_'], ['\\%', '\\_'], $q) . '%';
     $op = pp_like();
     $stmt = db()->prepare('SELECT COUNT(*) AS n FROM posts p' . pp_site_join()
