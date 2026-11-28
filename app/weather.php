@@ -44,12 +44,17 @@ const PP_WEATHER_MAX_AGE = 3 * 3600;
  * Mapping by province is right for every paper that has a block. A city in
  * a province's minority zone (the East Kootenay, northwestern Ontario,
  * Labrador) would need its own zone here first.
+ *
+ * The Northwest Territories map to America/Edmonton. tzdata keeps
+ * America/Yellowknife only as an alias of it, so PHP doesn't list it as a
+ * zone, and a paper's palette zone must be a listed one (the clock test).
+ * The rules, and every time printed, are the same either way.
  */
 const PP_WEATHER_ZONES = [
     'bc' => 'America/Vancouver', 'ab' => 'America/Edmonton', 'sk' => 'America/Regina',
     'mb' => 'America/Winnipeg',  'on' => 'America/Toronto',  'qc' => 'America/Toronto',
     'nb' => 'America/Moncton',   'ns' => 'America/Halifax',  'pe' => 'America/Halifax',
-    'nl' => 'America/St_Johns',  'yt' => 'America/Whitehorse', 'nt' => 'America/Yellowknife',
+    'nl' => 'America/St_Johns',  'yt' => 'America/Whitehorse', 'nt' => 'America/Edmonton',
     'nu' => 'America/Iqaluit',
 ];
 

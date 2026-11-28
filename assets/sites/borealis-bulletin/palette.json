@@ -1,63 +1,72 @@
 {
-    "zone": "America/Whitehorse",
+    "zone": "America/Edmonton",
+    "theme": "#0B1E2D",
     "weather": {
-        "city": "yt-16",
-        "place": "Whitehorse"
+        "city": "nt-24",
+        "place": "Yellowknife"
     },
     "palette": {
-        "ink": "#1A1A1A",
+        "ink": "#121C24",
         "paper": "#FFFFFF",
-        "surface": "#F2F4F6",
-        "accent": "#182330",
-        "deep": "#0F161D",
-        "secondary": "#758BA0",
-        "muted": "#4B5563",
-        "line": "#B5BDC6"
+        "surface": "#EEF4F5",
+        "accent": "#0F5243",
+        "midnight": "#0B1E2D",
+        "fjord": "#133147",
+        "aurora": "#2E9E76",
+        "glacier": "#4C9DB8",
+        "copper": "#9E4A1E",
+        "red": "#9E4A1E",
+        "muted": "#4C5E6B",
+        "line": "#B7C6CE",
+        "board": "#B7C6CE",
+        "sky": "#EEF4F5",
+        "hill": "#0F5243",
+        "field": "#4C9DB8",
+        "stubble": "#0B1E2D"
     },
     "desk_labels": {
-        "news": "News",
-        "politics": "Politics",
-        "resources": "Resources",
-        "environment": "Environment",
-        "culture": "Culture",
-        "sports": "Sports",
+        "local-news": "Territories",
+        "arctic-north": "Arctic & North",
+        "environment": "Land & Climate",
+        "business": "Economy",
+        "communities": "Communities",
         "opinion": "Opinion"
     },
     "desks": {
-        "news": "#182330",
-        "politics": "#182330",
-        "resources": "#182330",
-        "environment": "#182330",
-        "culture": "#182330",
-        "sports": "#182330",
-        "opinion": "#182330"
+        "local-news": "#0F5243",
+        "arctic-north": "#0B1E2D",
+        "environment": "#0F5243",
+        "business": "#133147",
+        "communities": "#0F5243",
+        "opinion": "#9E4A1E"
     },
     "chrome": {
         "template": "borealis",
         "nav": [
-            "news",
-            "politics",
-            "resources",
+            "local-news",
+            "arctic-north",
             "environment",
-            "culture",
-            "sports",
+            "business",
+            "communities",
             "opinion"
         ]
     },
     "admin": {
-        "accent": "#182330",
-        "spot": "#A23A2E",
+        "accent": "#0F5243",
+        "spot": "#9E4A1E",
         "strip": [
-            "#0F161D",
-            "#B5BDC6"
+            "#0B1E2D",
+            "#A9C3CF"
         ],
         "band": [
             "#FFFFFF",
-            "#182330"
+            "#0B1E2D"
         ],
         "nav": [
-            "#182330",
-            "#FFFFFF"
+            "#0B1E2D",
+            "#FFFFFF",
+            "#D9EFE6",
+            "#0B1E2D"
         ],
         "mark": "mark.svg",
         "wordmark": {

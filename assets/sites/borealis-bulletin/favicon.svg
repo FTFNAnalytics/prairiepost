@@ -1,4 +1,9 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Borealis Bulletin">
-  <rect width="64" height="64" fill="#182330"/>
-  <text x="32" y="44" text-anchor="middle" font-family="Georgia, 'Times New Roman', serif" font-size="28" font-weight="700" fill="#FFFFFF">BB</text>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" role="img" aria-label="Borealis Bulletin">
+  <title>Borealis Bulletin</title>
+  <!-- Simplified Polar Compass Roundel on Polar Midnight tile for 16px-48px favicons & app icons. Zero masks. -->
+  <rect width="64" height="64" fill="#0B1E2D"/>
+  <path d="M 39.5,6.5 A 26.5,26.5 0 1 1 24.5,6.5" fill="none" stroke="#38B889" stroke-width="4" stroke-linecap="butt"/>
+  <polygon points="32,4 34.7,16.8 45,19.5 34.7,22.2 32,29.5 29.3,22.2 19,19.5 29.3,16.8" fill="#FFFFFF"/>
+  <path d="M 13,38 C 20,30.5 27,30.5 34,34 C 40,37 46,35 51,29 L 51,35.5 C 46,41.5 39.5,43.5 33,40.5 C 26.5,37.5 20,38 13,44 Z" fill="#38B889"/>
+  <path d="M 16,47.5 L 25,44.5 L 31.5,46.5 L 39,43.5 L 48,47.5 L 48,50.5 L 16,50.5 Z" fill="#FFFFFF"/>
 </svg>
