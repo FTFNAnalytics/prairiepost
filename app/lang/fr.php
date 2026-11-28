@@ -32,6 +32,7 @@ return [
 
     // --- front page and lists -------------------------------------------
     'Latest'              => 'Dernières',
+    'Breaking'            => 'Dernière heure',
     'Featured'            => 'À la une',
     'Read more'           => 'Lire la suite',
     'More top stories'    => 'Plus d’actualités',
