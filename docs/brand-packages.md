@@ -6,9 +6,9 @@ Telegraph's design: the same layout, type and page furniture, in a
 placeholder slate colour scheme with a monogram roundel for a mark. Each
 has a launch pack with its domains, desks and wire feeds, and no stories.
 Terminal City Times has been a foundation since 22 Sep, in its own
-heritage-broadsheet design. Four packages, The Easterly's, Les Chutes',
-Citadel Courier's and Le Memphré's, arrived and were applied on 28 Nov
-(below).
+heritage-broadsheet design. All five packages, The Easterly's, Les
+Chutes', Citadel Courier's, Le Memphré's and Borealis Bulletin's,
+arrived and were applied on 28 Nov (below).
 
 | Paper | Slug and template | Covers | Domain | State |
 | --- | --- | --- | --- | --- |
@@ -16,7 +16,7 @@ Citadel Courier's and Le Memphré's, arrived and were applied on 28 Nov
 | The Easterly | `easterly`, `easterly` | Atlantic Canada, region-wide | easterly.ca | Branded 28 Nov; domain unregistered |
 | Le Memphré | `memphre`, `memphre` | Sherbrooke and the Eastern Townships (French) | memphre.ca | Branded 28 Nov; language and domain open |
 | Les Chutes | `chutes`, `chutes` | Quebec City and eastern Quebec (French) | chutesquebec.ca | Branded 28 Nov; domain unregistered |
-| Borealis Bulletin | `borealis-bulletin`, `borealis` | Yukon, NWT and Nunavut | borealisbulletin.ca | Foundation; domain unregistered |
+| Borealis Bulletin | `borealis-bulletin`, `borealis` | Yukon, NWT and Nunavut, and the Arctic beyond | borealisbulletin.ca | Branded 28 Nov; launch waits on the domain |
 | Terminal City Times | `terminal-city-times`, `terminalcity` | Vancouver | terminalcitytimes.ca | Foundation; domain registered 22 Sep |
 
 "Unregistered" is from the registries (RDAP) on 28 Nov 2026. Nothing is
@@ -269,21 +269,97 @@ the package's only text, and the files it names:
   - what the paper reports itself and what it links, for the inaugural
     edition.
 
-**Borealis Bulletin.**
-- Placeholders:
-  - tagline "News from north of sixty";
-  - newsletter "First Light";
-  - desks News, Politics, Resources, Environment, Culture, Sports,
-    Opinion.
-- Decide the home city, which sets the weather and the clock:
-  - **Whitehorse** is the placeholder.
-  - **Iqaluit** works as is.
-  - **Yellowknife** needs a one-line fix first. PHP lists its zone only
-    as an alias, so `app/weather.php` must point the Northwest
-    Territories at America/Edmonton.
+**Borealis Bulletin.** The package arrived on 28 Nov and is applied. It
+is unlike the other four:
+- It held a brand guide and a website preview as HTML pages, design
+  tokens, three reference photographs, six vector SVGs, a share card and
+  icons.
+- It also held code: a stylesheet, templates, chrome partials, a palette,
+  a launch pack and a runbook, written against this repository from the
+  foundation's own files.
+- It agrees with itself, and its marks are real vectors, so nothing was
+  traced.
 
-  The North's audience is about half Indigenous. The slate chose sky and
-  land over Inuit or Dene symbols, and the mark should hold to that.
+The build kept the package's code after reviewing it like any pull
+request: every helper it calls exists, and every font it names is
+already self-hosted. What the build changed is listed below.
+- **Colours:** the package's, by its names.
+
+  | Package name | Hex | Where it shows |
+  | --- | --- | --- |
+  | Polar Midnight | `#0B1E2D` | The wordmark's first line; the dark grounds (utility strip, lead panel, subscribe box, footer band); Subscribe; the Arctic & North and Economy chips |
+  | Boreal Pine | `#0F5243` | Links, the wordmark's second line, the Territories, Land & Climate and Communities chips, the numbered latest list (9.1:1 on white) |
+  | Aurora Emerald | `#2E9E76` | Rules, the current section's underline, the bar over a card without art, buttons under dark type. Never text on white (3.35:1) |
+  | Aurora Luminous | `#38B889` | The reversed wordmark and buttons on Polar Midnight |
+  | Glacier Ice | `#4C9DB8` | The weather box's rule, the masthead's horizon line, the roundel's second ribbon |
+  | Lichen Copper | `#9E4A1E` | Opinion chips, and the breaking strip under white type (6.1:1) |
+  | Frost Mist | `#EEF4F5` | The corridor bar, the weather box, quotes, the empty state |
+  | Permafrost Slate | `#4C5E6B` | Bylines, datelines, captions (6.7:1 on white) |
+  | Drift Silver | `#B7C6CE` | Card borders and rules, never text |
+
+  Every text pairing passes AA. The lowest are the corridor bar (6.05:1)
+  and dark type on Aurora buttons (5.4:1).
+- **Type:** Telegraph's Archivo, Archivo Narrow and Source Serif 4, plus
+  IBM Plex Mono for datelines, chips, kickers and the weather. All four
+  were already self-hosted. The sheet declares each itself (lesson 9),
+  and CDP confirms each paints as a custom font.
+- **Mark:** the Polar Compass & Aurora Roundel. Polaris breaks through a
+  60th-parallel compass ring, over two aurora ribbons and the Shield
+  horizon. It is sky and land only, as the slate asked, and the package's
+  guide forbids Inuit and Dene symbols too. The mark, the reversed mark
+  and a simplified favicon are used as delivered.
+  - `render-icons` redrew the icons from the favicon, and they match the
+    package's PNGs within 2% of pixels.
+  - The share card is the package's own.
+  - The package's three lockups set the name as SVG text, which an
+    `<img>` can't load the brand font for, so the site doesn't use them.
+- **Wordmark:** live text, as the package's chrome sets it: "Borealis" in
+  Polar Midnight over "Bulletin" in Boreal Pine, Archivo Narrow capitals,
+  beside the roundel. It is compact enough that the footer needs no 85%
+  rule: it stays inside its column at every width.
+- **Words:** the package's. Tagline "Above the 60th. On the record.",
+  newsletter "The 60th Parallel Brief", and the footer line
+  "Independent northern reporting from Whitehorse, Yellowknife, Iqaluit,
+  and every latitude north of 60°."
+- **Desks:** the package's six: Territories (`local-news`), Arctic & North
+  (`arctic-north`, new network-wide), Land & Climate (`environment`),
+  Economy (`business`), Communities and Opinion.
+- **Footprint:** wider than the slate's three territories: Inuit
+  Nunangat, the provincial Norths and the circumpolar Arctic too. The
+  wire pull adds Eye on the Arctic to the foundation's four northern
+  feeds.
+- **Home city:** Yellowknife, the package's choice. The weather is ECCC
+  `nt-24`. The clock is America/Edmonton, through the one-line fix in
+  `app/weather.php`, because PHP lists America/Yellowknife only as its
+  alias.
+- **What the build changed in the package's code:**
+  - the class prefix is the foundation's `bo-`, because `bb-` already
+    names three other papers' sheets;
+  - the dozen tints the sheet set inline are named once at its top;
+  - the network's breaking strip, read through `pp_breaking_live()`;
+  - the footer's year through `pp_date()`, not bare `date()`;
+  - the footer lockup is beside the wordmark again. The column links'
+    `display: block` had stacked it, which the package's own comment
+    says it shouldn't be;
+  - chrome strings go through `pp_t()`;
+  - the launch notes: links to `/tips` instead of a mailto to an address
+    on an unregistered domain; statements of what each desk covers
+    instead of facts about the North; dates set at seed time; and no
+    `contact_email`;
+  - the runbook is ours, with the package's checks in it. It asks for A
+    records only, where the package asked for AAAA too.
+- **Not used:** the three reference photographs, except in local
+  mock-ups. The guide's and preview's HTML pages, which carry scripts,
+  were read as text only.
+- Decide:
+  - borealisbulletin.com: the package names it beside the .ca. It joins
+    the pack once it is registered and pointed at the VPS;
+  - trademark clearance on the name, which the package's runbook asks
+    for before launch;
+  - the footprint's edges. Nunavik is in Quebec, and Nunatsiavut is in
+    Labrador, which The Easterly covers as part of Atlantic Canada;
+  - the footer line, which says the paper reports from the three
+    capitals. Keep it once that is true.
 
 **Terminal City Times.** The domain is registered. It needs its brand
 package, and one decision: keep its own heritage-broadsheet foundation,
@@ -388,3 +464,33 @@ when its newsroom presses Open in Settings.
   ground.** Le Memphré's footer is Dark Blue by the guidelines' own
   rule, and the logo's blue on it is 1.5:1. Build the reversed version
   so the page works, and ask.
+
+### What the fifth package taught (Borealis Bulletin, 28 Nov)
+
+- **A package can ship code. Review it as code, then keep what passes.**
+  Borealis's package shipped the paper's stylesheet, templates, chrome
+  and launch pack, written from the foundation's own files. The build
+  ran the checks any pull request gets:
+  - every helper it calls exists, and every font it names is vendored;
+  - every text pairing passes AA;
+  - no bare `date()`, no mailto, and the breaking strip only through
+    `pp_breaking_live()`;
+  - a render at seven widths, and the suite on both engines.
+
+  It passed most of them, so the package's design ships largely as
+  delivered.
+- **Launch notes in a package still have to be true by construction.**
+  The package wrote its notes about the paper, as asked. They also
+  stated facts about the North and sent readers to a tips address on a
+  domain nobody has registered. Read each sentence and ask whether it is
+  about the paper or about the world.
+- **A designer's runbook can contradict the network's state.** The
+  package asked for AAAA records, which the network publishes none of
+  until PLAN.md 9.2. Keep the runbook ours, and fold the package's
+  checks into it.
+- **Every package has hit the footer lockup.** `.xx-foot a { display:
+  block }` outranks `.xx-lock`, so the lockup stacks or overflows. Check
+  the footer's lockup at every width before calling a build done.
+- **Vector marks skip the tracing, but not the font check.** A logo that
+  sets the name as SVG text paints in a fallback face inside an `<img>`.
+  Use the mark as an image and set the name as live text.

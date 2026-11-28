@@ -459,7 +459,7 @@ holding a capability it should not have.
       build);
     - `chutes` (`chutes`, Quebec City, French);
     - `borealis-bulletin` (`borealis`, the North, Whitehorse as a
-      placeholder home).
+      placeholder home; Yellowknife since its brand build).
   - Each stylesheet is Telegraph's, with every one of its eleven colours
     turned into a role variable (primary, deep, secondary…) declared
     once at the top. A colour package sets those values and
@@ -476,9 +476,9 @@ holding a capability it should not have.
     paper's open decisions.
   - Each runbook (`DEPLOY-CITADEL.md`, `-EASTERLY`, `-MEMPHRE`,
     `-CHUTES`, `-BOREALIS`) blocks launch until the brand build.
-  - `America/Yellowknife` is only an alias in PHP's zone list, so a
-    Yellowknife-based paper fails the clock test until `app/weather.php`
-    points `nt` at America/Edmonton.
+  - `America/Yellowknife` is only an alias in PHP's zone list, so
+    `app/weather.php` points `nt` at America/Edmonton (since the Borealis
+    build), and a Yellowknife paper's palette zone is America/Edmonton.
 - **The Easterly is branded (28 Nov), the first package applied.**
   - The owner's package held six colours, the E. mark, the logotype and
     the lockup. `docs/brand-packages.md` maps each colour to where it
@@ -553,6 +553,30 @@ holding a capability it should not have.
   - Launch waits on the language, the domain (memphre.ca, or
     lememphre.ca, which the package's addresses use) and the inaugural
     edition.
+- **Borealis Bulletin is branded (28 Nov), the fifth and last of the five
+  foundations' packages.**
+  - The package shipped code as well as a brand: the stylesheet,
+    templates, chrome, palette, launch pack and runbook, written from the
+    foundation's files. The build reviewed them like a pull request and
+    kept them. `docs/brand-packages.md` lists every change; the main ones
+    follow.
+  - The class prefix is the foundation's `bo-`, because `bb-` already names
+    three other papers' sheets. Every colour is named once at the top of
+    `borealis.css`. The chrome gained the breaking strip (Lichen Copper,
+    through `pp_breaking_live()`), and the footer's year goes through
+    `pp_date()`.
+  - The Polar Compass & Aurora Roundel came as vectors and is used as
+    delivered. It is sky and land only, as the slate asked. The wordmark
+    is live text in Archivo Narrow, and IBM Plex Mono sets the datelines
+    and chips. The share card is the package's.
+  - The package's six desks; `arctic-north` is new network-wide. The home
+    city is Yellowknife (ECCC `nt-24`, clock America/Edmonton).
+  - The six launch notes are the package's, with mailto links to an
+    unregistered domain turned into `/tips`, facts about the North turned
+    into what each desk covers, and dates set at seed time.
+  - Launch waits only on the domain (`DEPLOY-BOREALIS.md`). The .com
+    joins the pack once registered. The network publishes A records
+    only, though the package's runbook asked for AAAA too.
 - **The expansion name slate is in `NETWORK-EXPANSION.md`** (chosen
   23 Nov 2026): twelve mastheads for the North, Atlantic Canada,
   Quebec and Saskatchewan, with their domains, the reasons, the open
