@@ -441,18 +441,49 @@ holding a capability it should not have.
   `docs/briefs/launch-steeltown-toronto.md` (launch-only from the live
   release, no pin; it checks for a stopped or running roll first, and
   adds `client_max_body_size 10m` to the two new blocks because the
-  live release's template predates it). Only `terminal-city-times`
+  live release's template predates it). `terminal-city-times`
   (DEPLOY-TERMINALCITY.md) remains
   foundation-only, awaiting its brand package. Foundations get
   their six-story inaugural editions at brand-build time, never
   earlier. The wider slate (Rideau siblings, Atlantic papers)
   awaits packages.
+- **Five more foundations, on Toronto Telegraph's design (28 Nov).**
+  - The owner's order: "get the foundations ready unbranded, and I'll
+    get colour packages… Toronto Telegraph is probably our cleanest
+    overall design. I'd replicate that with the new sites, just with
+    their own branding and colours."
+  - The five:
+    - `citadel-courier` (`citadel`, Halifax);
+    - `easterly` (`easterly`, Atlantic Canada, no weather city);
+    - `memphre` (`memphre`, Magog, French);
+    - `chutes` (`chutes`, Quebec City, French);
+    - `borealis-bulletin` (`borealis`, the North, Whitehorse as a
+      placeholder home).
+  - Each stylesheet is Telegraph's, with every one of its eleven colours
+    turned into a role variable (primary, deep, secondary…) declared
+    once at the top. A colour package sets those values and
+    `palette.json`, and nothing else.
+  - The one deliberate change from Telegraph: the Subscribe button
+    keeps its side padding. Telegraph's `.tg-nav a` rule overrides it
+    on the live site too.
+  - The French two use `pp_t()`, the French date and clock helpers, and
+    their own bylines, since `dateline()` prints "By".
+  - The packs have no stories, and no desk is new network-wide. Every
+    wire feed answered with RSS on 28 Nov.
+  - Their domains were unregistered on 28 Nov.
+  - `docs/brand-packages.md` lists what each package carries and each
+    paper's open decisions.
+  - Each runbook (`DEPLOY-CITADEL.md`, `-EASTERLY`, `-MEMPHRE`,
+    `-CHUTES`, `-BOREALIS`) blocks launch until the brand build.
+  - `America/Yellowknife` is only an alias in PHP's zone list, so a
+    Yellowknife-based paper fails the clock test until `app/weather.php`
+    points `nt` at America/Edmonton.
 - **The expansion name slate is in `NETWORK-EXPANSION.md`** (chosen
   23 Nov 2026): twelve mastheads for the North, Atlantic Canada,
   Quebec and Saskatchewan, with their domains, the reasons, the open
-  questions and every rejected name. Nothing is registered or built
-  yet. Read it before proposing names for a new region; record new
-  name decisions there, never only in a chat.
+  questions and every rejected name. Five are built as foundations
+  (above); none is registered. Read it before proposing names for a
+  new region; record new name decisions there, never only in a chat.
 - **Deploys are pinned**: the VPS agent resolves the release branch
   head via the API, requires the exact full SHA from the brief, and
   fetches `upgrade-papers.sh` at that SHA. Rolls are preceded by a

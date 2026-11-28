@@ -1,0 +1,71 @@
+{
+    "zone": "America/Halifax",
+    "weather": {
+        "city": "ns-19",
+        "place": "Halifax"
+    },
+    "palette": {
+        "ink": "#1A1A1A",
+        "paper": "#FFFFFF",
+        "surface": "#F2F4F6",
+        "accent": "#182330",
+        "deep": "#0F161D",
+        "secondary": "#758BA0",
+        "muted": "#4B5563",
+        "line": "#B5BDC6"
+    },
+    "desk_labels": {
+        "local-news": "Halifax",
+        "city-hall": "City Hall",
+        "politics": "Province",
+        "business": "Business",
+        "sports": "Sports",
+        "opinion": "Opinion"
+    },
+    "desks": {
+        "local-news": "#182330",
+        "city-hall": "#182330",
+        "politics": "#182330",
+        "business": "#182330",
+        "sports": "#182330",
+        "opinion": "#182330"
+    },
+    "chrome": {
+        "template": "citadel",
+        "nav": [
+            "local-news",
+            "city-hall",
+            "politics",
+            "business",
+            "sports",
+            "opinion"
+        ]
+    },
+    "admin": {
+        "accent": "#182330",
+        "spot": "#A23A2E",
+        "strip": [
+            "#0F161D",
+            "#B5BDC6"
+        ],
+        "band": [
+            "#FFFFFF",
+            "#182330"
+        ],
+        "nav": [
+            "#182330",
+            "#FFFFFF"
+        ],
+        "mark": "mark.svg",
+        "wordmark": {
+            "font": "'Archivo Narrow', 'Archivo', 'Arial Narrow', sans-serif",
+            "weight": 700,
+            "case": "uppercase",
+            "spacing": "0.02em"
+        },
+        "fonts": {
+            "heading": "'Archivo', 'Helvetica Neue', Arial, sans-serif",
+            "body": "'Source Serif 4', Georgia, serif"
+        }
+    }
+}

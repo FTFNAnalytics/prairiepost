@@ -101,9 +101,10 @@ foreach ([
 ] as [$block, $valid, $label]) {
     ok((pp_weather_config_from(['weather' => $block]) !== null) === $valid, "palette block: $label");
 }
-$expected = ['bison-bulletin', 'brampton-bulletin', 'brandon-bulletin', 'burrard-brief', 'cariboo-compass', 'edmonton-echo',
-    'grande-prairie-gazette', 'kelowna-current', 'kermode-chronicle', 'kitchener-chronicle', 'london-lookout', 'pacific-post',
-    'portage-press', 'prairiedispatch', 'red-river-register', 'rideau-review', 'surrey-standard', 'terminal-city-times', 'toronto-telegraph'];
+$expected = ['bison-bulletin', 'borealis-bulletin', 'brampton-bulletin', 'brandon-bulletin', 'burrard-brief', 'cariboo-compass', 'chutes',
+    'citadel-courier', 'edmonton-echo', 'grande-prairie-gazette', 'kelowna-current', 'kermode-chronicle', 'kitchener-chronicle',
+    'london-lookout', 'memphre', 'pacific-post', 'portage-press', 'prairiedispatch', 'red-river-register', 'rideau-review',
+    'surrey-standard', 'terminal-city-times', 'toronto-telegraph'];
 foreach (glob("$root/assets/sites/*/palette.json") as $file) {
     $slug = basename(dirname($file));
     $palette = json_decode((string) file_get_contents($file), true);

@@ -1,0 +1,72 @@
+{
+    "zone": "America/Toronto",
+    "weather": {
+        "city": "qc-133",
+        "place": "Québec"
+    },
+    "palette": {
+        "ink": "#1A1A1A",
+        "paper": "#FFFFFF",
+        "surface": "#F2F4F6",
+        "accent": "#182330",
+        "deep": "#0F161D",
+        "secondary": "#758BA0",
+        "muted": "#4B5563",
+        "line": "#B5BDC6"
+    },
+    "desk_labels": {
+        "actualites": "Actualités",
+        "politique": "Politique",
+        "economie": "Économie",
+        "culture-qc": "Culture",
+        "sports-qc": "Sports",
+        "idees": "Idées"
+    },
+    "desks": {
+        "actualites": "#182330",
+        "politique": "#182330",
+        "economie": "#182330",
+        "culture-qc": "#182330",
+        "sports-qc": "#182330",
+        "idees": "#182330"
+    },
+    "chrome": {
+        "template": "chutes",
+        "lang": "fr",
+        "nav": [
+            "actualites",
+            "politique",
+            "economie",
+            "culture-qc",
+            "sports-qc",
+            "idees"
+        ]
+    },
+    "admin": {
+        "accent": "#182330",
+        "spot": "#A23A2E",
+        "strip": [
+            "#0F161D",
+            "#B5BDC6"
+        ],
+        "band": [
+            "#FFFFFF",
+            "#182330"
+        ],
+        "nav": [
+            "#182330",
+            "#FFFFFF"
+        ],
+        "mark": "mark.svg",
+        "wordmark": {
+            "font": "'Archivo Narrow', 'Archivo', 'Arial Narrow', sans-serif",
+            "weight": 700,
+            "case": "uppercase",
+            "spacing": "0.02em"
+        },
+        "fonts": {
+            "heading": "'Archivo', 'Helvetica Neue', Arial, sans-serif",
+            "body": "'Source Serif 4', Georgia, serif"
+        }
+    }
+}
