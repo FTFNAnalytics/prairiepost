@@ -103,14 +103,14 @@ the lockup, as PNGs.
 - Desks unchanged: News, Politics, Business, Environment, Culture,
   Sports, Opinion.
 - Weather: none, as with Western Wire, since it has no home city.
-- Clock: Atlantic time.
-- The six-story inaugural edition waits on the second decision below.
-- Decide:
-  - whether Atlantic time suits, given Newfoundland runs half an hour
-    ahead;
-  - whether it does its own reporting, or links the Atlantic papers'
-    stories the way Western Wire links the West's;
-  - whether to hold theeasterly.com.
+- The owner's answers, 28 Nov:
+  - Atlantic time for all four provinces;
+  - its own reporting, not links to sister papers;
+  - the owner is registering easterly.ca.
+- The inaugural edition is written: seven launch notes, one per desk,
+  dated when the seeder runs.
+- Still open: whether to hold theeasterly.com, and the newsletter's name
+  and footer line.
 
 **Le Memphré.**
 - Placeholders:

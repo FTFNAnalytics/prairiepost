@@ -169,7 +169,9 @@ body.t-chutes {
 /* ---- footer ---- */
 .ch-foot { background: var(--ch-deep); color: var(--ch-foot-text); margin-top: 46px; }
 .ch-foot .cols { max-width: 1140px; margin: 0 auto; padding: 34px 20px 20px; display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 26px; }
-.ch-foot a.ch-lock { display: inline-flex; font-size: 10px; padding: 0; }
+/* The footer lockup at 85%, so it stays inside its column down to the
+   four-column grid's narrowest (981px); below that it has its own row. */
+.ch-foot a.ch-lock { display: inline-flex; font-size: 8.5px; padding: 0; }
 .ch-foot .ch-name .wm { color: var(--ch-paper); }
 .ch-foot .ch-name .sub { color: var(--ch-foot-text); }
 .ch-foot h4 { margin: 0 0 10px; font-family: var(--ch-ui); font-weight: 700; font-size: 13px; letter-spacing: .12em; text-transform: uppercase; color: var(--ch-gold); }
@@ -183,6 +185,7 @@ body.t-chutes {
   .ch-home { grid-template-columns: 1fr; }
   .ch-grid { grid-template-columns: repeat(2, 1fr); }
   .ch-foot .cols { grid-template-columns: 1fr 1fr; }
+  .ch-foot .cols > div:first-child { grid-column: 1 / -1; }
   .ch-hero h1 { font-size: 38px; }
   .ch-hero--noart .wm { right: 20px; bottom: 0; width: 200px; }
 }

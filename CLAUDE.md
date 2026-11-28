@@ -492,9 +492,11 @@ holding a capability it should not have.
     need the same, and the brand-packages doc says how to tell.
   - The chrome gained a breaking strip in the package's red, read only
     through `pp_breaking_live()`.
-  - Launch still waits on the domain and on the six-story inaugural
-    edition, which needs the owner's answer on whether the paper reports
-    or links (`DEPLOY-EASTERLY.md`).
+  - The owner's answers (28 Nov): Atlantic time, its own reporting, and
+    the owner is registering easterly.ca.
+  - The inaugural edition is seven launch notes, one per desk, dated by
+    the seeder at launch through the older packs' `$ago` helper.
+  - Launch waits only on the domain (`DEPLOY-EASTERLY.md`).
 - **Les Chutes is branded (28 Nov), the second package applied.**
   - The package's images disagree with each other: nine different
     waterfalls, five taglines and two type pairings. The build follows

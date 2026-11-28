@@ -26,6 +26,28 @@ function now(): string
     return date('Y-m-d H:i:s');
 }
 
+function pp_normalize_public_post(?array $post): ?array
+{
+    if ($post === null) {
+        return null;
+    }
+    if (array_key_exists('byline', $post)) {
+        $post['byline'] = pp_normalize_byline((string) ($post['byline'] ?? ''), (string) ($post['post_type'] ?? 'story'));
+    }
+    return $post;
+}
+
+function pp_normalize_public_posts(array $posts): array
+{
+    foreach ($posts as &$post) {
+        if (is_array($post) && array_key_exists('byline', $post)) {
+            $post['byline'] = pp_normalize_byline((string) ($post['byline'] ?? ''), (string) ($post['post_type'] ?? 'story'));
+        }
+    }
+    unset($post);
+    return $posts;
+}
+
 function featured_post(): ?array
 {
     $sql = 'SELECT ' . PP_POST_COLS . ' FROM posts p' . pp_site_join() . PP_POST_JOINS . '
@@ -33,7 +55,7 @@ function featured_post(): ?array
             ORDER BY CASE WHEN ps.placement = 'hero' THEN 0 ELSE 1 END, p.published_at DESC LIMIT 1";
     $stmt = db()->prepare($sql);
     $stmt->execute([now()]);
-    return $stmt->fetch() ?: null;
+    return pp_normalize_public_post($stmt->fetch() ?: null);
 }
 
 /** The front-featured band: up to four stories an editor placed there. */
@@ -50,7 +72,7 @@ function front_featured_posts(array $excludeIds = [], int $limit = 4): array
             ORDER BY p.published_at DESC LIMIT ' . (int) $limit;
     $stmt = db()->prepare($sql);
     $stmt->execute($params);
-    return $stmt->fetchAll();
+    return pp_normalize_public_posts($stmt->fetchAll());
 }
 
 function latest_posts(int $limit, array $excludeIds = [], int $offset = 0): array
@@ -66,7 +88,7 @@ function latest_posts(int $limit, array $excludeIds = [], int $offset = 0): arra
             ORDER BY p.published_at DESC LIMIT ' . (int) $limit . ' OFFSET ' . (int) $offset;
     $stmt = db()->prepare($sql);
     $stmt->execute($params);
-    return $stmt->fetchAll();
+    return pp_normalize_public_posts($stmt->fetchAll());
 }
 
 function posts_in_category(int $categoryId, int $limit, array $excludeIds = [], int $offset = 0): array
@@ -82,7 +104,7 @@ function posts_in_category(int $categoryId, int $limit, array $excludeIds = [], 
             ORDER BY CASE WHEN ps.placement = 'desk_lead' THEN 0 ELSE 1 END, p.published_at DESC LIMIT " . (int) $limit . ' OFFSET ' . (int) $offset;
     $stmt = db()->prepare($sql);
     $stmt->execute($params);
-    return $stmt->fetchAll();
+    return pp_normalize_public_posts($stmt->fetchAll());
 }
 
 function count_posts_in_category(int $categoryId): int
@@ -99,11 +121,31 @@ function post_by_slug(string $slug): ?array
             WHERE p.slug = ? AND ' . pp_published_where() . ' LIMIT 1';
     $stmt = db()->prepare($sql);
     $stmt->execute([$slug, now()]);
-    return $stmt->fetch() ?: null;
+    return pp_normalize_public_post($stmt->fetch() ?: null);
+}
+
+/** PostgreSQL GIN-indexed FTS expression matching idx_posts_search_fts. */
+function pp_posts_fts_expr(): string
+{
+    return "to_tsvector('simple', coalesce(p.title, '') || ' ' || coalesce(p.lede, '') || ' ' || coalesce(p.body, '') || ' ' || coalesce(p.dateline, ''))";
 }
 
 function search_posts(string $q, int $limit, int $offset = 0): array
 {
+    $q = trim($q);
+    if ($q === '') {
+        return [];
+    }
+    if (db()->getAttribute(PDO::ATTR_DRIVER_NAME) === 'pgsql' && preg_match('/[\p{L}\p{N}]/u', $q) === 1) {
+        $tsv = pp_posts_fts_expr();
+        $sql = 'SELECT ' . PP_POST_COLS . ' FROM posts p' . pp_site_join() . PP_POST_JOINS . '
+                WHERE ' . pp_published_where() . " AND $tsv @@ plainto_tsquery('simple', ?)
+                ORDER BY ts_rank($tsv, plainto_tsquery('simple', ?)) DESC, p.published_at DESC
+                LIMIT " . (int) $limit . ' OFFSET ' . (int) $offset;
+        $stmt = db()->prepare($sql);
+        $stmt->execute([now(), $q, $q]);
+        return pp_normalize_public_posts($stmt->fetchAll());
+    }
     $like = '%' . str_replace(['%', '_'], ['\\%', '\\_'], $q) . '%';
     $op = pp_like();
     $sql = 'SELECT ' . PP_POST_COLS . ' FROM posts p' . pp_site_join() . PP_POST_JOINS . '
@@ -111,11 +153,22 @@ function search_posts(string $q, int $limit, int $offset = 0): array
             ORDER BY p.published_at DESC LIMIT " . (int) $limit . ' OFFSET ' . (int) $offset;
     $stmt = db()->prepare($sql);
     $stmt->execute([now(), $like, $like, $like, $like]);
-    return $stmt->fetchAll();
+    return pp_normalize_public_posts($stmt->fetchAll());
 }
 
 function count_search_posts(string $q): int
 {
+    $q = trim($q);
+    if ($q === '') {
+        return 0;
+    }
+    if (db()->getAttribute(PDO::ATTR_DRIVER_NAME) === 'pgsql' && preg_match('/[\p{L}\p{N}]/u', $q) === 1) {
+        $tsv = pp_posts_fts_expr();
+        $stmt = db()->prepare('SELECT COUNT(*) AS n FROM posts p' . pp_site_join()
+            . ' WHERE ' . pp_published_where() . " AND $tsv @@ plainto_tsquery('simple', ?)");
+        $stmt->execute([now(), $q]);
+        return (int) $stmt->fetch()['n'];
+    }
     $like = '%' . str_replace(['%', '_'], ['\\%', '\\_'], $q) . '%';
     $op = pp_like();
     $stmt = db()->prepare('SELECT COUNT(*) AS n FROM posts p' . pp_site_join()
@@ -144,7 +197,7 @@ function posts_by_author(int $authorId, int $limit, int $offset = 0): array
             ORDER BY p.published_at DESC LIMIT ' . (int) $limit . ' OFFSET ' . (int) $offset;
     $stmt = db()->prepare($sql);
     $stmt->execute([now(), $authorId]);
-    return $stmt->fetchAll();
+    return pp_normalize_public_posts($stmt->fetchAll());
 }
 
 function count_posts_by_author(int $authorId): int
@@ -186,7 +239,7 @@ function posts_in_region(string $region, int $limit, array $excludeIds = [], int
             ORDER BY p.published_at DESC LIMIT ' . (int) $limit . ' OFFSET ' . (int) $offset;
     $stmt = db()->prepare($sql);
     $stmt->execute($params);
-    return $stmt->fetchAll();
+    return pp_normalize_public_posts($stmt->fetchAll());
 }
 
 function count_posts_in_region(string $region): int
@@ -648,7 +701,7 @@ function trending_posts(int $limit = 5): array
             ORDER BY p.views DESC, p.published_at DESC LIMIT ' . (int) $limit;
     $stmt = db()->prepare($sql);
     $stmt->execute([now(), $since]);
-    $posts = $stmt->fetchAll();
+    $posts = pp_normalize_public_posts($stmt->fetchAll());
     if (count($posts) < $limit) {
         $posts = array_merge($posts, latest_posts($limit - count($posts), array_map('intval', array_column($posts, 'id'))));
     }
@@ -665,7 +718,7 @@ function corrected_posts(int $limit = 50): array
             ORDER BY p.corrected_at DESC LIMIT " . (int) $limit;
     $stmt = db()->prepare($sql);
     $stmt->execute([now()]);
-    return $stmt->fetchAll();
+    return pp_normalize_public_posts($stmt->fetchAll());
 }
 
 /* --- Subscribers & newsletters ---------------------------------------------- */
@@ -1461,6 +1514,7 @@ function pp_bulk_set_status(array $user, array $seen, string $target): array
             }
             require_once PP_ROOT . '/app/agents.php';
             pp_agent_auto_enqueue($id);
+            pp_indexnow_notify_post($id);
         }
     }
 
