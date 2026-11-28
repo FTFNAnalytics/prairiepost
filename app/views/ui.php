@@ -90,7 +90,9 @@ function story_photo(array $post, bool $withCaption = false): string
     if (empty($post['image'])) {
         return '';
     }
-    $img = '<img src="' . e($post['image']) . '" alt="' . e(($post['image_alt'] ?? '') ?: ($post['image_caption'] ?: $post['title'])) . '" loading="lazy">';
+    $srcset = pp_image_srcset((string) $post['image']);
+    $srcsetAttr = $srcset !== '' ? ' srcset="' . e($srcset) . '" sizes="(max-width: 640px) 480px, 960px"' : '';
+    $img = '<img src="' . e($post['image']) . '"' . $srcsetAttr . ' alt="' . e(($post['image_alt'] ?? '') ?: ($post['image_caption'] ?: $post['title'])) . '" loading="lazy">';
     if (!$withCaption || ($post['image_caption'] === '' && $post['image_credit'] === '')) {
         return '<a class="photo" href="' . e(post_href($post)) . '"' . post_link_attr($post) . ' tabindex="-1" aria-hidden="true">' . $img . '</a>';
     }
@@ -116,6 +118,17 @@ function story_card(array $post, bool $withPhoto = true): string
     $html .= '<p class="byline">' . dateline($post) . '</p>';
     $html .= '</article>';
     return $html;
+}
+
+/**
+ * Render the shared AI / automated workflow disclosure line for a story
+ * (origin = 'ai' or 'hermes') when the paper's `ai_disclosure` setting is on.
+ */
+function pp_article_disclosure(array $post): string
+{
+    ob_start();
+    require PP_ROOT . '/app/views/partials/_article-disclosure.php';
+    return (string) ob_get_clean();
 }
 
 /**
@@ -317,6 +330,9 @@ function page_footer(): void
          where PHP never runs, so the page itself reports which ads it
          carried. The /ad endpoint is never cached; every view counts. */ ?>
 <img src="<?= e(url('ad')) ?>?imp=<?= implode('-', $ppAdsShown) ?>" alt="" width="1" height="1" style="position:absolute;left:-9999px" aria-hidden="true">
+<?php endif; ?>
+<?php if (!empty($GLOBALS['ppViewPostId'])): ?>
+<img src="<?= e(url('ad')) ?>?v=<?= (int) $GLOBALS['ppViewPostId'] ?>" alt="" width="1" height="1" style="position:absolute;left:-9999px" aria-hidden="true">
 <?php endif; ?>
 
 <?php

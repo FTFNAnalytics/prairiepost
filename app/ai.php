@@ -21,7 +21,29 @@ function pp_ai_enabled(): bool
 function pp_ai_model(): string
 {
     $m = trim((string) setting('ai_model', ''));
-    return $m !== '' ? $m : 'claude-opus-5';
+    return $m !== '' ? $m : 'claude-sonnet-4-6';
+}
+
+/** Daily AI call budget for this site (blank = 50/day, 0 = unlimited). */
+function pp_ai_daily_limit(): int
+{
+    $raw = trim((string) setting('ai_daily_limit', ''));
+    if ($raw === '') {
+        return 50;
+    }
+    return max(0, (int) $raw);
+}
+
+/** Number of AI Messages API calls recorded today for this site. */
+function pp_ai_calls_today(): int
+{
+    try {
+        $stmt = db()->prepare("SELECT COUNT(*) FROM audit_log WHERE site_id = ? AND action = 'ai.call' AND created_at >= ?");
+        $stmt->execute([current_site_id(), date('Y-m-d 00:00:00')]);
+        return (int) $stmt->fetchColumn();
+    } catch (Throwable) {
+        return 0;
+    }
 }
 
 /** Overridable only for a local stub or an outbound proxy — not a setting. */
@@ -44,6 +66,15 @@ function pp_ai_message(string $system, array $messages, array $opts = []): array
     if (!pp_ai_enabled()) {
         $out['error'] = "The research desk isn't connected yet — add anthropic_api_key to the hub's config.php.";
         return $out;
+    }
+
+    $limit = pp_ai_daily_limit();
+    if ($limit > 0) {
+        $used = pp_ai_calls_today();
+        if ($used >= $limit) {
+            $out['error'] = "Daily AI call limit reached ($used/$limit). Raise ai_daily_limit in Settings or try again tomorrow.";
+            return $out;
+        }
     }
 
     $payload = [
@@ -97,6 +128,11 @@ function pp_ai_message(string $system, array $messages, array $opts = []): array
         'in'  => (int) ($data['usage']['input_tokens'] ?? 0),
         'out' => (int) ($data['usage']['output_tokens'] ?? 0),
     ];
+    try {
+        pp_audit('ai.call', (string) $payload['model'], sprintf('in=%d out=%d', $out['usage']['in'], $out['usage']['out']));
+    } catch (Throwable) {
+        // Accounting must never abort an otherwise completed reply.
+    }
     // Thinking blocks precede the text on current models; collect text only.
     foreach (($data['content'] ?? []) as $block) {
         if (($block['type'] ?? '') === 'text') {

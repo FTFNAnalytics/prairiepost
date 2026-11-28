@@ -5,7 +5,7 @@
  */
 
 define('PP_ROOT', dirname(__DIR__));
-define('PP_SCHEMA_VERSION', 27);
+define('PP_SCHEMA_VERSION', 28);
 
 // PP_CONFIG lets the committed harness (tools/seed-all.sh, baseline.sh)
 // point a CLI run at a throwaway config without touching the checkout's
@@ -64,6 +64,7 @@ require PP_ROOT . '/app/freshness.php';
 require PP_ROOT . '/app/media.php';
 require PP_ROOT . '/app/ai.php';
 require PP_ROOT . '/app/google.php';
+require PP_ROOT . '/app/indexnow.php';
 
 function pp_config(string $key, $default = null)
 {

@@ -38,14 +38,12 @@ if (!empty($post['canonical_site_id']) && (int) $post['canonical_site_id'] !== c
 }
 $tags = tags_for_post((int) $post['id']);
 
-// Count the read (crawlers that identify themselves don't count).
-if (!preg_match('/bot|crawl|spider|slurp|preview/i', $_SERVER['HTTP_USER_AGENT'] ?? '')) {
-    db()->prepare('UPDATE posts SET views = views + 1 WHERE id = ?')->execute([(int) $post['id']]);
-}
-
-// A wire link has no story page of its own — the permalink sends the reader
-// straight to the outlet that reported it (the read is counted above).
+// A wire link has no story page of its own — count the click-through here
+// before sending the reader straight to the outlet that reported it.
 if (is_link_post($post)) {
+    if (!preg_match('/bot|crawl|spider|slurp|preview/i', $_SERVER['HTTP_USER_AGENT'] ?? '')) {
+        db()->prepare('UPDATE posts SET views = views + 1 WHERE id = ?')->execute([(int) $post['id']]);
+    }
     $target = trim((string) $post['source_url']);
     if (!preg_match('#^https?://#i', $target) || preg_match('/[\r\n\x00-\x1f]/', $target)) {
         redirect('/');
@@ -54,6 +52,11 @@ if (is_link_post($post)) {
     exit;
 }
 
+// Story pages count reads via the uncached /ad?v=<id> footer beacon so GET
+// responses remain 100% read-only and absorb traffic spikes from nginx cache.
+$GLOBALS['ppViewPostId'] = (int) $post['id'];
+
+$siteTitle = setting('site_title', 'The Prairie Dispatch');
 $jsonld = [
     '@context' => 'https://schema.org',
     '@type'    => 'NewsArticle',
@@ -62,14 +65,14 @@ $jsonld = [
     'datePublished' => date('c', strtotime($post['published_at'])),
     'dateModified'  => date('c', strtotime($post['updated_at'] ?: $post['published_at'])),
     'mainEntityOfPage' => $canonical,
-    'author' => array_filter([
-        '@type' => 'Person',
-        'name'  => $post['byline'] ?: setting('site_title'),
-        'url'   => !empty($post['author_slug']) ? site_url() . '/author/' . $post['author_slug'] : null,
-    ]),
+    'author' => pp_jsonld_author($post, $siteTitle),
     'publisher' => [
         '@type' => 'NewsMediaOrganization',
-        'name'  => setting('site_title', 'The Prairie Dispatch'),
+        'name'  => $siteTitle,
+        'url'   => site_url(),
+        'publishingPrinciples' => site_url() . '/standards',
+        'correctionsPolicy'    => site_url() . '/corrections',
+        'ownershipFundingInfo' => site_url() . '/about',
         'logo'  => [
             '@type'  => 'ImageObject',
             'url'    => ($ppLogo = pp_publisher_logo())['url'],
@@ -124,10 +127,17 @@ page_header([
 // below. Adding a paper is adding files — this chain never grows again.
 // The block boundary below deliberately emits one newline: the chain it
 // replaced was two php blocks, and every page carries that byte.
+$GLOBALS['ppDisclosureRendered'] = false;
 $ppView = PP_ROOT . '/app/views/article-' . basename((string) pp_chrome('template')) . '.php'; ?>
 
 <?php if (is_file($ppView)) {
     require $ppView;
+    if (empty($GLOBALS['ppDisclosureRendered'])) {
+        $ppDisc = pp_article_disclosure($post);
+        if ($ppDisc !== '') {
+            echo '<div class="wrap" style="margin:18px auto">' . $ppDisc . '</div>';
+        }
+    }
     page_footer();
     return;
 } ?>
@@ -151,13 +161,7 @@ $ppView = PP_ROOT . '/app/views/article-' . basename((string) pp_chrome('templat
       }
       echo implode(' · ', $parts);
     ?></p>
-    <?php
-    // AI disclosure: per-site and off by default. '1' prints the standard
-    // line; any other text prints verbatim. Only origin='ai' stories carry it.
-    $aiLine = trim((string) setting('ai_disclosure', ''));
-    if (($post['origin'] ?? '') === 'ai' && $aiLine !== ''): ?>
-    <p class="byline"><?= e($aiLine === '1' ? 'Prepared with AI assistance and reviewed by an editor.' : $aiLine) ?></p>
-    <?php endif; ?>
+    <?= pp_article_disclosure($post) ?>
   </div>
 
   <div class="pp-horizon" style="margin-top:18px"></div>
