@@ -5,14 +5,21 @@
         "place": "Halifax"
     },
     "palette": {
-        "ink": "#1A1A1A",
+        "ink": "#003262",
         "paper": "#FFFFFF",
-        "surface": "#F2F4F6",
-        "accent": "#182330",
-        "deep": "#0F161D",
-        "secondary": "#758BA0",
+        "surface": "#E9F5F8",
+        "accent": "#0047B6",
+        "deep": "#003262",
+        "sea": "#A8D5E2",
+        "gold": "#FDD44F",
+        "red": "#D21034",
         "muted": "#4B5563",
-        "line": "#B5BDC6"
+        "line": "#CCD6E0",
+        "board": "#CCD6E0",
+        "sky": "#A8D5E2",
+        "hill": "#0047B6",
+        "field": "#0047B6",
+        "stubble": "#003262"
     },
     "desk_labels": {
         "local-news": "Halifax",
@@ -23,12 +30,12 @@
         "opinion": "Opinion"
     },
     "desks": {
-        "local-news": "#182330",
-        "city-hall": "#182330",
-        "politics": "#182330",
-        "business": "#182330",
-        "sports": "#182330",
-        "opinion": "#182330"
+        "local-news": "#0047B6",
+        "city-hall": "#0047B6",
+        "politics": "#0047B6",
+        "business": "#0047B6",
+        "sports": "#0047B6",
+        "opinion": "#0047B6"
     },
     "chrome": {
         "template": "citadel",
@@ -42,30 +49,31 @@
         ]
     },
     "admin": {
-        "accent": "#182330",
-        "spot": "#A23A2E",
+        "accent": "#0047B6",
+        "spot": "#D21034",
         "strip": [
-            "#0F161D",
-            "#B5BDC6"
+            "#003262",
+            "#A8D5E2"
         ],
         "band": [
             "#FFFFFF",
-            "#182330"
+            "#003262"
         ],
         "nav": [
-            "#182330",
+            "#0047B6",
             "#FFFFFF"
         ],
         "mark": "mark.svg",
         "wordmark": {
-            "font": "'Archivo Narrow', 'Archivo', 'Arial Narrow', sans-serif",
-            "weight": 700,
-            "case": "uppercase",
-            "spacing": "0.02em"
+            "font": "'Newsreader', Georgia, serif",
+            "weight": 600,
+            "case": "none",
+            "spacing": "-0.01em",
+            "color": "#003262"
         },
         "fonts": {
-            "heading": "'Archivo', 'Helvetica Neue', Arial, sans-serif",
-            "body": "'Source Serif 4', Georgia, serif"
+            "heading": "'Newsreader', Georgia, serif",
+            "body": "'Inter', 'Helvetica Neue', Arial, sans-serif"
         }
     }
 }

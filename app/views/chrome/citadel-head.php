@@ -1,8 +1,11 @@
 <?php
-/* Citadel Courier — masthead chrome. FOUNDATION build (Nov 2026): Toronto
-   Telegraph's masthead, unbranded. In scope from page_header():
-   $siteTitle, $tagline, $activeDesk. The placeholder roundel and the
-   two-line wordmark wait for the brand package. */
+/* Citadel Courier — masthead chrome. Toronto Telegraph's masthead in the
+   owner's brand package (28 Nov 2026): the fort (mark.svg, traced from
+   the package's primary logo) and the wordmark set in Newsreader over
+   the tagline. In scope from page_header(): $siteTitle, $tagline,
+   $activeDesk. The breaking strip is the guide's Courier Red and shows
+   only while pp_breaking_live() holds (app/freshness.php); its label is
+   "Breaking" in the served HTML, uppercased by CSS. */
 ?>
 <div class="cc-util">
   <div class="in">
@@ -19,8 +22,8 @@
 <header class="cc-head">
   <div class="in">
     <a class="cc-lock" href="/" aria-label="<?= e($siteTitle) ?> — front page">
-      <img src="<?= e(site_asset('mark.svg')) ?>" alt="">
-      <span class="cc-name"><span class="top">Citadel</span><span class="mid">Courier</span><span class="sub"><?= e($tagline) ?></span></span>
+      <img class="mk" src="<?= e(site_asset('mark.svg')) ?>" alt="" width="93" height="55">
+      <span class="cc-name"><span class="wm">Citadel Courier</span><span class="sub"><?= e($tagline) ?></span></span>
     </a>
     <nav class="cc-nav" aria-label="<?= e(pp_t('Sections')) ?>">
       <a href="/"<?= ($GLOBALS['pp_front_page'] ?? false) ? ' aria-current="page"' : '' ?>><?= e(pp_t('Home')) ?></a>
@@ -32,4 +35,12 @@
     </nav>
   </div>
 </header>
+<?php if (pp_breaking_live()): ?>
+<div class="cc-brk">
+  <div class="in">
+    <span class="lbl">Breaking</span>
+    <a href="<?= e(setting('breaking_url')) ?>"><?= e(setting('breaking_label')) ?></a>
+  </div>
+</div>
+<?php endif; ?>
 <main id="content">
