@@ -37,7 +37,7 @@ function pp_schema_ddl(string $driver): array
     $dt = $pgsql ? 'TIMESTAMP' : 'DATETIME';
     $suffix = $mysql ? ' ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci' : '';
 
-    return [
+    $stmts = [
         "CREATE TABLE sites (
             id $id,
             name VARCHAR(160) NOT NULL,
@@ -261,6 +261,20 @@ function pp_schema_ddl(string $driver): array
             sent_at $dt,
             created_at $dt NOT NULL,
             CONSTRAINT uq_edition UNIQUE (site_id, edition_date)
+        )$suffix",
+
+        "CREATE TABLE newsletter_deliveries (
+            id $id,
+            newsletter_id INTEGER NOT NULL,
+            subscriber_id INTEGER NOT NULL,
+            email VARCHAR(191) NOT NULL,
+            token VARCHAR(64) NOT NULL DEFAULT '',
+            status VARCHAR(20) NOT NULL DEFAULT 'pending',
+            error VARCHAR(255) NOT NULL DEFAULT '',
+            attempts INTEGER NOT NULL DEFAULT 0,
+            sent_at $dt,
+            created_at $dt NOT NULL,
+            CONSTRAINT uq_newsletter_delivery UNIQUE (newsletter_id, subscriber_id)
         )$suffix",
 
         "CREATE TABLE settings (
@@ -612,7 +626,12 @@ function pp_schema_ddl(string $driver): array
         'CREATE INDEX idx_site_memberships_user ON site_memberships (user_id)',
         'CREATE INDEX idx_site_memberships_site ON site_memberships (site_id)',
         'CREATE INDEX idx_slug_redirects_post ON slug_redirects (post_id)',
+        'CREATE INDEX idx_newsletter_deliveries_queue ON newsletter_deliveries (newsletter_id, status, id)',
     ];
+    if ($pgsql) {
+        $stmts[] = "CREATE INDEX idx_posts_search_fts ON posts USING GIN (to_tsvector('simple', coalesce(title, '') || ' ' || coalesce(lede, '') || ' ' || coalesce(body, '') || ' ' || coalesce(dateline, '')))";
+    }
+    return $stmts;
 }
 
 function pp_install(PDO $pdo, string $driver): void
@@ -1642,6 +1661,40 @@ function pp_migrations(): array
             $pdo->exec('CREATE INDEX idx_slug_redirects_post ON slug_redirects (post_id)');
 
             $pdo->exec("UPDATE settings SET svalue = '27' WHERE site_id = 0 AND skey = 'schema_version'");
+        },
+
+        28 => function (PDO $pdo, string $driver): void {
+            // Performance & scale at 50+ papers (Sprint 3):
+            // 1. newsletter_deliveries provides a resumable, duplicate-free
+            //    per-subscriber outbox processed in bounded batches per cron tick.
+            // 2. On PostgreSQL, idx_posts_search_fts indexes full-text search
+            //    across title, lede, body, and dateline using a functional GIN
+            //    tsvector index (zero triggers, zero extra column bloat).
+            $id = $driver === 'mysql' ? 'INT UNSIGNED AUTO_INCREMENT PRIMARY KEY'
+                : ($driver === 'pgsql' ? 'INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY' : 'INTEGER PRIMARY KEY AUTOINCREMENT');
+            $dt = $driver === 'pgsql' ? 'TIMESTAMP' : 'DATETIME';
+            $suffix = $driver === 'mysql' ? ' ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci' : '';
+
+            $pdo->exec("CREATE TABLE newsletter_deliveries (
+                id $id,
+                newsletter_id INTEGER NOT NULL,
+                subscriber_id INTEGER NOT NULL,
+                email VARCHAR(191) NOT NULL,
+                token VARCHAR(64) NOT NULL DEFAULT '',
+                status VARCHAR(20) NOT NULL DEFAULT 'pending',
+                error VARCHAR(255) NOT NULL DEFAULT '',
+                attempts INTEGER NOT NULL DEFAULT 0,
+                sent_at $dt,
+                created_at $dt NOT NULL,
+                CONSTRAINT uq_newsletter_delivery UNIQUE (newsletter_id, subscriber_id)
+            )$suffix");
+            $pdo->exec('CREATE INDEX idx_newsletter_deliveries_queue ON newsletter_deliveries (newsletter_id, status, id)');
+
+            if ($driver === 'pgsql') {
+                $pdo->exec("CREATE INDEX idx_posts_search_fts ON posts USING GIN (to_tsvector('simple', coalesce(title, '') || ' ' || coalesce(lede, '') || ' ' || coalesce(body, '') || ' ' || coalesce(dateline, '')))");
+            }
+
+            $pdo->exec("UPDATE settings SET svalue = '28' WHERE site_id = 0 AND skey = 'schema_version'");
         },
 
     ];

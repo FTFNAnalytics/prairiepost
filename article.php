@@ -38,14 +38,12 @@ if (!empty($post['canonical_site_id']) && (int) $post['canonical_site_id'] !== c
 }
 $tags = tags_for_post((int) $post['id']);
 
-// Count the read (crawlers that identify themselves don't count).
-if (!preg_match('/bot|crawl|spider|slurp|preview/i', $_SERVER['HTTP_USER_AGENT'] ?? '')) {
-    db()->prepare('UPDATE posts SET views = views + 1 WHERE id = ?')->execute([(int) $post['id']]);
-}
-
-// A wire link has no story page of its own — the permalink sends the reader
-// straight to the outlet that reported it (the read is counted above).
+// A wire link has no story page of its own — count the click-through here
+// before sending the reader straight to the outlet that reported it.
 if (is_link_post($post)) {
+    if (!preg_match('/bot|crawl|spider|slurp|preview/i', $_SERVER['HTTP_USER_AGENT'] ?? '')) {
+        db()->prepare('UPDATE posts SET views = views + 1 WHERE id = ?')->execute([(int) $post['id']]);
+    }
     $target = trim((string) $post['source_url']);
     if (!preg_match('#^https?://#i', $target) || preg_match('/[\r\n\x00-\x1f]/', $target)) {
         redirect('/');
@@ -53,6 +51,10 @@ if (is_link_post($post)) {
     header('Location: ' . $target, true, 302);
     exit;
 }
+
+// Story pages count reads via the uncached /ad?v=<id> footer beacon so GET
+// responses remain 100% read-only and absorb traffic spikes from nginx cache.
+$GLOBALS['ppViewPostId'] = (int) $post['id'];
 
 $siteTitle = setting('site_title', 'The Prairie Dispatch');
 $jsonld = [

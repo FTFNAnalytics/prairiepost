@@ -635,6 +635,7 @@ function pp_handle_image_upload(array $file): array
     if (file_put_contents($dir . '/' . $name, $clean) === false) {
         return [null, "The server couldn't write the file. Check that /uploads/ is writable."];
     }
+    pp_generate_image_derivatives($dir . '/' . $name, $mime);
     return ['/uploads/' . date('Y/m') . '/' . $name, null];
 }
 
@@ -682,7 +683,96 @@ function pp_store_image_bytes(string $bytes, string $baseName): array
     if (file_put_contents($dir . '/' . $name, $clean) === false) {
         return [null, 'the server could not write the file'];
     }
+    pp_generate_image_derivatives($dir . '/' . $name, $mime);
     return ['/uploads/' . date('Y/m') . '/' . $name, null];
+}
+
+/**
+ * Emit responsive WebP derivatives (480w and 960w) beside a stored raster
+ * upload when PHP GD supports WebP and the source image is wider than the
+ * target width. Non-fatal: returns the list of generated filesystem paths.
+ */
+function pp_generate_image_derivatives(string $filePath, string $mime): array
+{
+    if (!in_array($mime, ['image/jpeg', 'image/png', 'image/webp'], true)) {
+        return [];
+    }
+    if (!function_exists('imagecreatefromstring') || !function_exists('imagewebp')) {
+        return [];
+    }
+    $raw = @file_get_contents($filePath);
+    if ($raw === false || $raw === '') {
+        return [];
+    }
+    $src = @imagecreatefromstring($raw);
+    if (!$src) {
+        return [];
+    }
+    $origW = imagesx($src);
+    $origH = imagesy($src);
+    if ($origW <= 480 || $origH <= 0) {
+        imagedestroy($src);
+        return [];
+    }
+
+    $dir = dirname($filePath);
+    $stem = pathinfo($filePath, PATHINFO_FILENAME);
+    $created = [];
+    foreach ([480, 960] as $targetW) {
+        if ($origW <= $targetW) {
+            continue;
+        }
+        $targetH = max(1, (int) round($origH * ($targetW / $origW)));
+        $dst = imagecreatetruecolor($targetW, $targetH);
+        if (!$dst) {
+            continue;
+        }
+        imagealphablending($dst, false);
+        imagesavealpha($dst, true);
+        $transparent = imagecolorallocatealpha($dst, 0, 0, 0, 127);
+        imagefilledrectangle($dst, 0, 0, $targetW, $targetH, $transparent);
+        if (imagecopyresampled($dst, $src, 0, 0, 0, 0, $targetW, $targetH, $origW, $origH)) {
+            $outPath = $dir . '/' . $stem . '-' . $targetW . 'w.webp';
+            if (@imagewebp($dst, $outPath, 82)) {
+                $created[] = $outPath;
+            }
+        }
+        imagedestroy($dst);
+    }
+    imagedestroy($src);
+    return $created;
+}
+
+/**
+ * Build a responsive HTML srcset string for a local /uploads/ raster image
+ * when sibling -480w.webp / -960w.webp derivatives exist on disk.
+ */
+function pp_image_srcset(string $publicUrl): string
+{
+    if (!str_starts_with($publicUrl, '/uploads/') || str_contains($publicUrl, '..')) {
+        return '';
+    }
+    $ext = strtolower((string) pathinfo($publicUrl, PATHINFO_EXTENSION));
+    if (!in_array($ext, ['jpg', 'jpeg', 'png', 'webp'], true)) {
+        return '';
+    }
+    $dirUrl = dirname($publicUrl);
+    $stem = pathinfo($publicUrl, PATHINFO_FILENAME);
+    $entries = [];
+    foreach ([480, 960] as $w) {
+        $candUrl = $dirUrl . '/' . $stem . '-' . $w . 'w.webp';
+        if (is_file(PP_ROOT . $candUrl)) {
+            $entries[] = $candUrl . ' ' . $w . 'w';
+        }
+    }
+    if (!$entries) {
+        return '';
+    }
+    $origFile = PP_ROOT . $publicUrl;
+    $info = is_file($origFile) ? @getimagesize($origFile) : false;
+    $origW = is_array($info) && !empty($info[0]) ? (int) $info[0] : 1600;
+    $entries[] = $publicUrl . ' ' . $origW . 'w';
+    return implode(', ', $entries);
 }
 
 /**

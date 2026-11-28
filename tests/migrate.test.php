@@ -103,6 +103,11 @@ $pdo->exec('ALTER TABLE post_sites DROP COLUMN placement');
 $pdo->exec('ALTER TABLE users DROP COLUMN is_network_admin');
 $pdo->exec('DROP TABLE site_memberships');
 $pdo->exec('DROP TABLE slug_redirects');
+// Step 28's: resumable newsletter outbox + Postgres FTS GIN index.
+$pdo->exec('DROP TABLE newsletter_deliveries');
+if ($engine === 'pgsql') {
+    $pdo->exec('DROP INDEX IF EXISTS idx_posts_search_fts');
+}
 $pdo->prepare("UPDATE settings SET svalue = '18' WHERE site_id = 0 AND skey = 'schema_version'")->execute();
 $pdo->prepare('INSERT INTO posts (title, slug, body, status, author_id, created_at, updated_at) VALUES (?,?,?,?,?,?,?)')
     ->execute(['Upgrade survivor', 'upgrade-survivor-' . bin2hex(random_bytes(3)), '<p>x</p>', 'published', 1, date('Y-m-d H:i:s'), date('Y-m-d H:i:s')]);
@@ -162,6 +167,10 @@ $p2->exec('ALTER TABLE post_sites DROP COLUMN placement');
 $p2->exec('ALTER TABLE users DROP COLUMN is_network_admin');
 $p2->exec('DROP TABLE site_memberships');
 $p2->exec('DROP TABLE slug_redirects');
+$p2->exec('DROP TABLE newsletter_deliveries');
+if ($engine === 'pgsql') {
+    $p2->exec('DROP INDEX IF EXISTS idx_posts_search_fts');
+}
 $p2->prepare("UPDATE settings SET svalue = '18' WHERE site_id = 0 AND skey = 'schema_version'")->execute();
 $p2->exec('DELETE FROM schema_migrations');
 $p2->exec('INSERT INTO schema_migrations (version, name, checksum, status, started_at, finished_at) '

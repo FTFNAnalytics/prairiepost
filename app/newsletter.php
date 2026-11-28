@@ -120,8 +120,107 @@ function pp_compile_edition(): array
     return [$subject, $out, count($posts)];
 }
 
-/** Send (or record) today's edition. Returns a human-readable summary. */
-function pp_send_edition(bool $force = false, bool $testOnly = false, string $testAddress = '', ?int $now = null): string
+/** Enqueue active subscribers into newsletter_deliveries for $editionId (idempotent). */
+function pp_queue_edition_deliveries(int $editionId): int
+{
+    $pdo = db();
+    $driver = $pdo->getAttribute(PDO::ATTR_DRIVER_NAME);
+    $sql = $driver === 'mysql'
+        ? 'INSERT IGNORE INTO newsletter_deliveries (newsletter_id, subscriber_id, email, token, status, created_at) VALUES (?, ?, ?, ?, ?, ?)'
+        : 'INSERT INTO newsletter_deliveries (newsletter_id, subscriber_id, email, token, status, created_at) VALUES (?, ?, ?, ?, ?, ?) ON CONFLICT(newsletter_id, subscriber_id) DO NOTHING';
+    $ins = $pdo->prepare($sql);
+    $ts = now();
+    $queued = 0;
+    foreach (active_subscribers() as $sub) {
+        $ins->execute([$editionId, (int) $sub['id'], (string) $sub['email'], (string) ($sub['token'] ?? ''), 'pending', $ts]);
+        $queued += $ins->rowCount();
+    }
+    return $queued;
+}
+
+/**
+ * Drain up to $batchSize pending rows from newsletter_deliveries for in-progress
+ * editions on this site. Resumable across cron ticks without duplicating sends.
+ * Returns ['edition_id' => int, 'sent' => int, 'failed' => int, 'remaining' => int, 'completed' => bool].
+ */
+function pp_process_newsletter_batch(?int $editionId = null, int $batchSize = 100, int $sleepMicros = 150000): array
+{
+    $pdo = db();
+    $batchSize = max(1, min(1000, $batchSize));
+    if ($editionId !== null) {
+        $stmt = $pdo->prepare('SELECT * FROM newsletters WHERE id = ? AND site_id = ?');
+        $stmt->execute([$editionId, current_site_id()]);
+        $edition = $stmt->fetch();
+    } else {
+        $stmt = $pdo->prepare("SELECT * FROM newsletters WHERE site_id = ? AND status = 'sending' ORDER BY id ASC LIMIT 1");
+        $stmt->execute([current_site_id()]);
+        $edition = $stmt->fetch();
+    }
+    if (!$edition) {
+        return ['edition_id' => 0, 'sent' => 0, 'failed' => 0, 'remaining' => 0, 'completed' => false];
+    }
+
+    $eid = (int) $edition['id'];
+    $subject = (string) $edition['subject'];
+    $html = (string) $edition['html'];
+
+    $rows = $pdo->prepare("SELECT * FROM newsletter_deliveries WHERE newsletter_id = ? AND status = 'pending' ORDER BY id ASC LIMIT " . (int) $batchSize);
+    $rows->execute([$eid]);
+    $pending = $rows->fetchAll();
+
+    $sentNow = 0;
+    $failedNow = 0;
+    $upd = $pdo->prepare('UPDATE newsletter_deliveries SET status = ?, error = ?, attempts = attempts + 1, sent_at = ? WHERE id = ?');
+    $sender = $GLOBALS['pp_newsletter_sender'] ?? null;
+
+    foreach ($pending as $row) {
+        $unsub = site_url() . '/newsletter/unsubscribe?t=' . urlencode((string) $row['token']);
+        $body = str_replace('%%UNSUB%%', $unsub, $html);
+        $err = is_callable($sender)
+            ? $sender((string) $row['email'], $subject, $body, $unsub)
+            : pp_send_mail((string) $row['email'], $subject, $body, $unsub);
+        if ($err === null) {
+            $sentNow++;
+            $upd->execute(['sent', '', now(), (int) $row['id']]);
+        } else {
+            $failedNow++;
+            $upd->execute(['failed', mb_substr((string) $err, 0, 255), null, (int) $row['id']]);
+        }
+        if ($sleepMicros > 0) {
+            usleep($sleepMicros);
+        }
+    }
+
+    $countsStmt = $pdo->prepare('SELECT status, COUNT(*) AS n FROM newsletter_deliveries WHERE newsletter_id = ? GROUP BY status');
+    $countsStmt->execute([$eid]);
+    $counts = ['pending' => 0, 'sent' => 0, 'failed' => 0];
+    foreach ($countsStmt as $c) {
+        $counts[(string) $c['status']] = (int) $c['n'];
+    }
+
+    $completed = $counts['pending'] === 0;
+    if ($completed) {
+        $finalStatus = ($counts['failed'] > 0 && $counts['sent'] === 0) ? 'failed' : 'sent';
+        $pdo->prepare('UPDATE newsletters SET status = ?, recipients = ?, sent_at = ? WHERE id = ?')
+            ->execute([$finalStatus, $counts['sent'], now(), $eid]);
+    } else {
+        $pdo->prepare('UPDATE newsletters SET recipients = ? WHERE id = ?')
+            ->execute([$counts['sent'], $eid]);
+    }
+
+    return [
+        'edition_id' => $eid,
+        'sent'       => $sentNow,
+        'failed'     => $failedNow,
+        'total_sent' => $counts['sent'],
+        'total_fail' => $counts['failed'],
+        'remaining'  => $counts['pending'],
+        'completed'  => $completed,
+    ];
+}
+
+/** Send (or queue + start draining) today's edition. Returns a human-readable summary. */
+function pp_send_edition(bool $force = false, bool $testOnly = false, string $testAddress = '', ?int $now = null, ?int $batchSize = null, int $sleepMicros = 150000): string
 {
     $today = pp_paper_date('Y-m-d', $now);
     [$subject, $html, $count] = pp_compile_edition();
@@ -131,7 +230,15 @@ function pp_send_edition(bool $force = false, bool $testOnly = false, string $te
         return $err === null ? "Test edition sent to $testAddress." : "Test failed: $err";
     }
 
-    if (newsletter_by_date($today)) {
+    $existing = newsletter_by_date($today);
+    if ($existing) {
+        if (($existing['status'] ?? '') === 'sending') {
+            $batch = $batchSize ?? max(1, (int) (setting('newsletter_batch_size', '100') ?: 100));
+            $res = pp_process_newsletter_batch((int) $existing['id'], $batch, $sleepMicros);
+            return $res['completed']
+                ? "Edition resumed and finished — {$res['total_sent']} sent" . ($res['total_fail'] ? " ({$res['total_fail']} failed)" : '') . '.'
+                : "Edition in progress — sent {$res['sent']} in this batch ({$res['remaining']} remaining).";
+        }
         return "This morning's edition already went out.";
     }
     if ($count === 0 && !$force) {
@@ -143,27 +250,32 @@ function pp_send_edition(bool $force = false, bool $testOnly = false, string $te
         ->execute([current_site_id(), $today, $subject, $html, 'sending', now()]);
     $editionId = pp_last_id('newsletters');
 
-    $sent = 0;
-    $failed = 0;
-    foreach (active_subscribers() as $sub) {
-        $unsub = site_url() . '/newsletter/unsubscribe?t=' . urlencode($sub['token']);
-        $err = pp_send_mail($sub['email'], $subject, str_replace('%%UNSUB%%', $unsub, $html), $unsub);
-        $err === null ? $sent++ : $failed++;
-        usleep(150000); // a gentle pace keeps shared-host rate limits friendly
+    pp_queue_edition_deliveries($editionId);
+    $batch = $batchSize ?? max(1, (int) (setting('newsletter_batch_size', '100') ?: 100));
+    $res = pp_process_newsletter_batch($editionId, $batch, $sleepMicros);
+
+    if (!$res['completed']) {
+        return "Edition queued — sent {$res['sent']} so far, {$res['remaining']} remaining (resumes automatically on the next cron tick).";
     }
-
-    db()->prepare('UPDATE newsletters SET status = ?, recipients = ?, sent_at = ? WHERE id = ?')
-        ->execute([$failed > 0 && $sent === 0 ? 'failed' : 'sent', $sent, now(), $editionId]);
-
+    $sent = $res['total_sent'];
+    $failed = $res['total_fail'];
     return "Edition sent to $sent subscriber" . ($sent === 1 ? '' : 's')
         . ($failed ? " ($failed failed — check the mail settings)" : '') . '.';
 }
 
-/** Called by the cron: send once per day, after the configured hour on the paper's clock. */
-function pp_maybe_send_daily(?int $now = null): string
+/** Called by the cron: resume any in-progress edition, or start today's after the configured hour. */
+function pp_maybe_send_daily(?int $now = null, ?int $batchSize = null, int $sleepMicros = 150000): string
 {
     if (setting('newsletter_enabled', '0') !== '1') {
         return 'newsletter: disabled';
+    }
+    // Always drain any in-progress outbox batch first (resumes interrupted or large sends).
+    $batch = $batchSize ?? max(1, (int) (setting('newsletter_batch_size', '100') ?: 100));
+    $res = pp_process_newsletter_batch(null, $batch, $sleepMicros);
+    if ($res['edition_id'] > 0) {
+        return $res['completed']
+            ? "newsletter: finished edition #{$res['edition_id']} ({$res['total_sent']} sent" . ($res['total_fail'] ? ", {$res['total_fail']} failed" : '') . ')'
+            : "newsletter: sent {$res['sent']} for edition #{$res['edition_id']} ({$res['remaining']} remaining)";
     }
     $hour = (int) (setting('newsletter_send_hour', '6') ?: 6);
     if ((int) pp_paper_date('G', $now) < $hour) {
@@ -172,7 +284,7 @@ function pp_maybe_send_daily(?int $now = null): string
     if (newsletter_by_date(pp_paper_date('Y-m-d', $now))) {
         return 'newsletter: already sent today';
     }
-    return 'newsletter: ' . pp_send_edition(false, false, '', $now);
+    return 'newsletter: ' . pp_send_edition(false, false, '', $now, $batch, $sleepMicros);
 }
 
 /** Confirmation email for double opt-in. */
