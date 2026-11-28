@@ -512,6 +512,22 @@ holding a capability it should not have.
     pull has an Est-du-Québec region of three Radio-Canada feeds.
   - Launch waits on the domain, chutesquebec.ca or leschutes.com (the
     guide prints the second), and on the inaugural edition.
+- **Citadel Courier is branded (28 Nov), the third package applied.**
+  - The package's images disagree with each other again: nine marks,
+    five taglines, and a guide that sets headings in Inter and labels a
+    shield-castle the primary logo. The build follows the README and
+    the files it names. `docs/brand-packages.md` lists every choice.
+  - Colours are the README's six. Gold is kept to accents, and Courier
+    Red (`--cc-signal`) is the breaking strip. Type is `--cc-head`
+    (Newsreader, also the wordmark as live text) and `--cc-ui` (Inter),
+    the same pair as Les Chutes.
+  - The masthead uses the primary logo's traced fort. The icons use the
+    app icon's lighthouse in Light Sea Blue, because the spec's blue on
+    its navy is 1.6:1.
+  - The tagline "Halifax • Nova Scotia" and the footer line come from
+    the homepage mock-up. The guide's delivery-company slogans and the
+    article mock-up's "Since 1873" are not used.
+  - Launch waits on the domain and the inaugural edition.
 - **The expansion name slate is in `NETWORK-EXPANSION.md`** (chosen
   23 Nov 2026): twelve mastheads for the North, Atlantic Canada,
   Quebec and Saskatchewan, with their domains, the reasons, the open

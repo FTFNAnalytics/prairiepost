@@ -188,6 +188,7 @@ body.t-citadel {
   .cc-home { grid-template-columns: 1fr; }
   .cc-grid { grid-template-columns: repeat(2, 1fr); }
   .cc-foot .cols { grid-template-columns: 1fr 1fr; }
+  .cc-foot .cols > div:first-child { grid-column: 1 / -1; }
   .cc-hero h1 { font-size: 38px; }
   .cc-hero--noart .wm { right: 20px; bottom: 0; width: 200px; }
 }
